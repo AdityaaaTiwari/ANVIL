@@ -1,7 +1,7 @@
-<!-- FORGE — AI Harness for software engineering -->
+<!-- ANVIL — AI Harness for software engineering -->
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/anvil-workbench/ANVIL/main/docs/forge-dashboard.png" alt="FORGE AI Harness dashboard" width="100%" />
+  <img src="https://raw.githubusercontent.com/anvil-workbench/ANVIL/main/docs/anvil-dashboard.png" alt="ANVIL AI Harness dashboard" width="100%" />
 </p>
 
 <h1 align="center">ANVIL — The AI Engineering Harness</h1>
@@ -42,7 +42,7 @@
 </p>
 
 <p align="center">
-  <sub>These are live-status placeholders until Star History publishes a trending record and global rank for FORGE. They will be replaced with Star History's live badge images once those records are available.</sub>
+  <sub>These are live-status placeholders until Star History publishes a trending record and global rank for ANVIL. They will be replaced with Star History's live badge images once those records are available.</sub>
 </p>
 
 <p align="center">
@@ -62,15 +62,15 @@
 ---
 
 > [!NOTE]
-> **FORGE v1.0.0 — AI harness foundation.** The local CLI, local dashboard, agent orchestration, MCP server, provider adapters, GitHub Action and GitHub App installation/authentication foundation are available. The GitHub App does not yet perform hosted repository scans or create pull requests. See [Current capabilities and boundaries](#current-capabilities-and-boundaries).
+> **ANVIL v1.0.0 — AI harness foundation.** The local CLI, local dashboard, agent orchestration, MCP server, provider adapters, GitHub Action and GitHub App installation/authentication foundation are available. The GitHub App does not yet perform hosted repository scans or create pull requests. See [Current capabilities and boundaries](#current-capabilities-and-boundaries).
 
-## What is FORGE?
+## What is ANVIL?
 
-**FORGE (FORGE Engineering Workbench)** is a local-first AI engineering harness for developers who want more than a chat window pointed at a repository.
+**ANVIL (ANVIL Engineering Workbench)** is a local-first AI engineering harness for developers who want more than a chat window pointed at a repository.
 
 It brings codebase understanding, specialist-agent workflows, engineering review, human approval, verification, experiment tracking and a live local dashboard into one inspectable system.
 
-FORGE is built around a simple engineering loop:
+ANVIL is built around a simple engineering loop:
 
 ```text
 inspect → understand → plan → propose → review → approve → verify → learn
@@ -80,7 +80,7 @@ The goal is not to let an agent silently take over a project. The goal is to mak
 
 ### At a glance
 
-| | FORGE provides |
+| | ANVIL provides |
 |---|---|
 | **Codebase intelligence** | Project inventory, code search, architecture maps, dependency analysis and change impact |
 | **Agent harness** | Specialist roles, skills, hooks, provider routing, task orchestration and run history |
@@ -106,7 +106,7 @@ npm --version
 git --version
 ```
 
-### Install FORGE
+### Install ANVIL
 
 Install the released CLI directly from the GitHub repository:
 
@@ -117,8 +117,8 @@ npm install --global git+https://github.com/anvil-workbench/ANVIL.git#v1.0.0
 Verify the installation:
 
 ```bash
-forge --version
-forge --help
+anvil --version
+anvil --help
 ```
 
 ### Initialize and inspect a project
@@ -128,17 +128,17 @@ Open a terminal in the repository you want to work on:
 ```bash
 cd /path/to/your-project
 
-# Create the local FORGE workspace
-forge init .
+# Create the local ANVIL workspace
+anvil init .
 
 # Inspect the project
-forge inspect .
+anvil inspect .
 
 # Start the local dashboard
-forge dashboard .
+anvil dashboard .
 ```
 
-FORGE prints the dashboard's local URL. Open that address in your browser.
+ANVIL prints the dashboard's local URL. Open that address in your browser.
 
 ### Windows PowerShell
 
@@ -148,27 +148,27 @@ node --version
 npm --version
 git --version
 
-# Install FORGE
+# Install ANVIL
 npm install --global git+https://github.com/anvil-workbench/ANVIL.git#v1.0.0
 
 # Move into your project
 cd C:\Users\YourName\Projects\my-project
 
 # Initialize, inspect and launch
-forge init .
-forge inspect .
-forge dashboard .
+anvil init .
+anvil inspect .
+anvil dashboard .
 ```
 
 Replace the example directory with your actual project path.
 
 ### Build from source
 
-For contributors or anyone who wants to work on FORGE itself:
+For contributors or anyone who wants to work on ANVIL itself:
 
 ```bash
 git clone https://github.com/anvil-workbench/ANVIL.git
-cd FORGE-ECC
+cd ANVIL
 npm ci
 npm run typecheck
 npm test
@@ -177,7 +177,7 @@ npm run build
 
 ## Features
 
-FORGE is composed of focused engineering systems that share local project context and persisted evidence.
+ANVIL is composed of focused engineering systems that share local project context and persisted evidence.
 
 ### 1. Project and code intelligence
 
@@ -256,7 +256,7 @@ Measure candidate configurations instead of silently changing agent behavior.
 - Agent/skill configuration snapshots and diffs.
 - Benchmark-gated configuration release preparation and human approval.
 
-Configuration promotion is reviewable. FORGE does not silently rewrite its own agent or skill setup based on an evaluation result.
+Configuration promotion is reviewable. ANVIL does not silently rewrite its own agent or skill setup based on an evaluation result.
 
 ### 6. Security and policy
 
@@ -268,21 +268,21 @@ Security-related features focus on inspectable boundaries and bounded operations
 - Workspace path restrictions and symlink rejection in bounded readers.
 - Patch/source fingerprint checks for approval records.
 - Sandbox policy validation and compliance reporting.
-- Explicit review of stopped FORGE-managed containers before cleanup.
+- Explicit review of stopped ANVIL-managed containers before cleanup.
 
 These controls reduce risk; they do not certify a repository or make arbitrary host execution safe.
 
 ## Dashboard
 
-The **FORGE dashboard** is a browser-based engineering control center served by the local CLI.
+The **anvil dashboard** is a browser-based engineering control center served by the local CLI.
 
 Start it from the project you want to inspect:
 
 ```bash
-forge dashboard .
+anvil dashboard .
 ```
 
-The terminal prints a localhost URL. The dashboard reads the selected workspace and its local FORGE records.
+The terminal prints a localhost URL. The dashboard reads the selected workspace and its local ANVIL records.
 
 ### Dashboard workspaces
 
@@ -311,129 +311,129 @@ Some dashboard panels depend on local history, a configured provider or enabled 
 
 These are two different experiences:
 
-- **[forge-ecc.vercel.app](https://forge-ecc.vercel.app/)** is the public product website.
-- **`forge dashboard .`** starts the actual interactive dashboard on your machine and connects it to the selected local project.
+- **[ANVIL.vercel.app](https://ANVIL.vercel.app/)** is the public product website.
+- **`anvil dashboard .`** starts the actual interactive dashboard on your machine and connects it to the selected local project.
 
 The public website does not host your local project dashboard.
 
 ## CLI reference
 
-Run `forge --help` for the complete command list and `forge <command> --help` for command-specific usage.
+Run `anvil --help` for the complete command list and `anvil <command> --help` for command-specific usage.
 
 ### Everyday project commands
 
 | Command | Purpose |
 |---|---|
-| `forge init [path]` | Create a local `.forge` starter workspace |
-| `forge inspect [path]` | Inspect project languages, tooling, dependencies and scripts |
-| `forge map [path]` | Map source modules and import relationships |
-| `forge dashboard [path]` | Start the local dashboard |
-| `forge quality [path]` | Generate a static engineering-quality report |
-| `forge deps [path]` | Analyze npm dependencies, licenses and imported security reports |
-| `forge health [path]` | Generate a unified project-health snapshot |
-| `forge deep [path]` | Analyze AST symbols, circular imports and change impact |
-| `forge git [path]` | Analyze changed files, impact and suggested tests |
-| `forge risk [path]` | Rank engineering hotspots |
-| `forge change-risk [path]` | Analyze changed-file risk and downstream impact |
-| `forge snapshot [path]` | Capture an intelligence snapshot |
-| `forge timeline [path]` | Compare the latest intelligence snapshots |
+| `anvil init [path]` | Create a local `.ANVIL` starter workspace |
+| `anvil inspect [path]` | Inspect project languages, tooling, dependencies and scripts |
+| `anvil map [path]` | Map source modules and import relationships |
+| `anvil dashboard [path]` | Start the local dashboard |
+| `anvil quality [path]` | Generate a static engineering-quality report |
+| `anvil deps [path]` | Analyze npm dependencies, licenses and imported security reports |
+| `anvil health [path]` | Generate a unified project-health snapshot |
+| `anvil deep [path]` | Analyze AST symbols, circular imports and change impact |
+| `anvil git [path]` | Analyze changed files, impact and suggested tests |
+| `anvil risk [path]` | Rank engineering hotspots |
+| `anvil change-risk [path]` | Analyze changed-file risk and downstream impact |
+| `anvil snapshot [path]` | Capture an intelligence snapshot |
+| `anvil timeline [path]` | Compare the latest intelligence snapshots |
 
 ### Agents and runs
 
 | Command | Purpose |
 |---|---|
-| `forge agents [path]` | List specialist-agent roles |
-| `forge skills [path]` | List built-in and workspace skills |
-| `forge hooks [path]` | List declarative lifecycle hooks |
-| `forge memory <action>` | Add, list, remove or inspect project memory |
-| `forge plan --goal TEXT` | Create and save a reviewable draft plan |
-| `forge run --goal TEXT` | Run a plan with the configured AI provider |
-| `forge runs [path]` | List saved local runs |
-| `forge show-run ID` | Display a saved run |
-| `forge approve RUN_ID TASK_ID` | Approve a task awaiting human review |
-| `forge resume RUN_ID` | Continue pending or approved tasks |
-| `forge replay RUN_ID` | Create a run from retryable failed tasks |
-| `forge trace RUN_ID` | Show per-agent execution telemetry |
+| `anvil agents [path]` | List specialist-agent roles |
+| `anvil skills [path]` | List built-in and workspace skills |
+| `anvil hooks [path]` | List declarative lifecycle hooks |
+| `anvil memory <action>` | Add, list, remove or inspect project memory |
+| `anvil plan --goal TEXT` | Create and save a reviewable draft plan |
+| `anvil run --goal TEXT` | Run a plan with the configured AI provider |
+| `anvil runs [path]` | List saved local runs |
+| `anvil show-run ID` | Display a saved run |
+| `anvil approve RUN_ID TASK_ID` | Approve a task awaiting human review |
+| `anvil resume RUN_ID` | Continue pending or approved tasks |
+| `anvil replay RUN_ID` | Create a run from retryable failed tasks |
+| `anvil trace RUN_ID` | Show per-agent execution telemetry |
 
 ### Review and verification
 
 | Command | Purpose |
 |---|---|
-| `forge review [path]` | Review changed source files |
-| `forge review [path] --ai` | Include provider-backed review suggestions |
-| `forge review-history [path]` | List saved review snapshots |
-| `forge review-show ID` | Display a saved review |
-| `forge review-compare A B` | Compare two saved reviews |
-| `forge patch-check ID N` | Dry-run validate a proposed patch |
-| `forge verify --list` | Discover available npm scripts without running them |
-| `forge verify SCRIPT` | Explicitly run one selected npm script |
-| `forge verify-history` | List saved verification runs |
-| `forge regression [path]` | Compare verification history with Git changes and impact |
-| `forge patch-verify ID SCRIPT` | Verify an approved staged patch in a temporary workspace |
+| `anvil review [path]` | Review changed source files |
+| `anvil review [path] --ai` | Include provider-backed review suggestions |
+| `anvil review-history [path]` | List saved review snapshots |
+| `anvil review-show ID` | Display a saved review |
+| `anvil review-compare A B` | Compare two saved reviews |
+| `anvil patch-check ID N` | Dry-run validate a proposed patch |
+| `anvil verify --list` | Discover available npm scripts without running them |
+| `anvil verify SCRIPT` | Explicitly run one selected npm script |
+| `anvil verify-history` | List saved verification runs |
+| `anvil regression [path]` | Compare verification history with Git changes and impact |
+| `anvil patch-verify ID SCRIPT` | Verify an approved staged patch in a temporary workspace |
 
 ### Evaluation and agent configuration
 
 | Command | Purpose |
 |---|---|
-| `forge evals [path]` | List local evaluation suites |
-| `forge evaluate RUN_ID` | Score a saved run against an evaluation suite |
-| `forge benchmark` | Record or view benchmark results |
-| `forge benchmark-matrix` | Run a configured model comparison matrix |
-| `forge benchmark-regression` | Compare a matrix with its baseline |
-| `forge optimize-agents` | Recommend evidence-based agent improvements |
-| `forge agent-intelligence` | Score agent effectiveness across benchmark history |
-| `forge agent-evolution` | Assess a controlled baseline/treatment experiment |
-| `forge experiment-studio` | Create or compare skill/model experiments |
-| `forge experiment-history` | Rank historical benchmark candidates |
-| `forge agent-config` | Snapshot, list, show and diff agent configuration |
-| `forge agent-release` | Prepare and review benchmark-gated configuration releases |
-| `forge experiment` | Capture, show and compare reproducible experiment manifests |
+| `anvil evals [path]` | List local evaluation suites |
+| `anvil evaluate RUN_ID` | Score a saved run against an evaluation suite |
+| `anvil benchmark` | Record or view benchmark results |
+| `anvil benchmark-matrix` | Run a configured model comparison matrix |
+| `anvil benchmark-regression` | Compare a matrix with its baseline |
+| `anvil optimize-agents` | Recommend evidence-based agent improvements |
+| `anvil agent-intelligence` | Score agent effectiveness across benchmark history |
+| `anvil agent-evolution` | Assess a controlled baseline/treatment experiment |
+| `anvil experiment-studio` | Create or compare skill/model experiments |
+| `anvil experiment-history` | Rank historical benchmark candidates |
+| `anvil agent-config` | Snapshot, list, show and diff agent configuration |
+| `anvil agent-release` | Prepare and review benchmark-gated configuration releases |
+| `anvil experiment` | Capture, show and compare reproducible experiment manifests |
 
 ### Sandbox and diagnostics
 
 | Command | Purpose |
 |---|---|
-| `forge sandbox-status` | Inspect Docker availability and advertised security options |
-| `forge sandbox-compliance` | Generate a sandbox compliance report |
-| `forge sandbox-policy-check` | Validate a fail-closed sandbox policy |
-| `forge sandbox-profiles` | List or inspect built-in security profiles |
-| `forge sandbox-cleanup` | Review stopped FORGE containers; `--apply` opts into removal |
-| `forge sandbox-cleanup-history` | Show recorded cleanup activity |
-| `forge agent-security [path]` | Audit supported agent instructions, skills, hooks and permissions |
+| `anvil sandbox-status` | Inspect Docker availability and advertised security options |
+| `anvil sandbox-compliance` | Generate a sandbox compliance report |
+| `anvil sandbox-policy-check` | Validate a fail-closed sandbox policy |
+| `anvil sandbox-profiles` | List or inspect built-in security profiles |
+| `anvil sandbox-cleanup` | Review stopped ANVIL containers; `--apply` opts into removal |
+| `anvil sandbox-cleanup-history` | Show recorded cleanup activity |
+| `anvil agent-security [path]` | Audit supported agent instructions, skills, hooks and permissions |
 
 Most project commands accept a project path. Use `--json` where supported for machine-readable output.
 
 ## AI providers
 
-FORGE supports provider adapters for local CLI and HTTP-based model services. Configure one provider using environment variables.
+ANVIL supports provider adapters for local CLI and HTTP-based model services. Configure one provider using environment variables.
 
 | Provider | Environment | Default model |
 |---|---|---|
 | Claude Code CLI | Authenticated Claude Code CLI on PATH | `sonnet` |
-| OpenAI | `FORGE_API_KEY` or `OPENAI_API_KEY` | `gpt-4.1-mini` |
+| OpenAI | `ANVIL_API_KEY` or `OPENAI_API_KEY` | `gpt-4.1-mini` |
 | Anthropic API | `ANTHROPIC_API_KEY` | `claude-sonnet-4-5` |
 | Google AI | `GOOGLE_API_KEY` | `gemini-2.5-flash` |
 | Ollama | Local Ollama endpoint | `llama3.2` |
 
-Set `FORGE_AI_PROVIDER` to the provider name and optionally set `FORGE_AI_MODEL` to override the model. `FORGE_BASE_URL` selects a compatible gateway/custom endpoint. For Ollama, `OLLAMA_HOST` overrides the default local endpoint.
+Set `ANVIL_AI_PROVIDER` to the provider name and optionally set `ANVIL_AI_MODEL` to override the model. `ANVIL_BASE_URL` selects a compatible gateway/custom endpoint. For Ollama, `OLLAMA_HOST` overrides the default local endpoint.
 
 ### Examples
 
 ```bash
 # OpenAI
-FORGE_AI_PROVIDER=openai OPENAI_API_KEY=YOUR_KEY forge run --goal "Review the authentication flow" --path .
+ANVIL_AI_PROVIDER=openai OPENAI_API_KEY=YOUR_KEY ANVIL run --goal "Review the authentication flow" --path .
 
 # Anthropic
-FORGE_AI_PROVIDER=anthropic ANTHROPIC_API_KEY=YOUR_KEY forge run --goal "Map the service boundaries" --path .
+ANVIL_AI_PROVIDER=anthropic ANTHROPIC_API_KEY=YOUR_KEY ANVIL run --goal "Map the service boundaries" --path .
 
 # Google Gemini
-FORGE_AI_PROVIDER=google GOOGLE_API_KEY=YOUR_KEY forge run --goal "Identify reliability risks" --path .
+ANVIL_AI_PROVIDER=google GOOGLE_API_KEY=YOUR_KEY ANVIL run --goal "Identify reliability risks" --path .
 
 # Local Ollama
-FORGE_AI_PROVIDER=ollama OLLAMA_HOST=http://localhost:11434 FORGE_AI_MODEL=llama3.2 forge run --goal "Explain the architecture" --path .
+ANVIL_AI_PROVIDER=ollama OLLAMA_HOST=http://localhost:11434 ANVIL_AI_MODEL=llama3.2 ANVIL run --goal "Explain the architecture" --path .
 
 # Claude Code CLI
-FORGE_AI_PROVIDER=claude-code FORGE_AI_MODEL=sonnet forge run --goal "Plan a safe refactor" --path .
+ANVIL_AI_PROVIDER=claude-code ANVIL_AI_MODEL=sonnet ANVIL run --goal "Plan a safe refactor" --path .
 ```
 
 > [!IMPORTANT]
@@ -447,31 +447,31 @@ The local dashboard includes explicit connection checks for OpenAI, Anthropic, G
 
 ### Claude Code
 
-FORGE includes a local Claude Code CLI provider adapter. It uses the CLI installed and authenticated on the developer's machine; it is not the same as configuring an Anthropic API key.
+ANVIL includes a local Claude Code CLI provider adapter. It uses the CLI installed and authenticated on the developer's machine; it is not the same as configuring an Anthropic API key.
 
 See [Claude Code integration](docs/integrations/claude-code.md).
 
 ### Cursor and MCP
 
-Cursor can connect to FORGE through the local stdio MCP server using Cursor's MCP configuration. This is **MCP interoperability**, not a native Cursor extension.
+Cursor can connect to ANVIL through the local stdio MCP server using Cursor's MCP configuration. This is **MCP interoperability**, not a native Cursor extension.
 
 Example project configuration:
 
 ```json
 {
   "mcpServers": {
-    "forge": {
+    "ANVIL": {
       "command": "node",
-      "args": ["C:/path/to/FORGE-ECC/dist/mcp/server.js"],
+      "args": ["C:/path/to/ANVIL/dist/mcp/server.js"],
       "env": {
-        "FORGE_WORKSPACE": "C:/path/to/your-project"
+        "ANVIL_WORKSPACE": "C:/path/to/your-project"
       }
     }
   }
 }
 ```
 
-Build FORGE before using the compiled server:
+Build ANVIL before using the compiled server:
 
 ```bash
 npm run build
@@ -481,37 +481,37 @@ Adjust the paths for your machine. See [Cursor MCP documentation](https://docs.c
 
 ### MCP server
 
-FORGE provides a Model Context Protocol server over stdio:
+ANVIL provides a Model Context Protocol server over stdio:
 
 ```bash
 npm run build
-FORGE_WORKSPACE=/absolute/path/to/project npm run mcp
+ANVIL_WORKSPACE=/absolute/path/to/project npm run mcp
 ```
 
 The current MCP server exposes nine bounded, read-only tools:
 
 | Tool | Function |
 |---|---|
-| `forge_inspect_project` | Inspect project structure and tooling |
-| `forge_map_architecture` | Map source files and imports |
-| `forge_search_code` | Search supported project source |
-| `forge_list_files` | List supported workspace files |
-| `forge_read_file` | Read a bounded text/source file |
-| `forge_quality_audit` | Run static project-quality checks |
-| `forge_git_intelligence` | Analyze Git changes and impact |
-| `forge_list_agents` | List built-in and workspace agent roles |
-| `forge_create_review_plan` | Create a draft engineering review plan |
+| `ANVIL_inspect_project` | Inspect project structure and tooling |
+| `ANVIL_map_architecture` | Map source files and imports |
+| `ANVIL_search_code` | Search supported project source |
+| `ANVIL_list_files` | List supported workspace files |
+| `ANVIL_read_file` | Read a bounded text/source file |
+| `ANVIL_quality_audit` | Run static project-quality checks |
+| `ANVIL_git_intelligence` | Analyze Git changes and impact |
+| `ANVIL_list_agents` | List built-in and workspace agent roles |
+| `ANVIL_create_review_plan` | Create a draft engineering review plan |
 
 MCP workspace paths are constrained to the configured workspace root. Hidden paths, generated/dependency directories, secret-like filenames and symlinks are excluded or rejected. Reads are bounded. The MCP server does not expose arbitrary shell execution, project-file writes, patch application or test execution.
 
-Some workspace browsing/search operations require an explicit restricted-mode allowlist in `.forge/permissions.json`; the default proposal-only policy denies them.
+Some workspace browsing/search operations require an explicit restricted-mode allowlist in `.ANVIL/permissions.json`; the default proposal-only policy denies them.
 
 ### GitHub Action
 
-FORGE ships a composite GitHub Action for selected CI operations.
+ANVIL ships a composite GitHub Action for selected CI operations.
 
 ```yaml
-name: FORGE checks
+name: ANVIL checks
 
 on:
   pull_request:
@@ -519,7 +519,7 @@ on:
     branches: [main]
 
 jobs:
-  forge:
+  ANVIL:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -543,7 +543,7 @@ Inputs are `version`, `project-path` and `operation`. The default operation is `
 
 ### GitHub App
 
-[**Get the FORGE GitHub App →**](https://forge-ecc.vercel.app/api/github/install)
+[**Get the ANVIL GitHub App →**](https://ANVIL.vercel.app/api/github/install)
 
 The GitHub App currently provides an installation entry point, signed installation webhooks, OAuth account authorization, verified installation association and server-side session handling.
 
@@ -553,19 +553,19 @@ See [GitHub App integration notes](docs/integrations/github-app.md) for endpoint
 
 ## Architecture
 
-FORGE is a TypeScript/Node.js application with a CLI entry point and focused core modules.
+ANVIL is a TypeScript/Node.js application with a CLI entry point and focused core modules.
 
 ```text
                          Developer / CI
                                |
               +----------------+----------------+
               |                |                |
-          FORGE CLI        GitHub Action     MCP clients
+          ANVIL CLI        GitHub Action     MCP clients
           src/cli.ts         action.yml     stdio transport
               |                |                |
               +----------------+----------------+
                                |
-                     FORGE Core Engine
+                     ANVIL Core Engine
                                |
       +----------------+------+-------+----------------+
       |                |              |                |
@@ -575,7 +575,7 @@ FORGE is a TypeScript/Node.js application with a CLI entry point and focused cor
       +----------------+------+-------+----------------+
                                |
                    Local workspace state
-                         .forge/
+                         .ANVIL/
                                |
                     Local Dashboard UI
                  src/core/dashboard-server.ts
@@ -584,8 +584,8 @@ FORGE is a TypeScript/Node.js application with a CLI entry point and focused cor
 ### Repository layout
 
 ```text
-FORGE-ECC/
-├── .forge/                 # Built-in evaluation data
+ANVIL/
+├── .ANVIL/                 # Built-in evaluation data
 ├── .github/workflows/      # CI, release and sandbox workflows
 ├── api/
 │   ├── _lib/               # GitHub App, OAuth and storage helpers
@@ -593,10 +593,10 @@ FORGE-ECC/
 ├── docs/
 │   ├── integrations/       # Claude Code and GitHub App guides
 │   ├── providers.md        # Provider setup and diagnostics
-│   └── FORGE-CAPABILITY-ROADMAP.md
+│   └── ANVIL-CAPABILITY-ROADMAP.md
 ├── public/
 │   ├── index.html          # Public product website
-│   └── *.svg               # FORGE brand artwork
+│   └── *.svg               # ANVIL brand artwork
 ├── src/
 │   ├── ai/                 # Provider adapters
 │   ├── core/               # Engineering workbench modules
@@ -629,7 +629,7 @@ FORGE-ECC/
 
 ## Security model
 
-FORGE is designed to keep consequential operations explicit and inspectable.
+ANVIL is designed to keep consequential operations explicit and inspectable.
 
 - **Local-first by default:** the dashboard runs on loopback and reads the workspace selected by the CLI.
 - **Bounded workspace access:** path resolution rejects traversal and symlinks; readers exclude hidden, generated, dependency and secret-like paths.
@@ -641,9 +641,9 @@ FORGE is designed to keep consequential operations explicit and inspectable.
 - **Opt-in Docker workflows:** Docker-backed verification and cleanup operations are separate and require explicit operator action.
 
 > [!WARNING]
-> FORGE is an early-stage engineering tool. Local script verification executes project-controlled code on the host; it is **not** an OS sandbox. Docker security depends on the host runtime and selected configuration. Static audits and heuristic risk scores are not security certifications. AI review may send selected source excerpts to the provider you configure.
+> ANVIL is an early-stage engineering tool. Local script verification executes project-controlled code on the host; it is **not** an OS sandbox. Docker security depends on the host runtime and selected configuration. Static audits and heuristic risk scores are not security certifications. AI review may send selected source excerpts to the provider you configure.
 
-Read [SECURITY.md](SECURITY.md) before using FORGE with untrusted repositories, agent instructions or project scripts.
+Read [SECURITY.md](SECURITY.md) before using ANVIL with untrusted repositories, agent instructions or project scripts.
 
 ## Current capabilities and boundaries
 
@@ -669,11 +669,11 @@ The v1.0 release establishes the local engineering workbench foundation.
 | Native Cursor/VS Code IDE extension | Not shipped |
 | Hosted multi-user dashboard | Not shipped |
 
-This table is intentional: a roadmap item is not a shipped feature. The project tracks planned work in the [FORGE Capability Roadmap](docs/FORGE-CAPABILITY-ROADMAP.md).
+This table is intentional: a roadmap item is not a shipped feature. The project tracks planned work in the [ANVIL Capability Roadmap](docs/ANVIL-CAPABILITY-ROADMAP.md).
 
 ## Roadmap
 
-FORGE's direction is to grow into a complete, local-first agent engineering harness while preserving clear permission boundaries.
+ANVIL's direction is to grow into a complete, local-first agent engineering harness while preserving clear permission boundaries.
 
 - **Agent and skill ecosystem:** expand specialist roles, skill packs, compatibility metadata and lifecycle management.
 - **Memory and context:** structured memory layers with provenance, retrieval and retention controls.
@@ -685,7 +685,7 @@ FORGE's direction is to grow into a complete, local-first agent engineering harn
 - **Learning loop:** evidence-based lessons and regression-gated, human-approved configuration releases.
 - **Operator experience:** unified setup/doctor/status commands, export/import and migration tools.
 
-See [docs/FORGE-CAPABILITY-ROADMAP.md](docs/FORGE-CAPABILITY-ROADMAP.md) for the detailed delivery sequence and non-negotiable product rules.
+See [docs/ANVIL-CAPABILITY-ROADMAP.md](docs/ANVIL-CAPABILITY-ROADMAP.md) for the detailed delivery sequence and non-negotiable product rules.
 
 ## Development
 
@@ -693,7 +693,7 @@ See [docs/FORGE-CAPABILITY-ROADMAP.md](docs/FORGE-CAPABILITY-ROADMAP.md) for the
 
 ```bash
 git clone https://github.com/anvil-workbench/ANVIL.git
-cd FORGE-ECC
+cd ANVIL
 npm ci
 ```
 
@@ -729,9 +729,9 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request.
 
 ## Project history
 
-FORGE's v1.0.0 release brings the local CLI, dashboard, engineering intelligence, agent workflows, MCP integration, GitHub Action and GitHub App installation foundation into one versioned product.
+ANVIL's v1.0.0 release brings the local CLI, dashboard, engineering intelligence, agent workflows, MCP integration, GitHub Action and GitHub App installation foundation into one versioned product.
 
-The project is maintained as an original FORGE codebase. ECC is a capability and documentation reference; FORGE maintains its own identity, implementation, data models and roadmap.
+The project is maintained as an original ANVIL codebase. ECC is a capability and documentation reference; ANVIL maintains its own identity, implementation, data models and roadmap.
 
 For release-by-release changes, see [CHANGELOG.md](CHANGELOG.md).
 
@@ -739,14 +739,14 @@ For release-by-release changes, see [CHANGELOG.md](CHANGELOG.md).
 
 | Resource | Link |
 |---|---|
-| Product website | [forge-ecc.vercel.app](https://forge-ecc.vercel.app/) |
-| Get the GitHub App | [Install FORGE](https://forge-ecc.vercel.app/api/github/install) |
+| Product website | [ANVIL.vercel.app](https://ANVIL.vercel.app/) |
+| Get the GitHub App | [Install ANVIL](https://ANVIL.vercel.app/api/github/install) |
 | Source repository | [anvil-workbench/ANVIL](https://github.com/anvil-workbench/ANVIL) |
-| Organization | [FORGE WORKBENCH](https://github.com/forge-workbench) |
+| Organization | [ANVIL WORKBENCH](https://github.com/anvil-workbench) |
 | Releases | [GitHub Releases](https://github.com/anvil-workbench/ANVIL/releases) |
 | Issues and bugs | [GitHub Issues](https://github.com/anvil-workbench/ANVIL/issues) |
 | CI and automation | [GitHub Actions](https://github.com/anvil-workbench/ANVIL/actions) |
-| Roadmap | [Capability Roadmap](docs/FORGE-CAPABILITY-ROADMAP.md) |
+| Roadmap | [Capability Roadmap](docs/ANVIL-CAPABILITY-ROADMAP.md) |
 | Changelog | [CHANGELOG.md](CHANGELOG.md) |
 | Provider guide | [docs/providers.md](docs/providers.md) |
 | GitHub App guide | [GitHub App integration](docs/integrations/github-app.md) |
@@ -755,7 +755,7 @@ For release-by-release changes, see [CHANGELOG.md](CHANGELOG.md).
 
 ## Support
 
-For questions about FORGE or help with the GitHub App, contact [THEGODOFEARTH3@gmail.com](mailto:THEGODOFEARTH3@gmail.com).
+For questions about ANVIL or help with the GitHub App, contact [THEGODOFEARTH3@gmail.com](mailto:THEGODOFEARTH3@gmail.com).
 
 ## Maintainer
 
@@ -763,7 +763,7 @@ For questions about FORGE or help with the GitHub App, contact [THEGODOFEARTH3@g
 
 ## License
 
-FORGE is open source under the [MIT License](LICENSE).
+ANVIL is open source under the [MIT License](LICENSE).
 
 ## Star history
 
@@ -771,7 +771,8 @@ FORGE is open source under the [MIT License](LICENSE).
   <a href="https://www.star-history.com/anvil-workbench/ANVIL">
     <picture>
       <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=anvil-workbench/ANVIL&type=Date&theme=dark" />
-      <img src="https://api.star-history.com/svg?repos=anvil-workbench/ANVIL&type=Date" alt="FORGE GitHub star history" width="100%" />
+      <img src="https://api.star-history.com/svg?repos=anvil-workbench/ANVIL&type=Date" alt="ANVIL GitHub star history" width="100%" />
     </picture>
   </a>
 </p>
+

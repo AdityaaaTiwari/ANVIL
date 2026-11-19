@@ -1,14 +1,14 @@
-# FORGE Capability Roadmap
+# ANVIL Capability Roadmap
 
-FORGE is the primary product. The separate ECC repository is a capability reference, not the codebase to rename or merge into FORGE.
+ANVIL is an independent, local-first AI engineering harness for software developers.
 
 ## Product direction
 
-Build an original, local-first agent engineering harness with FORGE-owned interfaces, data models, runtime, CLI, documentation, tests, and visual identity. Adopt useful capability patterns from the reference project, but do not bulk-copy its repository, branding, catalogs, or implementation. If a specific upstream implementation or text is intentionally reused, preserve the applicable license and attribution.
+Build an original, local-first agent engineering harness with ANVIL-owned interfaces, data models, runtime, CLI, documentation, tests, and visual identity. Preserve clear permission boundaries and keep consequential actions under reviewable human approval.
 
 ## Capability map
 
-| Capability area | FORGE foundation today | FORGE direction |
+| Capability area | ANVIL foundation today | ANVIL direction |
 | --- | --- | --- |
 | Agents and specialist roles | Agent registry, orchestration, provider adapters | Expand role catalog, agent contracts, task routing, delegation and agent lifecycle |
 | Skills and workflows | Skill registry, workspace Markdown skills, skill selection | Versioned skill packs, nested SKILL.md support, metadata validation, compatibility checks, install/update/list commands |
@@ -48,17 +48,9 @@ Build an original, local-first agent engineering harness with FORGE-owned interf
 - Add setup, upgrade, doctor, status and compatibility reporting.
 - Improve the dashboard around runs, approvals, memory, skills, traces and evaluation evidence.
 
-### Phase 5 — Learning and release quality
-- Turn verified outcomes into proposed lessons, never silent self-modification.
-- Require repeatable evaluation evidence before promoting agent or skill configuration.
-- Add regression gates, versioned releases, migration notes and reproducible release checks.
+## Non-negotiables
 
-## Non-negotiable product rules
-
-- FORGE owns its product identity and architecture.
-- No feature is marked complete until implementation, tests and user-facing documentation agree.
-- No live provider spend, credential use, destructive action or permission expansion without explicit authorization.
-- Never describe a proposal as an executed change.
-- Never describe host execution as sandboxed.
-- Never claim a provider, harness or platform is supported without a tested compatibility path.
-- Keep provenance for imported or adapted third-party material and honor its license.
+- Verification precedes claims. Do not claim a capability works without an automated test or executable verification run.
+- Keep consequential mutations reviewable. Avoid silent rewriting of agent definitions, instructions, or configuration without human promotion.
+- Maintain a local-first architecture. The local dashboard and CLI run against local workspaces without requiring cloud telemetry.
+- Permissions remain bounded. Do not weaken permission checks or provide unfettered access across security boundaries.

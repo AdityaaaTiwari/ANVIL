@@ -1,4 +1,4 @@
-name: FORGE CI
+name: ANVIL CI
 
 on:
   push:
@@ -49,13 +49,13 @@ jobs:
         run: |
           RUNNER_TEMP_POSIX="${RUNNER_TEMP//\\//}"
           npm pack --pack-destination "$RUNNER_TEMP_POSIX"
-          mkdir -p "$RUNNER_TEMP_POSIX/forge-clean-install"
-          npm install --prefix "$RUNNER_TEMP_POSIX/forge-clean-install" "$RUNNER_TEMP_POSIX"/*engineering-workbench-*.tgz
-          "$RUNNER_TEMP_POSIX/forge-clean-install/node_modules/.bin/anvil" --version
-          "$RUNNER_TEMP_POSIX/forge-clean-install/node_modules/.bin/anvil" --help
-          mkdir -p "$RUNNER_TEMP_POSIX/forge-smoke-project"
-          "$RUNNER_TEMP_POSIX/forge-clean-install/node_modules/.bin/anvil" init "$RUNNER_TEMP_POSIX/forge-smoke-project"
-          "$RUNNER_TEMP_POSIX/forge-clean-install/node_modules/.bin/anvil" inspect "$RUNNER_TEMP_POSIX/forge-smoke-project"
+          mkdir -p "$RUNNER_TEMP_POSIX/anvil-clean-install"
+          npm install --prefix "$RUNNER_TEMP_POSIX/anvil-clean-install" "$RUNNER_TEMP_POSIX"/*engineering-workbench-*.tgz
+          "$RUNNER_TEMP_POSIX/anvil-clean-install/node_modules/.bin/anvil" --version
+          "$RUNNER_TEMP_POSIX/anvil-clean-install/node_modules/.bin/anvil" --help
+          mkdir -p "$RUNNER_TEMP_POSIX/anvil-smoke-project"
+          "$RUNNER_TEMP_POSIX/anvil-clean-install/node_modules/.bin/anvil" init "$RUNNER_TEMP_POSIX/anvil-smoke-project"
+          "$RUNNER_TEMP_POSIX/anvil-clean-install/node_modules/.bin/anvil" inspect "$RUNNER_TEMP_POSIX/anvil-smoke-project"
 
   docker-runtime:
     name: Real Docker sandbox integration
