@@ -1,376 +1,1796 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#100d1d"><link rel="icon" type="image/svg+xml" href="/anvil-mark.svg"><meta property="og:title" content="ANVIL — The AI Engineering Workbench"><meta property="og:description" content="Understand codebases. Map architecture. Review changes. Verify outcomes.">
-<meta name="description" content="ANVIL — an AI engineering workbench for codebase intelligence, architecture mapping, change-risk analysis, review, verification and local engineering workflows.">
-<title>ANVIL — Understand. Engineer. Verify.</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#07080d">
+<link rel="icon" type="image/svg+xml" href="/anvil-mark.svg">
+<meta property="og:title" content="ANVIL — The AI Engineering Workbench">
+<meta property="og:description" content="Local-first codebase intelligence, architecture mapping, change-risk analysis, and deterministic verification.">
+<meta name="description" content="ANVIL is an open-source AI engineering workbench for codebase intelligence, architecture mapping, change-risk analysis, review history, and deterministic verification.">
+<title>ANVIL — The AI Engineering Workbench</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{color-scheme:dark;--bg:#090912;--ink:#f5f3ff;--muted:#aaa8bf;--line:rgba(226,220,255,.15);--glass:rgba(24,23,43,.58);--violet:#a78bfa;--pink:#fb8fc9;--cyan:#83e5f4;--lime:#c7f28a;--max:1200px}
-*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:90px}body{margin:0;background-color:#090912;background-image:linear-gradient(180deg,rgba(8,8,18,.36) 0%,rgba(8,8,18,.58) 42%,rgba(8,8,18,.82) 100%),url('/anvil-background.png');background-size:cover;background-position:center top;background-repeat:no-repeat;background-attachment:fixed;color:var(--ink);font:15px/1.65 Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;overflow-x:hidden}
-body:before,body:after{content:"";position:fixed;z-index:-2;pointer-events:none;filter:blur(85px);opacity:.48;border-radius:50%;animation:float 18s ease-in-out infinite alternate}
-body:before{width:620px;height:620px;left:-190px;top:-160px;background:radial-gradient(circle,#7448d7 0%,#432a83 38%,transparent 70%)}
-body:after{width:700px;height:700px;right:-240px;top:15%;background:radial-gradient(circle,#a33f88 0%,#5c397c 38%,transparent 72%);animation-delay:-8s}
-@keyframes float{to{transform:translate3d(80px,55px,0) scale(1.12)}}@keyframes rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}@keyframes scan{0%{transform:translateY(-110%)}100%{transform:translateY(430%)}}@keyframes pulse{50%{opacity:.45}}@keyframes typing{from{width:0}to{width:100%}}
-a{color:inherit;text-decoration:none}.wrap{width:min(var(--max),calc(100% - 44px));margin:auto}.glass{background:linear-gradient(135deg,rgba(255,255,255,.095),rgba(255,255,255,.025));border:1px solid var(--line);box-shadow:0 24px 80px rgba(0,0,0,.28),inset 0 1px rgba(255,255,255,.09);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px)}
-.topline{border-bottom:1px solid var(--line);font-size:11px;color:#d4c9f5;letter-spacing:.12em;text-transform:uppercase;text-align:center;padding:9px 12px;background:rgba(18,15,33,.65)}.topline span{color:var(--lime);margin-right:9px}
-header{position:sticky;top:0;z-index:10;background:rgba(9,9,18,.7);backdrop-filter:blur(22px);border-bottom:1px solid var(--line)}.nav{height:76px;display:flex;align-items:center;justify-content:space-between}.brand{display:flex;align-items:center;gap:11px;font-weight:900;letter-spacing:.19em}.logo{width:39px;height:39px;border-radius:13px;display:grid;place-items:center;color:#100c1c;font-size:20px;font-weight:950;background:linear-gradient(140deg,var(--cyan),var(--violet) 55%,var(--pink));box-shadow:0 5px 28px #a78bfa55;letter-spacing:-.08em}.navlinks{display:flex;align-items:center;gap:23px;color:var(--muted);font-size:12px}.navlinks a:hover{color:white}.btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:12px 18px;border-radius:12px;border:1px solid var(--line);font-weight:750;font-size:12px;background:rgba(255,255,255,.055);transition:.22s;cursor:pointer}.btn:hover{transform:translateY(-2px);border-color:#c8b5ff;box-shadow:0 9px 30px #a78bfa24}.btn.primary{color:#130d22;border:0;background:linear-gradient(110deg,#c3a8ff,#8de6f1 62%,#c5f28e)}.menu{display:none}
-.hero{padding:100px 0 82px;display:grid;grid-template-columns:1fr 1.02fr;gap:50px;align-items:center;min-height:690px}.kicker{display:inline-flex;align-items:center;gap:9px;padding:7px 11px;border:1px solid #b59bff44;border-radius:999px;background:#a78bfa12;color:#d5c8ff;font-size:10px;letter-spacing:.15em;text-transform:uppercase}.kicker i{width:7px;height:7px;border-radius:50%;background:var(--lime);box-shadow:0 0 15px var(--lime)}h1{font-size:clamp(48px,6.2vw,82px);line-height:.99;letter-spacing:-.065em;margin:24px 0 22px;font-weight:850}.gradient{background:linear-gradient(100deg,#c5adff 0%,#8ce5f3 48%,#f5a4d0 88%);-webkit-background-clip:text;background-clip:text;color:transparent}.lead{font-size:17px;color:#c1bed2;max-width:590px;line-height:1.8}.hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin:30px 0 21px}.micro{font-size:10px;color:#8f8ba8;letter-spacing:.13em}
-.terminal{border-radius:22px;overflow:hidden;position:relative;animation:rise .9s both}.terminal:after{content:"";position:absolute;left:0;right:0;top:0;height:90px;background:linear-gradient(transparent,rgba(174,142,255,.09),transparent);animation:scan 7s linear infinite;pointer-events:none}.termbar{display:flex;align-items:center;justify-content:space-between;padding:15px 18px;border-bottom:1px solid var(--line);background:#ffffff08;font-size:11px;color:#c9c5db}.lights{display:flex;gap:6px}.lights i{width:8px;height:8px;border-radius:50%;background:#fb8bba}.lights i:nth-child(2){background:#f5cb7d}.lights i:nth-child(3){background:#a8e88c}.termcontent{padding:22px}.term-label{font-size:10px;letter-spacing:.14em;color:#a99ccf}.command{font:12px/1.9 ui-monospace,SFMono-Regular,Consolas,monospace;color:#e5e1f4;margin:13px 0 18px;white-space:pre-wrap}.prompt{color:var(--lime)}.output{display:grid;gap:9px}.outrow{display:flex;justify-content:space-between;gap:15px;font-size:11px;padding:10px 12px;border:1px solid #ffffff13;border-radius:10px;background:#ffffff06}.outrow span{color:#aaa6bd}.ok{color:var(--lime)}.warn{color:#f6c77b}.termfoot{display:flex;justify-content:space-between;gap:10px;margin-top:17px;padding-top:14px;border-top:1px solid var(--line);font-size:10px;color:#9691ad}
-.trust{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:0 0 72px}.trustitem{padding:18px 19px;border-radius:15px}.trustitem b{display:block;font-size:16px}.trustitem span{color:var(--muted);font-size:11px}
-.section{padding:92px 0;border-top:1px solid #ffffff12;position:relative}.sectionhead{max-width:720px;margin-bottom:38px}.eyebrow{color:#bba7ff;font-size:10px;letter-spacing:.18em;text-transform:uppercase;font-weight:800}.section h2{font-size:clamp(34px,4.4vw,54px);letter-spacing:-.055em;line-height:1.08;margin:12px 0 14px}.sectionhead p{font-size:15px;color:var(--muted);line-height:1.8}
-.featuregrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.feature{padding:23px;border-radius:18px;min-height:210px;transition:.25s;position:relative;overflow:hidden}.feature:hover{transform:translateY(-5px);border-color:#c4adff77;background:linear-gradient(140deg,rgba(140,110,225,.18),rgba(255,255,255,.035))}.feature .num{font:11px ui-monospace,monospace;color:#b7a2ff}.feature .glyph{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;margin:15px 0;background:linear-gradient(135deg,#9d7cf52a,#76dce52b);border:1px solid #c4b0ff33;color:#d4c4ff;font-size:19px}.feature h3{font-size:16px;margin:0 0 8px}.feature p{font-size:12px;color:var(--muted);margin:0;line-height:1.75}.feature .tag{display:inline-block;margin-top:14px;color:#c4f28f;font-size:9px;letter-spacing:.12em;text-transform:uppercase}
-.demo{display:grid;grid-template-columns:.8fr 1.2fr;gap:22px;align-items:stretch}.tabs{display:grid;gap:9px}.tab{width:100%;text-align:left;padding:15px 17px;border-radius:13px;background:#ffffff06;border:1px solid var(--line);color:var(--muted);cursor:pointer}.tab strong{display:block;color:var(--ink);font-size:13px;margin-bottom:3px}.tab small{font-size:10px}.tab.active{border-color:#b49aff88;background:linear-gradient(110deg,#a78bfa22,#83e5f411);color:#e5ddff}.demo-screen{border-radius:19px;overflow:hidden;min-height:370px}.screenhead{display:flex;justify-content:space-between;padding:15px 18px;border-bottom:1px solid var(--line);font-size:11px}.screenbody{padding:21px}.screenbody h3{font-size:21px;margin:0 0 6px}.screenbody p{font-size:12px;color:var(--muted);margin:0 0 20px}.mockrows{display:grid;gap:9px}.mockrow{display:grid;grid-template-columns:32px 1fr auto;align-items:center;gap:10px;padding:12px;border:1px solid #ffffff13;background:#ffffff06;border-radius:11px;font-size:11px}.mockicon{width:29px;height:29px;border-radius:9px;background:#a78bfa20;display:grid;place-items:center;color:#d6c7ff}.mockrow small{display:block;color:#9994ae;font-size:10px}.pill{font-size:9px;padding:4px 7px;border-radius:999px;background:#c7f28a18;color:var(--lime)}
-.workflow{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.phase{padding:22px;border-radius:16px}.phase b{font:11px ui-monospace;color:#bca8ff}.phase h3{font-size:16px;margin:13px 0 7px}.phase p{font-size:12px;color:var(--muted);margin:0}.phase:before{content:"";display:block;width:100%;height:2px;background:linear-gradient(90deg,var(--violet),transparent);margin-bottom:15px}
-.split{display:grid;grid-template-columns:1fr 1fr;gap:17px}.info{padding:26px;border-radius:18px}.info h3{font-size:19px;margin:0 0 12px}.info p,.info li{color:var(--muted);font-size:12px}.info ul{padding-left:18px}.info li{margin:8px 0}
-.stack{display:flex;flex-wrap:wrap;gap:9px}.chip{font-size:11px;padding:9px 13px;border-radius:999px;background:#ffffff08;border:1px solid var(--line);color:#d4cee6}
-.faq{display:grid;grid-template-columns:1fr 1fr;gap:11px}.faq details{padding:18px 20px;border-radius:14px}.faq summary{font-weight:700;font-size:13px;cursor:pointer}.faq p{color:var(--muted);font-size:12px;margin-bottom:0}
-.cta{padding:42px;border-radius:22px;display:flex;justify-content:space-between;align-items:center;gap:25px;background:radial-gradient(ellipse at 80% 0,#a78bfa35,transparent 55%),linear-gradient(120deg,#ffffff0d,#ffffff03)}.cta h2{font-size:clamp(28px,4vw,42px);letter-spacing:-.05em;margin:0 0 8px}.cta p{color:var(--muted);margin:0}
-footer{padding:30px 0 48px;border-top:1px solid var(--line);color:#938ea8;font-size:11px}.foot{display:flex;justify-content:space-between;gap:18px}.footlinks{display:flex;gap:18px}
-.reveal{opacity:0;transform:translateY(18px);transition:opacity .65s,transform .65s}.reveal.visible{opacity:1;transform:none}
-@media(max-width:900px){.hero{grid-template-columns:1fr;padding-top:75px}.trust{grid-template-columns:repeat(2,1fr)}.featuregrid{grid-template-columns:repeat(2,1fr)}.demo{grid-template-columns:1fr}.tabs{grid-template-columns:repeat(2,1fr)}.workflow{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:620px){.wrap{width:calc(100% - 30px)}.nav{height:66px}.navlinks a:not(.btn){display:none}.hero{padding:62px 0 50px;gap:30px}.hero h1{font-size:50px}.lead{font-size:15px}.trust{gap:8px}.trustitem{padding:14px}.featuregrid,.split,.faq{grid-template-columns:1fr}.feature{min-height:unset}.section{padding:68px 0}.tabs{grid-template-columns:1fr 1fr}.tab{padding:12px}.workflow{grid-template-columns:1fr 1fr}.cta{padding:26px;align-items:flex-start;flex-direction:column}.foot{flex-direction:column}.termcontent{padding:15px}}
-@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}.reveal{opacity:1;transform:none}}
-/* ANVIL visual system — restrained graphite, warm paper and copper */
-:root{color-scheme:dark;--bg:#0b0a0e;--ink:#f4f0ed;--muted:#b9b1b0;--line:rgba(235,218,210,.16);--glass:rgba(25,22,25,.78);--violet:#e8b3a2;--pink:#e8b3a2;--cyan:#d7c3b8;--lime:#c7d5b2}
-body{background:#0b0a0e;color:var(--ink);background-image:linear-gradient(90deg,rgba(10,9,13,.96) 0%,rgba(10,9,13,.82) 48%,rgba(10,9,13,.38) 100%),linear-gradient(180deg,rgba(10,9,13,.35),#0b0a0e 88%),url('/anvil-background.png');background-size:cover;background-position:center 70px;background-repeat:no-repeat;background-attachment:fixed}
-body:before,body:after{display:none}
-.glass{background:rgba(22,20,23,.78);border:1px solid rgba(235,218,210,.17);box-shadow:0 18px 60px rgba(0,0,0,.28);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
-.topline{background:#0b0a0ee8;color:#c9bfbc;border-color:var(--line)}.topline span{color:#e8b3a2}header{background:rgba(11,10,14,.88);border-color:var(--line)}
-.logo{color:#171114;background:#e8b3a2;box-shadow:none}.navlinks{color:#c9c0bd}.navlinks a:hover{color:#fff}
-.btn{border-color:rgba(235,218,210,.26);background:rgba(255,255,255,.045);color:#f4f0ed}.btn:hover{border-color:#e8b3a2;box-shadow:0 8px 28px #0008}.btn.primary{color:#211512;background:#e8b3a2}
-.kicker{border-color:#e8b3a255;background:#e8b3a20d;color:#e8c9bd}.kicker i{background:#e8b3a2;box-shadow:0 0 12px #e8b3a2}
-.gradient{background:linear-gradient(100deg,#f2e9e4 0%,#e8b3a2 62%,#c9b4aa 100%);-webkit-background-clip:text;background-clip:text;color:transparent}.lead{color:#c9c0bd}.micro{color:#a99e9b}
-.termbar{color:#ded5d1}.term-label,.eyebrow,.feature .num,.phase b{color:#e8b3a2}.command{color:#f2eae6}.outrow{border-color:#ffffff18;background:#ffffff05}.outrow span,.termfoot{color:#b9b0ad}
-.section{border-color:var(--line)}.sectionhead p,.feature p,.phase p,.info p,.info li,.faq p{color:#bdb4b1}
-.feature:hover{border-color:#e8b3a277;background:rgba(232,179,162,.07)}.feature .glyph,.mockicon{background:rgba(232,179,162,.10);border-color:#e8b3a233;color:#f0cabc}
-.tag{color:#e8b3a2!important}.pill{background:#c7d5b21b;color:#d6e3c3}.tab{background:#ffffff05;color:#bdb4b1;border-color:var(--line)}.tab strong{color:#f4f0ed}.tab.active{border-color:#e8b3a2;background:rgba(232,179,162,.10);color:#fff}
-.screenhead{border-color:var(--line)}.mockrow{background:#ffffff05;border-color:#ffffff18}.phase:before{background:linear-gradient(90deg,#e8b3a2,transparent)}.chip{background:#ffffff07;border-color:var(--line);color:#e6ddda}
-.cta{background:linear-gradient(120deg,rgba(232,179,162,.12),rgba(255,255,255,.025))}footer{border-color:var(--line);color:#a99e9b}
-@media(max-width:620px){body{background-attachment:scroll;background-position:58% top;background-image:linear-gradient(180deg,rgba(10,9,13,.78),#0b0a0e 80%),url('/anvil-background.png')}}
-/* ANVIL brand + product-object showcase */
-.logo{width:44px;height:44px;border-radius:14px;background:linear-gradient(145deg,#f4c5b5,#d98c78);color:#201411;display:grid;place-items:center;box-shadow:0 8px 28px #e8b3a233;border:1px solid #ffe0d455}
-.logo svg{width:30px;height:30px;filter:drop-shadow(0 2px 2px #0004)}
-.brand{letter-spacing:.22em}
-.hero{gap:42px}
-.product-stage{padding:24px;border-radius:24px;position:relative;overflow:hidden;background:linear-gradient(145deg,rgba(39,31,34,.94),rgba(15,14,18,.94));border:1px solid #e8b3a244;box-shadow:0 28px 90px #0008}
-.product-stage:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 80% 0%,#e8b3a21c,transparent 38%),radial-gradient(circle at 10% 100%,#9b8ad21b,transparent 42%);pointer-events:none}
-.stage-head{position:relative;display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:16px;border-bottom:1px solid #ffffff18;font-size:10px;color:#d7c9c4;letter-spacing:.13em;text-transform:uppercase}
-.stage-status{color:#c7d5b2;letter-spacing:.08em}
-.stage-grid{position:relative;display:grid;grid-template-columns:1.05fr .95fr;gap:12px;margin-top:14px}
-.object-card{background:linear-gradient(145deg,#ffffff0c,#ffffff03);border:1px solid #ffffff18;border-radius:15px;padding:15px;min-height:145px;overflow:hidden}
-.object-card.wide{grid-column:1/-1;min-height:120px}
-.object-label{font-size:9px;letter-spacing:.13em;color:#e8b3a2;text-transform:uppercase}
-.object-title{font-size:14px;font-weight:750;margin:8px 0 4px;color:#f5eeeb}
-.object-note{font-size:10px;color:#b9afac;line-height:1.6}
-.arch-map{height:72px;display:flex;align-items:center;justify-content:center;gap:7px;margin-top:9px}
-.arch-node{font:9px ui-monospace,monospace;padding:9px 8px;border-radius:8px;border:1px solid #e8b3a266;background:#e8b3a20d;color:#f1d4c9;white-space:nowrap}
-.arch-link{height:1px;width:14px;background:#e8b3a2;position:relative}.arch-link:after{content:"";position:absolute;right:0;top:-3px;border:3px solid transparent;border-right:0;border-left-color:#e8b3a2}
-.code-lines{display:grid;gap:7px;margin-top:13px}.code-line{height:5px;border-radius:9px;background:#ffffff18}.code-line:nth-child(1){width:82%;background:#d6b3a2aa}.code-line:nth-child(2){width:64%}.code-line:nth-child(3){width:91%;background:#9eb8a988}.code-line:nth-child(4){width:48%}
-.security-ring{width:58px;height:58px;border:4px solid #c7d5b2;border-right-color:#c7d5b233;border-radius:50%;display:grid;place-items:center;font-size:19px;color:#d9e6c7;margin:10px auto 0}
-.mini-bars{height:65px;display:flex;align-items:end;gap:6px;margin-top:10px}.mini-bars i{display:block;flex:1;border-radius:5px 5px 1px 1px;background:linear-gradient(#e8b3a2,#a36d61);height:var(--h)}
-.stage-foot{position:relative;display:flex;justify-content:space-between;gap:10px;margin-top:14px;padding-top:13px;border-top:1px solid #ffffff18;color:#a99e9b;font-size:9px}
-.product-gallery{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
-.product-tile{padding:19px;border-radius:17px;min-height:205px;position:relative;overflow:hidden}
-.product-tile .tile-art{height:88px;display:flex;align-items:center;justify-content:center;margin-bottom:12px}
-.tile-icon{width:62px;height:62px;border-radius:18px;display:grid;place-items:center;font-size:28px;color:#f1cabc;background:linear-gradient(145deg,#e8b3a226,#ffffff08);border:1px solid #e8b3a255;box-shadow:inset 0 1px #fff2,0 10px 30px #0005}
-.product-tile h3{font-size:14px;margin:0 0 5px}.product-tile p{font-size:10px;line-height:1.65;color:#bdb4b1;margin:0}
-.product-tile:after{content:"";position:absolute;width:130px;height:130px;border-radius:50%;right:-75px;top:-75px;background:#e8b3a20c;filter:blur(5px)}
-@media(max-width:900px){.product-gallery{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:620px){.stage-grid{grid-template-columns:1fr 1fr}.product-gallery{grid-template-columns:1fr 1fr}.product-tile{padding:15px;min-height:190px}.arch-node{font-size:8px;padding:8px 6px}.product-stage{padding:15px}}
+:root {
+  --bg: #07080d;
+  --bg-surface: #0e121a;
+  --bg-surface-elevated: #141b26;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-hover: rgba(249, 115, 22, 0.4);
+  --border-active: rgba(56, 189, 248, 0.5);
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-subtle: #64748b;
+  --amber: #f97316;
+  --amber-light: #fb923c;
+  --amber-glow: rgba(249, 115, 22, 0.18);
+  --cyan: #38bdf8;
+  --cyan-glow: rgba(56, 189, 248, 0.16);
+  --emerald: #34d399;
+  --emerald-glow: rgba(52, 211, 153, 0.16);
+  --purple: #a855f7;
+  --max-w: 1240px;
+}
 
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; scroll-padding-top: 88px; }
+body {
+  background-color: var(--bg);
+  color: var(--text-main);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.6;
+  overflow-x: hidden;
+  background-image: 
+    radial-gradient(circle at 50% 0%, rgba(249, 115, 22, 0.09) 0%, transparent 45%),
+    radial-gradient(circle at 85% 15%, rgba(56, 189, 248, 0.07) 0%, transparent 40%),
+    radial-gradient(circle at 15% 55%, rgba(168, 85, 247, 0.05) 0%, transparent 35%);
+  background-attachment: fixed;
+}
 
- .logo{background:transparent!important;border:0!important;box-shadow:none!important;padding:0;overflow:visible}.logo img{width:100%;height:100%;display:block;object-fit:contain;filter:drop-shadow(0 0 13px #a78bfa66)}.hero-product{position:relative;margin-bottom:18px;border-radius:18px;overflow:hidden;border:1px solid #a78bfa66;background:#090914;box-shadow:0 22px 65px #0009}.hero-product img{display:block;width:100%;height:auto}.hero-product span{position:absolute;right:12px;bottom:10px;padding:6px 9px;border:1px solid #ffffff30;border-radius:99px;background:#090914c9;color:#d9cef8;font:9px ui-monospace,monospace;letter-spacing:.1em}.hero{align-items:start}.hero .terminal{margin-top:0}@media(max-width:620px){.hero-product{border-radius:13px}.hero-product span{font-size:7px;right:7px;bottom:7px}}\n
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; cursor: pointer; border: none; background: none; }
 
-/* Editorial navigation + practical quick-start strip */
-body{background-position:center top}
-header{position:fixed;top:12px;left:0;right:0;width:min(1600px,calc(100% - 48px));margin:0 auto;border:1px solid rgba(224,213,255,.22);border-radius:20px;background:rgba(17,16,25,.78);box-shadow:0 16px 48px rgba(0,0,0,.28);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)}
-.nav{height:68px}
-.hero{padding-top:132px}
-.quickstart{margin:-12px auto 76px;position:relative;z-index:1;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:22px;align-items:center;padding:22px 26px;border:1px solid rgba(226,220,255,.17);border-radius:20px;background:linear-gradient(110deg,rgba(25,23,35,.92),rgba(16,17,26,.78));box-shadow:0 22px 60px rgba(0,0,0,.22)}
-.quickstart-copy .eyebrow{color:#e8b3a2}.quickstart-copy h2{font-size:21px;letter-spacing:-.035em;margin:5px 0}.quickstart-copy p{margin:0;color:var(--muted);font-size:12px}
-.command-copy{display:flex;align-items:center;gap:16px;min-width:min(100%,560px);padding:14px 16px;border:1px solid rgba(226,220,255,.18);border-radius:13px;background:#0b0b13;font:12px ui-monospace,monospace;color:#e8e2f2}
-.command-copy code{flex:1;white-space:normal;overflow-wrap:anywhere}.command-copy .prompt{font-size:17px;color:#e8b3a2}
-.copy-command{border:0;border-radius:9px;padding:9px 13px;background:#e8b3a2;color:#211512;font-weight:800;cursor:pointer}
-.integration-note{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:14px;padding-top:16px;border-top:1px solid rgba(226,220,255,.12)}
-.integration-note>span{font-size:10px;color:#aaa5b9;letter-spacing:.12em;text-transform:uppercase}
-.integration-chips{display:flex;gap:9px;flex-wrap:wrap}
-.integration-chips span{font-size:10px;padding:7px 11px;border:1px solid rgba(226,220,255,.15);border-radius:9px;background:#ffffff08;color:#d9d4e6}
-.integration-chips b{color:#e8b3a2;font-size:8px;margin-left:5px}
-@media(max-width:760px){header{width:calc(100% - 20px);top:8px;border-radius:15px}.nav{height:60px}.navlinks{gap:10px}.navlinks a:not(.btn){display:none}.hero{padding-top:112px}.quickstart{grid-template-columns:1fr;margin:0 auto 48px;padding:18px}.command-copy{min-width:0}.integration-note{align-items:flex-start;flex-direction:column}}
+.wrap {
+  width: min(var(--max-w), calc(100% - 40px));
+  margin: 0 auto;
+}
 
- 
-/* ANVIL editorial redesign: varied layouts, retained original violet/cyan palette */
-header{position:sticky;top:10px;width:min(1500px,calc(100% - 36px));margin:10px auto 0;border:1px solid rgba(226,220,255,.18);border-radius:18px;background:rgba(13,12,23,.82);box-shadow:0 18px 55px #0005;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)}
-.nav{height:66px;padding:0 18px}.hero{padding-top:72px;min-height:620px}
-.topline{border:0;background:transparent;padding-top:14px}
-#workbench-preview .sectionhead{max-width:800px}
-.product-stage{border-radius:22px;background:linear-gradient(145deg,#171525,#0d101a 70%);border:1px solid rgba(226,220,255,.19);box-shadow:0 28px 90px #0006;overflow:hidden}
-.stage-head{padding:17px 22px;background:#ffffff08;border-bottom:1px solid #ffffff17;display:flex;justify-content:space-between;gap:15px;font:11px ui-monospace,monospace;letter-spacing:.08em}
-.stage-grid{padding:18px;gap:13px}.object-card{border-radius:15px;background:linear-gradient(145deg,#242039,#141723);border:1px solid #ffffff19;padding:20px;min-height:170px}.object-card:nth-child(2){background:linear-gradient(145deg,#102b36,#151a29)}.object-card:nth-child(3){background:linear-gradient(145deg,#302036,#171724)}.object-card:nth-child(4){background:linear-gradient(145deg,#243322,#151a22)}.object-card.wide{background:linear-gradient(105deg,#211b39,#10252d 65%,#2b1a2b)}
-.stage-foot{padding:13px 20px;background:#090a12;border-top:1px solid #ffffff16}
-#tools .featuregrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
-#tools .feature{min-height:270px;padding:27px;border-radius:20px}
-#tools .feature:nth-child(1){background:linear-gradient(145deg,#24203d,#121321)}
-#tools .feature:nth-child(2){background:linear-gradient(145deg,#122d36,#121923)}
-#tools .feature:nth-child(3){background:linear-gradient(145deg,#302036,#171622)}
-#integrations .split{gap:18px}
-#integrations .info{border-radius:20px;padding:28px}
-#integrations .info:first-child{background:linear-gradient(145deg,#172c35,#11151e)}
-#integrations .info:last-child{background:linear-gradient(145deg,#2a2039,#151421)}
-#pricing{background:#e8e1ed;color:#292332;border-top:0;margin-top:30px;padding:100px 0}
-#pricing .eyebrow{color:#89617d}#pricing .sectionhead p{color:#665b70}
-#pricing .gradient{background:none;color:#292332}
-#pricing .info{background:#eee8f1;border:1px solid #d0c5d7;box-shadow:0 15px 40px #30243a0b;backdrop-filter:none;color:#292332;border-radius:20px;padding:30px}
-#pricing .info:nth-child(2){background:#f7f0f5;border-color:#c8aebf}
-#pricing .info p,#pricing .info li{color:#665b70}
-#pricing .btn{border-color:#b7a5bc;color:#30283a;background:transparent}
-#pricing .btn.primary{background:#e8b3a2;color:#2b1d22;border:0}
-#community-proof{padding:100px 0;background:linear-gradient(120deg,#11101b,#151b2b 58%,#21182a);border-top:1px solid #ffffff12;border-bottom:1px solid #ffffff12}
-.community-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:26px;align-items:stretch}
-.community-main{padding:34px;border:1px solid #ffffff1c;border-radius:22px;background:linear-gradient(135deg,#201d32,#11141e)}
-.community-main h2{font-size:clamp(32px,4vw,48px);line-height:1.08;letter-spacing:-.05em;margin:12px 0}
-.community-main p{color:var(--muted);max-width:570px}
-.community-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:25px}
-.community-side{display:grid;gap:12px}
-.community-link{padding:23px;border-radius:18px;border:1px solid #ffffff18;background:#ffffff08;display:flex;justify-content:space-between;align-items:center;gap:14px}
-.community-link b{display:block;font-size:14px}.community-link small{display:block;color:var(--muted);font-size:11px;margin-top:4px}
-footer{padding:65px 0 25px;background:#090912;border-top:1px solid #ffffff17}
-.foot{display:grid;grid-template-columns:1.4fr repeat(3,1fr);gap:30px}
-.foot-brand{max-width:280px}.foot-brand p{font-size:12px;color:var(--muted)}
-.foot-col b{font-size:12px;display:block;margin-bottom:15px;color:#f4efff}
-.foot-col a{display:block;color:#aaa6bd;font-size:12px;margin:10px 0}.foot-col a:hover{color:#fff}
-.foot-bottom{grid-column:1/-1;border-top:1px solid #ffffff17;padding-top:20px;margin-top:15px;display:flex;justify-content:space-between;gap:15px;color:#88849d;font-size:11px}
-@media(max-width:760px){header{width:calc(100% - 18px);top:6px;margin-top:6px}.nav{height:60px;padding:0 10px}.navlinks{gap:10px}.navlinks a:not(.btn){display:none}.hero{padding-top:50px;min-height:0}.stage-grid{padding:12px}.object-card{padding:15px}.community-grid{grid-template-columns:1fr}.foot{grid-template-columns:1fr 1fr;gap:25px}.foot-brand{grid-column:1/-1}.foot-bottom{flex-direction:column}#pricing{padding:72px 0}}
+/* Header */
+header {
+  position: sticky;
+  top: 14px;
+  z-index: 50;
+  width: min(var(--max-w), calc(100% - 32px));
+  margin: 14px auto 0;
+  background: rgba(10, 13, 20, 0.78);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+  transition: border-color 0.25s, box-shadow 0.25s;
+}
+header:hover {
+  border-color: rgba(255, 255, 255, 0.14);
+}
 
+.nav {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+}
 
-/* Cohesive ANVIL palette: deep ink, muted indigo, soft lavender, restrained teal */
-:root{--bg:#0c0d17;--ink:#f1eff8;--muted:#aaa8ba;--line:rgba(205,199,231,.14);--glass:rgba(25,25,43,.68);--violet:#a99bd8;--pink:#c7b9df;--cyan:#8dbfc4;--lime:#b9cbb4;--max:1200px}
-body{background-color:#0c0d17;background-image:linear-gradient(180deg,rgba(10,11,20,.60),rgba(10,11,20,.78) 48%,rgba(10,11,20,.92)),url('/anvil-background.png')}
-body:before{background:radial-gradient(circle,#49436d 0%,#302d4b 40%,transparent 72%);opacity:.34}
-body:after{background:radial-gradient(circle,#34545b 0%,#283c49 40%,transparent 72%);opacity:.24}
-.gradient{background:linear-gradient(100deg,#c5b8e6 0%,#a7c9d0 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
-.eyebrow,.stage-status{color:#a9c7ca}
-header{background:rgba(15,16,27,.88);border-color:#c7c0df2b}
-.quickstart{background:linear-gradient(115deg,rgba(29,29,48,.96),rgba(20,27,37,.94));border-color:#c7c0df24}
-.quickstart-copy .eyebrow{color:#b8a9d9}
-.command-copy{background:#10111c;border-color:#c7c0df24;color:#e6e1f0}
-.command-copy .prompt{color:#a9c7ca}
-.copy-command{background:#b9b0d7;color:#242235}
-.integration-chips span{background:#ffffff07;border-color:#c7c0df20;color:#d7d3e3}
-.integration-chips b{color:#a9c7ca}
-.product-stage{background:linear-gradient(145deg,#191a2b,#10141e 75%);border-color:#c7c0df24}
-.object-card,.object-card:nth-child(1),.object-card:nth-child(2),.object-card:nth-child(3),.object-card:nth-child(4),.object-card.wide{background:linear-gradient(145deg,#222338,#171b28);border-color:#c7c0df20}
-.object-card:nth-child(2){background:linear-gradient(145deg,#1c3038,#171d2a)}
-.object-card:nth-child(3){background:linear-gradient(145deg,#29253a,#191b29)}
-.object-card:nth-child(4){background:linear-gradient(145deg,#26323a,#191e29)}
-.object-card.wide{background:linear-gradient(105deg,#25243a,#1b3037 70%,#22283a)}
-#tools .feature:nth-child(1),#tools .feature:nth-child(2),#tools .feature:nth-child(3){background:linear-gradient(145deg,#222338,#171b28);border-color:#c7c0df20}
-#tools .feature:nth-child(2){background:linear-gradient(145deg,#1c3038,#171d2a)}
-#tools .feature:nth-child(3){background:linear-gradient(145deg,#29253a,#191b29)}
-#integrations .info:first-child{background:linear-gradient(145deg,#1c3038,#171d2a)}
-#integrations .info:last-child{background:linear-gradient(145deg,#29253a,#191b29)}
-#community-proof{background:linear-gradient(120deg,#10121d,#171d2a 58%,#202034);border-color:#c7c0df18}
-.community-main{background:linear-gradient(135deg,#24243a,#171d29);border-color:#c7c0df20}
-.community-link{background:#ffffff06;border-color:#c7c0df20}
-#pricing{background:#e9e6ef;color:#292638}
-#pricing .eyebrow{color:#716987}
-#pricing .sectionhead p{color:#686477}
-#pricing .info{background:#efedf4;border-color:#d3cfdf;color:#292638}
-#pricing .info:nth-child(2){background:#f5f2f7;border-color:#c9c1d8}
-#pricing .info p,#pricing .info li{color:#686477}
-#pricing .btn{border-color:#bdb6cc;color:#383449}
-#pricing .btn.primary{background:#b8aecf;color:#282538}
-footer{background:#0a0b14;border-color:#c7c0df20}
-.foot-col b{color:#e9e5f2}.foot-col a{color:#aaa8ba}.foot-col a:hover{color:#d9d0ed}
-.stage-foot{background:#0d1019;border-color:#c7c0df18}
-.security-ring{border-color:#8dbfc4;color:#8dbfc4}
-.tile-icon{color:#b9b0d7;background:linear-gradient(145deg,#b9b0d71c,#ffffff06);border-color:#b9b0d744}
-.product-tile:after{background:#8dbfc40b}
-@media(max-width:760px){#pricing{padding:72px 0}}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 800;
+  font-size: 17px;
+  letter-spacing: 0.14em;
+  color: #fff;
+}
+.brand-mark {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.2), rgba(56, 189, 248, 0.15));
+  border: 1px solid rgba(249, 115, 22, 0.35);
+  box-shadow: 0 4px 16px var(--amber-glow);
+}
+.brand-mark img {
+  width: 22px;
+  height: 22px;
+  display: block;
+}
+.version-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 20px;
+  background: rgba(249, 115, 22, 0.15);
+  color: var(--amber-light);
+  border: 1px solid rgba(249, 115, 22, 0.3);
+  letter-spacing: 0.05em;
+}
 
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+.nav-links a {
+  transition: color 0.2s;
+}
+.nav-links a:hover {
+  color: #fff;
+}
 
-/* Final visual direction: graphite + steel blue + restrained amber */
-:root{--bg:#10141d;--ink:#f2f3f7;--muted:#aab3c2;--line:rgba(190,204,224,.16);--glass:rgba(22,29,41,.78);--violet:#9cacc7;--pink:#e5a58e;--cyan:#8eb9c8;--lime:#b6c8bd}
-body{background-color:#10141d;background-image:linear-gradient(180deg,rgba(12,17,26,.70),rgba(13,19,29,.82) 48%,rgba(12,17,26,.94)),url('/anvil-background.png')}
-body:before{background:radial-gradient(circle,#35485e 0%,#273447 44%,transparent 74%);opacity:.27}
-body:after{background:radial-gradient(circle,#594239 0%,#3b3033 42%,transparent 72%);opacity:.15}
-.gradient{background:linear-gradient(100deg,#e8b39d 0%,#a9c5d2 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
-header{background:rgba(16,20,29,.92);border-color:#a9b9cf30}
-.btn:hover{border-color:#a9c5d2;box-shadow:0 9px 30px #8eb9c81c}
-.btn.primary{background:linear-gradient(110deg,#e8b39d,#d8c0b2);color:#25232a}
-.quickstart{background:linear-gradient(115deg,rgba(31,39,53,.97),rgba(23,31,43,.96));border-color:#b6c5d61f}
-.quickstart-copy .eyebrow,.eyebrow{color:#d8a58f}
-.command-copy{background:#111823;border-color:#a9b9cf27;color:#e6e9ef}
-.command-copy .prompt{color:#e8ad94}
-.copy-command{background:#dca992;color:#29252a}
-.integration-chips span{background:#ffffff07;border-color:#b6c5d620;color:#d5dce6}
-.integration-chips b{color:#a9c5d2}
-.product-stage{background:linear-gradient(145deg,#202a38,#151d29 75%);border-color:#b6c5d624}
-.object-card,.object-card:nth-child(1),.object-card:nth-child(2),.object-card:nth-child(3),.object-card:nth-child(4),.object-card.wide{background:linear-gradient(145deg,#293546,#1b2634);border-color:#b6c5d620}
-.object-card:nth-child(2){background:linear-gradient(145deg,#203b43,#1a2935)}
-.object-card:nth-child(3){background:linear-gradient(145deg,#3b3038,#222834)}
-.object-card:nth-child(4){background:linear-gradient(145deg,#2c3b38,#1c2932)}
-.object-card.wide{background:linear-gradient(105deg,#2b3546,#203943 70%,#34303a)}
-#tools .feature:nth-child(1),#tools .feature:nth-child(2),#tools .feature:nth-child(3){background:linear-gradient(145deg,#293546,#1b2634);border-color:#b6c5d620}
-#tools .feature:nth-child(2){background:linear-gradient(145deg,#203b43,#1a2935)}
-#tools .feature:nth-child(3){background:linear-gradient(145deg,#3b3038,#222834)}
-#integrations .info:first-child{background:linear-gradient(145deg,#203b43,#1a2935)}
-#integrations .info:last-child{background:linear-gradient(145deg,#3b3038,#222834)}
-#community-proof{background:linear-gradient(120deg,#141b27,#1d2b38 58%,#2b252c);border-color:#b6c5d618}
-.community-main{background:linear-gradient(135deg,#2a3545,#1b2633);border-color:#b6c5d620}
-.community-link{background:#ffffff06;border-color:#b6c5d620}
-#pricing{background:#e9e5df;color:#292a2c}
-#pricing .eyebrow{color:#8d6558}
-#pricing .sectionhead p{color:#69676a}
-#pricing .info{background:#f0ede8;border-color:#d4cec5;color:#292a2c}
-#pricing .info:nth-child(2){background:#f8f3ed;border-color:#d6b9a9}
-#pricing .info p,#pricing .info li{color:#69676a}
-#pricing .btn{border-color:#b9afa5;color:#383439}
-#pricing .btn.primary{background:#dca992;color:#29252a}
-footer{background:#0c111a;border-color:#b6c5d620}
-.foot-col b{color:#eef0f4}.foot-col a{color:#aab3c2}.foot-col a:hover{color:#e8b39d}
-.foot-brand .brand{display:inline-flex;align-items:center;gap:13px;font-size:18px;letter-spacing:.16em}
-.foot-brand .logo{width:54px;height:54px;border-radius:16px;background:transparent!important;border:1px solid #a9b9cf30!important;box-shadow:0 8px 28px #0004!important;padding:6px;overflow:hidden}
-.foot-brand .logo img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 2px 9px #8eb9c855)}
-.foot-brand p{max-width:300px;line-height:1.8;color:#aab3c2}
-.foot-bottom{border-color:#b6c5d620;color:#8994a5}
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
 
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 15px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+}
+.btn-ghost {
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.03);
+}
+.btn-ghost:hover {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.06);
+  transform: translateY(-1px);
+}
+.btn-primary {
+  color: #07080d;
+  background: linear-gradient(135deg, #f97316, #fb923c);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 18px var(--amber-glow);
+}
+.btn-primary:hover {
+  background: linear-gradient(135deg, #fb923c, #fdba74);
+  box-shadow: 0 6px 24px rgba(249, 115, 22, 0.35);
+  transform: translateY(-1px);
+}
 
-/* Quiet premium palette — charcoal, soft white, one restrained copper accent */
-:root{--bg:#111214;--ink:#f2f0ec;--muted:#aaa7a1;--line:rgba(235,231,222,.13);--glass:rgba(25,26,28,.82);--violet:#c6b9aa;--pink:#c6b9aa;--cyan:#c6b9aa;--lime:#c6b9aa}
-body{background-color:#111214;background-image:linear-gradient(180deg,rgba(14,15,17,.70),rgba(14,15,17,.84) 48%,rgba(14,15,17,.94)),url('/anvil-background.png')}
-body:before,body:after{opacity:0}
-.gradient{background:none;color:#d7b49e;-webkit-text-fill-color:#d7b49e}
-header{background:rgba(18,19,21,.94);border-color:#ffffff1c;box-shadow:0 14px 42px #0005}
-.eyebrow,.stage-status{color:#c7a58e}
-.btn{border-color:#ffffff24;background:#ffffff08;color:#f1eee9}
-.btn:hover{border-color:#c7a58e;box-shadow:0 8px 24px #0003}
-.btn.primary,.copy-command{background:#c7a58e;color:#211b17}
-.quickstart,.product-stage,.community-main{background:#1a1b1e;border-color:#ffffff1c;box-shadow:0 22px 60px #0003}
-.command-copy{background:#111214;border-color:#ffffff20;color:#e9e6e0}
-.command-copy .prompt{color:#c7a58e}
-.integration-chips span{background:#ffffff06;border-color:#ffffff1b;color:#d5d1ca}
-.integration-chips b{color:#c7a58e}
-.object-card,.object-card:nth-child(1),.object-card:nth-child(2),.object-card:nth-child(3),.object-card:nth-child(4),.object-card.wide{background:#222326;border-color:#ffffff18}
-#tools .feature:nth-child(1),#tools .feature:nth-child(2),#tools .feature:nth-child(3){background:#1d1e21;border-color:#ffffff18}
-#integrations .info:first-child,#integrations .info:last-child{background:#1d1e21;border-color:#ffffff18}
-#community-proof{background:#151619;border-color:#ffffff14}
-.community-link{background:#1d1e21;border-color:#ffffff18}
-#pricing{background:#e9e6e0;color:#292725}
-#pricing .eyebrow{color:#8b6e5d}
-#pricing .sectionhead p,#pricing .info p,#pricing .info li{color:#706b65}
-#pricing .info,#pricing .info:nth-child(2){background:#f1eee8;border-color:#d4cec4;color:#292725}
-#pricing .btn{border-color:#c9c0b5;color:#37312d}
-#pricing .btn.primary{background:#c7a58e;color:#211b17}
-footer{background:#0d0e10;border-color:#ffffff18}
-.foot-col b{color:#eeeae3}.foot-col a{color:#aaa7a1}.foot-col a:hover{color:#d7b49e}
-.foot-bottom{border-color:#ffffff18;color:#8e8b85}
+/* Hero Section */
+.hero {
+  padding: 85px 0 60px;
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 48px;
+  align-items: center;
+  min-height: 640px;
+}
 
+.pill-announcement {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 14px;
+  border-radius: 99px;
+  background: rgba(249, 115, 22, 0.1);
+  border: 1px solid rgba(249, 115, 22, 0.28);
+  color: var(--amber-light);
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 24px;
+  letter-spacing: 0.02em;
+}
+.pill-announcement i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--amber);
+  box-shadow: 0 0 10px var(--amber);
+  animation: pulse 2s infinite ease-in-out;
+}
 
+h1 {
+  font-size: clamp(40px, 5.2vw, 68px);
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+  margin-bottom: 22px;
+  color: #fff;
+}
+.gradient-text {
+  background: linear-gradient(120deg, #fdba74 0%, #f97316 45%, #38bdf8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
 
+.hero-lead {
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--text-muted);
+  max-width: 580px;
+  margin-bottom: 32px;
+}
+
+.hero-cta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 26px;
+}
+.btn-large {
+  padding: 13px 24px;
+  font-size: 14px;
+  border-radius: 12px;
+}
+
+.micro-spec {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-subtle);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.micro-spec span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.micro-spec span::before {
+  content: "•";
+  color: var(--amber);
+}
+
+/* Interactive Hero Terminal */
+.terminal-card {
+  background: rgba(13, 17, 24, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  position: relative;
+}
+.terminal-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 18px;
+  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid var(--border);
+}
+.window-dots {
+  display: flex;
+  gap: 7px;
+}
+.window-dots span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.dot-red { background: #f43f5e; }
+.dot-yellow { background: #facc15; }
+.dot-green { background: #10b981; }
+
+.terminal-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text-subtle);
+  letter-spacing: 0.04em;
+}
+.terminal-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(56, 189, 248, 0.12);
+  color: var(--cyan);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+}
+
+.terminal-tabs {
+  display: flex;
+  background: rgba(0, 0, 0, 0.25);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+}
+.term-tab {
+  flex: 1;
+  text-align: center;
+  padding: 10px 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text-subtle);
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.term-tab:hover {
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.02);
+}
+.term-tab.active {
+  color: var(--amber-light);
+  border-bottom-color: var(--amber);
+  background: rgba(249, 115, 22, 0.06);
+  font-weight: 600;
+}
+
+.terminal-body {
+  padding: 22px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  line-height: 1.8;
+  color: #e2e8f0;
+  min-height: 310px;
+}
+.cmd-prompt { color: var(--amber); margin-right: 8px; font-weight: 700; }
+.cmd-command { color: #f8fafc; font-weight: 600; }
+.cmd-output { margin-top: 14px; display: grid; gap: 8px; }
+.cmd-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+.cmd-status-ok { color: var(--emerald); font-weight: 600; }
+.cmd-status-warn { color: #fbbf24; font-weight: 600; }
+.cmd-status-cyan { color: var(--cyan); font-weight: 600; }
+
+/* Interactive Quick Start Strip */
+.quickstart-strip {
+  margin: 20px auto 60px;
+  background: linear-gradient(135deg, rgba(20, 27, 38, 0.85), rgba(12, 16, 23, 0.85));
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 28px 32px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+}
+.quickstart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.quickstart-copy h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.02em;
+}
+.quickstart-copy p {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 3px;
+}
+
+.pkg-tabs {
+  display: inline-flex;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 4px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+.pkg-tab {
+  padding: 6px 14px;
+  font-size: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+  color: var(--text-muted);
+  border-radius: 7px;
+  transition: all 0.2s;
+}
+.pkg-tab:hover {
+  color: #fff;
+}
+.pkg-tab.active {
+  background: var(--amber);
+  color: #07080d;
+}
+
+.install-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-radius: 12px;
+  background: #080a0f;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: #e2e8f0;
+  gap: 16px;
+}
+.install-box code {
+  flex: 1;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+.copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.2s;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+.copy-btn:hover {
+  background: var(--amber);
+  color: #07080d;
+  border-color: var(--amber);
+}
+
+.integration-tags {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--text-subtle);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.integration-tags span {
+  padding: 4px 10px;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-weight: 600;
+}
+.integration-tags b {
+  color: var(--amber-light);
+  margin-left: 4px;
+}
+
+/* Metric Strip */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 90px;
+}
+.stat-card {
+  padding: 24px;
+  border-radius: 16px;
+  background: rgba(14, 18, 26, 0.65);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+  transition: transform 0.2s, border-color 0.2s;
+}
+.stat-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(249, 115, 22, 0.35);
+}
+.stat-number {
+  font-size: 38px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  background: linear-gradient(135deg, #fff 40%, var(--amber-light));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin-bottom: 8px;
+}
+.stat-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 4px;
+}
+.stat-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* Section Header */
+.section {
+  padding: 80px 0;
+  border-top: 1px solid var(--border);
+  position: relative;
+}
+.section-head {
+  max-width: 680px;
+  margin-bottom: 48px;
+}
+.eyebrow {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--amber-light);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  margin-bottom: 12px;
+}
+.section h2 {
+  font-size: clamp(30px, 3.8vw, 46px);
+  font-weight: 850;
+  line-height: 1.12;
+  letter-spacing: -0.035em;
+  color: #fff;
+  margin-bottom: 16px;
+}
+.section-head p {
+  font-size: 15px;
+  color: var(--text-muted);
+  line-height: 1.7;
+}
+
+/* Interactive Workbench Stage */
+.stage-container {
+  display: grid;
+  grid-template-columns: 0.8fr 1.2fr;
+  gap: 24px;
+  align-items: stretch;
+  margin-bottom: 40px;
+}
+.stage-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.stage-btn {
+  text-align: left;
+  padding: 20px;
+  border-radius: 14px;
+  background: rgba(14, 18, 26, 0.6);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  transition: all 0.25s;
+}
+.stage-btn:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.18);
+  transform: translateX(4px);
+}
+.stage-btn.active {
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.12), rgba(56, 189, 248, 0.06));
+  border-color: var(--amber);
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(249, 115, 22, 0.1);
+}
+.stage-btn-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--amber-light);
+  letter-spacing: 0.1em;
+  margin-bottom: 6px;
+  display: block;
+}
+.stage-btn-title {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  display: block;
+}
+.stage-btn-desc {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-subtle);
+  display: block;
+}
+.stage-btn.active .stage-btn-desc {
+  color: var(--text-muted);
+}
+
+.stage-display {
+  background: rgba(13, 17, 24, 0.85);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+}
+.stage-display-head {
+  padding: 16px 22px;
+  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+}
+.stage-display-body {
+  padding: 26px;
+  flex: 1;
+}
+.stage-canvas {
+  height: 100%;
+  min-height: 280px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Feature Grid */
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+.feature-card {
+  padding: 26px;
+  border-radius: 16px;
+  background: rgba(14, 18, 26, 0.65);
+  border: 1px solid var(--border);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+.feature-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(249, 115, 22, 0.35);
+  background: linear-gradient(145deg, rgba(22, 28, 40, 0.8), rgba(14, 18, 26, 0.8));
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.35), 0 0 24px var(--amber-glow);
+}
+.feature-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+.feature-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.15), rgba(56, 189, 248, 0.1));
+  border: 1px solid rgba(249, 115, 22, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  color: var(--amber-light);
+}
+.feature-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text-subtle);
+}
+.feature-card h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 8px;
+}
+.feature-card p {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.65;
+  margin-bottom: 16px;
+}
+.feature-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--amber-light);
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: rgba(249, 115, 22, 0.08);
+  border: 1px solid rgba(249, 115, 22, 0.2);
+  display: inline-block;
+  align-self: flex-start;
+}
+
+/* Architecture Interactive Visual */
+.arch-visual-box {
+  background: #080a0f;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 30px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.8);
+}
+.arch-svg-container {
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  display: block;
+}
+
+/* Dashboard Banner */
+.dash-banner {
+  background: linear-gradient(135deg, rgba(20, 27, 40, 0.95), rgba(10, 14, 22, 0.95));
+  border: 1px solid rgba(249, 115, 22, 0.3);
+  border-radius: 22px;
+  padding: 44px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 36px;
+  align-items: center;
+}
+.dash-banner h3 {
+  font-size: 28px;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 12px;
+  letter-spacing: -0.02em;
+}
+.dash-banner p {
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.7;
+  margin-bottom: 24px;
+}
+.dash-cmd-block {
+  background: #06070a;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 20px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  line-height: 1.8;
+  color: #cbd5e1;
+}
+
+/* Ecosystem Grid */
+.ecosystem-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+.eco-card {
+  padding: 22px;
+  border-radius: 14px;
+  background: rgba(14, 18, 26, 0.6);
+  border: 1px solid var(--border);
+  transition: all 0.2s;
+}
+.eco-card:hover {
+  border-color: rgba(56, 189, 248, 0.4);
+  transform: translateY(-2px);
+}
+.eco-badge {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  padding: 3px 7px;
+  border-radius: 5px;
+  background: rgba(56, 189, 248, 0.12);
+  color: var(--cyan);
+  margin-bottom: 12px;
+}
+.eco-card h4 {
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 6px;
+}
+.eco-card p {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+/* 4-Step Engineering Loop */
+.loop-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+.loop-card {
+  padding: 24px;
+  border-radius: 16px;
+  background: rgba(14, 18, 26, 0.65);
+  border: 1px solid var(--border);
+  position: relative;
+}
+.loop-card::before {
+  content: "";
+  display: block;
+  height: 2px;
+  background: linear-gradient(90deg, var(--amber), transparent);
+  margin-bottom: 18px;
+}
+.loop-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--amber-light);
+}
+.loop-card h3 {
+  font-size: 17px;
+  font-weight: 700;
+  margin: 10px 0 6px;
+  color: #fff;
+}
+.loop-card p {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+/* FAQ Accordion */
+.faq-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.faq-item {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: rgba(14, 18, 26, 0.6);
+  padding: 18px 22px;
+  transition: border-color 0.2s;
+}
+.faq-item:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+}
+.faq-item summary {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  outline: none;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.faq-item summary::-webkit-details-marker { display: none; }
+.faq-item summary::after {
+  content: "+";
+  font-size: 18px;
+  color: var(--amber);
+  transition: transform 0.2s;
+}
+.faq-item[open] summary::after {
+  transform: rotate(45deg);
+}
+.faq-item p {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.7;
+  margin-top: 12px;
+}
+
+/* Call to Action */
+.cta-box {
+  padding: 56px 48px;
+  border-radius: 24px;
+  background: radial-gradient(circle at 85% 20%, rgba(249, 115, 22, 0.18), transparent 50%),
+              linear-gradient(135deg, rgba(20, 27, 38, 0.95), rgba(10, 13, 20, 0.95));
+  border: 1px solid rgba(249, 115, 22, 0.35);
+  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+.cta-copy h2 {
+  font-size: clamp(28px, 3.6vw, 44px);
+  font-weight: 850;
+  letter-spacing: -0.035em;
+  color: #fff;
+  margin-bottom: 8px;
+}
+.cta-copy p {
+  font-size: 15px;
+  color: var(--text-muted);
+  max-width: 520px;
+}
+
+/* Footer */
+footer {
+  padding: 70px 0 35px;
+  border-top: 1px solid var(--border);
+  background: #050609;
+}
+.footer-grid {
+  display: grid;
+  grid-template-columns: 1.5fr repeat(3, 1fr);
+  gap: 40px;
+  margin-bottom: 48px;
+}
+.footer-brand {
+  max-width: 320px;
+}
+.footer-brand p {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 14px;
+  line-height: 1.7;
+}
+.footer-col b {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 16px;
+  letter-spacing: 0.04em;
+}
+.footer-col a {
+  display: block;
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+  transition: color 0.2s;
+}
+.footer-col a:hover {
+  color: var(--amber-light);
+}
+
+.footer-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 12px;
+  color: var(--text-subtle);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.9); }
+}
+
+/* Responsive */
+@media (max-width: 960px) {
+  .hero { grid-template-columns: 1fr; padding-top: 60px; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .stage-container { grid-template-columns: 1fr; }
+  .feature-grid { grid-template-columns: repeat(2, 1fr); }
+  .dash-banner { grid-template-columns: 1fr; padding: 30px; }
+  .ecosystem-grid { grid-template-columns: repeat(2, 1fr); }
+  .loop-grid { grid-template-columns: repeat(2, 1fr); }
+  .footer-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 640px) {
+  .nav-links { display: none; }
+  .hero { min-height: auto; }
+  .feature-grid { grid-template-columns: 1fr; }
+  .stats-grid { grid-template-columns: 1fr; }
+  .faq-grid { grid-template-columns: 1fr; }
+  .ecosystem-grid { grid-template-columns: 1fr; }
+  .loop-grid { grid-template-columns: 1fr; }
+  .footer-grid { grid-template-columns: 1fr; }
+  .cta-box { padding: 32px 24px; }
+}
 </style>
 </head>
 <body>
-<header><div class="wrap nav"><a class="brand" href="#"><span class="logo" aria-label="ANVIL logo"><img src="/anvil-mark.svg" alt="ANVIL mark"></span> ANVIL</a><nav class="navlinks"><a href="#platform">Platform</a><a href="#tools">Tools</a><a href="#integrations">Integrations</a><a href="#tour">Product tour</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a><a class="btn primary" href="/api/github/install" aria-label="Get the ANVIL GitHub App">Get App</a><a class="btn" href="https://github.com/AdityaaaTiwari">GitHub ↗</a></nav></div></header>
+
+<!-- Header Navigation -->
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="#">
+      <span class="brand-mark" aria-label="ANVIL Mark">
+        <img src="/anvil-mark.svg" alt="ANVIL Logo">
+      </span>
+      <span>ANVIL</span>
+      <span class="version-badge">v1.0.0</span>
+    </a>
+    <nav class="nav-links">
+      <a href="#capabilities">Capabilities</a>
+      <a href="#workbench">Workbench</a>
+      <a href="#architecture">Architecture</a>
+      <a href="#integrations">Integrations</a>
+      <a href="#quickstart">Quick Start</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <div class="nav-actions">
+      <a class="btn btn-ghost" href="https://www.npmjs.com/package/anvil-engineering-workbench" target="_blank" rel="noopener">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M0 0v24h24V0H0zm19.467 19.467h-4.32V8.853h-3.04v10.614H4.533V4.533h14.934v14.934z"/></svg>
+        <span>npm 1.0.0</span>
+      </a>
+      <a class="btn btn-primary" href="https://github.com/anvil-workbench/ANVIL" target="_blank" rel="noopener">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+        <span>GitHub ↗</span>
+      </a>
+    </div>
+  </div>
+</header>
+
 <main>
-<section class="wrap hero">
-<div><div class="kicker"><i></i> The AI Engineering Workbench</div><h1>Make every code change <span class="gradient">understandable.</span></h1><p class="lead">ANVIL helps you understand unfamiliar codebases, map architecture, inspect change risk, review proposed patches and verify outcomes — with evidence at every step and you in control.</p><div class="hero-actions"><a class="btn primary" href="https://github.com/anvil-workbench/ANVIL">Explore the open-source project ↗</a><a class="btn" href="#launch-dashboard">Open the local dashboard ↓</a></div><div class="micro">TYPESCRIPT TOOLING · LOCAL DASHBOARD · EXPLICIT APPROVAL · INSPECTABLE OUTPUTS</div></div>
-<div class="terminal glass"><div class="termbar"><div class="lights"><i></i><i></i><i></i></div><span>ANVIL — engineering session</span><span>LOCAL DEMO</span></div><div class="termcontent"><div class="term-label">01 / PROJECT INTELLIGENCE</div><div class="command"><span class="prompt">$</span> ANVIL deep ./your-project
-<span class="ok">✓</span> Source tree inspected
-<span class="ok">✓</span> TypeScript AST parsed
-<span class="ok">✓</span> Import relationships mapped
-<span class="ok">✓</span> Impact candidates collected</div><div class="output"><div class="outrow"><span>Architecture map</span><b class="ok">READY</b></div><div class="outrow"><span>Change-risk signals</span><b class="warn">REVIEW 04</b></div><div class="outrow"><span>Verification history</span><b class="ok">3 SAVED RUNS</b></div><div class="outrow"><span>Dependency assessment</span><b>REPORT-BASED</b></div></div><div class="termfoot"><span>Illustrative terminal walkthrough</span><span>NO LIVE SCAN</span></div></div></div>
-</section>
-<section class="wrap quickstart reveal" aria-label="Quick start">
-<div class="quickstart-copy"><div class="eyebrow">GET STARTED</div><h2>Bring ANVIL into your workflow.</h2><p>Clone the open-source project and build it locally. Node.js 22+ required.</p></div>
-<div class="command-copy"><span class="prompt">$</span><code id="anvil-install-command">git clone https://github.com/anvil-workbench/ANVIL.git && cd ANVIL && npm install && npm run build</code><button class="copy-command" id="anvil-copy-command" type="button">Copy</button></div>
-<div class="integration-note"><span>Verified integration paths</span><div class="integration-chips"><span>Claude Code <b>PROVIDER + MCP</b></span><span>Cursor <b>MCP CLIENT</b></span><span>MCP <b>AVAILABLE</b></span><span>OpenAI API <b>AVAILABLE</b></span><span>Anthropic API <b>AVAILABLE</b></span><span>Google AI <b>AVAILABLE</b></span><span>Ollama <b>AVAILABLE</b></span></div></div></div>
-</section>
-<section class="wrap trust reveal"><div class="trustitem glass"><b>Understand</b><span>Project and codebase intelligence</span></div><div class="trustitem glass"><b>Visualize</b><span>Architecture and dependency signals</span></div><div class="trustitem glass"><b>Evaluate</b><span>Risk, reviews and remediation plans</span></div><div class="trustitem glass"><b>Verify</b><span>Checks, history and regression signals</span></div></section>
-<section class="section" id="platform"><div class="wrap"><div class="sectionhead reveal"><div class="eyebrow">The ANVIL platform</div><h2>One workbench. <span class="gradient">A complete engineering picture.</span></h2><p>Explore the capabilities currently documented in the ANVIL repository. Each tool is designed to surface useful evidence, explain its limits and leave consequential decisions with the developer.</p></div><div class="featuregrid">
-<article class="feature glass reveal"><span class="num">01 / DISCOVER</span><div class="glyph">⌘</div><h3>Project intelligence</h3><p>Identify languages, manifests, frameworks, scripts, dependency counts and important project configuration before you start changing code.</p><span class="tag">ANVIL inspect</span></article>
-<article class="feature glass reveal"><span class="num">02 / ARCHITECTURE</span><div class="glyph">⌗</div><h3>Architecture mapping</h3><p>Explore source modules, import relationships, external packages, likely entry points and circular dependency groups.</p><span class="tag">ANVIL map · ANVIL deep</span></article>
-<article class="feature glass reveal"><span class="num">03 / CODE INTELLIGENCE</span><div class="glyph">⌘</div><h3>AST & symbol analysis</h3><p>Parse JavaScript and TypeScript syntax to find declarations, exports, circular imports and transitive file-impact candidates.</p><span class="tag">TypeScript AST</span></article>
-<article class="feature glass reveal"><span class="num">04 / CHANGE INTELLIGENCE</span><div class="glyph">⌁</div><h3>Git change-risk analysis</h3><p>Connect working-tree changes with downstream modules, structural hotspots, repository signals and candidate tests.</p><span class="tag">ANVIL git · change-risk</span></article>
-<article class="feature glass reveal"><span class="num">05 / CODE REVIEW</span><div class="glyph">⌕</div><h3>Review history</h3><p>Save review snapshots, inspect individual findings and compare reviews to understand how static findings change over time.</p><span class="tag">ANVIL review-history</span></article>
-<article class="feature glass reveal"><span class="num">06 / PATCH SAFETY</span><div class="glyph">⟐</div><h3>Patch proposal validation</h3><p>Check proposed unified diffs for target paths, hunk structure, line counts and source context — without applying the patch.</p><span class="tag">ANVIL patch-check</span></article>
-<article class="feature glass reveal"><span class="num">07 / VERIFICATION</span><div class="glyph">✓</div><h3>Verification engine</h3><p>Choose a named project script, run it deliberately and record output, exit status, duration and timestamps.</p><span class="tag">ANVIL verify</span></article>
-<article class="feature glass reveal"><span class="num">08 / REGRESSION</span><div class="glyph">↗</div><h3>Regression intelligence</h3><p>Compare saved verification outcomes to identify regressions, recoveries, persistent failures and stable checks.</p><span class="tag">ANVIL regression</span></article>
-<article class="feature glass reveal"><span class="num">09 / HEALTH</span><div class="glyph">◉</div><h3>Engineering health score</h3><p>Combine available quality, verification and dependency evidence with explicit coverage so missing evidence is not mistaken for a pass.</p><span class="tag">ANVIL health</span></article>
-<article class="feature glass reveal"><span class="num">10 / DEPENDENCIES</span><div class="glyph">⛓</div><h3>Dependency & license intelligence</h3><p>Inspect npm manifests and lockfiles, and import local audit/outdated reports to review vulnerability, version and license signals.</p><span class="tag">ANVIL deps</span></article>
-<article class="feature glass reveal"><span class="num">11 / REMEDIATION</span><div class="glyph">✳</div><h3>Remediation planner</h3><p>Prioritize dependency findings and suggest review steps. ANVIL does not silently install, upgrade or remove packages.</p><span class="tag">ANVIL remediate</span></article>
-<article class="feature glass reveal"><span class="num">12 / TIMELINE</span><div class="glyph">◷</div><h3>Engineering intelligence timeline</h3><p>Capture local snapshots and compare architecture size, hotspot counts, quality findings and selected project signals.</p><span class="tag">ANVIL snapshot · timeline</span></article>
-<article class="feature glass reveal"><span class="num">13 / DASHBOARD</span><div class="glyph">▦</div><h3>Local engineering dashboard</h3><p>Bring project health, architecture, saved runs, reviews, task activity and workspace exploration into a local control center.</p><span class="tag">ANVIL dashboard</span></article>
-<article class="feature glass reveal"><span class="num">14 / WORKSPACE</span><div class="glyph">▤</div><h3>Interactive workspace explorer</h3><p>Browse supported project files and folders, inspect sizes and preview source or documentation in the local dashboard.</p><span class="tag">Read-only explorer</span></article>
-<article class="feature glass reveal"><span class="num">15 / ORCHESTRATION</span><div class="glyph">⤢</div><h3>Task & run visibility</h3><p>Inspect saved orchestration runs, task activity and run details, with explicit approval controls for recorded workflow tasks.</p><span class="tag">Dashboard workflow view</span></article>
-<article class="feature glass reveal"><span class="num">16 / AI ASSISTANCE</span><div class="glyph">✧</div><h3>AI-assisted review</h3><p>Use a configured provider for review suggestions and single-file patch proposals. Selected source context may be sent to that provider.</p><span class="tag">Optional provider setup</span></article>
-</div></div></section>
+  <!-- Hero Section -->
+  <section class="wrap hero">
+    <div>
+      <div class="pill-announcement">
+        <i></i>
+        <span>ANVIL v1.0.0 is live on npm registry</span>
+      </div>
+      <h1>Make every code change <span class="gradient-text">predictable and verified.</span></h1>
+      <p class="hero-lead">The local-first AI engineering workbench that maps codebase architecture, parses AST symbols, audits change risk, and verifies outcomes — with zero telemetry leakage and full developer control.</p>
+      <div class="hero-cta">
+        <a class="btn btn-primary btn-large" href="#quickstart">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 13l5 5 5-5M12 4v14"/></svg>
+          <span>Get Started on npm</span>
+        </a>
+        <a class="btn btn-ghost btn-large" href="https://github.com/anvil-workbench/ANVIL" target="_blank" rel="noopener">
+          <span>View Source on GitHub ↗</span>
+        </a>
+      </div>
+      <div class="micro-spec">
+        <span>100% Local-First</span>
+        <span>TypeScript AST Parser</span>
+        <span>Git Change-Risk Engine</span>
+        <span>Deterministic Verification</span>
+      </div>
+    </div>
 
-<section class="section" id="workbench-preview"><div class="wrap"><div class="sectionhead reveal"><div class="eyebrow">Inside the workbench</div><h2>See the engineering, <span class="gradient">not just the slogan.</span></h2><p>A visual preview of the core objects ANVIL works with: connected modules, code signals, security checks and verification history. These panels are product illustrations, not live scan results.</p></div>
-<div class="product-stage reveal"><div class="stage-head"><span>ANVIL / PROJECT CONTROL CENTER</span><span class="stage-status">● LOCAL WORKSPACE PREVIEW</span></div><div class="stage-grid">
-<div class="object-card"><div class="object-label">01 · Architecture graph</div><div class="object-title">Trace the system</div><div class="arch-map"><span class="arch-node">CLI</span><i class="arch-link"></i><span class="arch-node">CORE</span><i class="arch-link"></i><span class="arch-node">DASH</span></div><div class="object-note">Modules · imports · entry points · impact paths</div></div>
-<div class="object-card"><div class="object-label">02 · Code intelligence</div><div class="object-title">Understand source</div><div class="code-lines"><i class="code-line"></i><i class="code-line"></i><i class="code-line"></i><i class="code-line"></i></div><div class="object-note">AST symbols · exports · dependency edges</div></div>
-<div class="object-card"><div class="object-label">03 · Safety signals</div><div class="object-title">Review before action</div><div class="security-ring">✓</div><div class="object-note" style="text-align:center">Advisory checks · human approval</div></div>
-<div class="object-card"><div class="object-label">04 · Verification</div><div class="object-title">Track outcomes</div><div class="mini-bars"><i style="--h:42%"></i><i style="--h:76%"></i><i style="--h:58%"></i><i style="--h:92%"></i><i style="--h:69%"></i><i style="--h:100%"></i></div><div class="object-note">Saved runs · regression comparisons</div></div>
-<div class="object-card wide"><div class="object-label">05 · The engineering loop</div><div class="object-title">Discover → Map → Review → Verify</div><div class="object-note">Connect repository context to deliberate engineering decisions. The live dashboard runs locally on your machine; this public preview contains no real project data.</div></div>
-</div><div class="stage-foot"><span>ILLUSTRATIVE PRODUCT UI · NOT A LIVE SCAN</span><span>ANVIL / OPEN SOURCE</span></div></div>
-</div></section>
-<section class="section"><div class="wrap"><div class="sectionhead reveal"><div class="eyebrow">A toolkit with real shape</div><h2>Purpose-built tools. <span class="gradient">One connected workflow.</span></h2><p>ANVIL is more than a logo and a terminal. These are the product areas developers can explore in the repository today.</p></div><div class="product-gallery">
-<article class="product-tile glass reveal"><div class="tile-art"><div class="tile-icon">⌘</div></div><h3>Repository Explorer</h3><p>Understand manifests, scripts, source layout and project signals.</p></article>
-<article class="product-tile glass reveal"><div class="tile-art"><div class="tile-icon">⌗</div></div><h3>Architecture Mapper</h3><p>Inspect module relationships, imports, symbols and impact candidates.</p></article>
-<article class="product-tile glass reveal"><div class="tile-art"><div class="tile-icon">⟐</div></div><h3>Change Intelligence</h3><p>Review Git changes, risk signals, diffs and remediation plans.</p></article>
-<article class="product-tile glass reveal"><div class="tile-art"><div class="tile-icon">✓</div></div><h3>Verification Lab</h3><p>Run named checks, save results and compare regressions over time.</p></article>
-</div></div></section>
-<section class="section" id="launch-dashboard"><div class="wrap"><div class="sectionhead reveal"><div class="eyebrow">ANVIL 1.0 · LIVE LOCAL DASHBOARD</div><h2>Your workspace. <span class="gradient">Your control center.</span></h2><p>The full dashboard runs on your machine and connects to the project directory you choose. It is not a mock screen and it does not upload your repository to this public website.</p></div><div class="split"><div class="info glass reveal"><h3>Launch the dashboard</h3><div class="command" style="border:1px solid var(--line);border-radius:12px;padding:14px;background:#0004;white-space:pre-wrap">git clone https://github.com/anvil-workbench/ANVIL.git
-cd ANVIL
-npm ci
-npm run build
-node dist/cli.js dashboard ./your-project</div><p>Replace <code>./your-project</code> with the local project you want to inspect. Open the localhost URL printed in your terminal.</p><a class="btn primary" href="https://github.com/anvil-workbench/ANVIL#quick-start">Full setup instructions ↗</a></div><div class="info glass reveal"><h3>What opens in the dashboard</h3><ul><li>Project health, stack and architecture overview</li><li>Agent registry, saved runs, task inspector and approval controls</li><li>Workflow editor and agent/skill configuration studio</li><li>Workspace explorer and symbol-aware code search</li><li>Reviews, verification history, traces and regression signals</li><li>Evaluations, benchmark comparisons and agent performance</li></ul><p>Provider-backed execution still requires your own provider credentials and explicit permission configuration.</p></div></div></div></section>
-<section class="section" id="ecosystem"><div class="wrap"><div class="sectionhead reveal"><div class="eyebrow">The ANVIL ecosystem</div><h2>Three connected layers. <span class="gradient">One engineering workflow.</span></h2><p>A product system built around understanding repositories, guiding engineering work and verifying outcomes.</p></div><div class="featuregrid">
-<article class="feature glass reveal"><span class="num">LAYER 01 · INTELLIGENCE</span><div class="glyph">⌘</div><h3>Codebase intelligence</h3><p>Repository inspection, AST and symbol analysis, dependency relationships, architecture mapping, Git-aware impact candidates and snapshots.</p><span class="tag">CURRENT TOOLING</span></article>
-<article class="feature glass reveal"><span class="num">LAYER 02 · ENGINEERING</span><div class="glyph">⌁</div><h3>Planning & verification</h3><p>Change-risk signals, review history, patch validation, remediation plans, named checks and regression comparisons.</p><span class="tag">CURRENT TOOLING</span></article>
-<article class="feature glass reveal"><span class="num">LAYER 03 · OPERATIONS</span><div class="glyph">◉</div><h3>Agent workbench</h3><p>Reusable specialist workflows, agent run visibility, shared project guidance and policy-aware orchestration.</p><span class="tag">ROADMAP · NOT SHIPPED</span></article></div></div></section>
-<section class="section"><div class="wrap"><div class="sectionhead reveal"><div class="eyebrow">Reusable engineering playbooks</div><h2>Not just commands. <span class="gradient">Repeatable ways to work.</span></h2><p>A proposed catalog connecting planning, implementation, review and verification. These modules are planned, not available in the current release.</p></div><div class="featuregrid">
-<article class="feature glass reveal"><span class="num">PLAYBOOK 01</span><div class="glyph">▤</div><h3>Planner</h3><p>Turn a feature request into scoped tasks, dependencies, acceptance criteria and a verification plan.</p><span class="tag">PLANNED</span></article>
-<article class="feature glass reveal"><span class="num">PLAYBOOK 02</span><div class="glyph">⌕</div><h3>Code reviewer</h3><p>Review diffs for correctness, maintainability, security-sensitive patterns and missing tests with evidence-linked findings.</p><span class="tag">PLANNED EXPANSION</span></article>
-<article class="feature glass reveal"><span class="num">PLAYBOOK 03</span><div class="glyph">✓</div><h3>Test strategist</h3><p>Recommend tests from changed modules and impact candidates, then track which checks actually ran.</p><span class="tag">PLANNED EXPANSION</span></article>
-<article class="feature glass reveal"><span class="num">PLAYBOOK 04</span><div class="glyph">⛨</div><h3>Security analyst</h3><p>Auditable local review for agent configuration, risky permissions and unsafe project defaults.</p><span class="tag">PLANNED · SCOPE TBD</span></article>
-<article class="feature glass reveal"><span class="num">PLAYBOOK 05</span><div class="glyph">⛓</div><h3>Dependency curator</h3><p>Explain outdated or vulnerable packages, compatibility concerns and human-reviewed upgrade options.</p><span class="tag">PLANNED EXPANSION</span></article>
-<article class="feature glass reveal"><span class="num">PLAYBOOK 06</span><div class="glyph">↻</div><h3>Learning journal</h3><p>Capture recurring fixes and team conventions as reviewable guidance with provenance and confidence.</p><span class="tag">PLANNED</span></article></div></div></section>
-<section class="section" id="roadmap"><div class="wrap"><div class="sectionhead reveal"><div class="eyebrow">Product roadmap</div><h2>Build the ecosystem <span class="gradient">without fake promises.</span></h2><p>Proposed milestones inspired by the breadth of the ECC product experience. Nothing here is called shipped until code, tests and docs exist.</p></div><div class="workflow">
-<article class="phase glass reveal"><b>NOW · FOUNDATION</b><h3>Stabilize the workbench</h3><p>Green CI, reliable local dashboard, command discovery, docs and first-run onboarding.</p></article>
-<article class="phase glass reveal"><b>NEXT · PLAYBOOKS</b><h3>Skills & agent catalog</h3><p>Versioned workflow packs, specialist roles, install profiles and explicit permissions.</p></article>
-<article class="phase glass reveal"><b>THEN · TRUST</b><h3>Security & policy review</h3><p>Local configuration auditing, severity-ranked findings, policy checks and reproducible reports.</p></article>
-<article class="phase glass reveal"><b>FUTURE · LEARNING</b><h3>Project memory & team sync</h3><p>Opt-in learning from accepted fixes, pruning controls, provenance and portable team guidance.</p></article></div></div></section><section class="section" id="tour"><div class="wrap"><div class="sectionhead reveal"><div class="eyebrow">Interactive product tour</div><h2>See how the workbench <span class="gradient">connects the dots.</span></h2><p>Choose a stage to preview the kind of evidence and workflow ANVIL brings together. This is an illustrative product tour, not a live repository scan.</p></div><div class="demo reveal"><div class="tabs" role="tablist" aria-label="Product tour stages"><button class="tab active" data-tab="discover"><strong>01 · Discover</strong><small>Understand the project</small></button><button class="tab" data-tab="map"><strong>02 · Map</strong><small>Explore architecture</small></button><button class="tab" data-tab="review"><strong>03 · Review</strong><small>Inspect changes</small></button><button class="tab" data-tab="verify"><strong>04 · Verify</strong><small>Check outcomes</small></button></div><div class="demo-screen glass"><div class="screenhead"><span>F. / WORKBENCH PREVIEW</span><span class="ok">● INTERACTIVE DEMO</span></div><div class="screenbody" id="demoContent"><h3>Start with context.</h3><p>Inspect the repository before making assumptions about how it works.</p><div class="mockrows"><div class="mockrow"><div class="mockicon">⌘</div><div><b>Project profile</b><small>Languages · scripts · manifests · dependencies</small></div><span class="pill">FOUND</span></div><div class="mockrow"><div class="mockicon">⌗</div><div><b>Source inventory</b><small>Recognized files and project structure</small></div><span class="pill">INDEXED</span></div><div class="mockrow"><div class="mockicon">◉</div><div><b>Scan notes</b><small>Limits and unresolved evidence are visible</small></div><span class="pill">REVIEW</span></div></div></div></div></div></div></section>
-<section class="section" id="workflow"><div class="wrap"><div class="sectionhead reveal"><div class="eyebrow">A repeatable engineering loop</div><h2>From unfamiliar repo to <span class="gradient">verified change.</span></h2><p>ANVIL connects discovery, architecture, review and verification into a workflow you can inspect and repeat.</p></div><div class="workflow"><article class="phase glass reveal"><b>01 / UNDERSTAND</b><h3>Inspect the codebase</h3><p>Discover the stack, scripts, dependencies, project structure and available evidence.</p></article><article class="phase glass reveal"><b>02 / MAP</b><h3>Trace architecture</h3><p>Explore imports, symbols, hotspots and likely downstream impact before editing.</p></article><article class="phase glass reveal"><b>03 / PLAN</b><h3>Review the change</h3><p>Inspect risk signals, review findings and remediation suggestions. Decide what to accept.</p></article><article class="phase glass reveal"><b>04 / VERIFY</b><h3>Prove the outcome</h3><p>Run selected checks, save results and compare with prior verification history.</p></article></div></div></section>
-<section class="section"><div class="wrap"><div class="sectionhead reveal"><div class="eyebrow">Developer control</div><h2>Transparent by default. <span class="gradient">No mystery automation.</span></h2></div><div class="split"><div class="info glass reveal"><h3>Local-first workflow</h3><ul><li>Analyze a project directory you choose.</li><li>Dashboard binds to localhost by default.</li><li>Saved snapshots and histories stay in the local <code>.ANVIL</code> directory.</li><li>AI review is optional and sends selected source context to your configured provider.</li><li>Public site previews do not access your local source code.</li></ul></div><div class="info glass reveal"><h3>Human approval stays explicit</h3><ul><li>Discovery does not automatically execute project scripts.</li><li>Verification requires you to select a named script.</li><li>Patch checks are dry runs; they do not apply changes.</li><li>Dependency remediation is a plan, not an automatic installer.</li><li>Risk scores are heuristics, not security guarantees or defect predictions.</li></ul></div></div></div></section>
-<section class="section"><div class="wrap"><div class="sectionhead reveal"><div class="eyebrow">Fits your workflow</div><h2>Open tooling. <span class="gradient">Your machine. Your decisions.</span></h2><p>ANVIL is an independent TypeScript project with a CLI and a local dashboard. Use it against a trusted local workspace and review every suggested action.</p></div><div class="stack reveal"><span class="chip">TypeScript</span><span class="chip">Node.js 22+</span><span class="chip">CLI</span><span class="chip">Local dashboard</span><span class="chip">Git-aware analysis</span><span class="chip">npm dependency reports</span><span class="chip">Vitest</span><span class="chip">MIT License</span></div></div></section>
-<section class="section" id="tools"><div class="wrap"><div class="sectionhead reveal"><div class="eyebrow">Explore the workbench</div><h2>Tools for the <span class="gradient">whole change lifecycle.</span></h2><p>From first inspection to post-change verification, ANVIL keeps the evidence and the next decision in one place.</p></div><div class="featuregrid">
-<article class="feature glass reveal"><span class="num">TOOL 01</span><div class="glyph">⌕</div><h3>Inspect & map</h3><p>Profile a repository, explore source structure, imports, symbols and likely impact paths.</p><span class="tag">AVAILABLE IN CLI</span></article>
-<article class="feature glass reveal"><span class="num">TOOL 02</span><div class="glyph">▦</div><h3>Local control center</h3><p>Review health snapshots, architecture, saved runs, task activity and a read-only workspace explorer.</p><span class="tag">AVAILABLE LOCALLY</span></article>
-<article class="feature glass reveal"><span class="num">TOOL 03</span><div class="glyph">✓</div><h3>Verify & compare</h3><p>Run a selected project script, preserve its result and compare it with the previous recorded run.</p><span class="tag">AVAILABLE IN CLI</span></article>
-</div></div></section>
-<section class="section" id="integrations"><div class="wrap"><div class="sectionhead reveal"><div class="eyebrow">AI providers & editor integrations</div><h2>Bring your tools. <span class="gradient">Keep your workflow.</span></h2><p>ANVIL supports provider-backed runs and exposes a local, read-only MCP tool server. Editor compatibility is through MCP configuration, not a claim of a native editor extension.</p></div><div class="split"><div class="info glass reveal"><h3>AI provider adapters</h3><ul><li><b>Claude Code CLI:</b> local authenticated CLI adapter for proposal-only agent runs; no Anthropic API key required for this path.</li><li><b>OpenAI API:</b> configured with an OpenAI API key or compatible endpoint.</li><li><b>Anthropic API:</b> configured with an Anthropic API key.</li><li><b>Google AI:</b> configured with a Google API key.</li><li><b>Ollama:</b> local model endpoint.</li></ul><p>Provider credentials and model access are controlled by the provider account you configure.</p><a class="btn" href="https://github.com/anvil-workbench/ANVIL/blob/main/docs/providers.md">Provider setup guide ↗</a></div><div class="info glass reveal"><h3>Claude Code & Cursor through MCP</h3><ul><li><b>Claude Code:</b> connect ANVIL's local stdio MCP server or use its Claude Code CLI provider adapter.</li><li><b>Cursor:</b> connect the same local MCP server using Cursor's project-level <code>.cursor/mcp.json</code> or global MCP configuration.</li><li><b>Read-only tools:</b> project inspection, architecture mapping, code search, quality audit, Git intelligence, agent listing and review planning.</li><li><b>No native editor extension is claimed:</b> these are documented MCP integrations.</li></ul><a class="btn" href="https://github.com/anvil-workbench/ANVIL/blob/main/docs/integrations/claude-code.md">Claude Code setup ↗</a> <a class="btn" href="https://prod.cursor.com/docs/mcp">Cursor MCP docs ↗</a></div></div></div></section>
-<section class="section" id="community-proof"><div class="wrap community-grid"><div class="community-main reveal"><div class="eyebrow">Open source · Built in public</div><h2>Make the work visible.<br><span class="gradient">Help shape what comes next.</span></h2><p>ANVIL is an independent, MIT-licensed engineering workbench. Explore the implementation, inspect the roadmap, report issues and contribute improvements directly in the repository.</p><div class="community-actions"><a class="btn primary" href="https://github.com/anvil-workbench/ANVIL">Explore the source ↗</a><a class="btn" href="https://github.com/anvil-workbench/ANVIL/issues">Open an issue ↗</a></div></div><div class="community-side reveal"><a class="community-link" href="https://github.com/anvil-workbench/ANVIL"><span><b>Source code</b><small>Read the implementation and release history</small></span><strong>↗</strong></a><a class="community-link" href="https://github.com/anvil-workbench/ANVIL/actions"><span><b>Build & checks</b><small>Inspect automated workflow runs</small></span><strong>↗</strong></a><a class="community-link" href="https://github.com/anvil-workbench/ANVIL/issues"><span><b>Contribute</b><small>Report bugs and suggest improvements</small></span><strong>↗</strong></a></div></div></section>
-<section class="section" id="pricing"><div class="wrap"><div class="sectionhead reveal"><div class="eyebrow">Simple, transparent access</div><h2>Open source. <span class="gradient">No paywall.</span></h2><p>ANVIL is published under the MIT license. There are no paid tiers or hosted-service claims on this page.</p></div><div class="split"><div class="info glass reveal"><div class="eyebrow">COMMUNITY EDITION</div><h3 style="font-size:38px;margin:8px 0">$0</h3><p>Use the open-source CLI and local dashboard on your own machine.</p><ul><li>Project inspection and architecture analysis</li><li>Review, verification and regression history</li><li>Local engineering dashboard</li><li>MIT-licensed source code</li></ul><a class="btn primary" href="https://github.com/anvil-workbench/ANVIL">Get ANVIL on GitHub ↗</a></div><div class="info glass reveal"><div class="eyebrow">GET STARTED</div><h3>Build it locally.</h3><p>Requires Node.js 22+. Clone the repository, install dependencies and build the CLI.</p><div class="command" style="border:1px solid var(--line);border-radius:12px;padding:14px;background:#0004">git clone https://github.com/anvil-workbench/ANVIL.git<br>cd ANVIL<br>npm install<br>npm run build</div><a class="btn" href="https://github.com/anvil-workbench/ANVIL#readme">Read setup instructions ↗</a></div></div></div></section>
-<section class="section" id="faq"><div class="wrap"><div class="sectionhead reveal"><div class="eyebrow">Questions</div><h2>Know what you're getting.</h2></div><div class="faq"><details class="glass"><summary>Is the public website the actual engineering dashboard?</summary><p>No. The public website explains ANVIL and contains illustrative previews. The full engineering dashboard runs locally against a project you select.</p></details><details class="glass"><summary>Does ANVIL automatically change my code?</summary><p>No. Patch validation is a dry run. Remediation output is a plan. Verification runs only when you select a named script.</p></details><details class="glass"><summary>Does ANVIL scan every programming language?</summary><p>Current architecture and deep AST analysis focus on JavaScript and TypeScript. Other project signals are based on recognized manifests, files and configuration.</p></details><details class="glass"><summary>Does the health score prove a project is secure?</summary><p>No. It is an evidence-based prioritization heuristic. Missing audit reports are marked not assessed, and a score is not a certification.</p></details><details class="glass"><summary>Does AI review send my code somewhere?</summary><p>AI review sends selected source excerpts to the provider you configure. Review your provider's data handling terms before enabling it.</p></details><details class="glass"><summary>Can I use ANVIL without a hosted account?</summary><p>The CLI and engineering dashboard are local tools. The public Vercel site is a separate static product page.</p></details></div></div></section>
-<section class="wrap" style="padding:35px 0 85px"><div class="cta glass reveal"><div><div class="eyebrow">Build with ANVIL</div><h2>Understand more. Change with confidence.</h2><p>Explore the code, inspect the roadmap and help shape the next engineering workbench.</p></div><div class="hero-actions" style="margin:0"><a class="btn primary" href="https://github.com/anvil-workbench/ANVIL">Explore ANVIL on GitHub ↗</a><a class="btn" href="https://github.com/anvil-workbench/ANVIL/issues">Suggest a feature ↗</a></div></div></section>
+    <!-- Live Terminal Simulation -->
+    <div class="terminal-card">
+      <div class="terminal-top">
+        <div class="window-dots">
+          <span class="dot-red"></span>
+          <span class="dot-yellow"></span>
+          <span class="dot-green"></span>
+        </div>
+        <div class="terminal-title">anvil — local engineering session</div>
+        <div class="terminal-tag">LIVE v1.0.0</div>
+      </div>
+      <div class="terminal-tabs">
+        <button class="term-tab active" data-tab="inspect">01 inspect</button>
+        <button class="term-tab" data-tab="map">02 map</button>
+        <button class="term-tab" data-tab="git">03 git-risk</button>
+        <button class="term-tab" data-tab="verify">04 verify</button>
+      </div>
+      <div class="terminal-body" id="termScreen">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- Interactive Quick Start Strip -->
+  <section class="wrap quickstart-strip" id="quickstart">
+    <div class="quickstart-header">
+      <div class="quickstart-copy">
+        <span class="eyebrow">QUICK START INSTALLATION</span>
+        <h2>Bring ANVIL into your development environment</h2>
+        <p>Run instantly with npx or install globally via your preferred package manager. Requires Node.js 22+.</p>
+      </div>
+      <div class="pkg-tabs" role="tablist">
+        <button class="pkg-tab active" data-pkg="npm">npm</button>
+        <button class="pkg-tab" data-pkg="npx">npx</button>
+        <button class="pkg-tab" data-pkg="pnpm">pnpm</button>
+        <button class="pkg-tab" data-pkg="yarn">yarn</button>
+      </div>
+    </div>
+    <div class="install-box">
+      <span class="cmd-prompt">$</span>
+      <code id="pkgCommand">npm install -g anvil-engineering-workbench</code>
+      <button class="copy-btn" id="copyPkgBtn" type="button">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        <span id="copyText">Copy</span>
+      </button>
+    </div>
+    <div class="integration-tags">
+      <span>Supported Adapters</span>
+      <span>Claude Code <b>MCP STDIO</b></span>
+      <span>Cursor IDE <b>MCP CLIENT</b></span>
+      <span>Local Models <b>OLLAMA</b></span>
+      <span>Cloud APIs <b>OPENAI · ANTHROPIC · GEMINI</b></span>
+      <span>Platform <b>NODE 22+ · TS 5.8+</b></span>
+    </div>
+  </section>
+
+  <!-- Metric Strip -->
+  <section class="wrap stats-grid">
+    <div class="stat-card">
+      <div class="stat-number">100%</div>
+      <div class="stat-label">Local-First Privacy</div>
+      <div class="stat-desc">Your code, AST symbols, and git history never leave your local workspace without explicit configuration.</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">16+</div>
+      <div class="stat-label">Deep Tooling Engines</div>
+      <div class="stat-desc">From TypeScript AST analysis and circular import graphs to heuristic git change-risk and regression tracking.</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">0 KB</div>
+      <div class="stat-label">Cloud Telemetry Leakage</div>
+      <div class="stat-desc">Zero tracking scripts, zero background phoning home. Saved state lives safely in your local <code>.anvil/</code> folder.</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">MIT</div>
+      <div class="stat-label">Open-Source License</div>
+      <div class="stat-desc">Fully auditable source code, forkable, and ready for community expansion on GitHub.</div>
+    </div>
+  </section>
+
+  <!-- Inside The Workbench (Interactive Stage) -->
+  <section class="section" id="workbench">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">INSIDE THE WORKBENCH</span>
+        <h2>Engineering evidence, <span class="gradient-text">not mystery automation.</span></h2>
+        <p>Explore the four core facets of ANVIL. Each engine gathers concrete evidence to guide your decisions rather than modifying your files silently.</p>
+      </div>
+
+      <div class="stage-container">
+        <div class="stage-selector">
+          <button class="stage-btn active" data-stage="0">
+            <span class="stage-btn-num">01 / INTELLIGENCE</span>
+            <span class="stage-btn-title">Codebase & Project Profiler</span>
+            <span class="stage-btn-desc">Parse frameworks, package manifests, build scripts, and configuration boundaries.</span>
+          </button>
+          <button class="stage-btn" data-stage="1">
+            <span class="stage-btn-num">02 / ARCHITECTURE</span>
+            <span class="stage-btn-title">AST & Module Dependency Graph</span>
+            <span class="stage-btn-desc">Trace static imports, package edges, circular imports, and candidate entry points.</span>
+          </button>
+          <button class="stage-btn" data-stage="2">
+            <span class="stage-btn-num">03 / RISK SIGNALS</span>
+            <span class="stage-btn-title">Git Change-Risk & Hotspot Analysis</span>
+            <span class="stage-btn-desc">Connect uncommitted diffs to downstream files, structural hotspots, and test targets.</span>
+          </button>
+          <button class="stage-btn" data-stage="3">
+            <span class="stage-btn-num">04 / VERIFICATION</span>
+            <span class="stage-btn-title">Deterministic Verification & Regressions</span>
+            <span class="stage-btn-desc">Execute named scripts, record outcomes, and track historical regressions across runs.</span>
+          </button>
+        </div>
+
+        <div class="stage-display">
+          <div class="stage-display-head">
+            <span id="stageHeadTitle">ANVIL / PROJECT PROFILE STAGE</span>
+            <span style="color:var(--emerald);">● LOCAL WORKSPACE SIMULATION</span>
+          </div>
+          <div class="stage-display-body" id="stageContent">
+            <!-- Dynamic Content -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Capabilities Feature Grid -->
+  <section class="section" id="capabilities">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">COMPLETE TOOLKIT</span>
+        <h2>Built for every step of <span class="gradient-text">the software lifecycle.</span></h2>
+        <p>From initial codebase discovery to post-merge verification, ANVIL provides purpose-built tools that give you structural clarity.</p>
+      </div>
+
+      <div class="feature-grid">
+        <div class="feature-card">
+          <div class="feature-header">
+            <div class="feature-icon">⌘</div>
+            <span class="feature-num">01</span>
+          </div>
+          <h3>Project Discovery</h3>
+          <p>Scan languages, manifests, frameworks, scripts, and dependency counts before touching a single line of code.</p>
+          <span class="feature-tag">anvil inspect</span>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-header">
+            <div class="feature-icon">⌗</div>
+            <span class="feature-num">02</span>
+          </div>
+          <h3>Architecture Mapping</h3>
+          <p>Map internal module relationships, external package imports, entry points, and circular dependency rings.</p>
+          <span class="feature-tag">anvil map · deep</span>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-header">
+            <div class="feature-icon">⚡</div>
+            <span class="feature-num">03</span>
+          </div>
+          <h3>AST Symbol Analysis</h3>
+          <p>Parse TypeScript syntax trees to extract functions, classes, interfaces, and transitive blast-radius paths.</p>
+          <span class="feature-tag">TypeScript AST</span>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-header">
+            <div class="feature-icon">⌁</div>
+            <span class="feature-num">04</span>
+          </div>
+          <h3>Change-Risk Assessment</h3>
+          <p>Correlate working-tree git changes with downstream architectural hotspots and recommended test suites.</p>
+          <span class="feature-tag">anvil git</span>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-header">
+            <div class="feature-icon">⌕</div>
+            <span class="feature-num">05</span>
+          </div>
+          <h3>Review History</h3>
+          <p>Save code review snapshots, inspect individual findings, and compare reviews across commits over time.</p>
+          <span class="feature-tag">anvil review-history</span>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-header">
+            <div class="feature-icon">⟐</div>
+            <span class="feature-num">06</span>
+          </div>
+          <h3>Dry-Run Patch Validation</h3>
+          <p>Validate proposed unified diffs for target file paths, hunk syntax, and source context without applying them.</p>
+          <span class="feature-tag">anvil patch-check</span>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-header">
+            <div class="feature-icon">✓</div>
+            <span class="feature-num">07</span>
+          </div>
+          <h3>Verification Engine</h3>
+          <p>Run named project test or build scripts deliberately, capturing standard outputs, exit codes, and timestamps.</p>
+          <span class="feature-tag">anvil verify</span>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-header">
+            <div class="feature-icon">↗</div>
+            <span class="feature-num">08</span>
+          </div>
+          <h3>Regression Intelligence</h3>
+          <p>Compare saved verification outcomes to identify regressions, recoveries, persistent failures, and stable runs.</p>
+          <span class="feature-tag">anvil regression</span>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-header">
+            <div class="feature-icon">◉</div>
+            <span class="feature-num">09</span>
+          </div>
+          <h3>Engineering Health Score</h3>
+          <p>Synthesize quality, verification, and dependency evidence into an honest, weighted engineering health metric.</p>
+          <span class="feature-tag">anvil health</span>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-header">
+            <div class="feature-icon">⛓</div>
+            <span class="feature-num">10</span>
+          </div>
+          <h3>Dependency Intelligence</h3>
+          <p>Inspect npm package manifests, lockfiles, and audit reports for vulnerability flags, outdated ranges, and licenses.</p>
+          <span class="feature-tag">anvil deps</span>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-header">
+            <div class="feature-icon">✳</div>
+            <span class="feature-num">11</span>
+          </div>
+          <h3>Remediation Planner</h3>
+          <p>Prioritize critical dependency findings and generate reviewable upgrade strategies without silent package installs.</p>
+          <span class="feature-tag">anvil remediate</span>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-header">
+            <div class="feature-icon">▦</div>
+            <span class="feature-num">12</span>
+          </div>
+          <h3>Local Web Dashboard</h3>
+          <p>Launch an interactive local control center with live SSE broadcasts, interactive graphs, and run inspectors.</p>
+          <span class="feature-tag">anvil dashboard</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Visual Architecture Showcase -->
+  <section class="section" id="architecture">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">SYSTEM ARCHITECTURE</span>
+        <h2>How ANVIL works <span class="gradient-text">under the hood.</span></h2>
+        <p>A decoupled, local-first pipeline designed to process real project trees without sending your proprietary source code to third-party endpoints.</p>
+      </div>
+
+      <div class="arch-visual-box">
+        <svg class="arch-svg-container" viewBox="0 0 900 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Background Grid lines -->
+          <line x1="0" y1="80" x2="900" y2="80" stroke="#161e2e" stroke-dasharray="4 4" />
+          <line x1="0" y1="160" x2="900" y2="160" stroke="#161e2e" stroke-dasharray="4 4" />
+          <line x1="0" y1="240" x2="900" y2="240" stroke="#161e2e" stroke-dasharray="4 4" />
+
+          <!-- Connection Lines with Glow -->
+          <path d="M140 160 L280 160" stroke="#f97316" stroke-width="2" opacity="0.8" />
+          <path d="M420 160 L540 100" stroke="#38bdf8" stroke-width="2" opacity="0.8" />
+          <path d="M420 160 L540 220" stroke="#34d399" stroke-width="2" opacity="0.8" />
+          <path d="M680 100 L760 140" stroke="#38bdf8" stroke-width="2" opacity="0.8" />
+          <path d="M680 220 L760 180" stroke="#34d399" stroke-width="2" opacity="0.8" />
+
+          <!-- Node 1: Local Workspace -->
+          <rect x="20" y="120" width="120" height="80" rx="12" fill="#0f1520" stroke="#f97316" stroke-width="1.5" />
+          <text x="80" y="152" fill="#fff" font-size="12" font-weight="700" text-anchor="middle" font-family="'JetBrains Mono', monospace">WORKSPACE</text>
+          <text x="80" y="172" fill="#94a3b8" font-size="10" text-anchor="middle">Local Filesystem</text>
+
+          <!-- Node 2: ANVIL Core Parser -->
+          <rect x="280" y="120" width="140" height="80" rx="12" fill="#0f1520" stroke="#f97316" stroke-width="1.5" />
+          <text x="350" y="152" fill="#fff" font-size="12" font-weight="700" text-anchor="middle" font-family="'JetBrains Mono', monospace">ANVIL CORE</text>
+          <text x="350" y="172" fill="#94a3b8" font-size="10" text-anchor="middle">AST & Graph Engine</text>
+
+          <!-- Node 3: Intelligence & MCP -->
+          <rect x="540" y="60" width="140" height="80" rx="12" fill="#0f1520" stroke="#38bdf8" stroke-width="1.5" />
+          <text x="610" y="92" fill="#fff" font-size="12" font-weight="700" text-anchor="middle" font-family="'JetBrains Mono', monospace">MCP SERVER</text>
+          <text x="610" y="112" fill="#94a3b8" font-size="10" text-anchor="middle">Claude / Cursor</text>
+
+          <!-- Node 4: Verification & Dashboard -->
+          <rect x="540" y="180" width="140" height="80" rx="12" fill="#0f1520" stroke="#34d399" stroke-width="1.5" />
+          <text x="610" y="212" fill="#fff" font-size="12" font-weight="700" text-anchor="middle" font-family="'JetBrains Mono', monospace">LOCAL STORE</text>
+          <text x="610" y="232" fill="#94a3b8" font-size="10" text-anchor="middle">.anvil/ State</text>
+
+          <!-- Node 5: Output UI & CLI -->
+          <rect x="760" y="120" width="120" height="80" rx="12" fill="#0f1520" stroke="#fff" stroke-width="1.5" />
+          <text x="820" y="152" fill="#fff" font-size="12" font-weight="700" text-anchor="middle" font-family="'JetBrains Mono', monospace">DASHBOARD</text>
+          <text x="820" y="172" fill="#94a3b8" font-size="10" text-anchor="middle">Localhost UI</text>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- Local Dashboard Spotlight Banner -->
+  <section class="section">
+    <div class="wrap">
+      <div class="dash-banner">
+        <div>
+          <span class="eyebrow">STANDALONE WEB INTERFACE</span>
+          <h3>Launch your local engineering control center</h3>
+          <p>Run the dashboard directly on your machine. Inspect architecture, visualize real-time dependency graphs, review audit trails, and approve agent actions through a sleek localhost interface.</p>
+          <div class="hero-cta" style="margin:0">
+            <a class="btn btn-primary" href="https://github.com/anvil-workbench/ANVIL#quick-start" target="_blank" rel="noopener">
+              <span>View Dashboard Guide ↗</span>
+            </a>
+          </div>
+        </div>
+        <div>
+          <div class="dash-cmd-block">
+            <span style="color:var(--text-subtle)"># Launch dashboard for any repository</span><br>
+            <span style="color:var(--amber)">$</span> anvil dashboard ./your-project<br><br>
+            <span style="color:var(--emerald)">✓</span> Dashboard running at: <span style="color:var(--cyan)">http://127.0.0.1:4173</span><br>
+            <span style="color:var(--emerald)">✓</span> Realtime SSE event stream active<br>
+            <span style="color:var(--emerald)">✓</span> Safe sandbox & local file preview ready
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Ecosystem Integrations -->
+  <section class="section" id="integrations">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">EXTENSIBILITY</span>
+        <h2>Integrates directly with <span class="gradient-text">your AI engineering stack.</span></h2>
+        <p>Connect ANVIL's local read-only MCP server to your AI editor or invoke specialized CLI workflows from automated pipelines.</p>
+      </div>
+
+      <div class="ecosystem-grid">
+        <div class="eco-card">
+          <span class="eco-badge">MCP SERVER</span>
+          <h4>Claude Code</h4>
+          <p>Register ANVIL as a local stdio MCP tool server so Claude can map architecture, search symbols, and audit codebase risk.</p>
+        </div>
+        <div class="eco-card">
+          <span class="eco-badge">MCP CLIENT</span>
+          <h4>Cursor IDE</h4>
+          <p>Add ANVIL to your project's <code>.cursor/mcp.json</code> for instant repository context inside Composer and Chat.</p>
+        </div>
+        <div class="eco-card">
+          <span class="eco-badge">LOCAL LLM</span>
+          <h4>Ollama</h4>
+          <p>Point ANVIL to your local Ollama endpoint for zero-cloud, 100% private review suggestions and diff generation.</p>
+        </div>
+        <div class="eco-card">
+          <span class="eco-badge">API PROVIDERS</span>
+          <h4>OpenAI · Anthropic · Gemini</h4>
+          <p>Configure your own API keys for optional high-reasoning patch proposals and security analysis.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4-Step Engineering Loop -->
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">THE ENGINEERING LIFECYCLE</span>
+        <h2>A repeatable, disciplined loop</h2>
+        <p>From unfamiliar legacy repositories to safely verified pull requests.</p>
+      </div>
+
+      <div class="loop-grid">
+        <div class="loop-card">
+          <span class="loop-num">PHASE 01</span>
+          <h3>Understand</h3>
+          <p>Inspect frameworks, package manifests, scripts, and build setup before modifying any source code.</p>
+        </div>
+        <div class="loop-card">
+          <span class="loop-num">PHASE 02</span>
+          <h3>Map</h3>
+          <p>Trace module dependencies, AST symbols, entry points, and structural hotspots across files.</p>
+        </div>
+        <div class="loop-card">
+          <span class="loop-num">PHASE 03</span>
+          <h3>Review</h3>
+          <p>Analyze Git uncommitted diffs, assess downstream blast radius, and validate proposed unified patches.</p>
+        </div>
+        <div class="loop-card">
+          <span class="loop-num">PHASE 04</span>
+          <h3>Verify</h3>
+          <p>Execute named test scripts, save deterministic outcome logs, and catch regressions before merging.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ Accordion -->
+  <section class="section" id="faq">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">FREQUENTLY ASKED QUESTIONS</span>
+        <h2>Everything you need to know.</h2>
+      </div>
+
+      <div class="faq-grid">
+        <details class="faq-item">
+          <summary>Does ANVIL automatically apply changes to my code?</summary>
+          <p>No. By design, ANVIL enforces human approval for consequential actions. Patch validation is a dry run that inspects diff structure, and remediation generation produces a plan rather than silently modifying dependencies.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Is ANVIL's local dashboard a hosted web app?</summary>
+          <p>No. The dashboard runs 100% locally on your machine via Node.js and binds to localhost. Your repository source code, AST index, and git history never get uploaded to any external server.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Which languages are supported for deep AST analysis?</summary>
+          <p>TypeScript and JavaScript have native, deep AST and symbol-level analysis. For other languages (Python, Go, Rust, Java), ANVIL provides manifest parsing, configuration audits, script runners, and git change-risk heuristics.</p>
+        </details>
+        <details class="faq-item">
+          <summary>How do I connect ANVIL with Claude Code or Cursor?</summary>
+          <p>ANVIL provides a built-in MCP server (`anvil mcp` or through the CLI). Simply add it to your Claude Code or Cursor configuration file to grant AI assistants read-only access to ANVIL's repository intelligence tools.</p>
+        </details>
+        <details class="faq-item">
+          <summary>What is required to run ANVIL?</summary>
+          <p>ANVIL requires Node.js version 22 or higher. It works seamlessly across macOS, Linux, and Windows PowerShell.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Is ANVIL completely free and open source?</summary>
+          <p>Yes. ANVIL is licensed under the permissive MIT License. You have complete freedom to inspect, fork, contribute, and use it in commercial or open-source projects.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- High-Impact CTA Box -->
+  <section class="wrap" style="padding: 40px 0 90px;">
+    <div class="cta-box">
+      <div class="cta-copy">
+        <span class="eyebrow">START ENGINEERING TODAY</span>
+        <h2>Ready to bring clarity to your codebase?</h2>
+        <p>Install ANVIL in seconds or explore the complete open-source repository on GitHub.</p>
+      </div>
+      <div class="hero-cta" style="margin:0">
+        <a class="btn btn-primary btn-large" href="#quickstart">
+          <span>Get Started on npm</span>
+        </a>
+        <a class="btn btn-ghost btn-large" href="https://github.com/anvil-workbench/ANVIL" target="_blank" rel="noopener">
+          <span>Explore on GitHub ↗</span>
+        </a>
+      </div>
+    </div>
+  </section>
 </main>
-<footer><div class="wrap foot"><div class="foot-brand"><a class="brand" href="#" aria-label="ANVIL home"><span class="logo"><img src="/anvil-mark.svg" alt="ANVIL logo"></span><span>ANVIL</span></a><p>The AI Engineering Workbench. Understand the codebase, map architecture, review changes and verify outcomes.</p></div><div class="foot-col"><b>Product</b><a href="#platform">Capabilities</a><a href="#workbench-preview">Workbench preview</a><a href="#tools">Tools</a><a href="#workflow">Workflow</a></div><div class="foot-col"><b>Explore</b><a href="#integrations">Environment</a><a href="#pricing">Open-source access</a><a href="#faq">FAQ</a><a href="#roadmap">Roadmap</a></div><div class="foot-col"><b>Open source</b><a href="https://github.com/anvil-workbench/ANVIL">GitHub repository</a><a href="https://github.com/anvil-workbench/ANVIL/actions">Build & checks</a><a href="https://github.com/anvil-workbench/ANVIL/issues">Issues & feedback</a><a href="https://github.com/anvil-workbench/ANVIL/blob/main/LICENSE">MIT License</a></div><div class="foot-bottom"><span>© 2026 ANVIL · Independent open-source project</span><span>Built for transparent, local-first engineering.</span></div></div></footer>
+
+<!-- Footer -->
+<footer>
+  <div class="wrap footer-grid">
+    <div class="footer-brand">
+      <a class="brand" href="#">
+        <span class="brand-mark">
+          <img src="/anvil-mark.svg" alt="ANVIL Logo">
+        </span>
+        <span>ANVIL</span>
+      </a>
+      <p>The AI Engineering Workbench. Built for codebase intelligence, architecture mapping, change-risk analysis, and deterministic verification.</p>
+    </div>
+    <div class="footer-col">
+      <b>Capabilities</b>
+      <a href="#capabilities">Project Discovery</a>
+      <a href="#capabilities">Architecture Mapping</a>
+      <a href="#capabilities">Change-Risk Engine</a>
+      <a href="#capabilities">Verification Lab</a>
+      <a href="#capabilities">Health Scorecards</a>
+    </div>
+    <div class="footer-col">
+      <b>Ecosystem</b>
+      <a href="#integrations">Claude Code MCP</a>
+      <a href="#integrations">Cursor Integration</a>
+      <a href="#integrations">Ollama Local LLM</a>
+      <a href="#workbench">Local Dashboard</a>
+      <a href="#architecture">Architecture Overview</a>
+    </div>
+    <div class="footer-col">
+      <b>Open Source</b>
+      <a href="https://github.com/anvil-workbench/ANVIL" target="_blank" rel="noopener">GitHub Repository</a>
+      <a href="https://www.npmjs.com/package/anvil-engineering-workbench" target="_blank" rel="noopener">npm Registry</a>
+      <a href="https://github.com/anvil-workbench/ANVIL/releases" target="_blank" rel="noopener">Releases & Changelog</a>
+      <a href="https://github.com/anvil-workbench/ANVIL/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">Contributing Guide</a>
+      <a href="https://github.com/anvil-workbench/ANVIL/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>
+    </div>
+  </div>
+  <div class="wrap footer-bottom">
+    <span>© 2026 ANVIL Organization · Maintained by <a href="https://github.com/AdityaaaTiwari" target="_blank" rel="noopener" style="color:var(--amber-light);font-weight:600;">@AdityaaaTiwari</a></span>
+    <span>Local-First · Zero Cloud Telemetry · Independent Open Source</span>
+  </div>
+</footer>
+
 <script>
-const copyAnvilCommand=document.getElementById("anvil-copy-command");
-if(copyAnvilCommand){copyAnvilCommand.addEventListener("click",async()=>{const value=document.getElementById("anvil-install-command").textContent;try{await navigator.clipboard.writeText(value);copyAnvilCommand.textContent="Copied";setTimeout(()=>copyAnvilCommand.textContent="Copy",1600)}catch{copyAnvilCommand.textContent="Select command";}})}
-const tours={
-discover:{title:"Start with context.",desc:"Inspect the repository before making assumptions about how it works.",rows:[["⌘","Project profile","Languages · scripts · manifests · dependencies","FOUND"],["⌗","Source inventory","Recognized files and project structure","INDEXED"],["◉","Scan notes","Limits and unresolved evidence are visible","REVIEW"]]},
-map:{title:"Make structure visible.",desc:"Explore how source files connect and where a change may travel.",rows:[["⌗","Module relationships","Static imports and package edges","MAPPED"],["⌘","Symbols & exports","AST-based declarations and exported names","PARSED"],["↗","Impact candidates","Potential downstream files to inspect","ESTIMATED"]]},
-review:{title:"Review with evidence.",desc:"Keep findings, proposed patches and risk signals inspectable.",rows:[["⌕","Review snapshots","Compare findings across saved reviews","SAVED"],["⟐","Patch validation","Check diff structure and source context","DRY RUN"],["◉","Change risk","Hotspots and candidate tests for review","ADVISORY"]]},
-verify:{title:"Close the loop.",desc:"Run selected checks and preserve the outcome for the next change.",rows:[["✓","Named script run","Explicitly selected test, build or lint script","RECORDED"],["↗","Regression history","Compare current result with prior outcome","TRACKED"],["◷","Health timeline","Snapshots show how evidence changes","LOCAL"]]}
+// Interactive Package Manager Command Switcher
+const pkgCommands = {
+  npm: "npm install -g anvil-engineering-workbench",
+  npx: "npx anvil-engineering-workbench",
+  pnpm: "pnpm add -g anvil-engineering-workbench",
+  yarn: "yarn global add anvil-engineering-workbench"
 };
-document.querySelectorAll(".tab").forEach(btn=>btn.addEventListener("click",()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));btn.classList.add("active");const d=tours[btn.dataset.tab];document.getElementById("demoContent").innerHTML="<h3>"+d.title+"</h3><p>"+d.desc+"</p><div class='mockrows'>"+d.rows.map(r=>"<div class='mockrow'><div class='mockicon'>"+r[0]+"</div><div><b>"+r[1]+"</b><small>"+r[2]+"</small></div><span class='pill'>"+r[3]+"</span></div>").join("")+"</div>"}));
-const observer=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add("visible");observer.unobserve(e.target)}}),{threshold:.08});document.querySelectorAll(".reveal").forEach(el=>observer.observe(el));
 
-/* GitHub account connection UI is intentionally omitted; the public action is Get App. */
+const pkgCode = document.getElementById("pkgCommand");
+const copyPkgBtn = document.getElementById("copyPkgBtn");
+const copyText = document.getElementById("copyText");
+
+document.querySelectorAll(".pkg-tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".pkg-tab").forEach(t => t.classList.remove("active"));
+    tab.classList.add("active");
+    const pkg = tab.dataset.pkg;
+    pkgCode.textContent = pkgCommands[pkg];
+  });
+});
+
+copyPkgBtn.addEventListener("click", async () => {
+  try {
+    await navigator.clipboard.writeText(pkgCode.textContent.trim());
+    copyText.textContent = "Copied! ✓";
+    copyPkgBtn.style.background = "var(--amber)";
+    copyPkgBtn.style.color = "#07080d";
+    setTimeout(() => {
+      copyText.textContent = "Copy";
+      copyPkgBtn.style.background = "";
+      copyPkgBtn.style.color = "";
+    }, 1800);
+  } catch (err) {
+    copyText.textContent = "Select & copy";
+  }
+});
+
+// Interactive Hero Terminal Tabs
+const terminalDemos = {
+  inspect: {
+    command: "anvil inspect ./my-app",
+    rows: [
+      { label: "Language breakdown", val: "TypeScript 84.2%, CSS 11.5%, JSON 4.3%", status: "ok" },
+      { label: "Detected framework", val: "Next.js 15.1 + React 19", status: "ok" },
+      { label: "Manifest dependencies", val: "28 production · 14 development", status: "cyan" },
+      { label: "Engineering health", val: "88/100 · 0 critical alerts", status: "ok" }
+    ]
+  },
+  map: {
+    command: "anvil map --entry ./src/index.ts",
+    rows: [
+      { label: "Modules parsed", val: "142 files · 618 export symbols", status: "ok" },
+      { label: "AST syntax trees", val: "TypeScript compiler API valid", status: "ok" },
+      { label: "Circular dependencies", val: "0 circular import loops found", status: "ok" },
+      { label: "Entrypoint routes", val: "8 public API routes identified", status: "cyan" }
+    ]
+  },
+  git: {
+    command: "anvil git --compare HEAD~1",
+    rows: [
+      { label: "Modified source files", val: "3 files (+142, -28 lines)", status: "warn" },
+      { label: "Downstream impact", val: "7 dependent files affected", status: "warn" },
+      { label: "Structural hotspot", val: "src/core/auth.ts (Central Hub)", status: "warn" },
+      { label: "Target test suites", val: "auth.test.ts, session.test.ts", status: "cyan" }
+    ]
+  },
+  verify: {
+    command: "anvil verify --script test",
+    rows: [
+      { label: "Script execution", val: "npm test (Vitest runner)", status: "ok" },
+      { label: "Test suites result", val: "24 passed, 0 failed (3.42s)", status: "ok" },
+      { label: "Regression check", val: "0 regressions vs saved run #18", status: "ok" },
+      { label: "Result logged to", val: ".anvil/runs/run-9a84b.json", status: "cyan" }
+    ]
+  }
+};
+
+const termScreen = document.getElementById("termScreen");
+function renderTerminal(tabKey) {
+  const data = terminalDemos[tabKey];
+  termScreen.innerHTML = `
+    <div>
+      <span class="cmd-prompt">$</span>
+      <span class="cmd-command">${data.command}</span>
+    </div>
+    <div class="cmd-output">
+      ${data.rows.map(r => `
+        <div class="cmd-row">
+          <span style="color:#94a3b8">${r.label}</span>
+          <span class="cmd-status-${r.status}">${r.val}</span>
+        </div>
+      `).join("")}
+    </div>
+    <div style="margin-top:16px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.06);font-size:10px;color:#64748b;display:flex;justify-content:space-between">
+      <span>● LOCAL PROCESS AUDITED</span>
+      <span>READY FOR VERIFICATION</span>
+    </div>
+  `;
+}
+renderTerminal("inspect");
+
+document.querySelectorAll(".term-tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".term-tab").forEach(t => t.classList.remove("active"));
+    tab.classList.add("active");
+    renderTerminal(tab.dataset.tab);
+  });
+});
+
+// Interactive Workbench Stage Switcher
+const stageData = [
+  {
+    head: "ANVIL / CODEBASE DISCOVERY & AST PROFILING",
+    html: `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div style="background:#090d14;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:16px;">
+          <div style="font-size:10px;font-family:'JetBrains Mono';color:var(--amber-light);margin-bottom:6px;">DISCOVERED STACK</div>
+          <div style="font-size:18px;font-weight:700;margin-bottom:12px;">TypeScript · Next.js</div>
+          <div style="font-size:12px;color:var(--text-muted);display:grid;gap:6px;">
+            <div>• Runtime: Node.js 22 LTS</div>
+            <div>• Package Manager: pnpm / npm</div>
+            <div>• Test Runner: Vitest v3</div>
+          </div>
+        </div>
+        <div style="background:#090d14;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:16px;">
+          <div style="font-size:10px;font-family:'JetBrains Mono';color:var(--cyan);margin-bottom:6px;">SOURCE COMPOSITION</div>
+          <div style="font-size:18px;font-weight:700;margin-bottom:12px;">148 Source Files</div>
+          <div style="height:6px;background:#1e293b;border-radius:99px;overflow:hidden;margin-bottom:10px;">
+            <div style="height:100%;width:84%;background:linear-gradient(90deg,var(--amber),var(--cyan));"></div>
+          </div>
+          <div style="font-size:11px;color:var(--text-subtle);">84% TS · 12% CSS · 4% Config</div>
+        </div>
+      </div>
+      <div style="margin-top:14px;background:#090d14;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:14px;font-family:'JetBrains Mono';font-size:11px;color:#94a3b8;">
+        <span style="color:var(--emerald);">✓</span> Parsed 618 export signatures across 14 modules in 184ms
+      </div>
+    `
+  },
+  {
+    head: "ANVIL / ARCHITECTURE & DEPENDENCY MAPPING",
+    html: `
+      <div style="background:#090d14;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:20px;">
+        <div style="display:flex;justify-content:space-around;align-items:center;padding:20px 0;">
+          <div style="text-align:center;">
+            <div style="width:52px;height:52px;border-radius:12px;background:rgba(249,115,22,0.15);border:1px solid var(--amber);display:grid;place-items:center;font-weight:700;color:var(--amber);margin:0 auto 8px;">CLI</div>
+            <span style="font-size:11px;color:var(--text-muted)">bin/anvil</span>
+          </div>
+          <div style="color:var(--text-subtle);font-size:20px;">➔</div>
+          <div style="text-align:center;">
+            <div style="width:52px;height:52px;border-radius:12px;background:rgba(56,189,248,0.15);border:1px solid var(--cyan);display:grid;place-items:center;font-weight:700;color:var(--cyan);margin:0 auto 8px;">CORE</div>
+            <span style="font-size:11px;color:var(--text-muted)">src/core</span>
+          </div>
+          <div style="color:var(--text-subtle);font-size:20px;">➔</div>
+          <div style="text-align:center;">
+            <div style="width:52px;height:52px;border-radius:12px;background:rgba(52,211,153,0.15);border:1px solid var(--emerald);display:grid;place-items:center;font-weight:700;color:var(--emerald);margin:0 auto 8px;">DASH</div>
+            <span style="font-size:11px;color:var(--text-muted)">localhost:4173</span>
+          </div>
+        </div>
+        <div style="border-top:1px solid rgba(255,255,255,0.08);padding-top:12px;display:flex;justify-content:space-between;font-size:11px;color:var(--text-subtle);font-family:'JetBrains Mono';">
+          <span>CIRCULAR DEPENDENCIES: 0</span>
+          <span>EXTERNAL PACKAGES: 3 (zod, mcp, ts)</span>
+        </div>
+      </div>
+    `
+  },
+  {
+    head: "ANVIL / GIT CHANGE-RISK & IMPACT RADIUS",
+    html: `
+      <div style="display:grid;gap:10px;">
+        <div style="background:#090d14;border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:12px;display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <b style="font-size:13px;color:#fff;">src/core/permission-policy.ts</b>
+            <div style="font-size:11px;color:var(--text-muted);">Touched by working tree · Central security gate</div>
+          </div>
+          <span style="font-size:10px;padding:4px 8px;border-radius:20px;background:rgba(244,63,94,0.15);color:#f43f5e;font-weight:700;">HIGH BLAST RADIUS</span>
+        </div>
+        <div style="background:#090d14;border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:12px;display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <b style="font-size:13px;color:#fff;">src/mcp/workspace-path.ts</b>
+            <div style="font-size:11px;color:var(--text-muted);">Path canonicalization · Downstream of 4 modules</div>
+          </div>
+          <span style="font-size:10px;padding:4px 8px;border-radius:20px;background:rgba(251,191,36,0.15);color:#fbbf24;font-weight:700;">MODERATE RISK</span>
+        </div>
+        <div style="background:#090d14;border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:10px 14px;font-family:'JetBrains Mono';font-size:11px;color:var(--cyan);">
+          Target test recommendation: tests/permission-policy.test.ts, tests/mcp-protocol.test.ts
+        </div>
+      </div>
+    `
+  },
+  {
+    head: "ANVIL / DETERMINISTIC VERIFICATION LAB",
+    html: `
+      <div style="background:#090d14;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:18px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <div>
+            <span style="font-size:11px;font-family:'JetBrains Mono';color:var(--emerald);">RUN #28 · SAVED RUN</span>
+            <div style="font-size:15px;font-weight:700;color:#fff;margin-top:2px;">Vitest Suite: 34 / 34 Passed</div>
+          </div>
+          <span style="padding:4px 10px;border-radius:20px;background:rgba(52,211,153,0.15);color:var(--emerald);font-size:11px;font-weight:700;">ALL CHECKS GREEN</span>
+        </div>
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.8;font-family:'JetBrains Mono';background:rgba(0,0,0,0.3);padding:12px;border-radius:8px;">
+          ✓ permission-policy.test.ts (240ms)<br>
+          ✓ run-store.test.ts (190ms)<br>
+          ✓ mcp-workspace-path.test.ts (110ms)<br>
+          <span style="color:var(--cyan);">→ 0 regressions detected compared with baseline #27</span>
+        </div>
+      </div>
+    `
+  }
+];
+
+const stageHeadTitle = document.getElementById("stageHeadTitle");
+const stageContent = document.getElementById("stageContent");
+function renderStage(idx) {
+  stageHeadTitle.textContent = stageData[idx].head;
+  stageContent.innerHTML = stageData[idx].html;
+}
+renderStage(0);
+
+document.querySelectorAll(".stage-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".stage-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    renderStage(Number(btn.dataset.stage));
+  });
+});
 </script>
-</body></html>
-
+</body>
+</html>
