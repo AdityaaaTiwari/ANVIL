@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#07080d">
-<link rel="icon" type="image/svg+xml" href="/anvil-mark.svg">
+<link rel="icon" type="image/svg+xml" href="anvil-mark.svg">
 <meta property="og:title" content="ANVIL — The AI Engineering Workbench">
 <meta property="og:description" content="Local-first codebase intelligence, architecture mapping, change-risk analysis, and deterministic verification.">
 <meta name="description" content="ANVIL is an open-source AI engineering workbench for codebase intelligence, architecture mapping, change-risk analysis, review history, and deterministic verification.">
@@ -104,9 +104,10 @@ header:hover {
   border: 1px solid rgba(249, 115, 22, 0.35);
   box-shadow: 0 4px 16px var(--amber-glow);
 }
-.brand-mark img {
-  width: 22px;
-  height: 22px;
+.brand-mark img,
+.brand-mark svg {
+  width: 24px;
+  height: 24px;
   display: block;
 }
 .version-badge {
@@ -1005,7 +1006,28 @@ footer {
   <div class="wrap nav">
     <a class="brand" href="#">
       <span class="brand-mark" aria-label="ANVIL Mark">
-        <img src="/anvil-mark.svg" alt="ANVIL Logo">
+        <svg viewBox="0 0 512 512" width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="brand-neon" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#38bdf8"/>
+              <stop offset="50%" stop-color="#f97316"/>
+              <stop offset="100%" stop-color="#fb923c"/>
+            </linearGradient>
+            <linearGradient id="brand-metal" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#1e293b"/>
+              <stop offset="100%" stop-color="#0f172a"/>
+            </linearGradient>
+          </defs>
+          <path d="M120 404 L392 404 L368 360 L144 360 Z" fill="url(#brand-metal)" stroke="#38bdf8" stroke-width="12" stroke-linejoin="round"/>
+          <path d="M144 360 L368 360 L336 312 L176 312 Z" fill="url(#brand-metal)" stroke="url(#brand-neon)" stroke-width="12" stroke-linejoin="round"/>
+          <path d="M176 312 L220 186 L256 186 L224 312 Z" fill="url(#brand-metal)" stroke="url(#brand-neon)" stroke-width="10"/>
+          <path d="M336 312 L292 186 L256 186 L288 312 Z" fill="url(#brand-metal)" stroke="url(#brand-neon)" stroke-width="10"/>
+          <path d="M188 266 L256 232 L324 266 L256 280 Z" fill="url(#brand-neon)"/>
+          <path d="M68 186 C104 184 156 180 188 162 L200 136 L416 136 C432 136 444 148 440 164 L424 186 L374 186 L344 212 L168 212 L136 186 Z" fill="url(#brand-metal)" stroke="url(#brand-neon)" stroke-width="14" stroke-linejoin="round"/>
+          <line x1="202" y1="140" x2="414" y2="140" stroke="#ffffff" stroke-width="10" stroke-linecap="round"/>
+          <line x1="202" y1="140" x2="414" y2="140" stroke="#f97316" stroke-width="14" opacity="0.6" stroke-linecap="round"/>
+          <polygon points="256,112 264,136 288,144 264,152 256,176 248,152 224,144 248,136" fill="#38bdf8"/>
+        </svg>
       </span>
       <span>ANVIL</span>
       <span class="version-badge">v1.0.0</span>
@@ -1527,7 +1549,28 @@ footer {
     <div class="footer-brand">
       <a class="brand" href="#">
         <span class="brand-mark">
-          <img src="/anvil-mark.svg" alt="ANVIL Logo">
+          <svg viewBox="0 0 512 512" width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="brand-neon-foot" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#38bdf8"/>
+                <stop offset="50%" stop-color="#f97316"/>
+                <stop offset="100%" stop-color="#fb923c"/>
+              </linearGradient>
+              <linearGradient id="brand-metal-foot" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stop-color="#1e293b"/>
+                <stop offset="100%" stop-color="#0f172a"/>
+              </linearGradient>
+            </defs>
+            <path d="M120 404 L392 404 L368 360 L144 360 Z" fill="url(#brand-metal-foot)" stroke="#38bdf8" stroke-width="12" stroke-linejoin="round"/>
+            <path d="M144 360 L368 360 L336 312 L176 312 Z" fill="url(#brand-metal-foot)" stroke="url(#brand-neon-foot)" stroke-width="12" stroke-linejoin="round"/>
+            <path d="M176 312 L220 186 L256 186 L224 312 Z" fill="url(#brand-metal-foot)" stroke="url(#brand-neon-foot)" stroke-width="10"/>
+            <path d="M336 312 L292 186 L256 186 L288 312 Z" fill="url(#brand-metal-foot)" stroke="url(#brand-neon-foot)" stroke-width="10"/>
+            <path d="M188 266 L256 232 L324 266 L256 280 Z" fill="url(#brand-neon-foot)"/>
+            <path d="M68 186 C104 184 156 180 188 162 L200 136 L416 136 C432 136 444 148 440 164 L424 186 L374 186 L344 212 L168 212 L136 186 Z" fill="url(#brand-metal-foot)" stroke="url(#brand-neon-foot)" stroke-width="14" stroke-linejoin="round"/>
+            <line x1="202" y1="140" x2="414" y2="140" stroke="#ffffff" stroke-width="10" stroke-linecap="round"/>
+            <line x1="202" y1="140" x2="414" y2="140" stroke="#f97316" stroke-width="14" opacity="0.6" stroke-linecap="round"/>
+            <polygon points="256,112 264,136 288,144 264,152 256,176 248,152 224,144 248,136" fill="#38bdf8"/>
+          </svg>
         </span>
         <span>ANVIL</span>
       </a>
