@@ -1,7 +1,7 @@
 <!-- FORGE — AI Harness for software engineering -->
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/AdityaaaTiwari/ANVIL/main/docs/forge-dashboard.png" alt="FORGE AI Harness dashboard" width="100%" />
+  <img src="https://raw.githubusercontent.com/anvil-workbench/ANVIL/main/docs/forge-dashboard.png" alt="FORGE AI Harness dashboard" width="100%" />
 </p>
 
 <h1 align="center">ANVIL — The AI Engineering Harness</h1>
@@ -16,10 +16,10 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/AdityaaaTiwari/ANVIL"><img src="https://img.shields.io/github/stars/AdityaaaTiwari/ANVIL?style=flat" alt="GitHub stars" /></a>
-  <a href="https://github.com/AdityaaaTiwari/ANVIL/forks"><img src="https://img.shields.io/github/forks/AdityaaaTiwari/ANVIL?style=flat" alt="GitHub forks" /></a>
-  <a href="https://github.com/AdityaaaTiwari/ANVIL/commits/main"><img src="https://img.shields.io/github/last-commit/AdityaaaTiwari/ANVIL?style=flat" alt="Last commit" /></a>
-  <a href="https://github.com/AdityaaaTiwari/ANVIL/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/AdityaaaTiwari/ANVIL/ci.yml?branch=main&style=flat&label=build" alt="Build status" /></a>
+  <a href="https://github.com/anvil-workbench/ANVIL"><img src="https://img.shields.io/github/stars/anvil-workbench/ANVIL?style=flat" alt="GitHub stars" /></a>
+  <a href="https://github.com/anvil-workbench/ANVIL/forks"><img src="https://img.shields.io/github/forks/anvil-workbench/ANVIL?style=flat" alt="GitHub forks" /></a>
+  <a href="https://github.com/anvil-workbench/ANVIL/commits/main"><img src="https://img.shields.io/github/last-commit/anvil-workbench/ANVIL?style=flat" alt="Last commit" /></a>
+  <a href="https://github.com/anvil-workbench/ANVIL/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/anvil-workbench/ANVIL/ci.yml?branch=main&style=flat&label=build" alt="Build status" /></a>
 </p>
 
 <p align="center">
@@ -33,10 +33,10 @@
 </p>
 
 <p align="center">
-  <a href="https://www.star-history.com/AdityaaaTiwari/ANVIL">
+  <a href="https://www.star-history.com/anvil-workbench/ANVIL">
     <img src="https://img.shields.io/badge/GitHub%20Trending-Not%20ranked%20yet-64748b?style=for-the-badge&logo=github&logoColor=white" alt="GitHub Trending — not ranked yet" />
   </a>
-  <a href="https://www.star-history.com/AdityaaaTiwari/ANVIL">
+  <a href="https://www.star-history.com/anvil-workbench/ANVIL">
     <img src="https://img.shields.io/badge/Star%20History%20Global%20Rank-Pending-64748b?style=for-the-badge&logo=starship&logoColor=white" alt="Star History global rank — pending" />
   </a>
 </p>
@@ -111,7 +111,7 @@ git --version
 Install the released CLI directly from the GitHub repository:
 
 ```bash
-npm install --global git+https://github.com/AdityaaaTiwari/ANVIL.git#v1.0.0
+npm install --global git+https://github.com/anvil-workbench/ANVIL.git#v1.0.0
 ```
 
 Verify the installation:
@@ -149,7 +149,7 @@ npm --version
 git --version
 
 # Install FORGE
-npm install --global git+https://github.com/AdityaaaTiwari/ANVIL.git#v1.0.0
+npm install --global git+https://github.com/anvil-workbench/ANVIL.git#v1.0.0
 
 # Move into your project
 cd C:\Users\YourName\Projects\my-project
@@ -167,7 +167,7 @@ Replace the example directory with your actual project path.
 For contributors or anyone who wants to work on FORGE itself:
 
 ```bash
-git clone https://github.com/AdityaaaTiwari/ANVIL.git
+git clone https://github.com/anvil-workbench/ANVIL.git
 cd FORGE-ECC
 npm ci
 npm run typecheck
@@ -523,7 +523,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: AdityaaaTiwari/ANVIL@v1.0.0
+      - uses: anvil-workbench/ANVIL@v1.0.0
         with:
           version: v1.0.0
           project-path: .
@@ -692,7 +692,7 @@ See [docs/FORGE-CAPABILITY-ROADMAP.md](docs/FORGE-CAPABILITY-ROADMAP.md) for the
 ### Clone and install
 
 ```bash
-git clone https://github.com/AdityaaaTiwari/ANVIL.git
+git clone https://github.com/anvil-workbench/ANVIL.git
 cd FORGE-ECC
 npm ci
 ```
@@ -741,11 +741,11 @@ For release-by-release changes, see [CHANGELOG.md](CHANGELOG.md).
 |---|---|
 | Product website | [forge-ecc.vercel.app](https://forge-ecc.vercel.app/) |
 | Get the GitHub App | [Install FORGE](https://forge-ecc.vercel.app/api/github/install) |
-| Source repository | [AdityaaaTiwari/ANVIL](https://github.com/AdityaaaTiwari/ANVIL) |
+| Source repository | [anvil-workbench/ANVIL](https://github.com/anvil-workbench/ANVIL) |
 | Organization | [FORGE WORKBENCH](https://github.com/forge-workbench) |
-| Releases | [GitHub Releases](https://github.com/AdityaaaTiwari/ANVIL/releases) |
-| Issues and bugs | [GitHub Issues](https://github.com/AdityaaaTiwari/ANVIL/issues) |
-| CI and automation | [GitHub Actions](https://github.com/AdityaaaTiwari/ANVIL/actions) |
+| Releases | [GitHub Releases](https://github.com/anvil-workbench/ANVIL/releases) |
+| Issues and bugs | [GitHub Issues](https://github.com/anvil-workbench/ANVIL/issues) |
+| CI and automation | [GitHub Actions](https://github.com/anvil-workbench/ANVIL/actions) |
 | Roadmap | [Capability Roadmap](docs/FORGE-CAPABILITY-ROADMAP.md) |
 | Changelog | [CHANGELOG.md](CHANGELOG.md) |
 | Provider guide | [docs/providers.md](docs/providers.md) |
@@ -768,10 +768,10 @@ FORGE is open source under the [MIT License](LICENSE).
 ## Star history
 
 <p align="center">
-  <a href="https://www.star-history.com/AdityaaaTiwari/ANVIL">
+  <a href="https://www.star-history.com/anvil-workbench/ANVIL">
     <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=AdityaaaTiwari/ANVIL&type=Date&theme=dark" />
-      <img src="https://api.star-history.com/svg?repos=AdityaaaTiwari/ANVIL&type=Date" alt="FORGE GitHub star history" width="100%" />
+      <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=anvil-workbench/ANVIL&type=Date&theme=dark" />
+      <img src="https://api.star-history.com/svg?repos=anvil-workbench/ANVIL&type=Date" alt="FORGE GitHub star history" width="100%" />
     </picture>
   </a>
 </p>
