@@ -33,7 +33,7 @@ runs:
         FORGE_VERSION: ${{ inputs.version }}
       run: |
         set -euo pipefail
-        npm install --global "git+https://github.com/AdityaaaTiwari/ANVIL.git#${FORGE_VERSION}"
+        npm install --global "git+https://github.com/anvil-workbench/ANVIL.git#${FORGE_VERSION}"
         anvil --version
     - name: Run FORGE
       shell: bash
