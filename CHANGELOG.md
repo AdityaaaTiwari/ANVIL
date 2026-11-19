@@ -1,8 +1,8 @@
-# FORGE Changelog
+# ANVIL Changelog
 
 ## 1.0.0 — First major release
 
-FORGE 1.0.0 brings the independent FORGE engineering workbench together as a versioned, installable product. It is designed to provide a local-first alternative for teams and developers who want codebase intelligence, agent orchestration, reviewable workflows, and measurable verification.
+ANVIL 1.0.0 brings the independent ANVIL engineering workbench together as a versioned, installable product. It is designed to provide a local-first alternative for teams and developers who want codebase intelligence, agent orchestration, reviewable workflows, and measurable verification.
 
 ### Product experience
 - Local engineering dashboard with project overview, health snapshots, architecture and dependency graphs, run history, task inspection, approvals, traces, reviews, verification history, and benchmark/evaluation views.
@@ -21,10 +21,10 @@ FORGE 1.0.0 brings the independent FORGE engineering workbench together as a ver
 
 ### Install and launch
 ```bash
-npm install -g forge-engineering-workbench
-forge --version
-forge init ./my-project
-forge dashboard ./my-project
+npm install -g anvil-engineering-workbench
+anvil --version
+anvil init ./my-project
+anvil dashboard ./my-project
 ```
 
 The dashboard binds to localhost by default. Open the URL printed in the terminal.
@@ -37,4 +37,4 @@ The dashboard binds to localhost by default. Open the URL printed in the termina
 - Local script verification executes project-controlled code on the host. Docker verification is opt-in and depends on the host runtime. Do not treat local execution or heuristic risk scores as a security guarantee.
 - Rootless Docker, live provider end-to-end validation, and hosted multi-user operation are not claimed as verified V1 capabilities.
 
-This release establishes the FORGE product foundation. Future releases can expand integrations and hosted operation without weakening the local-first permission and approval model.
+This release establishes the ANVIL product foundation. Future releases can expand integrations and hosted operation without weakening the local-first permission and approval model.
