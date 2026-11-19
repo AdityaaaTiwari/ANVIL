@@ -3,7 +3,9 @@ import path from "node:path";
 import { assertWorkspacePathAllowed } from "../core/workspace-browser.js";
 
 function isInside(root: string, candidate: string): boolean {
-  const relative = path.relative(root, candidate);
+  const normRoot = process.platform === "win32" ? root.toLowerCase() : root;
+  const normCandidate = process.platform === "win32" ? candidate.toLowerCase() : candidate;
+  const relative = path.relative(normRoot, normCandidate);
   return relative === "" || (!relative.startsWith(".." + path.sep) && relative !== ".." && !path.isAbsolute(relative));
 }
 
@@ -25,12 +27,14 @@ export function createWorkspaceResolver(workspaceRoot: string): (input?: string)
       const info = await lstat(cursor);
       if (info.isSymbolicLink()) throw new Error("Symbolic links are not allowed in MCP project paths.");
     }
-    const candidate = await realpath(path.resolve(workspaceRoot, ...segments));
-    if (!isInside(workspaceRoot, candidate)) {
+    const target = path.resolve(workspaceRoot, ...segments);
+    const candidate = await realpath(target);
+    const canonicalRoot = await realpath(workspaceRoot).catch(() => path.resolve(workspaceRoot));
+    if (!isInside(canonicalRoot, candidate)) {
       throw new Error("Requested project path is outside the configured FORGE workspace.");
     }
     const info = await stat(candidate);
     if (!info.isDirectory()) throw new Error("Project path must be a directory.");
-    return candidate;
+    return target;
   };
 }
