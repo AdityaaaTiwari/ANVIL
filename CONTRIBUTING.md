@@ -1,29 +1,34 @@
-# Contributing to FORGE
+# Contributing to ANVIL
 
-Thanks for considering a contribution.
+Thank you for your interest in contributing to ANVIL!
 
-## Before you start
+## Governance & Contribution Model
 
-1. Open an issue to discuss substantial changes.
-2. Keep pull requests focused and explain the user problem they solve.
-3. Do not include API keys, credentials, private project data, or generated secrets.
+To maintain code stability and security:
+- **No Direct Pushes:** Direct commits or pushes to the `main` branch are blocked.
+- **Review First:** All contributions must be submitted as Pull Requests (PRs) from your own fork.
+- **Maintainer Approval:** Every PR requires review and approval from the maintainer (@AdityaaaTiwari) before it can be merged.
 
-## Local checks
+## How to Contribute
 
-```bash
-npm ci
-npm test
-npm run typecheck
-npm run build
-```
+1. **Fork the Repository:** Create a fork under your personal GitHub account.
+2. **Clone & Branch:** Clone your fork and create a descriptive branch:
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+3. **Run Checks Locally:** Ensure all checks pass before submitting:
+   ```bash
+   npm ci
+   npm run typecheck
+   npm test
+   npm run build
+   ```
+4. **Commit Clearly:** Write concise, clear commit messages describing your changes.
+5. **Open a Pull Request:** Submit your PR against the `main` branch of the upstream repository. Complete the PR template checklist.
 
-## Engineering expectations
+## Guidelines
 
-- Prefer small modules with explicit inputs and outputs.
-- Add tests for new behavior and bug fixes.
-- Never claim a command or integration works without testing it.
-- Treat project files as untrusted input.
-- Require clear approval before destructive operations.
-- Update documentation when behavior or limitations change.
-
-By contributing, you agree that your contributions are provided under the project's MIT license.
+- Keep pull requests focused on a single change or fix.
+- Include automated tests for any new functionality or bug fixes.
+- Never commit credentials, secrets, private keys, or sensitive environment variables.
+- Contributions are licensed under the repository's MIT License.
