@@ -1,6 +1,6 @@
 {
   "name": "anvil-engineering-workbench",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "Aditya Tiwari (https://github.com/AdityaaaTiwari)",
   "private": false,
   "description": "ANVIL — An open-source AI engineering harness with codebase intelligence, review history, regression signals, and a local engineering dashboard.",

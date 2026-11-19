@@ -4,7 +4,7 @@ author: Aditya Tiwari
 
 branding:
   icon: terminal
-  color: gray-dark
+  color: orange
 
 inputs:
   version:
@@ -27,25 +27,25 @@ runs:
       uses: actions/setup-node@v4
       with:
         node-version: 22
-    - name: Install ANVIL from GitHub
+    - name: Install ANVIL
       shell: bash
       env:
-        FORGE_VERSION: ${{ inputs.version }}
+        ANVIL_VERSION: ${{ inputs.version }}
       run: |
         set -euo pipefail
-        npm install --global "git+https://github.com/anvil-workbench/ANVIL.git#${FORGE_VERSION}"
+        npm install --global "git+https://github.com/anvil-workbench/ANVIL.git#${ANVIL_VERSION}"
         anvil --version
-    - name: Run FORGE
+    - name: Run ANVIL
       shell: bash
       env:
-        FORGE_PROJECT_PATH: ${{ inputs.project-path }}
-        FORGE_OPERATION: ${{ inputs.operation }}
+        ANVIL_PROJECT_PATH: ${{ inputs.project-path }}
+        ANVIL_OPERATION: ${{ inputs.operation }}
       run: |
         set -euo pipefail
-        case "$FORGE_OPERATION" in
-          inspect) forge inspect "$FORGE_PROJECT_PATH" ;;
-          quality) forge quality "$FORGE_PROJECT_PATH" ;;
-          health) forge health "$FORGE_PROJECT_PATH" ;;
-          review) forge review "$FORGE_PROJECT_PATH" ;;
-          *) echo "Unsupported FORGE operation: $FORGE_OPERATION" >&2; exit 2 ;;
+        case "$ANVIL_OPERATION" in
+          inspect) anvil inspect "$ANVIL_PROJECT_PATH" ;;
+          quality) anvil quality "$ANVIL_PROJECT_PATH" ;;
+          health) anvil health "$ANVIL_PROJECT_PATH" ;;
+          review) anvil review "$ANVIL_PROJECT_PATH" ;;
+          *) echo "Unsupported ANVIL operation: $ANVIL_OPERATION" >&2; exit 2 ;;
         esac

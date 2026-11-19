@@ -1,7 +1,7 @@
 <!-- ANVIL — AI Harness for software engineering -->
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/anvil-workbench/ANVIL/main/docs/anvil-dashboard.png" alt="ANVIL AI Harness dashboard" width="100%" />
+  <img src="https://raw.githubusercontent.com/anvil-workbench/ANVIL/main/docs/anvil-dashboard.png?v=2" alt="ANVIL AI Harness dashboard" width="100%" />
 </p>
 
 <h1 align="center">ANVIL — The AI Engineering Harness</h1>
