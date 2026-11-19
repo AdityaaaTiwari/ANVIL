@@ -1,19 +1,17 @@
 # Security Policy
 
-FORGE is an early-stage project. Do not use it to run untrusted automation against important systems.
+ANVIL is an early-stage project. Do not use it to run untrusted automation against important systems.
 
-## Support contact
+If you believe you have found a security vulnerability in ANVIL, report it privately before public disclosure.
 
-For general FORGE support, contact [THEGODOFEARTH3@gmail.com](mailto:THEGODOFEARTH3@gmail.com).
+For general ANVIL support, contact [THEGODOFEARTH3@gmail.com](mailto:THEGODOFEARTH3@gmail.com).
 
-## Reporting a vulnerability
+## Scope
 
-Please use GitHub's private vulnerability reporting feature for this repository when available. Do not publish exploit details in a public issue.
+- Project file parsing, validation, and bounding
+- Command and script execution sandboxing
+- Docker container boundaries and credential handling
+- Token and model routing validation
+- Pull request, patch, and branch integrity checks
 
-## Security principles
-
-- Never commit credentials or tokens.
-- Treat repository content and agent output as untrusted data.
-- Keep execution permissions narrow.
-- Make potentially destructive operations opt-in and reviewable.
-- Report limitations honestly; automated checks do not guarantee that software is secure.
+Thank you for helping keep ANVIL and its users safe.

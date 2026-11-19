@@ -1,4 +1,4 @@
-name: FORGE Release
+name: ANVIL Release
 
 on:
   push:
@@ -61,7 +61,7 @@ jobs:
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
-          name: FORGE ${{ inputs.release_tag || github.ref_name }}
+          name: ANVIL ${{ inputs.release_tag || github.ref_name }}
           tag_name: ${{ inputs.release_tag || github.ref_name }}
           target_commitish: ${{ inputs.target_ref || github.sha }}
           body_path: CHANGELOG.md
