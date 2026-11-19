@@ -34,7 +34,7 @@ describe("local dashboard server", () => {
     expect(report.summary.critical).toBe(1);
     expect(JSON.stringify(report)).not.toContain("sk-1234567890abcdef1234567890");
     const page = await fetch(`http://127.0.0.1:${address.port}/`);
-    expect(await page.text()).toContain("FORGE — Engineering Workbench");
+    expect(await page.text()).toContain("ANVIL — Engineering Workbench");
   });
 
 
@@ -203,7 +203,7 @@ describe("local dashboard server", () => {
     const page = await fetch(base);
     expect(page.status).toBe(200);
     const html = await page.text();
-    expect(html).toContain("FORGE");
+    expect(html).toContain("ANVIL");
     expect(html).toContain("Agent handoff map");
     expect(html).toContain("Execution telemetry");
     expect(html).toContain("Agent observability");
