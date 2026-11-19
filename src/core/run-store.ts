@@ -99,6 +99,10 @@ export async function saveRun(projectPath: string, run: RunRecord): Promise<stri
 export async function loadRun(projectPath: string, runId: string): Promise<RunRecord> {
   validateRunId(runId);
   const filePath = path.join(await safeRunsDirectory(projectPath), `${runId}.json`);
+  const linkInfo = await lstat(filePath);
+  if (linkInfo.isSymbolicLink() || !linkInfo.isFile()) {
+    throw new Error("Stored run file must be a regular file and not a symbolic link.");
+  }
   const handle = await open(filePath, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0));
   let serialized: string;
   try {

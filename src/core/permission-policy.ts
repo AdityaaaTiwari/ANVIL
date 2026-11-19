@@ -48,6 +48,10 @@ export async function loadPermissionPolicy(projectPath: string): Promise<ForgePe
     if (directoryInfo.isSymbolicLink() || !directoryInfo.isDirectory()) {
       throw new Error("The .forge policy directory must be a real directory inside the project.");
     }
+    const fileInfo = await lstat(file).catch(() => null);
+    if (fileInfo && (fileInfo.isSymbolicLink() || !fileInfo.isFile())) {
+      throw new Error("The .forge/permissions.json policy file must be a regular file, not a symbolic link.");
+    }
     // Bound policy parsing and reject a final-component symlink swap at open time.
     let handle;
     try {

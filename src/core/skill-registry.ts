@@ -72,6 +72,10 @@ function parseSkill(id: string, content: string, filePath: string): SkillDefinit
 }
 
 async function readSkillFile(filePath: string): Promise<string> {
+  const linkInfo = await lstat(filePath);
+  if (linkInfo.isSymbolicLink() || !linkInfo.isFile()) {
+    throw new Error("Workspace skill file must be a regular file and not a symbolic link.");
+  }
   const handle = await open(filePath, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0));
   try {
     const info = await handle.stat();
