@@ -131,12 +131,19 @@ body{
 
 /* Navigation Tabs */
 .tab-nav{
+  position:sticky;
+  top:12px;
+  z-index:40;
+  background:rgba(9,13,20,0.94);
+  backdrop-filter:blur(20px);
   display:flex;
-  gap:6px;
-  border-bottom:1px solid var(--line);
-  padding:12px 0;
-  margin-bottom:22px;
+  gap:8px;
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:12px;
+  padding:8px 12px;
+  margin-bottom:28px;
   overflow-x:auto;
+  box-shadow:0 8px 32px rgba(0,0,0,0.4);
 }
 .tab-btn{
   background:transparent;
@@ -151,15 +158,14 @@ body{
   transition:all 0.2s ease;
   white-space:nowrap;
 }
-.tab-btn:hover{color:#fff;background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.08)}
+.tab-btn:hover{color:#fff;background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.1)}
 .tab-btn.active{
   color:#fff;
-  background:linear-gradient(135deg,rgba(249,115,22,0.18),rgba(249,115,22,0.08));
-  border-color:rgba(249,115,22,0.45);
+  background:linear-gradient(135deg,rgba(249,115,22,0.22),rgba(249,115,22,0.1));
+  border-color:rgba(249,115,22,0.5);
   box-shadow:0 0 15px rgba(249,115,22,0.15);
 }
-.tab-pane{display:none}
-.tab-pane.active{display:block}
+.tab-pane{margin-bottom:48px;scroll-margin-top:84px}
 
 /* Showcase Banner */
 .showcase-banner{
@@ -976,14 +982,13 @@ if(showcaseToggle){
   });
 }
 
-// Tab navigation
+// Tab quick jump navigation
 document.querySelectorAll(".tab-btn").forEach(btn=>{
   btn.addEventListener("click",()=>{
     document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
-    document.querySelectorAll(".tab-pane").forEach(p=>p.classList.remove("active"));
     btn.classList.add("active");
     const pane = el(btn.dataset.tab);
-    if(pane) pane.classList.add("active");
+    if(pane) pane.scrollIntoView({ behavior:"smooth", block:"start" });
   });
 });
 
@@ -1618,7 +1623,7 @@ async function loadWorkspace(pathValue=workspaceDirectory){
 async function previewWorkspace(filePath){
   try{
     const file=await api("/api/workspace/file?path="+encodeURIComponent(filePath));
-    el("workspacePreview").innerHTML='<div><b>'+esc(file.name)+'</b><div class="run-meta">'+esc(file.path)+' · '+esc(file.size)+' bytes</div></div><pre style="white-space:pre;overflow:auto;max-height:520px;background:#080c14;border:1px solid var(--line);padding:14px;border-radius:9px;font:11px/1.6 'JetBrains Mono',monospace">'+esc(file.content)+'</pre>';
+    el("workspacePreview").innerHTML='<div><b>'+esc(file.name)+'</b><div class="run-meta">'+esc(file.path)+' · '+esc(file.size)+' bytes</div></div><pre style="white-space:pre;overflow:auto;max-height:520px;background:#080c14;border:1px solid var(--line);padding:14px;border-radius:9px;font:11px/1.6 monospace">'+esc(file.content)+'</pre>';
   }catch(error){el("workspacePreview").innerHTML='<div class="error">'+esc(error.message)+'</div>';}
 }
 
