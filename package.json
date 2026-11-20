@@ -41,7 +41,12 @@
     "developer-tools",
     "engineering",
     "code-quality",
-    "workflows"
+    "workflows",
+    "doctor",
+    "cleaner",
+    "autofix",
+    "architecture-map",
+    "mcp-server"
   ],
   "license": "MIT",
   "devDependencies": {

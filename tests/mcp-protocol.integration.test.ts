@@ -94,6 +94,10 @@ describe("FORGE MCP stdio protocol integration", () => {
     expect(toolNames).toContain("forge_project_memory");
     expect(toolNames).toContain("forge_agent_security_audit");
     expect(toolNames).toContain("forge_dependency_impact");
+    expect(toolNames).toContain("forge_doctor");
+    expect(toolNames).toContain("forge_clean_preview");
+    expect(toolNames).toContain("anvil_doctor");
+    expect(toolNames).toContain("anvil_clean_preview");
 
     const agentIntel = await request("tools/call", {
       name: "forge_agent_intelligence",

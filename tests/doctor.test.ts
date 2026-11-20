@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { formatDoctorReport, runDoctorChecks } from "../src/core/doctor.js";
+import { formatDoctorReport, runDoctorChecks, fixDoctorIssues } from "../src/core/doctor.js";
 import path from "node:path";
 import os from "node:os";
 import { mkdtemp, mkdir } from "node:fs/promises";
@@ -121,5 +121,18 @@ describe("FORGE doctor diagnostics", () => {
     expect(text).toContain("[WARN] Docker daemon");
     expect(text).toContain("[FAIL] Project workspace");
     expect(text).toContain("Overall Status: CRITICAL (1 OK, 1 WARN, 1 FAIL)");
+  });
+
+  it("scaffolds missing .anvil, .gitignore, and .env.example with fixDoctorIssues", async () => {
+    const tmp = await mkdtemp(path.join(os.tmpdir(), "forge-doc-fix-"));
+    try {
+      const result = await fixDoctorIssues(tmp);
+      expect(result.repaired.length).toBeGreaterThanOrEqual(3);
+      expect(result.repaired.some(r => r.includes(".anvil"))).toBe(true);
+      expect(result.repaired.some(r => r.includes(".gitignore"))).toBe(true);
+      expect(result.repaired.some(r => r.includes(".env.example"))).toBe(true);
+    } finally {
+      await safeRm(tmp);
+    }
   });
 });

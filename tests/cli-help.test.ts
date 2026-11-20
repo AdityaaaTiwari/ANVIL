@@ -212,3 +212,25 @@ describe("agent-intelligence CLI flags", () => {
     }
   }, 20_000);
 });
+
+describe("clean and fix CLI commands", () => {
+  it("prints clean usage when --help is passed", () => {
+    const output = runCli("clean", "--help");
+    expect(output).toContain("Usage: anvil clean");
+    expect(output).toContain("--apply");
+    expect(output).toContain("--fix");
+    expect(output).toContain("--json");
+  });
+
+  it("prints fix usage when --help is passed", () => {
+    const output = runCli("fix", "--help");
+    expect(output).toContain("Usage: anvil fix");
+  });
+
+  it("prints doctor usage and documents --fix flag", () => {
+    const output = runCli("doctor", "--help");
+    expect(output).toContain("Usage: anvil doctor");
+    expect(output).toContain("--fix");
+    expect(output).toContain("--json");
+  });
+});

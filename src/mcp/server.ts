@@ -21,9 +21,11 @@ import { buildAgentOptimizationPlan } from "../core/agent-optimization.js";
 import { listProjectMemory, buildProjectMemoryContext } from "../core/project-memory.js";
 import { auditAgentConfiguration } from "../core/agent-security-audit.js";
 import { analyzeDependencyImpact } from "../core/dependency-impact.js";
+import { runDoctorChecks } from "../core/doctor.js";
+import { cleanProject } from "../core/project-cleaner.js";
 
 
-const WORKSPACE_ROOT = await realpath(process.env.FORGE_WORKSPACE ?? process.cwd());
+const WORKSPACE_ROOT = await realpath(process.env.ANVIL_WORKSPACE ?? process.env.FORGE_WORKSPACE ?? process.cwd());
 
 const resolveWorkspace = createWorkspaceResolver(WORKSPACE_ROOT);
 function result(data: unknown) {
@@ -385,6 +387,45 @@ server.registerTool(
     } catch (error) { return failure(error); }
   }
 );
+
+for (const name of ["forge_doctor", "anvil_doctor"] as const) {
+  server.registerTool(
+    name,
+    {
+      title: "Run diagnostic system and workspace health checks",
+      description: "Run comprehensive diagnostic checks on Node.js runtime, Git CLI, Docker daemon, provider credentials, and workspace configuration.",
+      inputSchema: z.object({
+        projectPath: z.string().optional().describe("Workspace-relative directory. Defaults to the configured workspace root.")
+      })
+    },
+    async ({ projectPath }) => {
+      try {
+        const root = await resolveWorkspace(projectPath);
+        return result(await auditReadOnlyMcpTool(name, () => runDoctorChecks(root)));
+      } catch (error) { return failure(error); }
+    }
+  );
+}
+
+for (const name of ["forge_clean_preview", "anvil_clean_preview"] as const) {
+  server.registerTool(
+    name,
+    {
+      title: "Preview workspace cleanup and dead code",
+      description: "Perform a safe, read-only dry-run scan to identify junk files, cache files, build artifacts, temporary downloads, and unreferenced orphan source modules.",
+      inputSchema: z.object({
+        projectPath: z.string().optional().describe("Workspace-relative directory. Defaults to the configured workspace root."),
+        includeOrphans: z.boolean().optional().describe("Scan and flag unreferenced source files across TypeScript, Python, Rust, Go, Java, and C/C++.")
+      })
+    },
+    async ({ projectPath, includeOrphans }) => {
+      try {
+        const root = await resolveWorkspace(projectPath);
+        return result(await auditReadOnlyMcpTool(name, () => cleanProject(root, { apply: false, checkOrphans: includeOrphans ?? true })));
+      } catch (error) { return failure(error); }
+    }
+  );
+}
 
 const transport = new StdioServerTransport();
 await server.connect(transport);

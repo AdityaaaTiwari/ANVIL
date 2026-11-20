@@ -32,6 +32,8 @@ In Claude Code, use `/mcp` to inspect configured MCP servers. The ANVIL server e
 - `forge_git_intelligence` / `anvil_git_intelligence`
 - `forge_list_agents` / `anvil_list_agents`
 - `forge_create_review_plan` / `anvil_create_review_plan`
+- `forge_doctor` / `anvil_doctor`
+- `forge_clean_preview` / `anvil_clean_preview`
 
 Ask Claude to inspect the project with `anvil_inspect_project` and map its architecture with `anvil_map_architecture`.
 
