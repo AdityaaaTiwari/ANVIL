@@ -4,7 +4,7 @@ ANVIL is an early-stage project. Do not use it to run untrusted automation again
 
 If you believe you have found a security vulnerability in ANVIL, report it privately before public disclosure.
 
-For general ANVIL support, contact [THEGODOFEARTH3@gmail.com](mailto:THEGODOFEARTH3@gmail.com).
+For general ANVIL support, contact [m.g.atiwari28@gmail.com](mailto:m.g.atiwari28@gmail.com).
 
 ## Scope
 
