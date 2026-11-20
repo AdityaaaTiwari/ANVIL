@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
     inputs:
       release_tag:
-        description: "Release tag to create (for example v1.0.5)"
+        description: "Release tag to create (for example v1.0.6)"
         required: true
-        default: "v1.0.5"
+        default: "v1.0.6"
       target_ref:
         description: "Verified branch or commit to release"
         required: true

@@ -37,7 +37,7 @@ body:
     id: environment
     attributes:
       label: Environment Info
-      description: Node version, OS, ANVIL version (e.g. Node 22.x, Windows 11 / Ubuntu 24.04, v1.0.5)
+      description: Node version, OS, ANVIL version (e.g. Node 22.x, Windows 11 / Ubuntu 24.04, v1.0.6)
       placeholder: Node v22.15.0, Windows 11
     validations:
       required: true

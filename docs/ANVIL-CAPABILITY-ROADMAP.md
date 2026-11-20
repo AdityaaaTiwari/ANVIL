@@ -44,7 +44,8 @@ Build an original, local-first agent engineering harness with ANVIL-owned interf
 - Keep execution permissions narrower than descriptive agent instructions.
 
 ### Phase 4 — Integrations and operator UX
-- Add supported harness adapters behind stable interfaces (Claude Code, Cursor, Windsurf via Model Context Protocol).
+- Add supported harness adapters behind stable interfaces (Claude Code, Cursor, Windsurf via Model Context Protocol) (Shipped in v1.0.6 via anvil mcp setup).
+- Project Memory & Architectural Decisions Hub: Dual-path retention (.anvil/memory.json), token-budgeted context ranking, and dashboard memory hub (Shipped in v1.0.6).
 - Doctor & Project Health wizard: `anvil doctor` system diagnostics and `anvil doctor --fix` automated environment scaffolding (Shipped in v1.0.3).
 - Polyglot Architecture & Cleaner Engine: Multi-language dependency mapping (Python, Rust, Go, Java, C/C++, TS), workspace junk pruning, and automated code cleanup (`anvil clean`, `anvil fix`) (Shipped in v1.0.3).
 - Zero-Fear Rollback & Self-Healing Loop: Instant byte-accurate snapshot restoration (`anvil undo`), automated test verification gate (`--verify`), pre-commit Git hook automation (`anvil hook install`), and framework-aware entrypoint manifests for Next.js, Django, Rust, and Go (Shipped in v1.0.4).

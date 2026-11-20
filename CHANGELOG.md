@@ -1,5 +1,22 @@
 # ANVIL Changelog
 
+## 1.0.6 — AI Harness MCP Wizard & Dashboard Project Memory Hub
+
+ANVIL 1.0.6 introduces automated AI harness integration for modern editors (Cursor, Claude Code, Windsurf, VS Code), a dedicated Project Memory & Architectural Decisions hub, and native dual-path memory retention.
+
+### Features & Capabilities
+- **Automated AI Harness MCP Setup (`anvil mcp setup`):** Single-command configuration for developer environments:
+  - `--client cursor`: Generates and non-destructively merges into `.cursor/mcp.json`.
+  - `--client claude`: Generates the exact stdio command for Claude Code CLI registration.
+  - `--client windsurf` & `--client vscode`: Configures `.windsurf/mcp_config.json` and `.vscode/mcp.json`.
+  - `--client all`: Configures all supported IDE harnesses in one execution.
+- **Project Memory & Architectural Decisions Hub (`anvil memory` & Web UI):**
+  - Live interactive Project Memory panel directly in the web dashboard under Overview & Health.
+  - Dropdown categorization (`decision`, `architecture`, `constraint`, `preference`, `fact`), input tags, and single-click addition/removal.
+  - Seamless dual-path storage supporting modern `.anvil/memory.json` with fallback to `.forge/memory.json`.
+  - Real-time token-budgeted context ranking so agent instructions receive prioritized architectural constraints without exceeding window limits.
+- **Interactive Landing Page Demos:** Enhanced product site with interactive terminal simulation tabs (`05 mcp-setup`, `06 memory`) and stage explorer showcasing harness connections.
+
 ## 1.0.5 — Seamless Single-Page Dashboard & Showcase Telemetry Hub
 
 ANVIL 1.0.5 enhances the local engineering experience with a seamless single-page dashboard architecture, pre-populated interactive showcase telemetry, automatic port fallback (`4173..4183`), and complete release pipeline synchronization.
