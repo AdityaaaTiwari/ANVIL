@@ -1,15 +1,16 @@
 # ANVIL Changelog
 
-## 1.0.3 — CLI Help, Usage & Output Brand Unification
+## 1.0.3 — Multi-Language Architecture Mapping, Farzi Cleaner & Self-Healing Wizard
 
-ANVIL 1.0.3 unifies all CLI help examples, usage instructions, error messages, and dashboard startup telemetry under the official `anvil` command.
+ANVIL 1.0.3 introduces comprehensive multi-language architecture mapping (Python, Go, Rust, Java, C/C++), an automated junk/farzi-file scrubber (`anvil clean`), automated code repair (`anvil fix`), and a one-command environment doctor auto-fix wizard (`anvil doctor --fix`).
 
-### Changes
-- Updated all CLI command examples in `--help` from `forge` to `anvil`.
-- Aligned starter workspace initialization to `.anvil`.
-- Updated CLI version output to `anvil 1.0.3`.
-- Updated all command usage strings, diagnostics, and dashboard startup messages to `ANVIL`.
-- Updated test suite assertions to verify `anvil` CLI help output.
+### Features & Capabilities
+- **Multi-Language Architecture Mapping (`anvil map`):** Expanded from JS/TS to Python (with relative package imports), Go, Rust (`mod` resolution), Java/Kotlin, and C/C++ (`#include`). Internal import resolution accurately maps hundreds of module relationships across mixed-language repositories with 0 false-positive circular loops.
+- **Automated Cleaner Engine (`anvil clean`):** Scans and safely prunes OS clutter (`.DS_Store`, `Thumbs.db`), incomplete downloads (`.crdownload`, `.part`, `.tmp`), error logs, editor swap/backup files, multi-language build caches (Python `__pycache__`/`*.pyc`, Java `*.class`, Rust/C++ `*.o`/`*.obj`/`*.pdb`), and empty directory residue. Supports safe dry-run preview by default, with `--apply` to execute.
+- **Code Auto-Repair (`anvil fix` & `anvil clean --fix`):** Safely detects and prunes unused named imports in TypeScript/JavaScript and Python (`from x import a, b`), preserves TypeScript type specifiers, normalizes trailing whitespace, collapses excessive blank lines, and guarantees trailing newlines without breaking compilations.
+- **Self-Healing Doctor Wizard (`anvil doctor --fix`):** Scaffolds missing `.anvil/` configuration directories (`agents/`, `skills/`, `workflows/`), creates multi-language safe `.gitignore`, generates `.env.example` templates, and initializes Git if absent.
+- **Dashboard Stability & Null-Safety:** Resolved deferred element listener binding in `src/core/dashboard-server.ts` with universal safe listener wrappers (`on()`), ensuring real-time dashboard telemetry populates instantly without script halts.
+- **CLI Brand & Help Unification:** Aligned all commands, help strings, and examples under the official `anvil` command.
 
 ## 1.0.2 — Maintainer & Contact Verification
 

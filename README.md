@@ -111,7 +111,7 @@ git --version
 Install the released CLI directly from the GitHub repository:
 
 ```bash
-npm install --global git+https://github.com/anvil-workbench/ANVIL.git#v1.0.0
+npm install --global git+https://github.com/anvil-workbench/ANVIL.git#v1.0.3
 ```
 
 Verify the installation:
@@ -128,8 +128,11 @@ Open a terminal in the repository you want to work on:
 ```bash
 cd /path/to/your-project
 
-# Create the local ANVIL workspace
-anvil init .
+# Initialize or auto-scaffold workspace configuration
+anvil doctor --fix
+
+# Clean temporary farzi files, caches, and auto-fix code issues
+anvil clean . --apply --fix
 
 # Inspect the project
 anvil inspect .
@@ -149,13 +152,14 @@ npm --version
 git --version
 
 # Install ANVIL
-npm install --global git+https://github.com/anvil-workbench/ANVIL.git#v1.0.0
+npm install --global git+https://github.com/anvil-workbench/ANVIL.git#v1.0.3
 
 # Move into your project
 cd C:\Users\YourName\Projects\my-project
 
-# Initialize, inspect and launch
-anvil init .
+# Initialize, clean, inspect and launch
+anvil doctor --fix
+anvil clean . --apply --fix
 anvil inspect .
 anvil dashboard .
 ```
@@ -325,6 +329,8 @@ Run `anvil --help` for the complete command list and `anvil <command> --help` fo
 | Command | Purpose |
 |---|---|
 | `anvil init [path]` | Create a local `.ANVIL` starter workspace |
+| `anvil clean [path]` | Scan & scrub farzi files, logs, temp downloads; add `--apply` to delete, `--fix` to repair code |
+| `anvil fix [path]` | Auto-repair code: prune unused imports, normalize whitespace and blank lines |
 | `anvil inspect [path]` | Inspect project languages, tooling, dependencies and scripts |
 | `anvil map [path]` | Map source modules and import relationships |
 | `anvil dashboard [path]` | Start the local dashboard |
@@ -393,6 +399,7 @@ Run `anvil --help` for the complete command list and `anvil <command> --help` fo
 
 | Command | Purpose |
 |---|---|
+| `anvil doctor [path]` | Environment health checks; add `--fix` to auto-scaffold missing config, .gitignore & .env |
 | `anvil sandbox-status` | Inspect Docker availability and advertised security options |
 | `anvil sandbox-compliance` | Generate a sandbox compliance report |
 | `anvil sandbox-policy-check` | Validate a fail-closed sandbox policy |
@@ -523,9 +530,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: anvil-workbench/ANVIL@v1.0.0
+      - uses: anvil-workbench/ANVIL@v1.0.3
         with:
-          version: v1.0.0
+          version: v1.0.3
           project-path: .
           operation: inspect
 ```
@@ -729,7 +736,7 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request.
 
 ## Project history
 
-ANVIL's v1.0.0 release brings the local CLI, dashboard, engineering intelligence, agent workflows, MCP integration, GitHub Action and GitHub App installation foundation into one versioned product.
+ANVIL's v1.0.3 release brings full multi-language architecture mapping, automated farzi-file scrubbing, code auto-repair, one-command doctor self-healing, the local CLI, dashboard, engineering intelligence, agent workflows, MCP integration, GitHub Action and GitHub App installation foundation into one versioned product.
 
 The project is maintained as an original ANVIL codebase. ECC is a capability and documentation reference; ANVIL maintains its own identity, implementation, data models and roadmap.
 
