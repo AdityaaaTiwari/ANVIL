@@ -1059,10 +1059,10 @@ footer {
     <div>
       <div class="pill-announcement">
         <i></i>
-        <span>ANVIL v1.0.0 is live on npm registry</span>
+        <span>ANVIL v1.0.3 is live on npm registry</span>
       </div>
       <h1>Make every code change <span class="gradient-text">predictable and verified.</span></h1>
-      <p class="hero-lead">The local-first AI engineering workbench that maps codebase architecture, parses AST symbols, audits change risk, and verifies outcomes — with zero telemetry leakage and full developer control.</p>
+      <p class="hero-lead">The local-first AI engineering workbench that maps codebase architecture across all languages, prunes junk and auto-fixes code, audits change risk, and verifies outcomes — with zero telemetry leakage and full developer control.</p>
       <div class="hero-cta">
         <a class="btn btn-primary btn-large" href="#quickstart">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 13l5 5 5-5M12 4v14"/></svg>
@@ -1074,8 +1074,8 @@ footer {
       </div>
       <div class="micro-spec">
         <span>100% Local-First</span>
-        <span>TypeScript AST Parser</span>
-        <span>Git Change-Risk Engine</span>
+        <span>Multi-Language AST & Map</span>
+        <span>Junk Cleaner & Auto-Fix</span>
         <span>Deterministic Verification</span>
       </div>
     </div>
@@ -1089,13 +1089,15 @@ footer {
           <span class="dot-green"></span>
         </div>
         <div class="terminal-title">anvil — local engineering session</div>
-        <div class="terminal-tag">LIVE v1.0.0</div>
+        <div class="terminal-tag">LIVE v1.0.3</div>
       </div>
       <div class="terminal-tabs">
         <button class="term-tab active" data-tab="inspect">01 inspect</button>
         <button class="term-tab" data-tab="map">02 map</button>
-        <button class="term-tab" data-tab="git">03 git-risk</button>
-        <button class="term-tab" data-tab="verify">04 verify</button>
+        <button class="term-tab" data-tab="clean">03 clean & fix</button>
+        <button class="term-tab" data-tab="doctor">04 doctor</button>
+        <button class="term-tab" data-tab="git">05 git-risk</button>
+        <button class="term-tab" data-tab="verify">06 verify</button>
       </div>
       <div class="terminal-body" id="termScreen">
         <!-- Rendered by JS -->
@@ -1190,6 +1192,16 @@ footer {
             <span class="stage-btn-num">04 / VERIFICATION</span>
             <span class="stage-btn-title">Deterministic Verification & Regressions</span>
             <span class="stage-btn-desc">Execute named scripts, record outcomes, and track historical regressions across runs.</span>
+          </button>
+          <button class="stage-btn" data-stage="4">
+            <span class="stage-btn-num">05 / AUTO-CLEAN & FIX</span>
+            <span class="stage-btn-title">Farzi File Scrubber & Code Repair</span>
+            <span class="stage-btn-desc">Clean OS clutter, incomplete downloads, temp logs, and auto-prune unused imports safely.</span>
+          </button>
+          <button class="stage-btn" data-stage="5">
+            <span class="stage-btn-num">06 / HEALING WIZARD</span>
+            <span class="stage-btn-title">Doctor Self-Healing Setup</span>
+            <span class="stage-btn-desc">One-command auto-scaffolding of .anvil configs, multi-language .gitignore, and Git environments.</span>
           </button>
         </div>
 
@@ -1334,6 +1346,26 @@ footer {
           <h3>Local Web Dashboard</h3>
           <p>Launch an interactive local control center with live SSE broadcasts, interactive graphs, and run inspectors.</p>
           <span class="feature-tag">anvil dashboard</span>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-header">
+            <div class="feature-icon">🧹</div>
+            <span class="feature-num">13</span>
+          </div>
+          <h3>Automated Junk Cleaner & Fix</h3>
+          <p>Scrub OS residue, partial downloads, error logs, and multi-language caches, with safe unused-import auto-repair.</p>
+          <span class="feature-tag">anvil clean · fix</span>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-header">
+            <div class="feature-icon">🩺</div>
+            <span class="feature-num">14</span>
+          </div>
+          <h3>Self-Healing Doctor Wizard</h3>
+          <p>Automate environment health diagnostics with one-command scaffolding of .anvil directories, .gitignore, and .env.</p>
+          <span class="feature-tag">anvil doctor --fix</span>
         </div>
       </div>
     </div>
@@ -1682,6 +1714,24 @@ const terminalDemos = {
       { label: "Regression check", val: "0 regressions vs saved run #18", status: "ok" },
       { label: "Result logged to", val: ".anvil/runs/run-9a84b.json", status: "cyan" }
     ]
+  },
+  clean: {
+    command: "anvil clean . --apply --fix",
+    rows: [
+      { label: "Farzi & junk deleted", val: "18 items (4.2 MB) · logs, .tmp, .crdownload, caches", status: "ok" },
+      { label: "Unused imports pruned", val: "12 named imports removed safely across TS & Python", status: "ok" },
+      { label: "Code formatting auto-fixed", val: "Trailing spaces & excessive blank lines normalized", status: "ok" },
+      { label: "Orphan files analysis", val: "0 unreferenced dead modules detected", status: "cyan" }
+    ]
+  },
+  doctor: {
+    command: "anvil doctor --fix",
+    rows: [
+      { label: "Environment status", val: "Node.js 22 LTS, Git 2.55 (Ready)", status: "ok" },
+      { label: "Workspace configuration", val: "Scaffolded .anvil/ (agents, skills, workflows)", status: "ok" },
+      { label: "Security & gitignore", val: "Multi-language .gitignore & .env.example created", status: "ok" },
+      { label: "Overall health check", val: "ALL GREEN · Ready for autonomous workflows", status: "cyan" }
+    ]
   }
 };
 
@@ -1813,6 +1863,46 @@ const stageData = [
           ✓ run-store.test.ts (190ms)<br>
           ✓ mcp-workspace-path.test.ts (110ms)<br>
           <span style="color:var(--cyan);">→ 0 regressions detected compared with baseline #27</span>
+        </div>
+      </div>
+    `
+  },
+  {
+    head: "ANVIL / AUTOMATED JUNK SCRUBBER & CODE REPAIR",
+    html: `
+      <div style="background:#090d14;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:18px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <div>
+            <span style="font-size:11px;font-family:'JetBrains Mono';color:var(--amber);">ANVIL CLEAN & FIX ENGINE</span>
+            <div style="font-size:15px;font-weight:700;color:#fff;margin-top:2px;">Farzi Clutter Eliminated & Code Auto-Repaired</div>
+          </div>
+          <span style="padding:4px 10px;border-radius:20px;background:rgba(245,158,11,0.15);color:var(--amber);font-size:11px;font-weight:700;">SAFE DRY-RUN & APPLY</span>
+        </div>
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.8;font-family:'JetBrains Mono';background:rgba(0,0,0,0.3);padding:12px;border-radius:8px;">
+          ✓ Removed 8 OS metadata files (.DS_Store, Thumbs.db)<br>
+          ✓ Cleaned 3 incomplete downloads & temp logs (.crdownload, npm-debug.log)<br>
+          ✓ Pruned 14 unused imports across TS/JS & Python modules<br>
+          <span style="color:var(--emerald);">→ 0 false-positive dead files · 100% build compile passed</span>
+        </div>
+      </div>
+    `
+  },
+  {
+    head: "ANVIL / SELF-HEALING DOCTOR & SETUP WIZARD",
+    html: `
+      <div style="background:#090d14;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:18px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <div>
+            <span style="font-size:11px;font-family:'JetBrains Mono';color:var(--cyan);">ONE-COMMAND INITIALIZATION</span>
+            <div style="font-size:15px;font-weight:700;color:#fff;margin-top:2px;">Doctor Auto-Scaffolding & Health Validation</div>
+          </div>
+          <span style="padding:4px 10px;border-radius:20px;background:rgba(56,189,248,0.15);color:var(--cyan);font-size:11px;font-weight:700;">SYSTEM HEALED</span>
+        </div>
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.8;font-family:'JetBrains Mono';background:rgba(0,0,0,0.3);padding:12px;border-radius:8px;">
+          ✓ Verified Node.js >= 22 & Git CLI availability<br>
+          ✓ Auto-scaffolded .anvil/ workspace (.anvil/agents, .anvil/skills, .anvil/workflows)<br>
+          ✓ Created multi-language .gitignore & secure .env.example template<br>
+          <span style="color:var(--cyan);">→ Ready for local-first autonomous engineering runs</span>
         </div>
       </div>
     `
