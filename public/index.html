@@ -1096,8 +1096,10 @@ footer {
         <button class="term-tab" data-tab="map">02 map</button>
         <button class="term-tab" data-tab="clean">03 clean & fix</button>
         <button class="term-tab" data-tab="doctor">04 doctor</button>
-        <button class="term-tab" data-tab="git">05 git-risk</button>
-        <button class="term-tab" data-tab="verify">06 verify</button>
+        <button class="term-tab" data-tab="mcp">05 mcp-setup</button>
+        <button class="term-tab" data-tab="memory">06 memory</button>
+        <button class="term-tab" data-tab="git">07 git-risk</button>
+        <button class="term-tab" data-tab="verify">08 verify</button>
       </div>
       <div class="terminal-body" id="termScreen">
         <!-- Rendered by JS -->
@@ -1202,6 +1204,11 @@ footer {
             <span class="stage-btn-num">06 / HEALING WIZARD</span>
             <span class="stage-btn-title">Doctor Self-Healing Setup</span>
             <span class="stage-btn-desc">One-command auto-scaffolding of .anvil configs, multi-language .gitignore, and Git environments.</span>
+          </button>
+          <button class="stage-btn" data-stage="6">
+            <span class="stage-btn-num">07 / HARNESS & MEMORY</span>
+            <span class="stage-btn-title">AI Harness MCP & Project Memory Hub</span>
+            <span class="stage-btn-desc">One-click MCP adapter setup for Cursor, Claude Code, and Windsurf, plus durable decision logs.</span>
           </button>
         </div>
 
@@ -1732,6 +1739,24 @@ const terminalDemos = {
       { label: "Security & gitignore", val: "Multi-language .gitignore & .env.example created", status: "ok" },
       { label: "Overall health check", val: "ALL GREEN · Ready for autonomous workflows", status: "cyan" }
     ]
+  },
+  mcp: {
+    command: "anvil mcp setup --client all",
+    rows: [
+      { label: "Cursor IDE (.cursor/mcp.json)", val: "Configured (safe merge with existing tools)", status: "ok" },
+      { label: "Claude Code CLI adapter", val: "claude mcp add --transport stdio anvil ...", status: "ok" },
+      { label: "Windsurf & VS Code config", val: "Generated in .windsurf/ & .vscode/mcp.json", status: "ok" },
+      { label: "Exposed tool count", val: "18 read-only architectural & intelligence tools", status: "cyan" }
+    ]
+  },
+  memory: {
+    command: "anvil memory add --kind decision --content 'Always run test gate with --verify'",
+    rows: [
+      { label: "Memory ID generated", val: "mem-8f2a1b9c (persisted to .anvil/memory.json)", status: "ok" },
+      { label: "Context retrieval test", val: "Top ranked note retrieved under 1200 token budget", status: "ok" },
+      { label: "Secrets sanitizer check", val: "PASSED · 0 credential patterns leaked", status: "ok" },
+      { label: "Agent context injection", val: "Live in Dashboard and Cursor/Claude Code runs", status: "cyan" }
+    ]
   }
 };
 
@@ -1904,6 +1929,27 @@ const stageData = [
           ✓ Auto-scaffolded .anvil/ workspace (.anvil/agents, .anvil/skills, .anvil/workflows)<br>
           ✓ Created multi-language .gitignore & secure .env.example template<br>
           <span style="color:var(--cyan);">→ Ready for local-first autonomous engineering runs</span>
+        </div>
+      </div>
+    `
+  },
+  {
+    head: "ANVIL / AI HARNESS MCP ADAPTERS & PROJECT MEMORY HUB",
+    html: `
+      <div style="background:#090d14;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:18px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <div>
+            <span style="font-size:11px;font-family:'JetBrains Mono';color:var(--emerald);">IDE HARNESS & CONTEXT STORE</span>
+            <div style="font-size:15px;font-weight:700;color:#fff;margin-top:2px;">Cursor, Claude Code, Windsurf & Durable Decisions</div>
+          </div>
+          <span style="padding:4px 10px;border-radius:20px;background:rgba(52,211,153,0.15);color:var(--emerald);font-size:11px;font-weight:700;">READY TO USE</span>
+        </div>
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.8;font-family:'JetBrains Mono';background:rgba(0,0,0,0.3);padding:12px;border-radius:8px;">
+          ✓ Single-command harness setup: <code>anvil mcp setup --client all</code><br>
+          ✓ Seamlessly merges with existing <code>.cursor/mcp.json</code> without wiping tools<br>
+          ✓ Durable architectural decisions saved to <code>.anvil/memory.json</code><br>
+          ✓ Interactive decision logging hub directly inside the live local dashboard<br>
+          <span style="color:var(--cyan);">→ Feed architectural context directly into Cursor, Claude, & Windsurf</span>
         </div>
       </div>
     `
