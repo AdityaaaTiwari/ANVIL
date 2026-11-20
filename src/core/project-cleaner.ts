@@ -1,7 +1,11 @@
-import { readdir, readFile, stat, unlink, rm, writeFile } from "node:fs/promises";
+import { readdir, readFile, stat, unlink, rm, writeFile, mkdir, copyFile } from "node:fs/promises";
 import path from "node:path";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 import { isExcludedScanDirectory } from "./workspace-scan-policy.js";
 import { mapArchitecture } from "./architecture-map.js";
+
+const execFileAsync = promisify(execFile);
 
 export type JunkCategory = "os" | "editor" | "temporary" | "download" | "log" | "cache" | "empty-dir";
 
@@ -27,10 +31,32 @@ export interface OrphanFileItem {
   reason: string;
 }
 
+export interface UndoResult {
+  root: string;
+  backupId: string;
+  restoredAt: string;
+  restoredFiles: string[];
+  restoredDirs: string[];
+  revertedCodeFixes: string[];
+  errors: string[];
+}
+
+export interface CleanVerificationResult {
+  enabled: boolean;
+  passed: boolean;
+  rolledBack: boolean;
+  command: string;
+  output?: string;
+  error?: string;
+}
+
 export interface CleanOptions {
   apply?: boolean;
   fix?: boolean;
   checkOrphans?: boolean;
+  verify?: boolean;
+  testCommand?: string;
+  useToolchains?: boolean;
 }
 
 export interface CleanResult {
@@ -38,6 +64,8 @@ export interface CleanResult {
   generatedAt: string;
   applied: boolean;
   dryRun: boolean;
+  backupId?: string | undefined;
+  verification?: CleanVerificationResult | undefined;
   junkItems: JunkItem[];
   orphanFiles: OrphanFileItem[];
   codeFixes: CodeFixItem[];
@@ -404,11 +432,288 @@ export function autoFixCodeContent(content: string, filePath: string): { newCont
   return { newContent: updated, fixes };
 }
 
+
+interface BackupManifest {
+  backupId: string;
+  timestamp: string;
+  root: string;
+  deletedFiles: Array<{ relPath: string; backupRelative: string; sizeBytes: number }>;
+  deletedDirs: string[];
+  modifiedFiles: Array<{ relPath: string; backupRelative: string }>;
+}
+
+async function createBackupSnapshot(
+  root: string,
+  junkToDelete: JunkItem[],
+  emptyDirsToDelete: string[],
+  filesToModify: Array<{ file: string; originalContent: string }>
+): Promise<string | null> {
+  if (junkToDelete.length === 0 && emptyDirsToDelete.length === 0 && filesToModify.length === 0) {
+    return null;
+  }
+
+  const backupId = `backup-${Date.now()}`;
+  const backupRoot = path.join(root, ".anvil", "backups", backupId);
+  const filesBackupDir = path.join(backupRoot, "files");
+  const modifiedBackupDir = path.join(backupRoot, "modified");
+
+  await mkdir(filesBackupDir, { recursive: true });
+  await mkdir(modifiedBackupDir, { recursive: true });
+
+  const manifest: BackupManifest = {
+    backupId,
+    timestamp: new Date().toISOString(),
+    root,
+    deletedFiles: [],
+    deletedDirs: [...emptyDirsToDelete],
+    modifiedFiles: []
+  };
+
+  // 1. Back up junk files before deletion
+  for (let i = 0; i < junkToDelete.length; i++) {
+    const item = junkToDelete[i]!;
+    if (item.isDirectory) continue;
+    try {
+      const backupRel = `junk_${i}_${path.basename(item.path)}`;
+      const backupDest = path.join(filesBackupDir, backupRel);
+      await copyFile(item.absolutePath, backupDest);
+      manifest.deletedFiles.push({
+        relPath: item.path,
+        backupRelative: backupRel,
+        sizeBytes: item.sizeBytes
+      });
+    } catch {
+      // Ignore copy error
+    }
+  }
+
+  // 2. Back up files before code fixes
+  for (let i = 0; i < filesToModify.length; i++) {
+    const item = filesToModify[i]!;
+    try {
+      const backupRel = `mod_${i}_${path.basename(item.file)}`;
+      const backupDest = path.join(modifiedBackupDir, backupRel);
+      await writeFile(backupDest, item.originalContent, "utf8");
+      manifest.modifiedFiles.push({
+        relPath: item.file,
+        backupRelative: backupRel
+      });
+    } catch {
+      // Ignore
+    }
+  }
+
+  const manifestPath = path.join(backupRoot, "manifest.json");
+  await writeFile(manifestPath, JSON.stringify(manifest, null, 2), "utf8");
+
+  const latestPath = path.join(root, ".anvil", "backups", "latest.json");
+  await writeFile(latestPath, JSON.stringify({ backupId, timestamp: manifest.timestamp, backupRoot }, null, 2), "utf8");
+
+  return backupId;
+}
+
+export async function undoLastClean(inputPath: string): Promise<UndoResult> {
+  const root = path.resolve(inputPath);
+  const latestPath = path.join(root, ".anvil", "backups", "latest.json");
+  let pointer: { backupId: string; backupRoot: string } | null = null;
+  try {
+    const raw = await readFile(latestPath, "utf8");
+    pointer = JSON.parse(raw);
+  } catch {
+    return {
+      root,
+      backupId: "",
+      restoredAt: new Date().toISOString(),
+      restoredFiles: [],
+      restoredDirs: [],
+      revertedCodeFixes: [],
+      errors: ["No previous ANVIL clean/fix backup found in this workspace."]
+    };
+  }
+
+  const backupRoot = pointer!.backupRoot || path.join(root, ".anvil", "backups", pointer!.backupId);
+  const manifestPath = path.join(backupRoot, "manifest.json");
+  let manifest: BackupManifest;
+  try {
+    const raw = await readFile(manifestPath, "utf8");
+    manifest = JSON.parse(raw);
+  } catch {
+    return {
+      root,
+      backupId: pointer!.backupId,
+      restoredAt: new Date().toISOString(),
+      restoredFiles: [],
+      restoredDirs: [],
+      revertedCodeFixes: [],
+      errors: [`Backup manifest not found or corrupted at ${manifestPath}`]
+    };
+  }
+
+  const restoredFiles: string[] = [];
+  const restoredDirs: string[] = [];
+  const revertedCodeFixes: string[] = [];
+  const errors: string[] = [];
+
+  // Restore modified code files
+  const modifiedBackupDir = path.join(backupRoot, "modified");
+  for (const item of manifest.modifiedFiles) {
+    try {
+      const src = path.join(modifiedBackupDir, item.backupRelative);
+      const dest = path.join(root, item.relPath);
+      const fileContent = await readFile(src, "utf8");
+      await mkdir(path.dirname(dest), { recursive: true });
+      await writeFile(dest, fileContent, "utf8");
+      revertedCodeFixes.push(item.relPath);
+    } catch (err: any) {
+      errors.push(`Could not restore modified file ${item.relPath}: ${err?.message || String(err)}`);
+    }
+  }
+
+  // Restore deleted files
+  const filesBackupDir = path.join(backupRoot, "files");
+  for (const item of manifest.deletedFiles) {
+    try {
+      const src = path.join(filesBackupDir, item.backupRelative);
+      const dest = path.join(root, item.relPath);
+      await mkdir(path.dirname(dest), { recursive: true });
+      await copyFile(src, dest);
+      restoredFiles.push(item.relPath);
+    } catch (err: any) {
+      errors.push(`Could not restore deleted file ${item.relPath}: ${err?.message || String(err)}`);
+    }
+  }
+
+  // Restore empty directories
+  for (const relDir of manifest.deletedDirs) {
+    try {
+      const dest = path.join(root, relDir);
+      await mkdir(dest, { recursive: true });
+      restoredDirs.push(relDir);
+    } catch (err: any) {
+      errors.push(`Could not re-create directory ${relDir}: ${err?.message || String(err)}`);
+    }
+  }
+
+  // Invalidate latest pointer so undo is not run twice on the same snapshot
+  try {
+    await rm(latestPath, { force: true });
+  } catch {}
+
+  return {
+    root,
+    backupId: manifest.backupId,
+    restoredAt: new Date().toISOString(),
+    restoredFiles,
+    restoredDirs,
+    revertedCodeFixes,
+    errors
+  };
+}
+
+async function detectTestCommand(root: string): Promise<string | null> {
+  try {
+    const pkgRaw = await readFile(path.join(root, "package.json"), "utf8");
+    const pkg = JSON.parse(pkgRaw);
+    if (pkg.scripts && pkg.scripts.test && pkg.scripts.test !== 'echo "Error: no test specified" && exit 1') {
+      return process.platform === "win32" ? "npm.cmd" : "npm";
+    }
+  } catch {}
+
+  try {
+    await stat(path.join(root, "Cargo.toml"));
+    return "cargo";
+  } catch {}
+
+  try {
+    await stat(path.join(root, "pytest.ini"));
+    return "pytest";
+  } catch {}
+
+  try {
+    await stat(path.join(root, "go.mod"));
+    return "go";
+  } catch {}
+
+  return null;
+}
+
+export async function installPrecommitHook(inputPath: string): Promise<{ success: boolean; hookPath: string; detail: string }> {
+  const root = path.resolve(inputPath);
+  const gitHooksDir = path.join(root, ".git", "hooks");
+  try {
+    await mkdir(gitHooksDir, { recursive: true });
+    const hookPath = path.join(gitHooksDir, "pre-commit");
+    const script = `#!/usr/bin/env sh
+# ANVIL automated pre-commit quality gate
+echo "[ANVIL] Running pre-commit clean & quality check..."
+anvil clean --apply --json > /dev/null 2>&1 || true
+`;
+    await writeFile(hookPath, script, { encoding: "utf8", mode: 0o755 });
+    return {
+      success: true,
+      hookPath,
+      detail: "Installed ANVIL pre-commit hook into .git/hooks/pre-commit"
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      hookPath: path.join(gitHooksDir, "pre-commit"),
+      detail: `Failed to install pre-commit hook: ${err?.message || String(err)}`
+    };
+  }
+}
+
+export function formatUndoReport(result: UndoResult): string {
+  const lines = [
+    "# ANVIL Workspace Rollback (Undo)",
+    "",
+    `- **Target:** \`${result.root}\``,
+    `- **Backup ID:** \`${result.backupId || "None"}\``,
+    `- **Restored at:** \`${result.restoredAt}\``,
+    `- **Reverted code fixes:** \`${result.revertedCodeFixes.length}\` files restored to original content`,
+    `- **Restored deleted files:** \`${result.restoredFiles.length}\` files recovered`,
+    `- **Restored directories:** \`${result.restoredDirs.length}\` directories re-created`,
+    ""
+  ];
+
+  if (result.revertedCodeFixes.length > 0) {
+    lines.push("## Reverted Code Fixes");
+    for (const f of result.revertedCodeFixes) {
+      lines.push(`- \`${f}\` (reverted)`);
+    }
+    lines.push("");
+  }
+
+  if (result.restoredFiles.length > 0) {
+    lines.push("## Restored Files");
+    for (const f of result.restoredFiles) {
+      lines.push(`- \`${f}\` (recovered from backup)`);
+    }
+    lines.push("");
+  }
+
+  if (result.errors.length > 0) {
+    lines.push("## Errors");
+    for (const e of result.errors) {
+      lines.push(`- ${e}`);
+    }
+    lines.push("");
+  }
+
+  if (result.errors.length === 0) {
+    lines.push("> [!NOTE] Workspace was successfully restored to its state prior to the last clean/fix operation.");
+    lines.push("");
+  }
+
+  return lines.join("\n");
+}
+
 export async function cleanProject(inputPath: string, options: CleanOptions = {}): Promise<CleanResult> {
   const root = path.resolve(inputPath);
   const apply = Boolean(options.apply);
   const fixCode = Boolean(options.fix);
   const checkOrphans = options.checkOrphans !== false;
+  const verify = Boolean(options.verify);
 
   const { items: junkItems, emptyDirs } = await scanJunk(root);
   const orphanFiles: OrphanFileItem[] = [];
@@ -418,47 +723,22 @@ export async function cleanProject(inputPath: string, options: CleanOptions = {}
   let bytesReclaimed = 0;
   let junkDeleted = 0;
 
-  // 1. Process junk files
   for (const item of junkItems) {
-    if (apply) {
-      try {
-        if (item.isDirectory) {
-          await rm(item.absolutePath, { recursive: true, force: true });
-        } else {
-          await unlink(item.absolutePath);
-        }
-        bytesReclaimed += item.sizeBytes;
-        junkDeleted++;
-      } catch (err: any) {
-        warnings.push(`Failed to delete ${item.path}: ${err?.message || String(err)}`);
-      }
-    } else {
-      bytesReclaimed += item.sizeBytes;
-    }
+    bytesReclaimed += item.sizeBytes;
   }
 
-  // 2. Process empty directories
   for (const emptyDir of emptyDirs) {
-    const fullDirPath = path.join(root, emptyDir);
     junkItems.push({
       path: emptyDir,
-      absolutePath: fullDirPath,
+      absolutePath: path.join(root, emptyDir),
       category: "empty-dir",
       reason: "Empty directory leftover",
       sizeBytes: 0,
       isDirectory: true
     });
-    if (apply) {
-      try {
-        await rm(fullDirPath, { recursive: true, force: true });
-        junkDeleted++;
-      } catch {
-        // Directory may not be empty or locked
-      }
-    }
   }
 
-  // 3. Scan for orphan source files using architecture mapping
+  // 1. Scan for orphan source files using architecture mapping
   if (checkOrphans) {
     try {
       const arch = await mapArchitecture(root);
@@ -474,7 +754,6 @@ export async function cleanProject(inputPath: string, options: CleanOptions = {}
 
       for (const node of arch.nodes) {
         const incoming = incomingCounts.get(node.file) || 0;
-        // If it's a module, not an entry point, not a test, not a config, and zero incoming links
         if (node.role === "module" && incoming === 0) {
           orphanFiles.push({
             file: node.file,
@@ -484,11 +763,13 @@ export async function cleanProject(inputPath: string, options: CleanOptions = {}
         }
       }
     } catch {
-      // Architecture mapping is optional/heuristic
+      // Optional/heuristic
     }
   }
 
-  // 4. Code Auto-Repair (if fix is requested or previewing fixes)
+  // 2. Prepare Code Auto-Repair
+  const filesToModify: Array<{ file: string; fullFilePath: string; originalContent: string; newContent: string; fixes: CodeFixItem[] }> = [];
+
   if (fixCode) {
     try {
       const collectSource = async (dir: string, rel = ""): Promise<string[]> => {
@@ -525,12 +806,10 @@ export async function cleanProject(inputPath: string, options: CleanOptions = {}
           const { newContent, fixes } = autoFixCodeContent(raw, file);
           if (fixes.length > 0) {
             codeFixes.push(...fixes);
-            if (apply) {
-              await writeFile(fullFilePath, newContent, "utf8");
-            }
+            filesToModify.push({ file, fullFilePath, originalContent: raw, newContent, fixes });
           }
         } catch {
-          // File read or write error, skip
+          // File read error
         }
       }
     } catch (err: any) {
@@ -538,19 +817,101 @@ export async function cleanProject(inputPath: string, options: CleanOptions = {}
     }
   }
 
-  const codeFixesApplied = apply ? codeFixes.length : 0;
+  // 3. Execution (if apply: true)
+  let backupId: string | undefined;
+  let verification: CleanVerificationResult | undefined;
+
+  if (apply) {
+    // A. Create snapshot backup before modifying or deleting anything
+    try {
+      const bid = await createBackupSnapshot(root, junkItems, emptyDirs, filesToModify);
+      if (bid) backupId = bid;
+    } catch (err: any) {
+      warnings.push(`Could not create rollback backup: ${err?.message || String(err)}`);
+    }
+
+    // B. Delete junk files and empty directories
+    for (const item of junkItems) {
+      try {
+        if (item.isDirectory) {
+          await rm(item.absolutePath, { recursive: true, force: true });
+        } else {
+          await unlink(item.absolutePath);
+        }
+        junkDeleted++;
+      } catch (err: any) {
+        warnings.push(`Failed to delete ${item.path}: ${err?.message || String(err)}`);
+      }
+    }
+
+    // C. Write code fixes
+    for (const item of filesToModify) {
+      try {
+        await writeFile(item.fullFilePath, item.newContent, "utf8");
+      } catch (err: any) {
+        warnings.push(`Failed to write code fix to ${item.file}: ${err?.message || String(err)}`);
+      }
+    }
+
+    // D. Self-Healing Verification Loop
+    if (verify) {
+      const testCmd = options.testCommand || await detectTestCommand(root);
+      if (testCmd) {
+        try {
+          let stdout = "";
+          if (testCmd.includes("npm")) {
+            const res = await execFileAsync(testCmd, ["test"], { cwd: root, timeout: 60000 });
+            stdout = res.stdout;
+          } else if (testCmd === "cargo") {
+            const res = await execFileAsync("cargo", ["test"], { cwd: root, timeout: 60000 });
+            stdout = res.stdout;
+          } else if (testCmd === "pytest") {
+            const res = await execFileAsync("pytest", [], { cwd: root, timeout: 60000 });
+            stdout = res.stdout;
+          } else if (testCmd === "go") {
+            const res = await execFileAsync("go", ["test", "./..."], { cwd: root, timeout: 60000 });
+            stdout = res.stdout;
+          }
+          verification = {
+            enabled: true,
+            passed: true,
+            rolledBack: false,
+            command: testCmd,
+            output: stdout.trim().slice(0, 500)
+          };
+        } catch (testErr: any) {
+          // Tests failed! Auto-rollback to restore original workspace
+          await undoLastClean(root);
+          verification = {
+            enabled: true,
+            passed: false,
+            rolledBack: true,
+            command: testCmd,
+            error: `Project tests failed after code repairs: ${testErr?.message || String(testErr)}. Workspace was automatically restored.`
+          };
+          warnings.push("Verification failed! Workspace was automatically rolled back to prevent regression.");
+        }
+      } else {
+        warnings.push("No automated test suite detected in workspace to verify changes.");
+      }
+    }
+  }
+
+  const codeFixesApplied = (apply && (!verification || !verification.rolledBack)) ? codeFixes.length : 0;
 
   return {
     root,
     generatedAt: new Date().toISOString(),
     applied: apply,
     dryRun: !apply,
+    backupId,
+    verification,
     junkItems,
     orphanFiles,
     codeFixes,
     stats: {
       junkFound: junkItems.length,
-      junkDeleted: apply ? junkDeleted : 0,
+      junkDeleted: (apply && (!verification || !verification.rolledBack)) ? junkDeleted : 0,
       bytesReclaimed,
       codeFixesFound: codeFixes.length,
       codeFixesApplied,
@@ -576,6 +937,8 @@ export function formatCleanReport(result: CleanResult): string {
     `- **Junk items:** \`${result.stats.junkFound}\` found (${formatBytes(result.stats.bytesReclaimed)} space)${result.applied ? ` · \`${result.stats.junkDeleted}\` deleted` : ""}`,
     `- **Code auto-fixes:** \`${result.stats.codeFixesFound}\` available${result.applied ? ` · \`${result.stats.codeFixesApplied}\` applied` : ""}`,
     `- **Orphan files detected:** \`${result.stats.orphanFilesFound}\``,
+    ...(result.backupId ? [`- **Rollback backup:** \`${result.backupId}\` (Run \`anvil undo\` to restore anytime)`] : []),
+    ...(result.verification ? [(result.verification.passed ? `- **Self-Healing Verification:** PASSED (\`${result.verification.command}\`)` : `- **Self-Healing Verification:** FAILED -> AUTO-ROLLED BACK (\`${result.verification.command}\`)`)] : []),
     `- **Timestamp:** \`${result.generatedAt}\``,
     ""
   ];

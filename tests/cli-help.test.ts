@@ -233,4 +233,10 @@ describe("clean and fix CLI commands", () => {
     expect(output).toContain("--fix");
     expect(output).toContain("--json");
   });
+
+  it("prints undo usage when --help is passed", () => {
+    const output = runCli("undo", "--help");
+    expect(output).toContain("Usage: anvil undo");
+    expect(output).toContain("Rollback");
+  });
 });

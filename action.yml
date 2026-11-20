@@ -10,13 +10,13 @@ inputs:
   version:
     description: ANVIL Git ref to install (tag, branch, or commit)
     required: false
-    default: v1.0.3
+    default: v1.0.4
   project-path:
     description: Repository directory to analyze
     required: false
     default: .
   operation:
-    description: Safe built-in operation to run (inspect, quality, health, review, doctor, clean)
+    description: Safe built-in operation to run (inspect, quality, health, review, doctor, clean, undo)
     required: false
     default: inspect
 
@@ -49,5 +49,6 @@ runs:
           review) anvil review "$ANVIL_PROJECT_PATH" ;;
           doctor) anvil doctor "$ANVIL_PROJECT_PATH" ;;
           clean) anvil clean "$ANVIL_PROJECT_PATH" ;;
+          undo) anvil undo "$ANVIL_PROJECT_PATH" ;;
           *) echo "Unsupported ANVIL operation: $ANVIL_OPERATION" >&2; exit 2 ;;
         esac

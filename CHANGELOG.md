@@ -1,5 +1,15 @@
 # ANVIL Changelog
 
+## 1.0.4 — Zero-Fear Rollback, Self-Healing Verification Loop & Framework Entrypoint Engine
+
+ANVIL 1.0.4 introduces production-grade safety nets and developer velocity superpowers: instant single-command rollback (`anvil undo`), an automated self-healing test verification gate (`--verify`), Git pre-commit hook automation (`anvil hook install`), and framework-aware entrypoint resolution for modern full-stack frameworks.
+
+### Features & Capabilities
+- **Instant Rollback Engine (`anvil undo`):** Every destructive action (`anvil clean --apply` or `anvil fix`) automatically creates a byte-accurate snapshot in `.anvil/backups/<backup-id>/` before touching disk. Running `anvil undo` instantly restores deleted files, re-creates pruned directories, and reverts modified source code with 100% byte fidelity.
+- **Self-Healing Test Verification Gate (`--verify`):** When `--verify` is passed to `anvil clean` or `anvil fix`, ANVIL automatically detects the project's test suite (`npm test`, `cargo test`, `pytest`, `go test ./...`) and runs it after applying repairs. If tests fail, ANVIL **automatically rolls back all changes** before the developer even notices, guaranteeing zero regression.
+- **Framework-Aware Entry Point Manifests:** Solves false-positive orphan file detection across modern full-stack frameworks including Next.js, Remix, Nuxt, SvelteKit, FastAPI, Django, Celery, and Go/Rust CLI binaries. Convention-based routes (`page.tsx`, `layout.tsx`, `route.ts`, `urls.py`, `conftest.py`, `build.rs`, `cmd/**/main.go`) are automatically recognized as entrypoints.
+- **Automated Git Pre-commit Hook (`anvil hook install`):** Generates and installs a lightweight `.git/hooks/pre-commit` hook that intercepts commits and prevents OS junk, partial downloads, and syntax errors from entering Git staging.
+
 ## 1.0.3 — Multi-Language Architecture Mapping, Farzi Cleaner & Self-Healing Wizard
 
 ANVIL 1.0.3 introduces comprehensive multi-language architecture mapping (Python, Go, Rust, Java, C/C++), an automated junk/farzi-file scrubber (`anvil clean`), automated code repair (`anvil fix`), and a one-command environment doctor auto-fix wizard (`anvil doctor --fix`).

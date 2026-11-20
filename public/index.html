@@ -1059,10 +1059,10 @@ footer {
     <div>
       <div class="pill-announcement">
         <i></i>
-        <span>ANVIL v1.0.3 is live on npm registry</span>
+        <span>ANVIL v1.0.4 is live on npm registry</span>
       </div>
       <h1>Make every code change <span class="gradient-text">predictable and verified.</span></h1>
-      <p class="hero-lead">The local-first AI engineering workbench that maps codebase architecture across all languages, prunes junk and auto-fixes code, audits change risk, and verifies outcomes — with zero telemetry leakage and full developer control.</p>
+      <p class="hero-lead">The local-first AI engineering workbench that maps codebase architecture across all languages, prunes junk and auto-fixes code with instant rollback, audits change risk, and self-heals via test verification — with zero telemetry leakage and full developer control.</p>
       <div class="hero-cta">
         <a class="btn btn-primary btn-large" href="#quickstart">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 13l5 5 5-5M12 4v14"/></svg>
@@ -1075,8 +1075,8 @@ footer {
       <div class="micro-spec">
         <span>100% Local-First</span>
         <span>Multi-Language AST & Map</span>
-        <span>Junk Cleaner & Auto-Fix</span>
-        <span>Deterministic Verification</span>
+        <span>Self-Healing Clean & Fix</span>
+        <span>Instant Snapshot Undo</span>
       </div>
     </div>
 
@@ -1089,7 +1089,7 @@ footer {
           <span class="dot-green"></span>
         </div>
         <div class="terminal-title">anvil — local engineering session</div>
-        <div class="terminal-tag">LIVE v1.0.3</div>
+        <div class="terminal-tag">LIVE v1.0.4</div>
       </div>
       <div class="terminal-tabs">
         <button class="term-tab active" data-tab="inspect">01 inspect</button>
@@ -1716,12 +1716,12 @@ const terminalDemos = {
     ]
   },
   clean: {
-    command: "anvil clean . --apply --fix",
+    command: "anvil clean . --apply --fix --verify",
     rows: [
       { label: "Farzi & junk deleted", val: "18 items (4.2 MB) · logs, .tmp, .crdownload, caches", status: "ok" },
       { label: "Unused imports pruned", val: "12 named imports removed safely across TS & Python", status: "ok" },
-      { label: "Code formatting auto-fixed", val: "Trailing spaces & excessive blank lines normalized", status: "ok" },
-      { label: "Orphan files analysis", val: "0 unreferenced dead modules detected", status: "cyan" }
+      { label: "Self-healing test verification", val: "PASSED (npm test · 100% green)", status: "ok" },
+      { label: "Snapshot backup created", val: ".anvil/backups/ (run 'anvil undo' anytime)", status: "cyan" }
     ]
   },
   doctor: {

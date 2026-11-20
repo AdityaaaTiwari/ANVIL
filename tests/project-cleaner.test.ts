@@ -2,7 +2,7 @@ import { mkdir, mkdtemp, writeFile, readFile, stat } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { cleanProject, autoFixCodeContent, formatCleanReport } from "../src/core/project-cleaner.js";
+import { cleanProject, autoFixCodeContent, formatCleanReport, undoLastClean, formatUndoReport, installPrecommitHook } from "../src/core/project-cleaner.js";
 import { safeRm } from "./test-helpers.js";
 
 const temporaryDirectories: string[] = [];
@@ -146,5 +146,61 @@ describe("cleanProject", () => {
     expect(fixed).toContain(`import { alpha } from "./lib.js";`);
     expect(fixed).not.toContain("unusedBeta");
     expect(fixed).not.toContain("   ");
+  });
+
+  it("creates a rollback snapshot and restores files with undoLastClean", async () => {
+    const root = await createTempWorkspace();
+    const junkFile = path.join(root, ".DS_Store");
+    const sourceFile = path.join(root, "index.ts");
+    const originalSource = 'import { foo, bar } from "./helper.js";   \n\nconsole.log(foo);\n';
+
+    await writeFile(junkFile, "ds-store-content");
+    await writeFile(sourceFile, originalSource);
+
+    // Apply clean & fix
+    const cleanResult = await cleanProject(root, { apply: true, fix: true });
+    expect(cleanResult.applied).toBe(true);
+    expect(cleanResult.backupId).toBeDefined();
+
+    // Verify junk was deleted and code was fixed
+    await expect(stat(junkFile)).rejects.toThrow();
+    const modifiedCode = await readFile(sourceFile, "utf8");
+    expect(modifiedCode).not.toContain("bar");
+
+    // Perform UNDO
+    const undoResult = await undoLastClean(root);
+    expect(undoResult.errors.length).toBe(0);
+    expect(undoResult.restoredFiles.length).toBeGreaterThan(0);
+    expect(undoResult.revertedCodeFixes.length).toBeGreaterThan(0);
+
+    // Verify junk file was restored from backup
+    const restoredJunkStat = await stat(junkFile);
+    expect(restoredJunkStat.isFile()).toBe(true);
+
+    // Verify source file was restored to exact original content
+    const restoredCode = await readFile(sourceFile, "utf8");
+    expect(restoredCode).toBe(originalSource);
+
+    const report = formatUndoReport(undoResult);
+    expect(report).toContain("# ANVIL Workspace Rollback (Undo)");
+  });
+
+  it("returns a clean error message when undoLastClean is called with no prior backup", async () => {
+    const root = await createTempWorkspace();
+    const result = await undoLastClean(root);
+    expect(result.errors.length).toBeGreaterThan(0);
+    expect(result.errors[0]).toContain("No previous ANVIL clean/fix backup found");
+  });
+
+  it("installs pre-commit hook into .git/hooks/pre-commit", async () => {
+    const root = await createTempWorkspace();
+    await mkdir(path.join(root, ".git"));
+
+    const hookResult = await installPrecommitHook(root);
+    expect(hookResult.success).toBe(true);
+
+    const hookContent = await readFile(hookResult.hookPath, "utf8");
+    expect(hookContent).toContain("#!/usr/bin/env sh");
+    expect(hookContent).toContain("anvil clean");
   });
 });

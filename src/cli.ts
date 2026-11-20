@@ -194,7 +194,9 @@ Commands:
   approve RUNID TASK_ID  Approve a task awaiting human review
   show-run ID      Display one saved run (use --path for project directory)
   clean [path]     Scan and delete junk, logs, temp downloads; add --apply and --fix
-  fix [path]       Auto-repair code errors, trim whitespace & prune unused imports
+  fix [path]       Auto-repair code errors, trim whitespace & prune unused imports (add --verify)
+  undo [path]      Rollback the last anvil clean/fix operation using saved snapshot backup
+  hook install     Install ANVIL automated pre-commit hook into Git
   doctor [path]    Run environment health checks; add --fix to auto-scaffold config
   dashboard [path] Start the local read-only web dashboard
   version          Print the installed version
@@ -774,7 +776,21 @@ async function main(args: string[]): Promise<void> {
       }
       return;
     }
+    case "hook":
     case "hooks": {
+      if (rest[0] === "install" || rest.includes("--install")) {
+        const target = path.resolve(rest.find(arg => !arg.startsWith("--") && arg !== "install" && arg !== "pre-commit") ?? ".");
+        try {
+          const { installPrecommitHook } = await import("./core/project-cleaner.js");
+          const result = await installPrecommitHook(target);
+          process.stdout.write(`${result.detail}\n`);
+          if (!result.success) process.exitCode = 1;
+        } catch (error) {
+          process.stderr.write("Could not install hook: " + (error instanceof Error ? error.message : String(error)) + "\n");
+          process.exitCode = 1;
+        }
+        return;
+      }
       const target = path.resolve(rest.find(arg => !arg.startsWith("--")) ?? ".");
       try {
         const hooks = await loadHooks(target);
@@ -1610,15 +1626,40 @@ async function main(args: string[]): Promise<void> {
         return;
       }
       const json = rest.includes("--json");
-      const apply = rest.includes("--apply") || (command === "fix" && !rest.includes("--dry-run"));
-      const fix = rest.includes("--fix") || command === "fix";
+      const isFix = command === "fix";
+      const apply = isFix || rest.includes("--apply");
+      const fix = isFix || rest.includes("--fix");
+      const verify = rest.includes("--verify");
+      const checkOrphans = !rest.includes("--no-orphans");
       const target = rest.find(arg => !arg.startsWith("--")) ?? ".";
       try {
-        const report = await cleanProject(path.resolve(target), { apply, fix });
+        const { cleanProject, formatCleanReport } = await import("./core/project-cleaner.js");
+        const report = await cleanProject(path.resolve(target), { apply, fix, checkOrphans, verify });
         process.stdout.write(json ? `${JSON.stringify(report, null, 2)}\n` : `${formatCleanReport(report)}\n`);
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         process.stderr.write(`ANVIL ${command} failed: ${message}\n`);
+        process.exitCode = 1;
+      }
+      return;
+    }
+    case "undo": {
+      if (rest.includes("--help")) {
+        process.stdout.write("Usage: anvil undo [path] [--json]\n  Rollback the last anvil clean or fix operation using saved snapshot backup.\n");
+        return;
+      }
+      const json = rest.includes("--json");
+      const target = rest.find(arg => !arg.startsWith("--")) ?? ".";
+      try {
+        const { undoLastClean, formatUndoReport } = await import("./core/project-cleaner.js");
+        const report = await undoLastClean(path.resolve(target));
+        process.stdout.write(json ? `${JSON.stringify(report, null, 2)}\n` : `${formatUndoReport(report)}\n`);
+        if (report.errors.length > 0) {
+          process.exitCode = 1;
+        }
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        process.stderr.write(`ANVIL undo failed: ${message}\n`);
         process.exitCode = 1;
       }
       return;
@@ -1663,37 +1704,7 @@ async function main(args: string[]): Promise<void> {
       }
       return;
     }
-    case "clean":
-    case "fix": {
-      if (rest.includes("--help")) {
-        process.stdout.write(
-          "Usage: anvil clean [path] [--apply] [--fix] [--no-orphans] [--json]\n" +
-          "       anvil fix [path] [--json]\n\n" +
-          "Scan, delete junk/temp downloads/logs, and auto-repair code issues.\n\n" +
-          "Options:\n" +
-          "  --apply       Actually delete junk items and save code fixes (default is dry-run preview)\n" +
-          "  --fix         Auto-repair code: remove unused imports, trim whitespace, normalize blank lines\n" +
-          "  --no-orphans  Skip dead / unreferenced source module scanning\n" +
-          "  --json        Output result as JSON\n"
-        );
-        return;
-      }
-      const json = rest.includes("--json");
-      const isFix = command === "fix";
-      const apply = isFix || rest.includes("--apply");
-      const fix = isFix || rest.includes("--fix");
-      const checkOrphans = !rest.includes("--no-orphans");
-      const target = rest.find(arg => !arg.startsWith("--")) ?? ".";
-      try {
-        const { cleanProject, formatCleanReport } = await import("./core/project-cleaner.js");
-        const result = await cleanProject(path.resolve(target), { apply, fix, checkOrphans });
-        process.stdout.write(json ? JSON.stringify(result, null, 2) + "\n" : formatCleanReport(result) + "\n");
-      } catch (error) {
-        process.stderr.write("ANVIL clean failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
-        process.exitCode = 1;
-      }
-      return;
-    }
+
     case "doctor": {
       if (rest.includes("--help")) {
         process.stdout.write(

@@ -152,7 +152,7 @@ npm --version
 git --version
 
 # Install ANVIL
-npm install --global git+https://github.com/anvil-workbench/ANVIL.git#v1.0.3
+npm install --global git+https://github.com/anvil-workbench/ANVIL.git#v1.0.4
 
 # Move into your project
 cd C:\Users\YourName\Projects\my-project
@@ -329,8 +329,10 @@ Run `anvil --help` for the complete command list and `anvil <command> --help` fo
 | Command | Purpose |
 |---|---|
 | `anvil init [path]` | Create a local `.ANVIL` starter workspace |
-| `anvil clean [path]` | Scan & scrub farzi files, logs, temp downloads; add `--apply` to delete, `--fix` to repair code |
-| `anvil fix [path]` | Auto-repair code: prune unused imports, normalize whitespace and blank lines |
+| `anvil clean [path]` | Scan & scrub farzi files, logs, temp downloads; add `--apply` to delete, `--fix` to repair code, `--verify` to run test gate |
+| `anvil fix [path]` | Auto-repair code: prune unused imports, normalize whitespace and blank lines; add `--verify` |
+| `anvil undo [path]` | Instant single-command rollback of last clean/fix operation using saved snapshot backup |
+| `anvil hook install` | Install automated ANVIL quality gate into `.git/hooks/pre-commit` |
 | `anvil inspect [path]` | Inspect project languages, tooling, dependencies and scripts |
 | `anvil map [path]` | Map source modules and import relationships |
 | `anvil dashboard [path]` | Start the local dashboard |

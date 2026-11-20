@@ -86,16 +86,36 @@ function roleFor(file: string): ArchitectureNode["role"] {
     return "config";
   }
 
-  // Entry points (main entry, CLI, servers, and serverless / API routes)
+  // Entry points (main entry, CLI, servers, framework routing & serverless / API routes)
   if (
-    /(^|\/)(api|routes|pages)(\/|$)/.test(lower) ||
+    /(^|\/)(api|routes|pages|views|controllers|handlers|endpoints|app)(\/|$)/.test(lower) ||
     /(^|\/)(index|main|cli|server|app|run|launch)\.[a-z0-9]+$/.test(lower) ||
     /^(src\/)?(index|main|cli|server|app)\.[a-z0-9]+$/.test(lower) ||
     base === "manage.py" ||
     base === "wsgi.py" ||
     base === "asgi.py" ||
     base === "__main__.py" ||
-    base === "lib.rs"
+    base === "conftest.py" ||
+    base === "urls.py" ||
+    base === "routers.py" ||
+    base === "tasks.py" ||
+    base === "celery.py" ||
+    base === "lib.rs" ||
+    base === "build.rs" ||
+    /(^|\/)bin\/[^\/]+\.rs$/.test(lower) ||
+    /(^|\/)examples\/[^\/]+\.rs$/.test(lower) ||
+    /(^|\/)benches\/[^\/]+\.rs$/.test(lower) ||
+    /(^|\/)cmd\/[^\/]+\/main\.go$/.test(lower) ||
+    base.startsWith("page.") ||
+    base.startsWith("layout.") ||
+    base.startsWith("loading.") ||
+    base.startsWith("error.") ||
+    base.startsWith("not-found.") ||
+    base.startsWith("route.") ||
+    base.startsWith("middleware.") ||
+    base.startsWith("+page.") ||
+    base.startsWith("+layout.") ||
+    base.startsWith("+server.")
   ) {
     return "entry";
   }
