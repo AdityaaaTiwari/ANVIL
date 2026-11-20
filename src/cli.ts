@@ -46,6 +46,7 @@ import { captureIntelligenceSnapshot, compareLatestIntelligence, formatIntellige
 import { analyzeDependencies, formatDependencyIntelligence } from "./core/dependency-intelligence.js";
 import { generateRemediationPlan, formatRemediationPlan } from "./core/remediation-planner.js";
 import { addProjectMemory, buildProjectMemoryContext, listProjectMemory, removeProjectMemory, type ProjectMemoryKind } from "./core/project-memory.js";
+import { setupHarnessMcp, resolveMcpServerScript, type McpClientType } from "./core/mcp-setup.js";
 import { formatSkillContext, loadSkillRegistry, selectSkills } from "./core/skill-registry.js";
 import { applyBeforeAgentHooks, loadHooks } from "./core/hook-engine.js";
 import { assertSupportedAgentPolicy, loadPermissionPolicy } from "./core/permission-policy.js";
@@ -181,6 +182,7 @@ Commands:
   map [path]       Map source modules and import relationships
   agents [path]    List built-in and workspace agent roles
   memory <action>  Manage local project memory (add, list, remove, context)
+  mcp [setup]      Model Context Protocol server and harness setup (cursor, claude, windsurf)
   skills [path]    List built-in and workspace skills
   hooks [path]     List configured declarative lifecycle hooks
   agent-security [path] Audit agent instructions, skills, hooks, and permissions
@@ -803,9 +805,13 @@ async function main(args: string[]): Promise<void> {
     }
     case "memory": {
       const [action = "list", ...memoryArgs] = rest;
-      const targetIndex = memoryArgs.findIndex(arg => !arg.startsWith("--"));
-      const target = path.resolve(targetIndex >= 0 ? memoryArgs[targetIndex] ?? "." : ".");
       const option = (name: string) => { const index = memoryArgs.indexOf(name); return index >= 0 ? memoryArgs[index + 1] : undefined; };
+      const skipValues = new Set<number>();
+      for (let i = 0; i < memoryArgs.length; i++) {
+        if (memoryArgs[i]?.startsWith("--")) skipValues.add(i + 1);
+      }
+      const positional = memoryArgs.filter((arg, i) => !arg.startsWith("--") && !skipValues.has(i));
+      const target = path.resolve(positional[0] ?? ".");
       try {
         if (action === "list") {
           const entries = await listProjectMemory(target);
@@ -817,7 +823,7 @@ async function main(args: string[]): Promise<void> {
           if (!kind || !allowed.includes(kind) || !content) throw new Error("Usage: anvil memory add [path] --kind decision|architecture|constraint|preference|fact --content TEXT [--tags a,b]");
           const tags = option("--tags")?.split(",") ?? [];
           const entry = await addProjectMemory(target, { kind, content, tags });
-          process.stdout.write(`Saved ${entry.id} to .forge/memory.json\n`);
+          process.stdout.write(`Saved ${entry.id} to project memory\n`);
         } else if (action === "remove") {
           const id = memoryArgs.find(arg => arg.startsWith("mem-"));
           if (!id) throw new Error("Usage: anvil memory remove [path] mem-ID");
@@ -831,7 +837,44 @@ async function main(args: string[]): Promise<void> {
           throw new Error("Memory actions: add, list, remove, context.");
         }
       } catch (error) {
-        process.stderr.write("FORGE memory command failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
+        process.stderr.write("ANVIL memory command failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
+        process.exitCode = 1;
+      }
+      return;
+    }
+    case "mcp": {
+      const [subcommand = "info", ...mcpArgs] = rest;
+      const option = (name: string) => { const index = mcpArgs.indexOf(name); return index >= 0 ? mcpArgs[index + 1] : undefined; };
+      const skipValues = new Set<number>();
+      for (let i = 0; i < mcpArgs.length; i++) {
+        if (mcpArgs[i]?.startsWith("--")) skipValues.add(i + 1);
+      }
+      const positional = mcpArgs.filter((arg, i) => !arg.startsWith("--") && !skipValues.has(i));
+      const target = path.resolve(positional[0] ?? ".");
+      try {
+        if (subcommand === "setup") {
+          const client = (option("--client") ?? "all") as McpClientType;
+          const report = await setupHarnessMcp(target, client);
+          process.stdout.write(`\nANVIL Model Context Protocol Harness Setup\n`);
+          process.stdout.write(`Project: ${report.projectPath}\n`);
+          process.stdout.write(`MCP Server: ${report.serverScriptPath}\n\n`);
+          for (const res of report.results) {
+            process.stdout.write(`✓ [${res.client.toUpperCase()}]: ${res.details}\n`);
+          }
+          process.stdout.write(`\nYour AI harness is ready to use ANVIL tools!\n`);
+        } else if (subcommand === "server" || subcommand === "start") {
+          const script = resolveMcpServerScript();
+          await import(script);
+        } else {
+          const script = resolveMcpServerScript();
+          process.stdout.write(`ANVIL Model Context Protocol (MCP) Server\n\n`);
+          process.stdout.write(`Server entrypoint: ${script}\n\n`);
+          process.stdout.write(`Commands:\n`);
+          process.stdout.write(`  anvil mcp setup [--client cursor|claude|windsurf|vscode|all]  Configure your AI harness\n`);
+          process.stdout.write(`  anvil mcp start                                                Run MCP stdio transport\n\n`);
+        }
+      } catch (error) {
+        process.stderr.write("ANVIL MCP command failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
         process.exitCode = 1;
       }
       return;

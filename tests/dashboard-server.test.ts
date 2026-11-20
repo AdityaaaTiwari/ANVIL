@@ -222,6 +222,21 @@ describe("local dashboard server", () => {
     expect(html).toContain("Compare with previous run");
     expect(html).toContain("Cancel run");
     expect(html).toContain("Retry this task and blocked dependants");
+    expect(html).toContain("Project Memory & Architectural Decisions");
+
+    const initialMemory = await fetch(base + "/api/memory");
+    expect(initialMemory.status).toBe(200);
+    expect((await initialMemory.json()).entries).toBeDefined();
+
+    const addMem = await fetch(base + "/api/memory", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ kind: "decision", content: "Always use Vitest", tags: ["testing"] })
+    });
+    expect(addMem.status).toBe(201);
+    const added = await addMem.json();
+    expect(added.id).toMatch(/^mem-/);
+    expect(added.content).toBe("Always use Vitest");
 
     await mkdir(path.join(root, "src"));
     await writeFile(path.join(root, "src", "demo.ts"), "export const demo = true;\\n");

@@ -1,4 +1,5 @@
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
+import { existsSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 import path from "node:path";
 
@@ -25,7 +26,14 @@ const MAX_CONTENT_LENGTH = 4000;
 const SECRET_PATTERN = /(?:api[_-]?key|secret|password|access[_-]?token)\s*[:=]\s*\S+/i;
 
 function memoryPath(projectPath: string): string {
-  return path.join(path.resolve(projectPath), ".forge", "memory.json");
+  const root = path.resolve(projectPath);
+  const anvilFile = path.join(root, ".anvil", "memory.json");
+  if (existsSync(anvilFile)) return anvilFile;
+  const forgeFile = path.join(root, ".forge", "memory.json");
+  if (existsSync(forgeFile)) return forgeFile;
+  const anvilDir = path.join(root, ".anvil");
+  if (existsSync(anvilDir)) return anvilFile;
+  return forgeFile;
 }
 
 async function readDocument(projectPath: string): Promise<MemoryDocument> {

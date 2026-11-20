@@ -239,4 +239,14 @@ describe("clean and fix CLI commands", () => {
     expect(output).toContain("Usage: anvil undo");
     expect(output).toContain("Rollback");
   });
+
+  it("prints mcp usage and supports mcp setup", () => {
+    const output = runCli("mcp");
+    expect(output).toContain("Model Context Protocol");
+    expect(output).toContain("anvil mcp setup");
+
+    const setupOutput = runCli("mcp", "setup", "--client", "claude");
+    expect(setupOutput).toContain("Model Context Protocol Harness Setup");
+    expect(setupOutput).toContain("claude mcp add");
+  });
 });

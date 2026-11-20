@@ -68,4 +68,14 @@ describe("local project memory", () => {
     expect(results.filter(result => result.status === "rejected")).toHaveLength(2);
     expect(await listProjectMemory(root)).toHaveLength(1);
   });
+
+  it("prefers .anvil/memory.json when .anvil directory exists", async () => {
+    const root = await workspace();
+    const { mkdir } = await import("node:fs/promises");
+    await mkdir(path.join(root, ".anvil"), { recursive: true });
+    const note = await addProjectMemory(root, { kind: "architecture", content: "Modern ANVIL memory test", tags: ["anvil"] });
+    expect(note.id).toMatch(/^mem-/);
+    const content = await readFile(path.join(root, ".anvil", "memory.json"), "utf8");
+    expect(content).toContain("Modern ANVIL memory test");
+  });
 });

@@ -33,6 +33,7 @@ import { diagnoseProvider, type DiagnosableProvider } from "./provider-diagnosti
 import { createRunFromWorkflow, listWorkflows, loadWorkflow, saveWorkflow } from "./workflow-store.js";
 import { cleanProject, undoLastClean } from "./project-cleaner.js";
 import { runDoctorChecks } from "./doctor.js";
+import { listProjectMemory, addProjectMemory, removeProjectMemory } from "./project-memory.js";
 
 // --- SSE broadcast state ---
 const sseClients = new Set<ServerResponse>();
@@ -446,6 +447,30 @@ body{
       <div class="section-head"><h2>Verification history</h2><span class="pill">REAL COMMAND RESULTS</span></div>
       <div id="verificationPanel" class="list"><div class="loading">Loading verification history…</div></div>
     </div>
+  </section>
+
+  <section class="section card">
+    <div class="section-head">
+      <h2>Project Memory & Architectural Decisions</h2>
+      <div class="actions">
+        <span class="pill pill-cyan">CONTEXT STORE</span>
+        <button class="btn" id="refreshMemory">Refresh memory</button>
+      </div>
+    </div>
+    <p class="run-meta">Durable project constraints, architectural decisions, and preferences that guide specialist agents and IDE harness assistants.</p>
+    <div style="display:flex;gap:8px;margin:12px 0;flex-wrap:wrap">
+      <select id="newMemoryKind" class="btn" style="padding:6px 12px">
+        <option value="decision">Decision</option>
+        <option value="architecture">Architecture</option>
+        <option value="constraint">Constraint</option>
+        <option value="preference">Preference</option>
+        <option value="fact">Fact</option>
+      </select>
+      <input type="text" id="newMemoryContent" placeholder="e.g. Always use Vitest for unit tests; require --verify on clean." style="flex:1;min-width:260px;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;padding:6px 12px;color:var(--text);font-family:inherit;font-size:13px">
+      <input type="text" id="newMemoryTags" placeholder="tags (comma separated)" style="width:180px;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;padding:6px 12px;color:var(--text);font-family:inherit;font-size:13px">
+      <button class="btn btn-primary" id="saveMemoryBtn">+ Save Decision</button>
+    </div>
+    <div id="memoryList" class="list"><div class="loading">Loading project memory…</div></div>
   </section>
 </div>
 
@@ -1489,6 +1514,31 @@ async function runCleanerPreview(){
   }catch(err){output.innerHTML = '<div class="error">'+esc(err.message)+'</div>';}
 }
 
+async function loadMemory(){
+  try{
+    const res=await api("/api/memory");
+    let entries = res.entries || [];
+    if(!entries.length && isShowcase){
+      entries = [
+        { id: "mem-showcase-1", kind: "architecture", content: "ANVIL uses local-first AST parsing for polyglot module mapping across 6 languages.", tags: ["ast", "polyglot"], updatedAt: new Date().toISOString() },
+        { id: "mem-showcase-2", kind: "decision", content: "Every code fix and cleaner run requires automated test gate verification (--verify) with instant rollback.", tags: ["safety", "rollback"], updatedAt: new Date().toISOString() },
+        { id: "mem-showcase-3", kind: "constraint", content: "Never forward arbitrary environment secrets or credentials to third-party providers or tools.", tags: ["security"], updatedAt: new Date().toISOString() }
+      ];
+    }
+    el("memoryList").innerHTML = entries.length ? entries.map(item => {
+      const kindClass = item.kind === "decision" ? "pill-emerald" : item.kind === "constraint" ? "pill-accent" : "pill-cyan";
+      return '<div class="rowitem" style="align-items:flex-start"><div><div style="display:flex;gap:6px;align-items:center;margin-bottom:4px"><span class="pill ' + kindClass + '">' + esc(item.kind.toUpperCase()) + '</span>' + (item.tags||[]).map(t => '<span class="pill" style="font-size:10px">#' + esc(t) + '</span>').join('') + '<span class="run-meta" style="margin-left:8px">' + esc(item.id) + '</span></div><div style="font-size:13px;line-height:1.4">' + esc(item.content) + '</div></div>' + (!item.id.startsWith("mem-showcase") ? '<button class="btn" style="padding:4px 8px;font-size:11px" onclick="deleteMemoryEntry(\'' + esc(item.id) + '\')">Remove</button>' : '') + '</div>';
+    }).join("") : '<div class="empty">No project memory entries saved yet. Add a decision or constraint above to guide your agents!</div>';
+  }catch(e){el("memoryList").innerHTML='<div class="error">'+esc(e.message)+'</div>';}
+}
+
+async function deleteMemoryEntry(id){
+  try{
+    await fetch("/api/memory/delete",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({id})});
+    loadMemory();
+  }catch(e){alert("Failed to remove memory: "+e.message);}
+}
+
 on("runCleanDryRunBtn","click",runCleanerPreview);
 on("quickCleanBtn","click",()=>{
   document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
@@ -1780,12 +1830,26 @@ on("exportExperimentHistory","click",()=>{
   }
 });
 
+on("refreshMemory","click",loadMemory);
+on("saveMemoryBtn","click",async()=>{
+  const kind=el("newMemoryKind").value;
+  const content=el("newMemoryContent").value.trim();
+  const tags=el("newMemoryTags").value.split(",").map(t=>t.trim()).filter(Boolean);
+  if(!content)return;
+  try{
+    await fetch("/api/memory",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({kind,content,tags})});
+    el("newMemoryContent").value="";
+    el("newMemoryTags").value="";
+    loadMemory();
+  }catch(e){alert("Failed to save decision: "+e.message);}
+});
+
 function reloadAllViews(){
   loadOverview();loadAgents();loadRuns();loadActivity();loadObservability();
   loadEvaluationHistory();loadBenchmarkHistory();loadBenchmarkRegression();loadAgentPerformance();
   loadSkillExperiments();loadExperimentHistory();loadAgentOptimization();loadAgentIntelligence();
   loadHealth();loadRegression();loadReviews();loadQuality();loadVerifications();
-  loadCleanerBackups();
+  loadCleanerBackups();loadMemory();
 }
 
 reloadAllViews();
@@ -1832,7 +1896,7 @@ export async function startDashboard(options: DashboardOptions): Promise<Dashboa
         response.writeHead(405, { "content-type": "application/json" }).end(JSON.stringify({ error: "Method not allowed." }));
         return;
       }
-      if (request.method === "POST" && (requestUrl.pathname === "/api/workflows" || requestUrl.pathname === "/api/clean/run" || requestUrl.pathname === "/api/clean/undo" || requestUrl.pathname === "/api/config-files" || requestUrl.pathname === "/api/config-snapshots" || /^\/api\/providers\/(?:openai|anthropic|google|ollama)\/diagnose$/.test(requestUrl.pathname) || requestUrl.pathname === "/api/config-releases" || /^\/api\/config-releases\/rel-[a-f0-9]{12}\/(?:approve|reject)$/.test(requestUrl.pathname) || requestUrl.pathname.endsWith("/run") && requestUrl.pathname.startsWith("/api/workflows/") || /^\/api\/runs\/[^/]+\/(?:replay|cancel)$/.test(requestUrl.pathname) || /^\/api\/runs\/[^/]+\/tasks\/[^/]+\/retry$/.test(requestUrl.pathname))) {
+      if (request.method === "POST" && (requestUrl.pathname === "/api/memory" || requestUrl.pathname === "/api/memory/delete" || requestUrl.pathname === "/api/workflows" || requestUrl.pathname === "/api/clean/run" || requestUrl.pathname === "/api/clean/undo" || requestUrl.pathname === "/api/config-files" || requestUrl.pathname === "/api/config-snapshots" || /^\/api\/providers\/(?:openai|anthropic|google|ollama)\/diagnose$/.test(requestUrl.pathname) || requestUrl.pathname === "/api/config-releases" || /^\/api\/config-releases\/rel-[a-f0-9]{12}\/(?:approve|reject)$/.test(requestUrl.pathname) || requestUrl.pathname.endsWith("/run") && requestUrl.pathname.startsWith("/api/workflows/") || /^\/api\/runs\/[^/]+\/(?:replay|cancel)$/.test(requestUrl.pathname) || /^\/api\/runs\/[^/]+\/tasks\/[^/]+\/retry$/.test(requestUrl.pathname))) {
         const origin = request.headers.origin;
         if (origin && new URL(origin).host !== request.headers.host) {
           response.writeHead(403, { "content-type": "application/json" }).end(JSON.stringify({ error: "Cross-origin requests are not allowed." }));
@@ -1931,6 +1995,22 @@ export async function startDashboard(options: DashboardOptions): Promise<Dashboa
         if (requestUrl.pathname === "/api/clean/undo") {
           const result = await undoLastClean(projectPath);
           response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(JSON.stringify(result));
+          return;
+        }
+        if (requestUrl.pathname === "/api/memory") {
+          const record = (body && typeof body === "object" ? body : {}) as Record<string, unknown>;
+          const kind = (record.kind as string) || "decision";
+          const content = String(record.content || "");
+          const tags = Array.isArray(record.tags) ? record.tags.map(String) : [];
+          const entry = await addProjectMemory(projectPath, { kind: kind as any, content, tags });
+          response.writeHead(201, { "content-type": "application/json; charset=utf-8" }).end(JSON.stringify(entry));
+          return;
+        }
+        if (requestUrl.pathname === "/api/memory/delete") {
+          const record = (body && typeof body === "object" ? body : {}) as Record<string, unknown>;
+          const id = String(record.id || "");
+          const success = await removeProjectMemory(projectPath, id);
+          response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(JSON.stringify({ success }));
           return;
         }
         if (requestUrl.pathname === "/api/workflows") {
@@ -2374,6 +2454,11 @@ export async function startDashboard(options: DashboardOptions): Promise<Dashboa
           } catch {}
         }
         response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(JSON.stringify({ snapshots: snapshots.sort((a,b) => b.at.localeCompare(a.at)) }));
+        return;
+      }
+      if (requestUrl.pathname === "/api/memory") {
+        const entries = await listProjectMemory(projectPath);
+        response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(JSON.stringify({ entries }));
         return;
       }
       if (requestUrl.pathname === "/api/architecture") {
