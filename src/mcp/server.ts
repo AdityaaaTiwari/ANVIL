@@ -57,7 +57,7 @@ async function auditReadOnlyMcpTool<T>(tool: string, operation: () => Promise<T>
 
 const server = new McpServer({
   name: "forge-engineering-workbench",
-  version: "1.0.0"
+  version: "1.0.4"
 });
 
 server.registerTool(

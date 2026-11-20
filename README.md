@@ -62,7 +62,7 @@
 ---
 
 > [!NOTE]
-> **ANVIL v1.0.0 — AI harness foundation.** The local CLI, local dashboard, agent orchestration, MCP server, provider adapters, GitHub Action and GitHub App installation/authentication foundation are available. The GitHub App does not yet perform hosted repository scans or create pull requests. See [Current capabilities and boundaries](#current-capabilities-and-boundaries).
+> **ANVIL v1.0.4 — AI harness foundation.** The local CLI, local dashboard, agent orchestration, MCP server, provider adapters, GitHub Action, automated self-healing cleaner, byte-accurate rollback (`anvil undo`), pre-commit hooks (`anvil hook install`), and GitHub App installation/authentication foundation are available. See [Current capabilities and boundaries](#current-capabilities-and-boundaries).
 
 ## What is ANVIL?
 
@@ -108,10 +108,16 @@ git --version
 
 ### Install ANVIL
 
-Install the released CLI directly from the GitHub repository:
+Install the released CLI via npm:
 
 ```bash
-npm install --global git+https://github.com/anvil-workbench/ANVIL.git#v1.0.3
+npm install --global anvil-engineering-workbench
+```
+
+Or install directly from the GitHub repository:
+
+```bash
+npm install --global git+https://github.com/anvil-workbench/ANVIL.git#v1.0.4
 ```
 
 Verify the installation:
@@ -532,9 +538,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: anvil-workbench/ANVIL@v1.0.3
+      - uses: anvil-workbench/ANVIL@v1.0.4
         with:
-          version: v1.0.3
+          version: v1.0.4
           project-path: .
           operation: inspect
 ```
@@ -738,7 +744,7 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request.
 
 ## Project history
 
-ANVIL's v1.0.3 release brings full multi-language architecture mapping, automated farzi-file scrubbing, code auto-repair, one-command doctor self-healing, the local CLI, dashboard, engineering intelligence, agent workflows, MCP integration, GitHub Action and GitHub App installation foundation into one versioned product.
+ANVIL's v1.0.4 release brings single-command byte-accurate rollback (`anvil undo`), automated test verification gate (`--verify`), Git pre-commit hook automation (`anvil hook install`), framework-aware entrypoint resolution, full multi-language architecture mapping, automated farzi-file scrubbing, code auto-repair, one-command doctor self-healing, the local CLI, rich showcase telemetry dashboard, engineering intelligence, agent workflows, MCP integration, GitHub Action and GitHub App installation foundation into one versioned product.
 
 The project is maintained as an original ANVIL codebase. ECC is a capability and documentation reference; ANVIL maintains its own identity, implementation, data models and roadmap.
 

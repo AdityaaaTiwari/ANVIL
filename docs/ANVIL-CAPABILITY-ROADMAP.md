@@ -48,7 +48,7 @@ Build an original, local-first agent engineering harness with ANVIL-owned interf
 - Doctor & Project Health wizard: `anvil doctor` system diagnostics and `anvil doctor --fix` automated environment scaffolding (Shipped in v1.0.3).
 - Polyglot Architecture & Cleaner Engine: Multi-language dependency mapping (Python, Rust, Go, Java, C/C++, TS), workspace junk pruning, and automated code cleanup (`anvil clean`, `anvil fix`) (Shipped in v1.0.3).
 - Zero-Fear Rollback & Self-Healing Loop: Instant byte-accurate snapshot restoration (`anvil undo`), automated test verification gate (`--verify`), pre-commit Git hook automation (`anvil hook install`), and framework-aware entrypoint manifests for Next.js, Django, Rust, and Go (Shipped in v1.0.4).
-- Real-time engineering dashboard with live architectural metrics, system health, quality audits, and agent intelligence (Shipped in v1.0.3).
+- Real-time engineering dashboard with live architectural metrics, system health, quality audits, agent intelligence, showcase telemetry mode, and self-healing cleaner hub (Shipped in v1.0.4).
 
 ## Non-negotiables
 
