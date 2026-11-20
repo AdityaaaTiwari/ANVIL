@@ -1,5 +1,16 @@
 # ANVIL Changelog
 
+## 1.0.1 — Rebranding, Modern Website & Documentation Polish
+
+ANVIL 1.0.1 introduces a completely redesigned product website, high-definition SVG iconography, comprehensive documentation unification under the ANVIL brand, and cross-platform stability improvements.
+
+### Enhancements & Fixes
+- **Modern Landing Website (`public/index.html`):** Redesigned with an ultra-clean Obsidian and Anvil Copper dark design system, interactive package manager installer tabs (`npm`, `npx`, `pnpm`, `yarn`), interactive live terminal simulation with real-time output switching, and interactive 4-stage workbench explorer.
+- **Self-Contained Vector Iconography:** Replaced external image references with 100% self-contained inline SVG brand marks to ensure zero broken images when viewing locally or offline.
+- **Brand Unification:** Purged all remaining legacy branding across `docs/`, `action.yml`, workflow files, and dashboard server templates.
+- **High-Resolution Banner:** Generated a brand new, crisp screenshot of the ANVIL engineering dashboard (`docs/anvil-dashboard.png`) for repository and npm README presentations.
+- **Cross-Platform Test Stabilization:** Resolved Windows symlink traversal and 8.3 path canonicalization issues in CI workflows.
+
 ## 1.0.0 — First major release
 
 ANVIL 1.0.0 brings the independent ANVIL engineering workbench together as a versioned, installable product. It is designed to provide a local-first alternative for teams and developers who want codebase intelligence, agent orchestration, reviewable workflows, and measurable verification.
