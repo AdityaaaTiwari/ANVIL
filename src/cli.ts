@@ -193,7 +193,9 @@ Commands:
   resume RUNID     Continue pending or approved tasks in a saved run
   approve RUNID TASK_ID  Approve a task awaiting human review
   show-run ID      Display one saved run (use --path for project directory)
-  doctor [path]    Run environment health checks (Node, git, Docker, API keys)
+  clean [path]     Scan and delete junk, logs, temp downloads; add --apply and --fix
+  fix [path]       Auto-repair code errors, trim whitespace & prune unused imports
+  doctor [path]    Run environment health checks; add --fix to auto-scaffold config
   dashboard [path] Start the local read-only web dashboard
   version          Print the installed version
   help             Show this help message
@@ -1661,15 +1663,70 @@ async function main(args: string[]): Promise<void> {
       }
       return;
     }
-    case "doctor": {
+    case "clean":
+    case "fix": {
       if (rest.includes("--help")) {
-        process.stdout.write("Usage: anvil doctor [path] [--json]\n  Run environment health checks.\n");
+        process.stdout.write(
+          "Usage: anvil clean [path] [--apply] [--fix] [--no-orphans] [--json]\n" +
+          "       anvil fix [path] [--json]\n\n" +
+          "Scan, delete junk/temp downloads/logs, and auto-repair code issues.\n\n" +
+          "Options:\n" +
+          "  --apply       Actually delete junk items and save code fixes (default is dry-run preview)\n" +
+          "  --fix         Auto-repair code: remove unused imports, trim whitespace, normalize blank lines\n" +
+          "  --no-orphans  Skip dead / unreferenced source module scanning\n" +
+          "  --json        Output result as JSON\n"
+        );
         return;
       }
       const json = rest.includes("--json");
+      const isFix = command === "fix";
+      const apply = isFix || rest.includes("--apply");
+      const fix = isFix || rest.includes("--fix");
+      const checkOrphans = !rest.includes("--no-orphans");
+      const target = rest.find(arg => !arg.startsWith("--")) ?? ".";
+      try {
+        const { cleanProject, formatCleanReport } = await import("./core/project-cleaner.js");
+        const result = await cleanProject(path.resolve(target), { apply, fix, checkOrphans });
+        process.stdout.write(json ? JSON.stringify(result, null, 2) + "\n" : formatCleanReport(result) + "\n");
+      } catch (error) {
+        process.stderr.write("ANVIL clean failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
+        process.exitCode = 1;
+      }
+      return;
+    }
+    case "doctor": {
+      if (rest.includes("--help")) {
+        process.stdout.write(
+          "Usage: anvil doctor [path] [--fix] [--json]\n" +
+          "  Run environment health checks.\n" +
+          "  Add --fix to auto-scaffold missing .anvil config directories, .gitignore, and .env.example.\n"
+        );
+        return;
+      }
+      const json = rest.includes("--json");
+      const doFix = rest.includes("--fix");
       const target = rest.find(arg => !arg.startsWith("--"));
       try {
-        const { runDoctorChecks, formatDoctorReport } = await import("./core/doctor.js");
+        const { runDoctorChecks, fixDoctorIssues, formatDoctorReport } = await import("./core/doctor.js");
+        if (doFix) {
+          const fixResult = await fixDoctorIssues(target ? path.resolve(target) : undefined);
+          if (!json) {
+            process.stdout.write("# ANVIL Doctor Auto-Fix\n\n");
+            if (fixResult.repaired.length > 0) {
+              for (const item of fixResult.repaired) {
+                process.stdout.write(`✓ ${item}\n`);
+              }
+            } else {
+              process.stdout.write("✓ Environment and configuration are already properly set up.\n");
+            }
+            if (fixResult.warnings.length > 0) {
+              for (const warn of fixResult.warnings) {
+                process.stdout.write(`! Warning: ${warn}\n`);
+              }
+            }
+            process.stdout.write("\nRunning health checks after fix...\n\n");
+          }
+        }
         const report = await runDoctorChecks(target ? path.resolve(target) : undefined);
         process.stdout.write(json ? JSON.stringify(report, null, 2) + "\n" : formatDoctorReport(report) + "\n");
         if (report.overallStatus === "critical") process.exitCode = 1;

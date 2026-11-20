@@ -1,5 +1,5 @@
 import { execFile } from "node:child_process";
-import { lstat } from "node:fs/promises";
+import { lstat, mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
 
@@ -16,6 +16,12 @@ export interface DoctorReport {
   summary: { ok: number; warn: number; fail: number };
   checks: DoctorCheck[];
   checkedAt: string;
+}
+
+export interface DoctorFixResult {
+  root: string;
+  repaired: string[];
+  warnings: string[];
 }
 
 async function checkNodeVersion(): Promise<DoctorCheck> {
@@ -149,31 +155,32 @@ export async function runDoctorChecks(projectPath?: string): Promise<DoctorRepor
           detail: `Accessible directory: ${resolved}`,
         });
 
-        // Check .forge
+        // Check .anvil / .forge
+        let configFound = false;
+        try {
+          const anvilStat = await lstat(path.join(resolved, ".anvil"));
+          if (anvilStat.isDirectory()) configFound = true;
+        } catch {}
         try {
           const forgeStat = await lstat(path.join(resolved, ".forge"));
-          if (forgeStat.isDirectory()) {
-            checks.push({
-              name: "FORGE configuration",
-              status: "ok",
-              detail: ".forge directory detected.",
-            });
-          } else {
-            checks.push({
-              name: "FORGE configuration",
-              status: "warn",
-              detail: ".forge path exists but is not a directory.",
-            });
-          }
-        } catch {
+          if (forgeStat.isDirectory()) configFound = true;
+        } catch {}
+
+        if (configFound) {
+          checks.push({
+            name: "FORGE configuration",
+            status: "ok",
+            detail: ".anvil / .forge directory detected.",
+          });
+        } else {
           checks.push({
             name: "FORGE configuration",
             status: "warn",
-            detail: "No .forge directory found. Run 'forge init' to configure this project.",
+            detail: "No .anvil / .forge directory found. Run 'anvil init' or 'anvil doctor --fix' to configure this project.",
           });
         }
 
-        // Check dist
+        // Check dist in node projects
         try {
           const pkgStat = await lstat(path.join(resolved, "package.json"));
           if (pkgStat.isFile()) {
@@ -238,6 +245,140 @@ export async function runDoctorChecks(projectPath?: string): Promise<DoctorRepor
     checks,
     checkedAt: new Date().toISOString(),
   };
+}
+
+export async function fixDoctorIssues(projectPath?: string): Promise<DoctorFixResult> {
+  const root = path.resolve(projectPath ?? ".");
+  const repaired: string[] = [];
+  const warnings: string[] = [];
+
+  // 1. Scaffold .anvil workspace directories if missing
+  const anvilDir = path.join(root, ".anvil");
+  const forgeDir = path.join(root, ".forge");
+  try {
+    let hasAnvil = false;
+    try { hasAnvil = (await lstat(anvilDir)).isDirectory(); } catch {}
+    let hasForge = false;
+    try { hasForge = (await lstat(forgeDir)).isDirectory(); } catch {}
+
+    if (!hasAnvil && !hasForge) {
+      await mkdir(path.join(anvilDir, "agents"), { recursive: true });
+      await mkdir(path.join(anvilDir, "skills"), { recursive: true });
+      await mkdir(path.join(anvilDir, "workflows"), { recursive: true });
+      repaired.push("Scaffolded .anvil/ workspace configuration directories (.anvil/agents, .anvil/skills, .anvil/workflows).");
+    }
+  } catch (err: any) {
+    warnings.push(`Could not initialize .anvil directory: ${err?.message || String(err)}`);
+  }
+
+  // 2. Scaffold .gitignore if missing
+  const gitignorePath = path.join(root, ".gitignore");
+  try {
+    let gitignoreExists = false;
+    try { gitignoreExists = (await lstat(gitignorePath)).isFile(); } catch {}
+    if (!gitignoreExists) {
+      const standardGitignore = `# OS Clutter
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Logs and debug
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Node
+node_modules/
+dist/
+coverage/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.venv/
+env/
+
+# Rust / C
+target/
+*.o
+*.obj
+
+# ANVIL local state
+.anvil/
+.forge/
+`;
+      await writeFile(gitignorePath, standardGitignore, "utf8");
+      repaired.push("Created comprehensive multi-language .gitignore file.");
+    }
+  } catch (err: any) {
+    warnings.push(`Could not create .gitignore: ${err?.message || String(err)}`);
+  }
+
+  // 3. Scaffold .env.example if missing
+  const envExamplePath = path.join(root, ".env.example");
+  try {
+    let envExampleExists = false;
+    try { envExampleExists = (await lstat(envExamplePath)).isFile(); } catch {}
+    if (!envExampleExists) {
+      const template = `# ANVIL AI Provider Credentials (Example template)
+# Copy to .env and configure your local keys
+
+OPENAI_API_KEY=your_openai_api_key_here
+ANTHROPIC_API_KEY=your_anthropic_api_key_here
+GEMINI_API_KEY=your_gemini_api_key_here
+`;
+      await writeFile(envExamplePath, template, "utf8");
+      repaired.push("Scaffolded safe .env.example template for AI provider credentials.");
+    }
+  } catch (err: any) {
+    warnings.push(`Could not create .env.example: ${err?.message || String(err)}`);
+  }
+
+  // 4. Git repository initialization if git CLI is present but .git is missing
+  const gitDir = path.join(root, ".git");
+  try {
+    let isGitRepo = false;
+    try { isGitRepo = (await lstat(gitDir)).isDirectory(); } catch {}
+    if (!isGitRepo) {
+      try {
+        await execFileAsync("git", ["init"], { cwd: root, timeout: 5000 });
+        repaired.push("Initialized fresh Git repository (git init).");
+      } catch (err: any) {
+        warnings.push(`Could not run git init: ${err?.message || String(err)}`);
+      }
+    }
+  } catch {}
+
+  // 5. Build project if package.json exists and dist/ is missing
+  try {
+    const pkgPath = path.join(root, "package.json");
+    const distPath = path.join(root, "dist");
+    let hasPkg = false;
+    try { hasPkg = (await lstat(pkgPath)).isFile(); } catch {}
+    let hasDist = false;
+    try { hasDist = (await lstat(distPath)).isDirectory(); } catch {}
+
+    if (hasPkg && !hasDist) {
+      try {
+        const npmCmd = process.platform === "win32" ? "npm.cmd" : "npm";
+        await execFileAsync(npmCmd, ["run", "build"], { cwd: root, timeout: 30000 });
+        repaired.push("Compiled build artifacts (npm run build -> dist/).");
+      } catch (err: any) {
+        warnings.push(`Could not auto-compile dist/: ${err?.message || String(err)}`);
+      }
+    }
+  } catch {}
+
+  return { root, repaired, warnings };
 }
 
 export function formatDoctorReport(report: DoctorReport): string {

@@ -43,40 +43,48 @@ describe("autoFixCodeContent", () => {
     expect(newContent).not.toContain("./dead.js");
     expect(fixes.some(f => f.type === "unused-import")).toBe(true);
   });
+
+  it("removes unused imports in Python files while keeping used ones", () => {
+    const pyCode = "from math import sqrt, ceil, floor\n\nprint(sqrt(16))\n";
+    const { newContent, fixes } = autoFixCodeContent(pyCode, "script.py");
+
+    expect(newContent).toContain("from math import sqrt");
+    expect(newContent).not.toContain("ceil");
+    expect(newContent).not.toContain("floor");
+    expect(fixes.some(f => f.type === "unused-import" && f.detail.includes("ceil"))).toBe(true);
+  });
 });
 
 describe("cleanProject", () => {
-  it("detects OS, editor, download, and log clutter in dry-run mode without deleting", () => {
-    return (async () => {
-      const root = await createTempWorkspace();
-      const dsStore = path.join(root, ".DS_Store");
-      const npmLog = path.join(root, "npm-debug.log");
-      const tempDownload = path.join(root, "file.crdownload");
-      const editorBackup = path.join(root, "script.js~");
+  it("detects OS, editor, download, and log clutter in dry-run mode without deleting", async () => {
+    const root = await createTempWorkspace();
+    const dsStore = path.join(root, ".DS_Store");
+    const npmLog = path.join(root, "npm-debug.log");
+    const tempDownload = path.join(root, "file.crdownload");
+    const editorBackup = path.join(root, "script.js~");
 
-      await writeFile(dsStore, "ds-store-data");
-      await writeFile(npmLog, "error log contents");
-      await writeFile(tempDownload, "partial data");
-      await writeFile(editorBackup, "backup data");
+    await writeFile(dsStore, "ds-store-data");
+    await writeFile(npmLog, "error log contents");
+    await writeFile(tempDownload, "partial data");
+    await writeFile(editorBackup, "backup data");
 
-      const dryRun = await cleanProject(root, { apply: false });
+    const dryRun = await cleanProject(root, { apply: false });
 
-      expect(dryRun.dryRun).toBe(true);
-      expect(dryRun.applied).toBe(false);
-      expect(dryRun.junkItems.length).toBe(4);
-      expect(dryRun.stats.bytesReclaimed).toBeGreaterThan(0);
-      expect(dryRun.stats.junkDeleted).toBe(0);
+    expect(dryRun.dryRun).toBe(true);
+    expect(dryRun.applied).toBe(false);
+    expect(dryRun.junkItems.length).toBe(4);
+    expect(dryRun.stats.bytesReclaimed).toBeGreaterThan(0);
+    expect(dryRun.stats.junkDeleted).toBe(0);
 
-      // Verify files were NOT deleted in dry-run mode
-      const s1 = await stat(dsStore);
-      expect(s1.isFile()).toBe(true);
+    // Verify files were NOT deleted in dry-run mode
+    const s1 = await stat(dsStore);
+    expect(s1.isFile()).toBe(true);
 
-      const markdown = formatCleanReport(dryRun);
-      expect(markdown).toContain("# ANVIL Workspace Clean & Repair");
-      expect(markdown).toContain("DRY RUN");
-      expect(markdown).toContain(".DS_Store");
-      expect(markdown).toContain("npm-debug.log");
-    })();
+    const markdown = formatCleanReport(dryRun);
+    expect(markdown).toContain("# ANVIL Workspace Clean & Repair");
+    expect(markdown).toContain("DRY RUN");
+    expect(markdown).toContain(".DS_Store");
+    expect(markdown).toContain("npm-debug.log");
   });
 
   it("deletes junk files and cleans empty directories when apply is true", async () => {
@@ -97,6 +105,28 @@ describe("cleanProject", () => {
     // Verify files were actually deleted
     await expect(stat(thumbsDb)).rejects.toThrow();
     await expect(stat(yarnError)).rejects.toThrow();
+  });
+
+  it("detects multi-language junk: Python cache, C objects, Java classes", async () => {
+    const root = await createTempWorkspace();
+    const pycache = path.join(root, "__pycache__");
+    const pycFile = path.join(pycache, "module.cpython-311.pyc");
+    const cObj = path.join(root, "main.o");
+    const javaClass = path.join(root, "App.class");
+    const downloadPart = path.join(root, "package.tar.gz.part");
+
+    await mkdir(pycache);
+    await writeFile(pycFile, "pyc bytes");
+    await writeFile(cObj, "object bytes");
+    await writeFile(javaClass, "bytecode");
+    await writeFile(downloadPart, "partial download");
+
+    const result = await cleanProject(root, { apply: false });
+    expect(result.junkItems.length).toBeGreaterThanOrEqual(4);
+    expect(result.junkItems.some(i => i.path.includes("__pycache__") || i.path.includes(".pyc"))).toBe(true);
+    expect(result.junkItems.some(i => i.path.includes("main.o"))).toBe(true);
+    expect(result.junkItems.some(i => i.path.includes("App.class"))).toBe(true);
+    expect(result.junkItems.some(i => i.path.includes(".part"))).toBe(true);
   });
 
   it("auto-fixes source code files when fix and apply are both true", async () => {

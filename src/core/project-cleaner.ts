@@ -77,13 +77,40 @@ function classifyJunkFile(basename: string, relPath: string): { category: JunkCa
   }
 
   // Temporary & incomplete downloads
-  if (lower.endsWith(".tmp") || lower.endsWith(".temp") || lower.endsWith(".crdownload") || lower.endsWith(".part")) {
-    return { category: lower.endsWith(".crdownload") || lower.endsWith(".part") ? "download" : "temporary", reason: "Incomplete download or temporary artifact" };
+  if (
+    lower.endsWith(".tmp") ||
+    lower.endsWith(".temp") ||
+    lower.endsWith(".crdownload") ||
+    lower.endsWith(".part") ||
+    lower.endsWith(".aria2") ||
+    lower.endsWith(".download")
+  ) {
+    return { category: lower.endsWith(".crdownload") || lower.endsWith(".part") || lower.endsWith(".aria2") || lower.endsWith(".download") ? "download" : "temporary", reason: "Incomplete download or temporary artifact" };
   }
 
   // Editor clutter
   if (lower.endsWith("~") || lower.endsWith(".swp") || lower.endsWith(".swo") || lower.endsWith(".bak") || lower.endsWith(".orig") || lower.endsWith(".rej")) {
     return { category: "editor", reason: "Editor backup, swap, or merge residue" };
+  }
+
+  // Python bytecode & caches
+  if (lower.endsWith(".pyc") || lower.endsWith(".pyo") || lower.endsWith(".pyd")) {
+    return { category: "cache", reason: "Compiled Python bytecode artifact" };
+  }
+
+  // Java / JVM compiled class files
+  if (lower.endsWith(".class")) {
+    return { category: "cache", reason: "Compiled Java bytecode class file" };
+  }
+
+  // C / C++ / Rust / Windows object and debug files
+  if (lower.endsWith(".o") || lower.endsWith(".obj") || lower.endsWith(".pdb") || lower.endsWith(".ilk") || lower.endsWith(".idb")) {
+    return { category: "cache", reason: "Native object or debug symbol artifact" };
+  }
+
+  // Go test runner binaries
+  if (lower.endsWith(".test") && !relPath.includes("/")) {
+    return { category: "cache", reason: "Compiled Go test runner binary" };
   }
 
   // Transient build caches
@@ -120,6 +147,29 @@ async function scanJunk(
     const fullPath = path.join(root, relChild);
 
     if (entry.isDirectory()) {
+      const dirLower = entry.name.toLowerCase();
+      if (
+        dirLower === "__pycache__" ||
+        dirLower === ".pytest_cache" ||
+        dirLower === ".mypy_cache" ||
+        dirLower === ".ruff_cache" ||
+        dirLower === ".ipynb_checkpoints"
+      ) {
+        try {
+          const dirStat = await stat(fullPath);
+          items.push({
+            path: normalizedRel,
+            absolutePath: fullPath,
+            category: "cache",
+            reason: "Python runtime or test cache directory (regenerable)",
+            sizeBytes: dirStat.size || 4096,
+            isDirectory: true
+          });
+        } catch {
+          // Ignore stat error
+        }
+        continue;
+      }
       if (isExcludedScanDirectory(entry.name)) {
         // Special case: coverage directories can be considered cache junk if present at root
         if (entry.name === "coverage" || entry.name === ".nyc_output") {
@@ -291,6 +341,66 @@ export function autoFixCodeContent(content: string, filePath: string): { newCont
     }
   }
 
+  // 5. Safe unused import removal for Python source files
+  if ([".py", ".pyw"].includes(ext)) {
+    const pyImportRegex = /^from\s+([.\w]+)\s+import\s+([^#\r\n]+)/gm;
+    let match: RegExpExecArray | null;
+    let codePass = updated;
+    let importFixCount = 0;
+
+    while ((match = pyImportRegex.exec(updated)) !== null) {
+      const fullStatement = match[0];
+      const fromModule = match[1];
+      const rawSpecifiers = match[2];
+      if (!fromModule || !rawSpecifiers) continue;
+      if (rawSpecifiers.trim() === "*") continue;
+
+      const specs = rawSpecifiers.split(",").map(s => s.trim()).filter(Boolean);
+      const parsed = specs.map(s => {
+        const parts = s.split(/\s+as\s+/).map(p => p.trim());
+        return {
+          importedName: parts[0] || s,
+          localName: parts[1] || parts[0] || s,
+          raw: s
+        };
+      });
+
+      const contentWithoutImport = updated.slice(0, match.index) + updated.slice(match.index + fullStatement.length);
+      const surviving: string[] = [];
+      const removed: string[] = [];
+
+      for (const spec of parsed) {
+        const escaped = spec.localName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const wordRegex = new RegExp(`\\b${escaped}\\b`);
+        if (wordRegex.test(contentWithoutImport)) {
+          surviving.push(spec.raw);
+        } else {
+          removed.push(spec.localName);
+        }
+      }
+
+      if (removed.length > 0) {
+        importFixCount += removed.length;
+        if (surviving.length === 0) {
+          codePass = codePass.replace(fullStatement + "\n", "").replace(fullStatement, "");
+        } else {
+          const newStatement = `from ${fromModule} import ${surviving.join(", ")}`;
+          codePass = codePass.replace(fullStatement, newStatement);
+        }
+        fixes.push({
+          file: filePath,
+          type: "unused-import",
+          detail: `Removed unused Python import(s): ${removed.join(", ")} from "${fromModule}"`,
+          applied: true
+        });
+      }
+    }
+
+    if (importFixCount > 0) {
+      updated = codePass;
+    }
+  }
+
   return { newContent: updated, fixes };
 }
 
@@ -391,7 +501,16 @@ export async function cleanProject(inputPath: string, options: CleanOptions = {}
           const childRel = rel ? path.join(rel, e.name) : e.name;
           if (e.isDirectory() && !isExcludedScanDirectory(e.name)) {
             res.push(...await collectSource(dir, childRel));
-          } else if (e.isFile() && [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".json"].includes(path.extname(e.name).toLowerCase())) {
+          } else if (e.isFile() && [
+            ".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs",
+            ".py", ".pyw",
+            ".go",
+            ".rs",
+            ".java", ".kt",
+            ".c", ".cpp", ".cc", ".cxx", ".h", ".hpp",
+            ".cs",
+            ".json", ".md"
+          ].includes(path.extname(e.name).toLowerCase())) {
             res.push(childRel.split(path.sep).join("/"));
           }
         }
