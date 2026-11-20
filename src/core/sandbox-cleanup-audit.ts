@@ -49,9 +49,9 @@ export async function readSandboxCleanupAudit(projectRoot: string): Promise<Sand
 }
 
 export function formatSandboxCleanupHistory(entries: SandboxCleanupAuditEntry[]): string {
-  if (!entries.length) return "# FORGE Sandbox Cleanup History\n\nNo cleanup runs recorded yet.";
+  if (!entries.length) return "# ANVIL Sandbox Cleanup History\n\nNo cleanup runs recorded yet.";
   return [
-    "# FORGE Sandbox Cleanup History",
+    "# ANVIL Sandbox Cleanup History",
     "",
     ...entries.map(entry => [
       "## " + entry.timestamp + " — " + entry.mode.toUpperCase(),

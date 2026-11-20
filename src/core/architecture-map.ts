@@ -131,7 +131,7 @@ export async function mapArchitecture(inputPath: string): Promise<ArchitectureMa
 
 export function formatArchitectureMap(map: ArchitectureMap): string {
   const lines = [
-    "# FORGE Architecture Map", "",
+    "# ANVIL Architecture Map", "",
     `- **Project:** \`${map.root}\``,
     `- **Source files mapped:** ${map.scannedFiles}`,
     `- **Internal import relationships:** ${map.edges.length}`,

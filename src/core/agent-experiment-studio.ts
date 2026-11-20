@@ -31,7 +31,7 @@ export function createSkillExperimentMatrix(input: SkillExperimentStudioInput): 
 export function formatSkillExperimentMatrix(matrix: BenchmarkMatrixConfig): string {
   const experiment = matrix.skillExperiment!;
   return [
-    "FORGE Experiment Studio · " + matrix.name,
+    "ANVIL Experiment Studio · " + matrix.name,
     "Matrix ID: " + matrix.id,
     "Provider/model: " + matrix.candidates[0]!.provider + "/" + matrix.candidates[0]!.model,
     "Repeats per candidate: " + matrix.repeats,
@@ -74,7 +74,7 @@ export function createModelComparisonMatrix(input: ModelComparisonStudioInput): 
 }
 export function formatModelComparisonMatrix(matrix: BenchmarkMatrixConfig): string {
   return [
-    "FORGE Model Comparison Studio · " + matrix.name,
+    "ANVIL Model Comparison Studio · " + matrix.name,
     "Matrix ID: " + matrix.id,
     "Candidates: " + matrix.candidates.length,
     "Repeats per candidate: " + matrix.repeats,

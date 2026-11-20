@@ -95,7 +95,7 @@ export async function decideAgentConfigRelease(projectPath: string, id: string, 
 }
 export function formatAgentConfigRelease(item: AgentConfigRelease): string {
   return [
-    "FORGE Agent Configuration Release " + item.id,
+    "ANVIL Agent Configuration Release " + item.id,
     "Status: " + item.status.toUpperCase(),
     "Candidate: " + item.candidateVersionId,
     "Approved baseline: " + item.baselineVersionId,

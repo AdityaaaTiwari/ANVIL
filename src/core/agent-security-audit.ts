@@ -254,7 +254,7 @@ export async function auditAgentConfiguration(projectPath: string): Promise<Agen
 
 export function formatAgentSecurityReport(report: AgentSecurityReport): string {
   const lines = [
-    "FORGE Agent Configuration Security Audit",
+    "ANVIL Agent Configuration Security Audit",
     "Status: " + report.status.toUpperCase(),
     "Files scanned: " + report.filesScanned,
     "Findings: " + report.summary.critical + " critical · " + report.summary.high + " high · " + report.summary.medium + " medium",

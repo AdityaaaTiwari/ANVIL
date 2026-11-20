@@ -75,5 +75,5 @@ export async function validateReviewPatch(root:string,record:ReviewRecord,sugges
  return {...base,file,status:"applicable",hunks:parsed.hunks.length,reason:"All patch hunks match the current file. This is a dry-run validation only; no files were changed."};
 }
 export function formatPatchValidation(report:PatchValidationReport):string{
- return ["# FORGE Patch Validation","- Review: "+report.reviewId,"- Suggestion: "+report.suggestionNumber,"- File: "+(report.file||"(unknown)"),"- Status: "+report.status.toUpperCase(),"- Hunks: "+report.hunks,"","## Result",report.reason,"","No source files were modified."].join("\n");
+ return ["# ANVIL Patch Validation","- Review: "+report.reviewId,"- Suggestion: "+report.suggestionNumber,"- File: "+(report.file||"(unknown)"),"- Status: "+report.status.toUpperCase(),"- Hunks: "+report.hunks,"","## Result",report.reason,"","No source files were modified."].join("\n");
 }

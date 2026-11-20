@@ -53,7 +53,7 @@ describe("inspectProject", () => {
     root = await mkdtemp(path.join(os.tmpdir(), "forge-test-"));
     await writeFile(path.join(root, "main.py"), "print('hello')");
     const report = await inspectProject(root);
-    expect(formatProjectReport(report)).toContain("# FORGE Project Intelligence");
+    expect(formatProjectReport(report)).toContain("# ANVIL Project Intelligence");
     expect(formatProjectReport(report)).toContain("Python");
   });
 });

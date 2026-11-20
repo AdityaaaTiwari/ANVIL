@@ -38,7 +38,7 @@ export async function reviewProject(inputPath:string,options:{base?:string;all?:
  return {root,generatedAt:new Date().toISOString(),scope,base,filesReviewed:files,findings,summary,warnings};
 }
 export function formatCodeReview(report:CodeReviewReport):string{
- return ["# FORGE Code Review","", "- Scope: "+report.scope,"- Files reviewed: "+report.filesReviewed.length,"- Findings: "+report.findings.length+" (high "+report.summary.high+", medium "+report.summary.medium+", low "+report.summary.low+")","",
+ return ["# ANVIL Code Review","", "- Scope: "+report.scope,"- Files reviewed: "+report.filesReviewed.length,"- Findings: "+report.findings.length+" (high "+report.summary.high+", medium "+report.summary.medium+", low "+report.summary.low+")","",
  "## Findings",...(report.findings.length?report.findings.map(f=>"- **"+f.severity.toUpperCase()+" "+f.ruleId+"** — `"+f.file+":"+f.line+"`: "+f.title+"\n  Evidence: `"+f.evidence+"`\n  Recommendation: "+f.recommendation):["- No configured heuristic patterns detected."]),"",
  "## Files reviewed",...(report.filesReviewed.length?report.filesReviewed.map(f=>"- `"+f+"`"):["- None."]),"",
  "## Method and limitations","- This is deterministic pattern-based triage, not an AI review, compiler analysis, or security audit.",

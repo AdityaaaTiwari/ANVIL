@@ -151,7 +151,7 @@ export async function analyzeDependencyImpact(inputPath: string, base = "HEAD"):
 }
 export function formatDependencyImpact(report: DependencyImpactReport): string {
   return [
-    "# FORGE Dependency & Change Impact", "",
+    "# ANVIL Dependency & Change Impact", "",
     "- Dependencies declared: " + report.dependencies.length,
     "- External packages imported: " + report.importedPackages.length,
     "- Undeclared imports: " + report.undeclaredImports.length,

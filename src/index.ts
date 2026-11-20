@@ -1,5 +1,5 @@
 /**
- * FORGE — The AI Engineering Workbench
+ * ANVIL — The AI Engineering Workbench
  *
  * Core engine APIs and type exports.
  */

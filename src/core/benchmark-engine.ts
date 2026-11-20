@@ -138,7 +138,7 @@ export async function listBenchmarks(projectPath: string): Promise<BenchmarkDocu
 }
 
 export function formatBenchmark(document: BenchmarkDocument): string {
-  const lines = ["FORGE Benchmark Lab · " + document.suiteName, "Trials: " + document.trials.length, "", "Provider / model | Trials | Avg rubric | Avg judge | Pass rate | Variance | Avg time | Avg tokens"];
+  const lines = ["ANVIL Benchmark Lab · " + document.suiteName, "Trials: " + document.trials.length, "", "Provider / model | Trials | Avg rubric | Avg judge | Pass rate | Variance | Avg time | Avg tokens"];
   for (const group of document.groups) lines.push([group.key, group.trials, group.averageScore + "/100", group.averageJudgeScore === undefined ? "—" : group.averageJudgeScore + "/100 (" + group.judgePassRate + "% pass)", group.passRate + "%", "σ " + group.scoreStdDev, group.averageDurationMs + " ms", group.averageEstimatedTokens].join(" | "));
   lines.push("", "Recent trials:");
   for (const trial of document.trials.slice(-10).reverse()) lines.push("  " + trial.runId + " · " + trial.provider + " / " + (trial.models.join(", ") || "unknown") + " · " + trial.score + "/100 rubric" + (trial.judgeScore === undefined ? "" : " · " + trial.judgeScore + "/100 judge") + " · " + (trial.passed ? "PASS" : "REVIEW"));

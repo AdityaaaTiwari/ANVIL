@@ -183,6 +183,6 @@ export function selectSkills(skills: readonly SkillDefinition[], goal: string, l
 
 export function formatSkillContext(skills: readonly SkillDefinition[]): string {
   if (!skills.length) return "";
-  return "Selected FORGE skills (guidance only; follow project policy and user approval):\n\n" +
+  return "Selected ANVIL skills (guidance only; follow project policy and user approval):\n\n" +
     skills.map(skill => `## ${skill.name}\n${skill.instructions}`).join("\n\n");
 }

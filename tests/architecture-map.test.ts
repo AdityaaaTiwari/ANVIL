@@ -38,6 +38,6 @@ describe("mapArchitecture", () => {
     expect(result.nodes).toHaveLength(2);
     expect(result.edges).toContainEqual({ from: "src/main.ts", to: "src/lib/math.ts", kind: "internal" });
     expect(result.entryPoints).toContain("src/main.ts");
-    expect(formatArchitectureMap(result)).toContain("# FORGE Architecture Map");
+    expect(formatArchitectureMap(result)).toContain("# ANVIL Architecture Map");
   });
 });

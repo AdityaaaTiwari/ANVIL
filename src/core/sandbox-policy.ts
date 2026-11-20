@@ -67,5 +67,5 @@ export async function loadSandboxPolicy(filePath: string): Promise<{ valid: true
 }
 
 export function formatSandboxPolicyValidation(result: Awaited<ReturnType<typeof loadSandboxPolicy>>): string {
-  return ["# FORGE Sandbox Policy Validation", "", "- File: " + result.path, "- Result: " + (result.valid ? "VALID" : "INVALID"), "", ...(result.valid ? ["Policy may be considered by the runtime enforcement layer; validation itself does not apply it."] : result.errors.map(error => "- " + error))].join("\n");
+  return ["# ANVIL Sandbox Policy Validation", "", "- File: " + result.path, "- Result: " + (result.valid ? "VALID" : "INVALID"), "", ...(result.valid ? ["Policy may be considered by the runtime enforcement layer; validation itself does not apply it."] : result.errors.map(error => "- " + error))].join("\n");
 }

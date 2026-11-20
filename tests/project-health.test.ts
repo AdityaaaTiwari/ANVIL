@@ -17,7 +17,7 @@ describe("project health report",()=>{let root="";afterEach(async()=>{if(root)aw
   expect(report.current.verification.successRate).toBeNull();
   expect(Array.isArray(report.current.project.languages)).toBe(true);
   expect(report.history).toHaveLength(1);
-  expect(formatProjectHealthMarkdown(report)).toContain("# FORGE Project Health Report");
+  expect(formatProjectHealthMarkdown(report)).toContain("# ANVIL Project Health Report");
   const again=await generateProjectHealth(root);expect(again.history.length).toBe(2);
  });
 });

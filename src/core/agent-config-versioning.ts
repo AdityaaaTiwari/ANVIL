@@ -170,7 +170,7 @@ export function compareAgentConfigVersions(before: AgentConfigVersion, after: Ag
 }
 export function formatAgentConfigVersion(version: AgentConfigVersion): string {
   return [
-    "FORGE Agent Configuration Version",
+    "ANVIL Agent Configuration Version",
     "ID: " + version.id,
     "Created: " + version.createdAt,
     "Author: " + version.createdBy,

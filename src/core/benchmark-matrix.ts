@@ -171,7 +171,7 @@ export async function saveBenchmarkMatrix(projectPath: string, report: Benchmark
 }
 
 export function formatBenchmarkMatrix(report: BenchmarkMatrixReport): string {
-  const lines = ["FORGE Automated Benchmark Matrix · " + report.matrixName, "Suite: " + report.suiteId, "Goal: " + report.goal, "", "Candidate | Trials | Completed | Avg score | Pass rate | σ score | Avg time | Avg estimated tokens"];
+  const lines = ["ANVIL Automated Benchmark Matrix · " + report.matrixName, "Suite: " + report.suiteId, "Goal: " + report.goal, "", "Candidate | Trials | Completed | Avg score | Pass rate | σ score | Avg time | Avg estimated tokens"];
   for (const item of report.summary) lines.push([item.candidateId + " (" + item.provider + "/" + item.model + ")", item.trials, item.completed, item.averageScore + "/100", item.passRate + "%", item.scoreStdDev, item.averageDurationMs + " ms", item.averageEstimatedTokens].join(" | "));
   if (report.agentSummary?.length) { lines.push("", "Per-agent scorecards:", "Candidate | Agent | Cases | Average score | Pass rate | Skills observed"); for (const item of report.agentSummary) lines.push([item.candidateId, item.agent, item.completed, item.averageScore + "/100", item.passRate + "%", item.skillsObserved.join(", ") || "none"].join(" | ")); }
   if (report.skillExperiment) {

@@ -17,7 +17,7 @@ describe("auditProject", () => {
     expect(report.metrics.sourceFiles).toBe(1);
     expect(report.score).toBeGreaterThanOrEqual(0);
     expect(report.score).toBeLessThanOrEqual(100);
-    expect(formatQualityAudit(report)).toContain("# FORGE Quality Report");
+    expect(formatQualityAudit(report)).toContain("# ANVIL Quality Report");
   });
 
   it("excludes private configuration directories from audit metrics", async () => {

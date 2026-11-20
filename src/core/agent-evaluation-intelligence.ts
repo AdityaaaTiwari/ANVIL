@@ -247,7 +247,7 @@ export function buildAgentEvaluationIntelligence(
 
 export function formatAgentEvaluationIntelligence(report: AgentEvaluationIntelligence): string {
   const lines = [
-    "FORGE Agent Evaluation Intelligence",
+    "ANVIL Agent Evaluation Intelligence",
     "Status: " + report.status.toUpperCase(),
     "Suite: " + (report.suiteId || "not available"),
     "Runs analyzed: " + report.runsAnalyzed,

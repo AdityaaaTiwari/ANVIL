@@ -34,7 +34,7 @@ export function parseSandboxRuntimeReport(
 
 export function formatSandboxRuntimeReport(report: SandboxRuntimeReport): string {
   return [
-    "# FORGE Sandbox Runtime Status",
+    "# ANVIL Sandbox Runtime Status",
     "",
     "- Runtime: " + report.runtime,
     "- Available: " + (report.available ? "yes" : "no"),

@@ -59,7 +59,7 @@ export function buildAgentOptimizationPlan(history: BenchmarkMatrixReport[]): Ag
   return { status: "recommendations", suiteId: current.suiteId, goal: current.goal, baselineAt: baseline.createdAt, currentAt: current.createdAt, suggestions, guardrails };
 }
 export function formatAgentOptimizationPlan(plan: AgentOptimizationPlan): string {
-  const lines = ["FORGE Adaptive Agent Optimization", "Status: " + plan.status.toUpperCase(), "Suite: " + (plan.suiteId || "not available"), "Goal: " + (plan.goal || "not available"), ""];
+  const lines = ["ANVIL Adaptive Agent Optimization", "Status: " + plan.status.toUpperCase(), "Suite: " + (plan.suiteId || "not available"), "Goal: " + (plan.goal || "not available"), ""];
   if (!plan.suggestions.length) lines.push(plan.status === "insufficient-history" ? "Run the same evaluation suite and goal twice to establish comparable history." : "No repeated agent failure patterns were found in the latest comparable run.");
   for (const item of plan.suggestions) {
     lines.push(item.agent + " · " + item.candidateId + " · score " + (item.baselineScore === null ? "no baseline" : item.baselineScore + " → " + item.currentScore + " (" + item.scoreDelta + ")"));

@@ -40,7 +40,7 @@ export function createSandboxComplianceReport(
 
 export function formatSandboxComplianceReport(report: SandboxComplianceReport): string {
   return [
-    "# FORGE Sandbox Compliance",
+    "# ANVIL Sandbox Compliance",
     "",
     "- Profile: " + report.profile,
     "- Result: " + report.status.toUpperCase(),

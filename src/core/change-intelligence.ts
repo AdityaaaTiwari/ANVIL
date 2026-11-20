@@ -108,7 +108,7 @@ export async function analyzeChangeIntelligence(inputPath: string, base = "HEAD"
 }
 export function formatChangeIntelligence(report: ChangeIntelligenceReport): string {
   return [
-    "# FORGE Change Risk & Test Intelligence", "",
+    "# ANVIL Change Risk & Test Intelligence", "",
     "- Branch: " + report.branch,
     "- Compared with: " + report.base,
     "- Changed files: " + report.summary.changedFiles,

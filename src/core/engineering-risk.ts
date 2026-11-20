@@ -118,7 +118,7 @@ export async function analyzeEngineeringRisk(inputPath: string): Promise<Enginee
 }
 export function formatEngineeringRisk(report: EngineeringRiskReport): string {
   const lines = [
-    "# FORGE Engineering Risk Report", "",
+    "# ANVIL Engineering Risk Report", "",
     `- **Project:** \`${report.root}\``,
     `- **Source files:** ${report.summary.scannedFiles}`,
     `- **Internal relationships:** ${report.summary.relationships}`,

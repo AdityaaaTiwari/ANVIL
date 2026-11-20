@@ -65,7 +65,7 @@ export async function analyzeGitChanges(inputPath:string,base="HEAD"):Promise<Gi
  return {root,generatedAt:new Date().toISOString(),branch,base,changes,impact,suggestedTests,risk:{level,reasons:[...new Set(reasons)]},warnings};
 }
 export function formatGitIntelligence(report:GitIntelligenceReport):string{
- return ["# FORGE Git Intelligence","", "- Branch: "+report.branch,"- Compared with: "+report.base,"- Changed files: "+report.changes.length,"- Risk estimate: "+report.risk.level.toUpperCase(),"",
+ return ["# ANVIL Git Intelligence","", "- Branch: "+report.branch,"- Compared with: "+report.base,"- Changed files: "+report.changes.length,"- Risk estimate: "+report.risk.level.toUpperCase(),"",
  "## Changes",...(report.changes.length?report.changes.map(c=>"- ["+c.status+"] `"+c.file+"`"):["- Working tree matches the selected base."]),"",
  "## Downstream impact",...(report.impact.length?report.impact.map(i=>"- `"+i.file+"` may affect: "+i.affected.map(f=>"`"+f+"`").join(", ")):["- No downstream imports identified for changed files."]),"",
  "## Suggested tests",...(report.suggestedTests.length?report.suggestedTests.map(t=>"- `"+t.file+"` — "+t.reason):["- No source-file test suggestions generated."]),"",

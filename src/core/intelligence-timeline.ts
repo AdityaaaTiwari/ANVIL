@@ -129,7 +129,7 @@ export function formatIntelligenceComparison(comparison: IntelligenceComparison)
   const d = comparison.delta;
   const signed = (n: number) => (n > 0 ? "+" : "") + n;
   return [
-    "# FORGE Engineering Intelligence Timeline", "",
+    "# ANVIL Engineering Intelligence Timeline", "",
     "- Captured: " + c.generatedAt,
     "- Git commit: " + (c.commit ?? "unavailable (not a Git repository)"),
     "- Structural risk index: " + c.metrics.score + "/100",

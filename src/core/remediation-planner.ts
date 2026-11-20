@@ -129,7 +129,7 @@ export async function generateRemediationPlan(root: string, options: { auditRepo
 }
 export function formatRemediationPlan(plan: RemediationPlan): string {
   const lines = [
-    "# FORGE Remediation Plan", "", `- Project: \`${plan.root}\``, `- Generated: ${plan.generatedAt}`,
+    "# ANVIL Remediation Plan", "", `- Project: \`${plan.root}\``, `- Generated: ${plan.generatedAt}`,
     `- Items: ${plan.summary.total} (critical ${plan.summary.critical}, high ${plan.summary.high}, moderate ${plan.summary.moderate}, low ${plan.summary.low}, info ${plan.summary.info})`,
     `- Evidence-backed: ${plan.summary.evidenceBacked}; advisory: ${plan.summary.advisory}`, "",
     "## Prioritized actions",

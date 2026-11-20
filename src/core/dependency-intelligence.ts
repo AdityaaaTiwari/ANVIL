@@ -204,7 +204,7 @@ export async function analyzeDependencies(inputPath: string, options: { auditRep
 async function exists(file: string): Promise<boolean> { try { await lstat(file); return true; } catch { return false; } }
 export function formatDependencyIntelligence(report: DependencyIntelligenceReport): string {
   const s = report.summary;
-  const lines = ["# FORGE Dependency Intelligence","", "- Project: `"+report.root+"`", "- Generated: "+report.generatedAt,
+  const lines = ["# ANVIL Dependency Intelligence","", "- Project: `"+report.root+"`", "- Generated: "+report.generatedAt,
     "- Ecosystem: "+report.ecosystem, "- Manifest: "+(report.manifestFound?"package.json detected":"not detected"),
     "- Lockfile: "+(report.lockfile.name ? report.lockfile.name+" ("+report.lockfile.lockedPackages+" packages)" : "not parsed"), "",
     "## Inventory", "- Direct dependencies: "+s.direct+" (production "+s.production+", development "+s.development+", optional "+s.optional+", peer "+s.peer+")",

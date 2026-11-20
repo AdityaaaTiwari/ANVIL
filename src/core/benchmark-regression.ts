@@ -99,7 +99,7 @@ export async function loadBenchmarkRegression(projectPath: string, matrixId?: st
 }
 
 export function formatBenchmarkRegression(report: BenchmarkRegressionReport): string {
-  const lines = ["FORGE Benchmark Regression Intelligence · " + report.matrixName, "Status: " + report.status.toUpperCase(), "Suite: " + report.suiteId, ""];
+  const lines = ["ANVIL Benchmark Regression Intelligence · " + report.matrixName, "Status: " + report.status.toUpperCase(), "Suite: " + report.suiteId, ""];
   lines.push(...report.summary);
   for (const item of report.candidates) {
     lines.push("", item.candidateId + " · " + item.provider + "/" + item.model, "  Score: " + item.baselineScore + " → " + item.currentScore + " (" + (item.scoreDelta > 0 ? "+" : "") + item.scoreDelta + ")", "  Pass rate: " + item.baselinePassRate + "% → " + item.currentPassRate + "%", "  Duration: " + item.durationChangePercent + "% · estimated tokens: " + item.tokenChangePercent + "%");

@@ -93,7 +93,7 @@ export async function analyzeCodebase(inputPath:string):Promise<DeepArchitecture
 export function formatCodebaseAnalysis(report:DeepArchitectureReport):string{
   const exported=report.symbols.filter(s=>s.exported);
   return [
-    "# FORGE Deep Code Intelligence","",
+    "# ANVIL Deep Code Intelligence","",
     "- Project: `"+report.root+"`",
     "- AST symbols: "+report.symbols.length+" ("+exported.length+" exported)",
     "- Circular dependency groups: "+report.circularDependencies.length,

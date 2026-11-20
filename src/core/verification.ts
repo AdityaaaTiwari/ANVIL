@@ -119,7 +119,7 @@ export async function runVerification(
 }
 export function formatVerificationResult(result: VerificationResult): string {
   return [
-    "# FORGE Verification Result","",
+    "# ANVIL Verification Result","",
     `- **Script:** \`${result.script}\``,
     `- **Status:** \`${result.status.toUpperCase()}\``,
     `- **Exit code:** \`${result.exitCode===null?"not available":result.exitCode}\``,
