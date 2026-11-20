@@ -40,7 +40,7 @@ afterEach(async () => {
 
 describe("run-history CLI help", () => {
   it("prints runs usage without reading project history", () => {
-    expect(runCli("runs", "--help")).toContain("Usage: forge runs [path] [--json] [--limit N] [--status STATUS]");
+    expect(runCli("runs", "--help")).toContain("Usage: anvil runs [path] [--json] [--limit N] [--status STATUS]");
   });
 
   it("documents the versioned JSON option and run limit", () => {
@@ -51,7 +51,7 @@ describe("run-history CLI help", () => {
   });
 
   it("prints show-run usage without requiring a run ID", () => {
-    expect(runCli("show-run", "--help")).toContain("Usage: forge show-run RUN_ID [--path PROJECT]");
+    expect(runCli("show-run", "--help")).toContain("Usage: anvil show-run RUN_ID [--path PROJECT]");
   });
 
   it("rejects malformed show-run arguments", async () => {
@@ -132,7 +132,7 @@ describe("run-history CLI help", () => {
 describe("agent-intelligence CLI flags", () => {
   it("prints usage and exits cleanly when --help is passed", () => {
     const output = runCli("agent-intelligence", "--help");
-    expect(output).toContain("Usage: forge agent-intelligence");
+    expect(output).toContain("Usage: anvil agent-intelligence");
     expect(output).toContain("--suite ID");
     expect(output).toContain("--candidate ID");
     expect(output).toContain("--limit N");

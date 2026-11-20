@@ -1,5 +1,16 @@
 # ANVIL Changelog
 
+## 1.0.3 — CLI Help, Usage & Output Brand Unification
+
+ANVIL 1.0.3 unifies all CLI help examples, usage instructions, error messages, and dashboard startup telemetry under the official `anvil` command.
+
+### Changes
+- Updated all CLI command examples in `--help` from `forge` to `anvil`.
+- Aligned starter workspace initialization to `.anvil`.
+- Updated CLI version output to `anvil 1.0.3`.
+- Updated all command usage strings, diagnostics, and dashboard startup messages to `ANVIL`.
+- Updated test suite assertions to verify `anvil` CLI help output.
+
 ## 1.0.2 — Maintainer & Contact Verification
 
 ANVIL 1.0.2 updates official maintainer contact information, aligning all security, support, and package metadata with Aditya Tiwari (`m.g.atiwari28@gmail.com`).

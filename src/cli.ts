@@ -120,17 +120,16 @@ function readAgentDurationBudgets(): Record<string, number> | undefined {
   return budgets;
 }
 
-const VERSION = "1.0.0";
+const VERSION = "1.0.3";
 
 const HELP = `
 ANVIL — The AI Engineering Workbench
 
 Usage:
   anvil <command> [options]
-  forge <command> [options]
 
 Commands:
-  init [path]      Create a safe, local-first .forge starter workspace
+  init [path]      Create a safe, local-first .anvil starter workspace
   inspect [path]   Analyze project languages, tooling, dependencies, and scripts
   evaluate RUNID  Score a saved run against a local evaluation suite
   benchmark [RUN_ID] [--suite SUITE_ID] [--path PROJECT]  Record or view benchmark results
@@ -173,7 +172,7 @@ Commands:
   sandbox-compliance [PROFILE] [IMAGE@sha256:DIGEST] Generate a sandbox compliance report
   sandbox-policy-check POLICY.json Validate a fail-closed sandbox policy file
   sandbox-profiles [NAME] List or inspect built-in sandbox security profiles
-  sandbox-cleanup        Review stopped FORGE containers; add --apply to remove them
+  sandbox-cleanup        Review stopped ANVIL containers; add --apply to remove them
   sandbox-cleanup-history [PATH] Show recorded cleanup activity
   verify-history   List saved verification runs for a project
   map [path]       Map source modules and import relationships
@@ -201,17 +200,17 @@ Options:
   --help           Show command usage
 
 Examples:
-  forge inspect .
-  forge inspect ./my-app --json
-  forge map .
-  forge agents .
-  forge plan --goal "Add authentication safely"
-  forge run --goal "Review the API design"
-  forge runs .
-  forge replay forge-RUN-ID
-  forge approve forge-RUN-ID TASK_ID
-  forge resume forge-RUN-ID
-  forge dashboard .
+  anvil inspect .
+  anvil inspect ./my-app --json
+  anvil map .
+  anvil agents .
+  anvil plan --goal "Add authentication safely"
+  anvil run --goal "Review the API design"
+  anvil runs .
+  anvil replay anvil-RUN-ID
+  anvil approve anvil-RUN-ID TASK_ID
+  anvil resume anvil-RUN-ID
+  anvil dashboard .
 `.trim();
 
 async function main(args: string[]): Promise<void> {
@@ -225,18 +224,18 @@ async function main(args: string[]): Promise<void> {
     case "version":
     case "--version":
     case "-v":
-      process.stdout.write(`forge ${VERSION}\n`);
+      process.stdout.write(`anvil ${VERSION}\n`);
       return;
     case "init": {
       const target = rest.find(arg => !arg.startsWith("--")) ?? ".";
       try {
         const result = await initializeProject(path.resolve(target));
-        process.stdout.write(`FORGE initialized in ${path.resolve(target)}\n`);
+        process.stdout.write(`ANVIL initialized in ${path.resolve(target)}\n`);
         for (const file of result.created) process.stdout.write(`  created  ${file}\n`);
         for (const file of result.skipped) process.stdout.write(`  kept     ${file} (already exists)\n`);
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        process.stderr.write(`FORGE could not initialize this project: ${message}\n`);
+        process.stderr.write(`ANVIL could not initialize this project: ${message}\n`);
         process.exitCode = 1;
       }
       return;
@@ -259,7 +258,7 @@ async function main(args: string[]): Promise<void> {
         if (action === "prepare") {
           const [candidateVersionId, baselineVersionId] = args;
           const matrixId = option("--matrix");
-          if (!candidateVersionId || !baselineVersionId || !matrixId) throw new Error("Usage: forge agent-release prepare CANDIDATE_CONFIG_ID BASELINE_CONFIG_ID --matrix MATRIX_ID --path PROJECT");
+          if (!candidateVersionId || !baselineVersionId || !matrixId) throw new Error("Usage: anvil agent-release prepare CANDIDATE_CONFIG_ID BASELINE_CONFIG_ID --matrix MATRIX_ID --path PROJECT");
           const regression = await loadBenchmarkRegression(target, matrixId);
           const release = await prepareAgentConfigRelease(target, { candidateVersionId, baselineVersionId, regression });
           process.stdout.write(formatAgentConfigRelease(release) + "\nHuman approval is still required. No live files were changed.\n");
@@ -267,18 +266,18 @@ async function main(args: string[]): Promise<void> {
           const items = await listAgentConfigReleases(target);
           process.stdout.write(items.length ? items.map(item => item.id + "  " + item.status.padEnd(17) + "  " + item.candidateVersionId + "  " + item.benchmarkStatus).join("\n") + "\n" : "No agent configuration releases found.\n");
         } else if (action === "show") {
-          const id = args[0]; if (!id) throw new Error("Usage: forge agent-release show RELEASE_ID --path PROJECT");
+          const id = args[0]; if (!id) throw new Error("Usage: anvil agent-release show RELEASE_ID --path PROJECT");
           const item = (await listAgentConfigReleases(target)).find(entry => entry.id === id);
           if (!item) throw new Error("Release not found: " + id);
           process.stdout.write(formatAgentConfigRelease(item) + "\n");
         } else if (action === "approve" || action === "reject") {
-          const id = args[0]; if (!id) throw new Error("Usage: forge agent-release approve|reject RELEASE_ID --reviewer NAME --path PROJECT");
+          const id = args[0]; if (!id) throw new Error("Usage: anvil agent-release approve|reject RELEASE_ID --reviewer NAME --path PROJECT");
           const reviewer = option("--reviewer"); if (!reviewer?.trim()) throw new Error("A reviewer is required via --reviewer NAME.");
           const item = await decideAgentConfigRelease(target, id, reviewer, action);
           process.stdout.write(formatAgentConfigRelease(item) + "\n");
         } else throw new Error("Unknown action. Use prepare, list, show, approve or reject.");
       } catch (error) {
-        process.stderr.write("FORGE agent release failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
+        process.stderr.write("ANVIL agent release failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
         process.exitCode = 1;
       }
       return;
@@ -297,10 +296,10 @@ async function main(args: string[]): Promise<void> {
           const versions = await listAgentConfigVersions(target);
           process.stdout.write(versions.length ? versions.map(item => item.id + "  " + item.status.padEnd(9) + "  " + item.createdAt + "  " + item.files.length + " files").join("\n") + "\n" : "No agent configuration snapshots found. Run forge agent-config snapshot first.\n");
         } else if (action === "show") {
-          const id = ids[0]; if (!id) throw new Error("Usage: forge agent-config show CONFIG_ID --path PROJECT");
+          const id = ids[0]; if (!id) throw new Error("Usage: anvil agent-config show CONFIG_ID --path PROJECT");
           process.stdout.write(formatAgentConfigVersion(await loadAgentConfigVersion(target, id)) + "\n");
         } else if (action === "diff") {
-          if (ids.length < 2) throw new Error("Usage: forge agent-config diff BEFORE_ID AFTER_ID --path PROJECT");
+          if (ids.length < 2) throw new Error("Usage: anvil agent-config diff BEFORE_ID AFTER_ID --path PROJECT");
           const [before, after] = await Promise.all([loadAgentConfigVersion(target, ids[0]!), loadAgentConfigVersion(target, ids[1]!)]);
           const diff = compareAgentConfigVersions(before, after);
           process.stdout.write(["Agent configuration diff", "Added: " + (diff.added.join(", ") || "none"), "Changed: " + (diff.changed.join(", ") || "none"), "Removed: " + (diff.removed.join(", ") || "none"), "Unchanged: " + diff.unchanged.length].join("\n") + "\n");
@@ -308,7 +307,7 @@ async function main(args: string[]): Promise<void> {
           throw new Error("Direct snapshot approval is disabled. Use forge agent-release prepare with a release-ready benchmark matrix, then forge agent-release approve RELEASE_ID --reviewer NAME.");
         } else throw new Error("Unknown action. Use snapshot, list, show or diff.");
       } catch (error) {
-        process.stderr.write("FORGE agent configuration command failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
+        process.stderr.write("ANVIL agent configuration command failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
         process.exitCode = 1;
       }
       return;
@@ -320,7 +319,7 @@ async function main(args: string[]): Promise<void> {
       const rawLimit = option("--limit");
       const limit = rawLimit === undefined ? undefined : Number(rawLimit);
       if (limit !== undefined && (!Number.isSafeInteger(limit) || limit < 1 || limit > 100)) {
-        process.stderr.write("FORGE experiment history: --limit must be an integer from 1 to 100.\n");
+        process.stderr.write("ANVIL experiment history: --limit must be an integer from 1 to 100.\n");
         process.exitCode = 1; return;
       }
       try {
@@ -330,7 +329,7 @@ async function main(args: string[]): Promise<void> {
         const history = buildExperimentHistory(reports, { ...(suiteId ? { suiteId } : {}), ...(candidateId ? { candidateId } : {}), ...(limit !== undefined ? { limit } : {}) });
         process.stdout.write(rest.includes("--json") ? JSON.stringify(history, null, 2) + "\n" : formatExperimentHistory(history) + "\n");
       } catch (error) {
-        process.stderr.write("FORGE experiment history failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
+        process.stderr.write("ANVIL experiment history failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
         process.exitCode = 1;
       }
       return;
@@ -339,7 +338,7 @@ async function main(args: string[]): Promise<void> {
       const action = rest[0] ?? "create";
       const option = (name: string) => { const index = rest.indexOf(name); return index >= 0 ? rest[index + 1] : undefined; };
       if (action !== "create" && action !== "compare") {
-        process.stderr.write("Usage: forge experiment-studio compare --id ID --name NAME --candidates id:provider:model,id:provider:model [--config-versions id=cfg-id,id=cfg-id] [--repeats 2] [--path PROJECT]\n");
+        process.stderr.write("Usage: anvil experiment-studio compare --id ID --name NAME --candidates id:provider:model,id:provider:model [--config-versions id=cfg-id,id=cfg-id] [--repeats 2] [--path PROJECT]\n");
         process.stderr.write("   or: forge experiment-studio create --id ID --name NAME --provider PROVIDER --model MODEL --skills skill-a,skill-b [--repeats 2] [--path PROJECT]\n");
         process.exitCode = 1;
         return;
@@ -352,7 +351,7 @@ async function main(args: string[]): Promise<void> {
         const pathIndex = rest.indexOf("--path");
         const target = path.resolve(pathIndex >= 0 ? rest[pathIndex + 1] ?? "." : ".");
         if (!id || !name || !rawCandidates) {
-          process.stderr.write("Usage: forge experiment-studio compare --id ID --name NAME --candidates id:provider:model,id:provider:model [--repeats 2] [--path PROJECT]\n");
+          process.stderr.write("Usage: anvil experiment-studio compare --id ID --name NAME --candidates id:provider:model,id:provider:model [--repeats 2] [--path PROJECT]\n");
           process.exitCode = 1; return;
         }
         try {
@@ -378,7 +377,7 @@ async function main(args: string[]): Promise<void> {
           await writeFile(destination, JSON.stringify(matrix, null, 2) + "\n", { encoding: "utf8", flag: "wx", mode: 0o600 });
           process.stdout.write(formatModelComparisonMatrix(matrix) + "\nSaved: " + path.relative(target, destination) + "\n");
         } catch (error) {
-          process.stderr.write("FORGE model comparison failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
+          process.stderr.write("ANVIL model comparison failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
           process.exitCode = 1;
         }
         return;
@@ -390,7 +389,7 @@ async function main(args: string[]): Promise<void> {
       const pathIndex = rest.indexOf("--path");
       const target = path.resolve(pathIndex >= 0 ? rest[pathIndex + 1] ?? "." : ".");
       if (!id || !name || !model || !skills) {
-        process.stderr.write("Usage: forge experiment-studio create --id ID --name NAME --provider openai|claude-code --model MODEL --skills skill-a,skill-b [--repeats 2] [--path PROJECT]\n");
+        process.stderr.write("Usage: anvil experiment-studio create --id ID --name NAME --provider openai|claude-code --model MODEL --skills skill-a,skill-b [--repeats 2] [--path PROJECT]\n");
         process.exitCode = 1;
         return;
       }
@@ -409,7 +408,7 @@ async function main(args: string[]): Promise<void> {
         await writeFile(destination, JSON.stringify(matrix, null, 2) + "\n", { encoding: "utf8", flag: "wx", mode: 0o600 });
         process.stdout.write(formatSkillExperimentMatrix(matrix) + "\nSaved: " + path.relative(target, destination) + "\n");
       } catch (error) {
-        process.stderr.write("FORGE experiment studio failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
+        process.stderr.write("ANVIL experiment studio failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
         process.exitCode = 1;
       }
       return;
@@ -419,7 +418,7 @@ async function main(args: string[]): Promise<void> {
       const pathIndex = rest.indexOf("--path");
       const target = path.resolve(pathIndex >= 0 ? rest[pathIndex + 1] ?? "." : ".");
       if (!matrixId || matrixId.startsWith("--")) {
-        process.stderr.write("Usage: forge agent-evolution MATRIX_ID --path PROJECT\n");
+        process.stderr.write("Usage: anvil agent-evolution MATRIX_ID --path PROJECT\n");
         process.exitCode = 1;
         return;
       }
@@ -431,7 +430,7 @@ async function main(args: string[]): Promise<void> {
         process.stdout.write(formatAgentEvolutionAssessment(assessment) + "\n");
         if (assessment.status !== "eligible-for-review") process.exitCode = assessment.status === "insufficient-evidence" ? 2 : 1;
       } catch (error) {
-        process.stderr.write("FORGE agent evolution failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
+        process.stderr.write("ANVIL agent evolution failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
         process.exitCode = 1;
       }
       return;
@@ -439,14 +438,14 @@ async function main(args: string[]): Promise<void> {
     case "agent-intelligence": {
       if (rest.includes("--help")) {
         process.stdout.write(
-          "Usage: forge agent-intelligence [--suite ID] [--candidate ID] [--limit N] [--json] [--path PROJECT]\n" +
+          "Usage: anvil agent-intelligence [--suite ID] [--candidate ID] [--limit N] [--json] [--path PROJECT]\n" +
           "Score agent effectiveness across benchmark history.\n\n" +
           "Options:\n" +
           "  --suite ID       Filter to a specific evaluation suite ID.\n" +
           "  --candidate ID   Filter to a specific candidate ID.\n" +
           "  --limit N        Number of historical runs to analyze (2–50, default 10).\n" +
           "  --json           Output the full intelligence report as machine-readable JSON.\n" +
-          "  --path PROJECT   Path to the FORGE project directory (defaults to cwd).\n\n" +
+          "  --path PROJECT   Path to the ANVIL project directory (defaults to cwd).\n\n" +
           "Exit codes:\n" +
           "  0  Ready: at least one scorecard was produced.\n" +
           "  1  Error: an unexpected failure occurred.\n" +
@@ -465,7 +464,7 @@ async function main(args: string[]): Promise<void> {
       const rawLimit = option("--limit");
       const limit = rawLimit === undefined ? undefined : Number(rawLimit);
       if (limit !== undefined && (!Number.isSafeInteger(limit) || limit < 2 || limit > 50)) {
-        process.stderr.write("FORGE agent intelligence: --limit must be an integer from 2 to 50.\n");
+        process.stderr.write("ANVIL agent intelligence: --limit must be an integer from 2 to 50.\n");
         process.exitCode = 1;
         return;
       }
@@ -485,7 +484,7 @@ async function main(args: string[]): Promise<void> {
         );
         if (report.status === "insufficient-data") process.exitCode = 2;
       } catch (error) {
-        process.stderr.write("FORGE agent intelligence failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
+        process.stderr.write("ANVIL agent intelligence failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
         process.exitCode = 1;
       }
       return;
@@ -499,7 +498,7 @@ async function main(args: string[]): Promise<void> {
         process.stdout.write(formatAgentOptimizationPlan(plan) + "\n");
         if (plan.status === "insufficient-history") process.exitCode = 2;
       } catch (error) {
-        process.stderr.write("FORGE adaptive agent optimization failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
+        process.stderr.write("ANVIL adaptive agent optimization failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
         process.exitCode = 1;
       }
       return;
@@ -513,7 +512,7 @@ async function main(args: string[]): Promise<void> {
         process.stdout.write(formatBenchmarkRegression(report) + "\n");
         if (report.status === "blocked") process.exitCode = 2;
       } catch (error) {
-        process.stderr.write("FORGE benchmark regression failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
+        process.stderr.write("ANVIL benchmark regression failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
         process.exitCode = 1;
       }
       return;
@@ -530,7 +529,7 @@ async function main(args: string[]): Promise<void> {
           const matrixId = option("--matrix-id");
           const provider = option("--provider") ?? process.env.FORGE_AI_PROVIDER ?? "openai";
           const model = option("--model") ?? process.env.FORGE_AI_MODEL ?? process.env.FORGE_MODEL ?? "gpt-4.1";
-          if (!matrixFile || !suiteId || !matrixId) throw new Error("Usage: forge experiment capture --matrix-file CONFIG.json --matrix-id ID --suite SUITE_ID [--provider ID] [--model NAME] [--path PROJECT]");
+          if (!matrixFile || !suiteId || !matrixId) throw new Error("Usage: anvil experiment capture --matrix-file CONFIG.json --matrix-id ID --suite SUITE_ID [--provider ID] [--model NAME] [--path PROJECT]");
           const matrix = await loadBenchmarkMatrix(path.resolve(matrixFile));
           const suites = await loadEvaluationSuites(target);
           const suite = suites.find(item => item.id === suiteId);
@@ -545,18 +544,18 @@ async function main(args: string[]): Promise<void> {
           const saved = await saveExperimentManifest(target, manifest);
           process.stdout.write(formatExperimentManifest(manifest) + "\nSaved: " + path.relative(target, saved) + "\n");
         } else if (action === "show") {
-          const id = rest[1]; if (!id) throw new Error("Usage: forge experiment show EXPERIMENT_ID --path PROJECT");
+          const id = rest[1]; if (!id) throw new Error("Usage: anvil experiment show EXPERIMENT_ID --path PROJECT");
           process.stdout.write(formatExperimentManifest(await loadExperimentManifest(target, id)) + "\n");
         } else if (action === "compare") {
           const ids = rest.slice(1).filter((arg,index,all) => !arg.startsWith("--") && all[index-1] !== "--path");
-          if (ids.length !== 2) throw new Error("Usage: forge experiment compare EXPERIMENT_A EXPERIMENT_B --path PROJECT");
+          if (ids.length !== 2) throw new Error("Usage: anvil experiment compare EXPERIMENT_A EXPERIMENT_B --path PROJECT");
           const [a,b] = await Promise.all([loadExperimentManifest(target,ids[0]!),loadExperimentManifest(target,ids[1]!)]);
           const comparison = compareExperimentManifests(a,b);
           process.stdout.write("Experiment reproducibility: " + (comparison.compatible ? "COMPATIBLE" : "NOT COMPARABLE") + "\n" + (comparison.differences.length ? comparison.differences.map(item => "  - " + item).join("\n") : "  Critical manifest fields match.") + "\n");
           if (!comparison.compatible) process.exitCode = 2;
         } else throw new Error("Unknown action. Use capture, show or compare.");
       } catch (error) {
-        process.stderr.write("FORGE experiment command failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
+        process.stderr.write("ANVIL experiment command failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
         process.exitCode = 1;
       }
       return;
@@ -568,7 +567,7 @@ async function main(args: string[]): Promise<void> {
       const suiteId = suiteIndex >= 0 ? rest[suiteIndex + 1] : undefined;
       const goalEnd = goalIndex >= 0 ? rest.findIndex((arg, index) => index > goalIndex && arg.startsWith("--")) : -1;
       const goal = goalIndex >= 0 ? rest.slice(goalIndex + 1, goalEnd >= 0 ? goalEnd : rest.length).join(" ").trim() : "";
-      if (!configFile || !suiteId || !goal) { process.stderr.write("Usage: forge benchmark-matrix CONFIG.json --suite SUITE_ID --goal \"engineering task\" [--path PROJECT]\n"); process.exitCode = 1; return; }
+      if (!configFile || !suiteId || !goal) { process.stderr.write("Usage: anvil benchmark-matrix CONFIG.json --suite SUITE_ID --goal \"engineering task\" [--path PROJECT]\n"); process.exitCode = 1; return; }
       try {
         const config = await loadBenchmarkMatrix(path.resolve(configFile));
         const configVersions = new Map<string, { id: string; fingerprint: string }>();
@@ -683,7 +682,7 @@ async function main(args: string[]): Promise<void> {
       const pathIndex = rest.indexOf("--path"), suiteIndex = rest.indexOf("--suite");
       const target = path.resolve(pathIndex >= 0 ? rest[pathIndex + 1] ?? "." : ".");
       const suiteId = suiteIndex >= 0 ? rest[suiteIndex + 1] : undefined;
-      if (!runId) { process.stderr.write("Usage: forge evaluate RUNID [--suite SUITE_ID] [--path PROJECT]\n"); process.exitCode = 1; return; }
+      if (!runId) { process.stderr.write("Usage: anvil evaluate RUNID [--suite SUITE_ID] [--path PROJECT]\n"); process.exitCode = 1; return; }
       try {
         const suites = await loadEvaluationSuites(target);
         const suite = suiteId ? suites.find(item => item.id === suiteId) : suites[0];
@@ -721,7 +720,7 @@ async function main(args: string[]): Promise<void> {
         }
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        process.stderr.write(`FORGE could not load agents: ${message}\n`);
+        process.stderr.write(`ANVIL could not load agents: ${message}\n`);
         process.exitCode = 1;
       }
       return;
@@ -792,13 +791,13 @@ async function main(args: string[]): Promise<void> {
           const kind = option("--kind") as ProjectMemoryKind | undefined;
           const content = option("--content");
           const allowed: ProjectMemoryKind[] = ["decision", "architecture", "constraint", "preference", "fact"];
-          if (!kind || !allowed.includes(kind) || !content) throw new Error("Usage: forge memory add [path] --kind decision|architecture|constraint|preference|fact --content TEXT [--tags a,b]");
+          if (!kind || !allowed.includes(kind) || !content) throw new Error("Usage: anvil memory add [path] --kind decision|architecture|constraint|preference|fact --content TEXT [--tags a,b]");
           const tags = option("--tags")?.split(",") ?? [];
           const entry = await addProjectMemory(target, { kind, content, tags });
           process.stdout.write(`Saved ${entry.id} to .forge/memory.json\n`);
         } else if (action === "remove") {
           const id = memoryArgs.find(arg => arg.startsWith("mem-"));
-          if (!id) throw new Error("Usage: forge memory remove [path] mem-ID");
+          if (!id) throw new Error("Usage: anvil memory remove [path] mem-ID");
           const removed = await removeProjectMemory(target, id);
           process.stdout.write(removed ? `Removed ${id}.\n` : `Memory entry ${id} was not found.\n`);
         } else if (action === "context") {
@@ -827,7 +826,7 @@ async function main(args: string[]): Promise<void> {
         process.stdout.write(`\nDraft plan saved to ${path.relative(target, saved)}. No AI provider was called and no files or commands were executed.\n`);
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        process.stderr.write(`FORGE could not create a plan: ${message}\n`);
+        process.stderr.write(`ANVIL could not create a plan: ${message}\n`);
         process.exitCode = 1;
       }
       return;
@@ -837,7 +836,7 @@ async function main(args: string[]): Promise<void> {
       const pathIndex = rest.indexOf("--path");
       const target = path.resolve(pathIndex >= 0 ? rest[pathIndex + 1] ?? "." : ".");
       try {
-        if (!runId) throw new Error("Usage: forge replay RUN_ID [--path PROJECT]");
+        if (!runId) throw new Error("Usage: anvil replay RUN_ID [--path PROJECT]");
         const source = await loadRun(target, runId);
         const replay = createReplayRun(source);
         const saved = await saveRun(target, replay);
@@ -855,7 +854,7 @@ async function main(args: string[]): Promise<void> {
       const reviewerIndex = rest.indexOf("--reviewer");
       const reasonIndex = rest.indexOf("--reason");
       try {
-        if (!runId || !taskId) throw new Error("Usage: forge approve RUN_ID TASK_ID [--reviewer NAME] [--reason TEXT] [--path PROJECT]");
+        if (!runId || !taskId) throw new Error("Usage: anvil approve RUN_ID TASK_ID [--reviewer NAME] [--reason TEXT] [--path PROJECT]");
         const updated = await decideTaskApproval(target, runId, taskId, "approved", reviewerIndex >= 0 ? rest[reviewerIndex + 1] ?? "local-user" : "local-user", reasonIndex >= 0 ? rest.slice(reasonIndex + 1, pathIndex >= 0 ? pathIndex : rest.length).join(" ") : undefined);
         process.stdout.write("Approved " + taskId + " in " + runId + ". Resume explicitly with `forge resume " + runId + "`.\n");
         process.stdout.write("Run status: " + updated.status + "\n");
@@ -867,7 +866,7 @@ async function main(args: string[]): Promise<void> {
       const pathIndex = rest.indexOf("--path");
       const target = path.resolve(pathIndex >= 0 ? rest[pathIndex + 1] ?? "." : ".");
       try {
-        if (!runId) throw new Error("Usage: forge resume RUN_ID [--path PROJECT]");
+        if (!runId) throw new Error("Usage: anvil resume RUN_ID [--path PROJECT]");
         const permissions = await loadPermissionPolicy(target);
         const providerChoice = (process.env.FORGE_AI_PROVIDER ?? "openai").toLowerCase();
         assertSupportedAgentPolicy(permissions, providerChoice, "FORGE resume");
@@ -935,7 +934,7 @@ async function main(args: string[]): Promise<void> {
       const runId = rest[0];
       const pathIndex = rest.indexOf("--path");
       const target = path.resolve(pathIndex >= 0 ? rest[pathIndex + 1] ?? "." : ".");
-      if (!runId) { process.stderr.write("Usage: forge trace RUNID [--path PROJECT]\n"); process.exitCode = 1; return; }
+      if (!runId) { process.stderr.write("Usage: anvil trace RUNID [--path PROJECT]\n"); process.exitCode = 1; return; }
       try {
         const trace = await loadExecutionTrace(target, runId);
         process.stdout.write("FORGE execution trace: " + runId + "\n");
@@ -948,7 +947,7 @@ async function main(args: string[]): Promise<void> {
     }
     case "runs": {
       if (rest.includes("--help")) {
-        process.stdout.write("Usage: forge runs [path] [--json] [--limit N] [--status STATUS]\nLists valid saved run records. Use --json for the versioned machine-readable summary, --limit N for the newest N runs, and --status to filter by run state.\n");
+        process.stdout.write("Usage: anvil runs [path] [--json] [--limit N] [--status STATUS]\nLists valid saved run records. Use --json for the versioned machine-readable summary, --limit N for the newest N runs, and --status to filter by run state.\n");
         return;
       }
       const limitIndex = rest.indexOf("--limit");
@@ -964,7 +963,7 @@ async function main(args: string[]): Promise<void> {
       const target = positionalPaths[0] ?? ".";
       try {
         if (positionalPaths.length > 1) {
-          throw new Error("Usage: forge runs [path] [--json] [--limit N] [--status STATUS]");
+          throw new Error("Usage: anvil runs [path] [--json] [--limit N] [--status STATUS]");
         }
         for (const option of ["--json", "--limit", "--status"]) {
           if (rest.filter(arg => arg === option).length > 1) {
@@ -998,7 +997,7 @@ async function main(args: string[]): Promise<void> {
     }
     case "show-run": {
       if (rest.includes("--help")) {
-        process.stdout.write("Usage: forge show-run RUN_ID [--path PROJECT]\nDisplays one validated saved run record.\n");
+        process.stdout.write("Usage: anvil show-run RUN_ID [--path PROJECT]\nDisplays one validated saved run record.\n");
         return;
       }
       const pathIndices = rest.flatMap((arg, index) => arg === "--path" ? [index] : []);
@@ -1016,7 +1015,7 @@ async function main(args: string[]): Promise<void> {
         if (pathIndex >= 0 && (!pathValue || pathValue.startsWith("--"))) {
           throw new Error("--path requires a project directory.");
         }
-        if (positional.length !== 1) throw new Error("Usage: forge show-run RUN_ID [--path PROJECT]");
+        if (positional.length !== 1) throw new Error("Usage: anvil show-run RUN_ID [--path PROJECT]");
         const id = positional[0]!;
         const run = await loadRun(path.resolve(target), id);
         process.stdout.write(`${JSON.stringify(run, null, 2)}\n`);
@@ -1095,7 +1094,7 @@ async function main(args: string[]): Promise<void> {
     }
     case "deps": {
       if (rest.includes("--help")) {
-        process.stdout.write("Usage: forge deps [path] [--audit-report FILE] [--outdated-report FILE] [--json]\n");
+        process.stdout.write("Usage: anvil deps [path] [--audit-report FILE] [--outdated-report FILE] [--json]\n");
         return;
       }
       const option = (name:string) => { const index=rest.indexOf(name); return index>=0 ? rest[index+1] : undefined; };
@@ -1157,7 +1156,7 @@ async function main(args: string[]): Promise<void> {
       const query=rest.filter((arg,index)=>!arg.startsWith("--")&&!optionValues.has(index)).join(" ").trim();
       const limit=limitIndex>=0?Number(rest[limitIndex+1]):80;
       try { const report=await searchWorkspace(target,query,limit);process.stdout.write(JSON.stringify(report,null,2)+"\n"); }
-      catch(error){process.stderr.write("FORGE code search failed: "+(error instanceof Error?error.message:String(error))+"\n");process.exitCode=1;}
+      catch(error){process.stderr.write("ANVIL code search failed: "+(error instanceof Error?error.message:String(error))+"\n");process.exitCode=1;}
       return;
     }
     case "dashboard": {
@@ -1173,7 +1172,7 @@ async function main(args: string[]): Promise<void> {
         const dashboard = await startDashboard({ projectPath: target, port: portValue });
         const address = dashboard.server.address();
         const actualPort = address && typeof address !== "string" ? address.port : portValue;
-        process.stdout.write(`FORGE dashboard: http://127.0.0.1:${actualPort}\nProject: ${target}\nPress Ctrl+C to stop.\n`);
+        process.stdout.write(`ANVIL dashboard: http://127.0.0.1:${actualPort}\nProject: ${target}\nPress Ctrl+C to stop.\n`);
         const shutdown = () => dashboard.server.close(() => process.exit(0));
         process.once("SIGINT", shutdown);
         process.once("SIGTERM", shutdown);
@@ -1195,7 +1194,7 @@ async function main(args: string[]): Promise<void> {
           process.stdout.write(checks.length ? checks.map(check => `${check.name.padEnd(20)} ${check.command}`).join("\n") + "\n" : "No selectable npm scripts found.\n");
           return;
         }
-        if (!script) throw new Error("Choose one script explicitly. Usage: forge verify SCRIPT [--path PROJECT], or use --list to discover scripts.");
+        if (!script) throw new Error("Choose one script explicitly. Usage: anvil verify SCRIPT [--path PROJECT], or use --list to discover scripts.");
         const result = await runVerification(target, script);
         const comparison = await compareVerification(target, result);
         await saveVerification(target, result);
@@ -1204,7 +1203,7 @@ async function main(args: string[]): Promise<void> {
         if (result.status !== "passed") process.exitCode = 1;
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        process.stderr.write(`FORGE verification failed: ${message}\n`);
+        process.stderr.write(`ANVIL verification failed: ${message}\n`);
         process.exitCode = 1;
       }
       return;
@@ -1226,7 +1225,7 @@ async function main(args: string[]): Promise<void> {
           ].join("\n"));
         }
       } catch (error) {
-        process.stderr.write("FORGE sandbox profiles failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
+        process.stderr.write("ANVIL sandbox profiles failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
         process.exitCode = 1;
       }
       return;
@@ -1236,7 +1235,7 @@ async function main(args: string[]): Promise<void> {
       try {
         process.stdout.write(formatSandboxCleanupHistory(await readSandboxCleanupAudit(target)) + "\n");
       } catch (error) {
-        process.stderr.write("FORGE sandbox cleanup history failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
+        process.stderr.write("ANVIL sandbox cleanup history failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
         process.exitCode = 1;
       }
       return;
@@ -1245,7 +1244,7 @@ async function main(args: string[]): Promise<void> {
       const apply = rest.includes("--apply");
       const unknown = rest.filter(arg => arg !== "--apply");
       try {
-        if (unknown.length) throw new Error("Usage: forge sandbox-cleanup [--apply]. Cleanup is dry-run unless --apply is explicit.");
+        if (unknown.length) throw new Error("Usage: anvil sandbox-cleanup [--apply]. Cleanup is dry-run unless --apply is explicit.");
         const output = await runSandboxProbe([
           "ps", "-a", "--filter", "label=com.forge.managed=true",
           "--format", "{{.ID}}\\t{{.Status}}\\t{{.Names}}",
@@ -1268,14 +1267,14 @@ async function main(args: string[]): Promise<void> {
         });
         process.stdout.write(formatSandboxCleanupReport(candidates, removed, apply) + "\n");
       } catch (error) {
-        process.stderr.write("FORGE sandbox cleanup failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
+        process.stderr.write("ANVIL sandbox cleanup failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
         process.exitCode = 1;
       }
       return;
     }
     case "sandbox-policy-check": {
       const policyPath = rest[0];
-      if (!policyPath) { process.stderr.write("Usage: forge sandbox-policy-check POLICY.json\n"); process.exitCode = 1; return; }
+      if (!policyPath) { process.stderr.write("Usage: anvil sandbox-policy-check POLICY.json\n"); process.exitCode = 1; return; }
       const result = await loadSandboxPolicy(policyPath);
       process.stdout.write(formatSandboxPolicyValidation(result) + "\n");
       if (!result.valid) process.exitCode = 1;
@@ -1307,7 +1306,7 @@ async function main(args: string[]): Promise<void> {
         process.stdout.write(formatSandboxComplianceReport(report) + "\n");
         if (report.status === "non-compliant") process.exitCode = 1;
       } catch (error) {
-        process.stderr.write("FORGE sandbox compliance failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
+        process.stderr.write("ANVIL sandbox compliance failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
         process.exitCode = 1;
       }
       return;
@@ -1344,7 +1343,7 @@ async function main(args: string[]): Promise<void> {
       const stageId = argsWithoutPath.find(arg => !arg.startsWith("--"));
       const script = argsWithoutPath.find((arg, index) => !arg.startsWith("--") && index > 0);
       try {
-        if (!stageId || !script) throw new Error("Usage: forge patch-verify PATCH_STAGE_ID SCRIPT [--install-dependencies] [--sandbox-image IMAGE@sha256:DIGEST] [--require-rootless] [--profile balanced|hardened|rootless-required] [--policy POLICY.json] [--path PROJECT]");
+        if (!stageId || !script) throw new Error("Usage: anvil patch-verify PATCH_STAGE_ID SCRIPT [--install-dependencies] [--sandbox-image IMAGE@sha256:DIGEST] [--require-rootless] [--profile balanced|hardened|rootless-required] [--policy POLICY.json] [--path PROJECT]");
         if (sandboxImageIndex >= 0 && !sandboxImage) throw new Error("--sandbox-image requires an image pinned by sha256 digest.");
         if (requireRootless && !sandboxImage) throw new Error("--require-rootless requires --sandbox-image container execution.");
         if (profileIndex >= 0 && !securityProfile) throw new Error("--profile requires a profile name.");
@@ -1360,7 +1359,7 @@ async function main(args: string[]): Promise<void> {
           ...(sandboxPolicyPath ? { sandboxPolicyPath } : {}),
         });
         process.stdout.write(
-          "# FORGE Staged Patch Verification\n\n" +
+          "# ANVIL Staged Patch Verification\n\n" +
           "- **Stage:** `" + result.stageId + "`\n" +
           "- **Patch file:** `" + result.file + "`\n" +
           "- **Staged SHA-256:** `" + result.stagedSha256 + "`\n" +
@@ -1376,7 +1375,7 @@ async function main(args: string[]): Promise<void> {
         if (result.verification.status !== "passed") process.exitCode = 1;
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        process.stderr.write("FORGE staged verification failed: " + message + "\n");
+        process.stderr.write("ANVIL staged verification failed: " + message + "\n");
         process.exitCode = 1;
       }
       return;
@@ -1415,7 +1414,7 @@ async function main(args: string[]): Promise<void> {
         process.stdout.write(json ? JSON.stringify({ ...saved, reviewId: saved.id }, null, 2) + "\n" : formatCodeReview(report) + (ai ? "\n\n" + formatAIReview(ai) : "") + "\n\nSaved review: " + saved.id + "\n");
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        process.stderr.write(`FORGE code review failed: ${message}\n`);
+        process.stderr.write(`ANVIL code review failed: ${message}\n`);
         process.exitCode = 1;
       }
       return;
@@ -1423,21 +1422,21 @@ async function main(args: string[]): Promise<void> {
     case "review-history": {
       const target = path.resolve(rest.find((arg,index)=>!arg.startsWith("--")&&rest[index-1]!=="--path") ?? ".");
       try { const records=await listReviews(target); process.stdout.write(records.length?records.map(r=>r.id+"  "+r.createdAt+"  "+r.report.findings.length+" static findings").join("\n")+"\n":"No saved reviews found.\n"); }
-      catch(error){process.stderr.write("FORGE review history failed: "+(error instanceof Error?error.message:String(error))+"\n");process.exitCode=1;}
+      catch(error){process.stderr.write("ANVIL review history failed: "+(error instanceof Error?error.message:String(error))+"\n");process.exitCode=1;}
       return;
     }
     case "review-show": {
       const id=rest.find(arg=>!arg.startsWith("--")) ?? "";
       const pathIndex=rest.indexOf("--path");const target=path.resolve(pathIndex>=0?rest[pathIndex+1]??".":".");
       try { const record=await loadReview(target,id); process.stdout.write(formatReviewRecord(record)+"\n"); }
-      catch(error){process.stderr.write("FORGE could not load review: "+(error instanceof Error?error.message:String(error))+"\n");process.exitCode=1;}
+      catch(error){process.stderr.write("ANVIL could not load review: "+(error instanceof Error?error.message:String(error))+"\n");process.exitCode=1;}
       return;
     }
     case "review-compare": {
       const ids=rest.filter((arg,index)=>!arg.startsWith("--")&&rest[index-1]!=="--path");
       const pathIndex=rest.indexOf("--path");const target=path.resolve(pathIndex>=0?rest[pathIndex+1]??".":".");
-      try { if(ids.length<2)throw new Error("Usage: forge review-compare REVIEW_ID_A REVIEW_ID_B --path PROJECT"); const [a,b]=await Promise.all([loadReview(target,ids[0]!),loadReview(target,ids[1]!)]);const diff=compareReviews(a,b);process.stdout.write(["Review comparison", "Added ("+diff.added.length+")",...diff.added.map(x=>"+ "+x),"Resolved ("+diff.resolved.length+")",...diff.resolved.map(x=>"- "+x),"Persistent ("+diff.persistent.length+")",...diff.persistent.map(x=>"= "+x)].join("\n")+"\n"); }
-      catch(error){process.stderr.write("FORGE review comparison failed: "+(error instanceof Error?error.message:String(error))+"\n");process.exitCode=1;}
+      try { if(ids.length<2)throw new Error("Usage: anvil review-compare REVIEW_ID_A REVIEW_ID_B --path PROJECT"); const [a,b]=await Promise.all([loadReview(target,ids[0]!),loadReview(target,ids[1]!)]);const diff=compareReviews(a,b);process.stdout.write(["Review comparison", "Added ("+diff.added.length+")",...diff.added.map(x=>"+ "+x),"Resolved ("+diff.resolved.length+")",...diff.resolved.map(x=>"- "+x),"Persistent ("+diff.persistent.length+")",...diff.persistent.map(x=>"= "+x)].join("\n")+"\n"); }
+      catch(error){process.stderr.write("ANVIL review comparison failed: "+(error instanceof Error?error.message:String(error))+"\n");process.exitCode=1;}
       return;
     }
     case "regression": {
@@ -1451,7 +1450,7 @@ async function main(args: string[]): Promise<void> {
         process.stdout.write(json?JSON.stringify(report,null,2)+"\n":formatRegressionReport(report)+"\n");
         if(report.summary.regressions>0)process.exitCode=1;
       } catch(error) {
-        process.stderr.write("FORGE regression analysis failed: "+(error instanceof Error?error.message:String(error))+"\n");
+        process.stderr.write("ANVIL regression analysis failed: "+(error instanceof Error?error.message:String(error))+"\n");
         process.exitCode=1;
       }
       return;
@@ -1461,11 +1460,11 @@ async function main(args: string[]): Promise<void> {
       const target = path.resolve(pathIndex >= 0 ? rest[pathIndex + 1] ?? "." : ".");
       const stageId = rest.find((arg, index) => !arg.startsWith("--") && rest[index - 1] !== "--path") ?? "";
       try {
-        if (!stageId) throw new Error("Usage: forge patch-review STAGE_ID --path PROJECT");
+        if (!stageId) throw new Error("Usage: anvil patch-review STAGE_ID --path PROJECT");
         const review = await reviewStagedPatch(target, stageId);
-        process.stdout.write(["# FORGE Staged Patch Review", "- Stage: " + review.stageId, "- File: " + review.file, "- Source SHA-256: " + review.sourceSha256, "- Staged SHA-256: " + review.stagedSha256, "- Source unchanged: " + review.unchanged, "", review.diff].join("\n") + "\n");
+        process.stdout.write(["# ANVIL Staged Patch Review", "- Stage: " + review.stageId, "- File: " + review.file, "- Source SHA-256: " + review.sourceSha256, "- Staged SHA-256: " + review.stagedSha256, "- Source unchanged: " + review.unchanged, "", review.diff].join("\n") + "\n");
       } catch (error) {
-        process.stderr.write("FORGE staged patch review failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
+        process.stderr.write("ANVIL staged patch review failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
         process.exitCode = 1;
       }
       return;
@@ -1475,11 +1474,11 @@ async function main(args: string[]): Promise<void> {
       const target = path.resolve(pathIndex >= 0 ? rest[pathIndex + 1] ?? "." : ".");
       const approvalId = rest.find((arg, index) => !arg.startsWith("--") && rest[index - 1] !== "--path") ?? "";
       try {
-        if (!approvalId) throw new Error("Usage: forge patch-stage APPROVAL_ID --path PROJECT");
+        if (!approvalId) throw new Error("Usage: anvil patch-stage APPROVAL_ID --path PROJECT");
         const staged = await stageApprovedPatch(target, approvalId);
-        process.stdout.write(["# FORGE Isolated Patch Stage", "- Stage: " + staged.id, "- Approval: " + staged.approvalId, "- File: " + staged.file, "- Staged copy: " + staged.stagedFile, "- SHA-256: " + staged.stagedSha256, "", "The original project file was not modified.", "No tests or commands were executed."].join("\n") + "\n");
+        process.stdout.write(["# ANVIL Isolated Patch Stage", "- Stage: " + staged.id, "- Approval: " + staged.approvalId, "- File: " + staged.file, "- Staged copy: " + staged.stagedFile, "- SHA-256: " + staged.stagedSha256, "", "The original project file was not modified.", "No tests or commands were executed."].join("\n") + "\n");
       } catch (error) {
-        process.stderr.write("FORGE patch staging failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
+        process.stderr.write("ANVIL patch staging failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
         process.exitCode = 1;
       }
       return;
@@ -1496,12 +1495,12 @@ async function main(args: string[]): Promise<void> {
       const reason = reasonIndex >= 0 ? rest[reasonIndex + 1] : undefined;
       try {
         if (!reviewId || !Number.isInteger(suggestionNumber) || suggestionNumber < 1 || !reviewer.trim()) {
-          throw new Error("Usage: forge patch-approve REVIEW_ID SUGGESTION_NUMBER --reviewer NAME [--reason TEXT] --path PROJECT");
+          throw new Error("Usage: anvil patch-approve REVIEW_ID SUGGESTION_NUMBER --reviewer NAME [--reason TEXT] --path PROJECT");
         }
         const approval = await approveReviewPatch(target, reviewId, suggestionNumber, reviewer, reason);
-        process.stdout.write(["# FORGE Patch Approval", "- Approval ID: " + approval.id, "- Review: " + approval.reviewId, "- Suggestion: " + approval.suggestionNumber, "- File: " + approval.file, "- Reviewer: " + approval.reviewer, "- Approved: " + approval.approvedAt, "- Expires: " + approval.expiresAt, "- Patch SHA-256: " + approval.patchSha256, "- Source SHA-256: " + approval.sourceSha256, "", "No source files were modified."].join("\n") + "\n");
+        process.stdout.write(["# ANVIL Patch Approval", "- Approval ID: " + approval.id, "- Review: " + approval.reviewId, "- Suggestion: " + approval.suggestionNumber, "- File: " + approval.file, "- Reviewer: " + approval.reviewer, "- Approved: " + approval.approvedAt, "- Expires: " + approval.expiresAt, "- Patch SHA-256: " + approval.patchSha256, "- Source SHA-256: " + approval.sourceSha256, "", "No source files were modified."].join("\n") + "\n");
       } catch (error) {
-        process.stderr.write("FORGE patch approval failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
+        process.stderr.write("ANVIL patch approval failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
         process.exitCode = 1;
       }
       return;
@@ -1511,7 +1510,7 @@ async function main(args: string[]): Promise<void> {
       const pathIndex = rest.indexOf("--path");
       const target = path.resolve(pathIndex >= 0 ? rest[pathIndex + 1] ?? "." : ".");
       try {
-        if (!id) throw new Error("Usage: forge patch-approval-check APPROVAL_ID --path PROJECT");
+        if (!id) throw new Error("Usage: anvil patch-approval-check APPROVAL_ID --path PROJECT");
         const result = await verifyPatchApproval(target, id);
         process.stdout.write((result.valid ? "VALID: " : "INVALID: ") + result.reason + "\n");
         if (!result.valid) process.exitCode = 1;
@@ -1527,13 +1526,13 @@ async function main(args: string[]): Promise<void> {
       const target=path.resolve(pathIndex>=0?rest[pathIndex+1]??".":".");
       const numberArg=rest.find((arg,index)=>index>0&&!arg.startsWith("--")&&rest[index-1]!==id&&rest[index-1]!=="--path");
       try {
-        if(!id||!numberArg)throw new Error("Usage: forge patch-check REVIEW_ID SUGGESTION_NUMBER --path PROJECT");
+        if(!id||!numberArg)throw new Error("Usage: anvil patch-check REVIEW_ID SUGGESTION_NUMBER --path PROJECT");
         const record=await loadReview(target,id);
         const result=await validateReviewPatch(target,record,Number(numberArg));
         process.stdout.write(formatPatchValidation(result)+"\n");
         if(result.status!=="applicable")process.exitCode=1;
       } catch(error) {
-        process.stderr.write("FORGE patch validation failed: "+(error instanceof Error?error.message:String(error))+"\n");
+        process.stderr.write("ANVIL patch validation failed: "+(error instanceof Error?error.message:String(error))+"\n");
         process.exitCode=1;
       }
       return;
@@ -1549,7 +1548,7 @@ async function main(args: string[]): Promise<void> {
         process.stdout.write(json ? JSON.stringify(report, null, 2) + "\n" : formatGitIntelligence(report) + "\n");
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        process.stderr.write(`FORGE Git analysis failed: ${message}\n`);
+        process.stderr.write(`ANVIL Git analysis failed: ${message}\n`);
         process.exitCode = 1;
       }
       return;
@@ -1562,14 +1561,14 @@ async function main(args: string[]): Promise<void> {
         process.stdout.write(json ? JSON.stringify(report, null, 2) + "\n" : formatCodebaseAnalysis(report) + "\n");
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        process.stderr.write(`FORGE deep analysis failed: ${message}\n`);
+        process.stderr.write(`ANVIL deep analysis failed: ${message}\n`);
         process.exitCode = 1;
       }
       return;
     }
     case "remediate": {
       if (rest.includes("--help")) {
-        process.stdout.write("Usage: forge remediate [path] [--audit-report FILE] [--outdated-report FILE] [--json]\n");
+        process.stdout.write("Usage: anvil remediate [path] [--audit-report FILE] [--outdated-report FILE] [--json]\n");
         return;
       }
       const option = (name: string) => { const index = rest.indexOf(name); return index >= 0 ? rest[index + 1] : undefined; };
@@ -1579,7 +1578,7 @@ async function main(args: string[]): Promise<void> {
         const plan = await generateRemediationPlan(target, { ...(auditReport ? { auditReport } : {}), ...(outdatedReport ? { outdatedReport } : {}) });
         process.stdout.write(rest.includes("--json") ? JSON.stringify(plan, null, 2) + "\n" : formatRemediationPlan(plan) + "\n");
       } catch (error) {
-        process.stderr.write("FORGE remediation planning failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
+        process.stderr.write("ANVIL remediation planning failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
         process.exitCode = 1;
       }
       return;
@@ -1592,14 +1591,14 @@ async function main(args: string[]): Promise<void> {
         process.stdout.write(json ? JSON.stringify(report, null, 2) + "\n" : formatProjectHealthMarkdown(report) + "\n");
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        process.stderr.write(`FORGE health report failed: ${message}\n`);
+        process.stderr.write(`ANVIL health report failed: ${message}\n`);
         process.exitCode = 1;
       }
       return;
     }
     case "quality": {
       if (rest.includes("--help")) {
-        process.stdout.write("Usage: forge quality [path] [--json]\n");
+        process.stdout.write("Usage: anvil quality [path] [--json]\n");
         return;
       }
       const json = rest.includes("--json");
@@ -1609,7 +1608,7 @@ async function main(args: string[]): Promise<void> {
         process.stdout.write(json ? `${JSON.stringify(report, null, 2)}\n` : `${formatQualityAudit(report)}\n`);
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        process.stderr.write(`FORGE quality audit failed: ${message}\n`);
+        process.stderr.write(`ANVIL quality audit failed: ${message}\n`);
         process.exitCode = 1;
       }
       return;
@@ -1617,7 +1616,7 @@ async function main(args: string[]): Promise<void> {
     case "inspect":
     case "map": {
       if (rest.includes("--help")) {
-        process.stdout.write(`Usage: forge ${command} [path] [--json]\n`);
+        process.stdout.write(`Usage: anvil ${command} [path] [--json]\n`);
         return;
       }
       const json = rest.includes("--json");
@@ -1632,14 +1631,14 @@ async function main(args: string[]): Promise<void> {
         }
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        process.stderr.write(`FORGE could not ${command} this project: ${message}\n`);
+        process.stderr.write(`ANVIL could not ${command} this project: ${message}\n`);
         process.exitCode = 1;
       }
       return;
     }
     case "doctor": {
       if (rest.includes("--help")) {
-        process.stdout.write("Usage: forge doctor [path] [--json]\n  Run environment health checks.\n");
+        process.stdout.write("Usage: anvil doctor [path] [--json]\n  Run environment health checks.\n");
         return;
       }
       const json = rest.includes("--json");
@@ -1650,13 +1649,13 @@ async function main(args: string[]): Promise<void> {
         process.stdout.write(json ? JSON.stringify(report, null, 2) + "\n" : formatDoctorReport(report) + "\n");
         if (report.overallStatus === "critical") process.exitCode = 1;
       } catch (error) {
-        process.stderr.write("FORGE doctor failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
+        process.stderr.write("ANVIL doctor failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
         process.exitCode = 1;
       }
       return;
     }
     default:
-      process.stderr.write(`Unknown command: ${command}\nRun "forge help" to see available commands.\n`);
+      process.stderr.write(`Unknown command: ${command}\nRun "anvil help" to see available commands.\n`);
       process.exitCode = 1;
   }
 }
