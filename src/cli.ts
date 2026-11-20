@@ -367,11 +367,11 @@ async function main(args: string[]): Promise<void> {
         }
         try {
           const configVersions = new Map((option("--config-versions") ?? "").split(",").filter(Boolean).map(item => {
-          const separator = item.indexOf("=");
-          if (separator < 1 || separator === item.length - 1) throw new Error("Each config version must use candidate-id=cfg-xxxxxxxxxxxx format.");
-          return [item.slice(0, separator), item.slice(separator + 1)] as const;
-        }));
-        const candidates = rawCandidates.split(",").map(item => {
+            const separator = item.indexOf("=");
+            if (separator < 1 || separator === item.length - 1) throw new Error("Each config version must use candidate-id=cfg-xxxxxxxxxxxx format.");
+            return [item.slice(0, separator), item.slice(separator + 1)] as const;
+          }));
+          const candidates = rawCandidates.split(",").map(item => {
             const [candidateId, candidateProvider, ...modelParts] = item.split(":");
             const model = modelParts.join(":");
             if (!candidateId || !candidateProvider || !model) throw new Error("Each candidate must use id:provider:model format.");
@@ -379,8 +379,8 @@ async function main(args: string[]): Promise<void> {
             const configVersionId = configVersions.get(candidateId);
             return { id: candidateId, provider: candidateProvider as "openai" | "claude-code" | "anthropic" | "google" | "ollama", model, ...(configVersionId ? { configVersionId } : {}) };
           });
-        for (const candidateId of configVersions.keys()) if (!candidates.some(candidate => candidate.id === candidateId)) throw new Error("Configuration snapshot references unknown candidate: " + candidateId);
-        for (const candidate of candidates) if (candidate.configVersionId) await loadAgentConfigVersion(target, candidate.configVersionId);
+          for (const candidateId of configVersions.keys()) if (!candidates.some(candidate => candidate.id === candidateId)) throw new Error("Configuration snapshot references unknown candidate: " + candidateId);
+          for (const candidate of candidates) if (candidate.configVersionId) await loadAgentConfigVersion(target, candidate.configVersionId);
           const matrix = createModelComparisonMatrix({ id, name, repeats, candidates });
           const destination = path.join(target, ".forge", "experiments", id + ".json");
           const { mkdir, writeFile } = await import("node:fs/promises");
@@ -435,7 +435,7 @@ async function main(args: string[]): Promise<void> {
       }
       try {
         const history = await listBenchmarkMatrices(target);
-        const report = history.filter(item => item.matrixId === matrixId).sort((a,b) => b.createdAt.localeCompare(a.createdAt))[0];
+        const report = history.filter(item => item.matrixId === matrixId).sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
         if (!report) throw new Error("Benchmark matrix not found: " + matrixId);
         const assessment = assessAgentEvolution(report);
         process.stdout.write(formatAgentEvolutionAssessment(assessment) + "\n");
@@ -558,10 +558,10 @@ async function main(args: string[]): Promise<void> {
           const id = rest[1]; if (!id) throw new Error("Usage: anvil experiment show EXPERIMENT_ID --path PROJECT");
           process.stdout.write(formatExperimentManifest(await loadExperimentManifest(target, id)) + "\n");
         } else if (action === "compare") {
-          const ids = rest.slice(1).filter((arg,index,all) => !arg.startsWith("--") && all[index-1] !== "--path");
+          const ids = rest.slice(1).filter((arg, index, all) => !arg.startsWith("--") && all[index - 1] !== "--path");
           if (ids.length !== 2) throw new Error("Usage: anvil experiment compare EXPERIMENT_A EXPERIMENT_B --path PROJECT");
-          const [a,b] = await Promise.all([loadExperimentManifest(target,ids[0]!),loadExperimentManifest(target,ids[1]!)]);
-          const comparison = compareExperimentManifests(a,b);
+          const [a, b] = await Promise.all([loadExperimentManifest(target, ids[0]!), loadExperimentManifest(target, ids[1]!)]);
+          const comparison = compareExperimentManifests(a, b);
           process.stdout.write("Experiment reproducibility: " + (comparison.compatible ? "COMPATIBLE" : "NOT COMPARABLE") + "\n" + (comparison.differences.length ? comparison.differences.map(item => "  - " + item).join("\n") : "  Critical manifest fields match.") + "\n");
           if (!comparison.compatible) process.exitCode = 2;
         } else throw new Error("Unknown action. Use capture, show or compare.");
@@ -811,7 +811,8 @@ async function main(args: string[]): Promise<void> {
         if (memoryArgs[i]?.startsWith("--")) skipValues.add(i + 1);
       }
       const positional = memoryArgs.filter((arg, i) => !arg.startsWith("--") && !skipValues.has(i));
-      const target = path.resolve(positional[0] ?? ".");
+      const targetPath = positional.find(arg => !arg.startsWith("mem-")) ?? ".";
+      const target = path.resolve(targetPath);
       try {
         if (action === "list") {
           const entries = await listProjectMemory(target);
@@ -937,61 +938,63 @@ async function main(args: string[]): Promise<void> {
         const providerChoice = (process.env.FORGE_AI_PROVIDER ?? "openai").toLowerCase();
         assertSupportedAgentPolicy(permissions, providerChoice, "FORGE resume");
         await withRunExecutionLock(target, runId, async () => {
-        const savedRun = await loadRun(target, runId);
-        if (savedRun.status === "running") {
-          const recovered = await recoverInterruptedRun(target, runId);
-          process.stdout.write("Recovered interrupted run " + runId + ": " + recovered.status + "\n");
-          process.stdout.write("Any task that was running has an unknown provider outcome and was marked failed. FORGE did not replay provider requests. Review the run before explicitly retrying failed work.\n");
-          return;
-        }
-        if (savedRun.status !== "pending" && savedRun.status !== "awaiting_approval") throw new Error("Only pending or approval-cleared runs can be resumed. Use `forge replay` only after reviewing failed tasks.");
-        const model = process.env.FORGE_AI_MODEL ?? process.env.FORGE_MODEL;
-        const baseModel = model ?? (providerChoice === "claude-code" ? "sonnet" : "gpt-4.1-mini");
-        const createProvider = (selectedModel: string) => providerChoice === "claude-code" ? new ClaudeCodeProvider({ cwd: target, model: selectedModel }) : createHostedAgentProvider({ ...process.env, FORGE_AI_PROVIDER: providerChoice }, selectedModel, { workspacePath: target, permissionPolicy: permissions });
-        let priorTraceEntries: Awaited<ReturnType<typeof loadExecutionTrace>>["entries"] = [];
-        try { priorTraceEntries = (await loadExecutionTrace(target, runId)).entries; }
-        catch (error) { if (!(error && typeof error === "object" && "code" in error && error.code === "ENOENT")) throw error; }
-        const traceAgentUsage = priorTraceEntries.reduce<Record<string, number>>((usage, entry) => { usage[entry.agent] = (usage[entry.agent] ?? 0) + entry.inputTokensEstimate + entry.outputTokensEstimate; return usage; }, {});
-        const traceRunUsage = priorTraceEntries.reduce((total, entry) => total + entry.inputTokensEstimate + entry.outputTokensEstimate, 0);
-        const priorAgentUsage = savedRun.tokenUsage?.estimatedTokensByAgent ?? traceAgentUsage;
-        const priorRunUsage = savedRun.tokenUsage?.estimatedTokensUsed ?? traceRunUsage;
-        const router = new ModelRouter({ fastModel: process.env.FORGE_MODEL_FAST ?? baseModel, balancedModel: process.env.FORGE_MODEL_BALANCED ?? baseModel, reasoningModel: process.env.FORGE_MODEL_REASONING ?? baseModel, ...(process.env.FORGE_FALLBACK_MODEL ? { fallbackModel: process.env.FORGE_FALLBACK_MODEL } : {}), retryAttempts: Number(process.env.FORGE_MODEL_RETRY_ATTEMPTS ?? 2), retryDelayMs: Number(process.env.FORGE_MODEL_RETRY_DELAY_MS ?? 500), ...(process.env.FORGE_MAX_INPUT_TOKENS_PER_TASK ? { maxInputTokensPerTask: Number(process.env.FORGE_MAX_INPUT_TOKENS_PER_TASK) } : {}), ...(process.env.FORGE_MAX_OUTPUT_TOKENS_PER_TASK ? { maxOutputTokensPerTask: Number(process.env.FORGE_MAX_OUTPUT_TOKENS_PER_TASK) } : {}), ...(process.env.FORGE_MAX_ESTIMATED_TOKENS_PER_RUN ? { maxEstimatedTokensPerRun: Number(process.env.FORGE_MAX_ESTIMATED_TOKENS_PER_RUN) } : {}),
-          ...(process.env.FORGE_MAX_ESTIMATED_TOKENS_PER_AGENT ? { maxEstimatedTokensPerAgent: readAgentTokenBudgets()! } : {}),
-          ...(process.env.FORGE_MAX_TASK_DURATION_MS ? { maxTaskDurationMs: Number(process.env.FORGE_MAX_TASK_DURATION_MS) } : {}),
-          ...(process.env.FORGE_MAX_TASK_DURATION_MS_BY_AGENT ? { maxTaskDurationMsByAgent: readAgentDurationBudgets()! } : {}),
-          initialEstimatedTokensUsed: priorRunUsage, initialEstimatedTokensByAgent: priorAgentUsage, createProvider });
-        const memory = await buildProjectMemoryContext(target, savedRun.goal);
-        // Re-check current workspace policy before resuming any task that has not completed.
-        // Previously applied hook guidance is kept in the saved prompt and is not appended twice.
-        const resumeHooks = await loadHooks(target);
-        for (const record of savedRun.tasks) {
-          if (record.status !== "pending" && record.status !== "awaiting_approval") continue;
-          const applied = applyBeforeAgentHooks(record.task, resumeHooks);
-          const additions = applied.context.filter(message => !record.task.prompt.includes(message));
-          record.task = {
-            ...applied.task,
-            prompt: additions.length ? record.task.prompt + "\n\nHook guidance:\n" + additions.join("\n") : record.task.prompt,
-          };
-          if (applied.blockedReason) {
-            record.status = "blocked";
-            record.error = "Blocked by current policy hook: " + applied.blockedReason;
+          const savedRun = await loadRun(target, runId);
+          if (savedRun.status === "running") {
+            const recovered = await recoverInterruptedRun(target, runId);
+            process.stdout.write("Recovered interrupted run " + runId + ": " + recovered.status + "\n");
+            process.stdout.write("Any task that was running has an unknown provider outcome and was marked failed. FORGE did not replay provider requests. Review the run before explicitly retrying failed work.\n");
+            return;
           }
-        }
-        const currentTokenUsage = () => {
-          const usage = router.traces.reduce((total, entry) => { total.estimatedTokensUsed += entry.inputTokensEstimate + entry.outputTokensEstimate; total.estimatedTokensByAgent[entry.agent] = (total.estimatedTokensByAgent[entry.agent] ?? 0) + entry.inputTokensEstimate + entry.outputTokensEstimate; return total; }, { estimatedTokensUsed: priorRunUsage, estimatedTokensByAgent: { ...priorAgentUsage } as Record<string, number> });
-          return usage;
-        };
-        let persistedTraceEntries = 0;
-        const persistRunSnapshot = async (snapshot: RunRecord) => {
-          await saveRun(target, { ...snapshot, tokenUsage: currentTokenUsage() });
-          const newEntries = router.traces.slice(persistedTraceEntries);
-          if (newEntries.length) { await saveExecutionTrace(target, snapshot.id, newEntries); persistedTraceEntries = router.traces.length; }
-        };
-        const completed = await advanceRun(savedRun, router, new Set(), { maxConcurrency: 4, projectContext: memory.text, projectContextForTask: task => buildAgentWorkspaceContext(target, task), shouldCancel: async () => (await loadRun(target, runId)).status === "cancelled", onTaskSettled: persistRunSnapshot, onUpdate: persistRunSnapshot });
-        const saved = await saveRun(target, { ...completed, tokenUsage: currentTokenUsage() });
-        const tracePath = await saveExecutionTrace(target, completed.id, router.traces.slice(persistedTraceEntries));
-        process.stdout.write("Resumed " + runId + ": " + completed.status + "\n");
-        process.stdout.write("Saved: " + path.relative(target, saved) + "\nTrace: " + path.relative(target, tracePath) + "\n");
+          if (savedRun.status !== "pending" && savedRun.status !== "awaiting_approval") throw new Error("Only pending or approval-cleared runs can be resumed. Use `forge replay` only after reviewing failed tasks.");
+          const model = process.env.FORGE_AI_MODEL ?? process.env.FORGE_MODEL;
+          const baseModel = model ?? (providerChoice === "claude-code" ? "sonnet" : "gpt-4.1-mini");
+          const createProvider = (selectedModel: string) => providerChoice === "claude-code" ? new ClaudeCodeProvider({ cwd: target, model: selectedModel }) : createHostedAgentProvider({ ...process.env, FORGE_AI_PROVIDER: providerChoice }, selectedModel, { workspacePath: target, permissionPolicy: permissions });
+          let priorTraceEntries: Awaited<ReturnType<typeof loadExecutionTrace>>["entries"] = [];
+          try { priorTraceEntries = (await loadExecutionTrace(target, runId)).entries; }
+          catch (error) { if (!(error && typeof error === "object" && "code" in error && error.code === "ENOENT")) throw error; }
+          const traceAgentUsage = priorTraceEntries.reduce<Record<string, number>>((usage, entry) => { usage[entry.agent] = (usage[entry.agent] ?? 0) + entry.inputTokensEstimate + entry.outputTokensEstimate; return usage; }, {});
+          const traceRunUsage = priorTraceEntries.reduce((total, entry) => total + entry.inputTokensEstimate + entry.outputTokensEstimate, 0);
+          const priorAgentUsage = savedRun.tokenUsage?.estimatedTokensByAgent ?? traceAgentUsage;
+          const priorRunUsage = savedRun.tokenUsage?.estimatedTokensUsed ?? traceRunUsage;
+          const router = new ModelRouter({
+            fastModel: process.env.FORGE_MODEL_FAST ?? baseModel, balancedModel: process.env.FORGE_MODEL_BALANCED ?? baseModel, reasoningModel: process.env.FORGE_MODEL_REASONING ?? baseModel, ...(process.env.FORGE_FALLBACK_MODEL ? { fallbackModel: process.env.FORGE_FALLBACK_MODEL } : {}), retryAttempts: Number(process.env.FORGE_MODEL_RETRY_ATTEMPTS ?? 2), retryDelayMs: Number(process.env.FORGE_MODEL_RETRY_DELAY_MS ?? 500), ...(process.env.FORGE_MAX_INPUT_TOKENS_PER_TASK ? { maxInputTokensPerTask: Number(process.env.FORGE_MAX_INPUT_TOKENS_PER_TASK) } : {}), ...(process.env.FORGE_MAX_OUTPUT_TOKENS_PER_TASK ? { maxOutputTokensPerTask: Number(process.env.FORGE_MAX_OUTPUT_TOKENS_PER_TASK) } : {}), ...(process.env.FORGE_MAX_ESTIMATED_TOKENS_PER_RUN ? { maxEstimatedTokensPerRun: Number(process.env.FORGE_MAX_ESTIMATED_TOKENS_PER_RUN) } : {}),
+            ...(process.env.FORGE_MAX_ESTIMATED_TOKENS_PER_AGENT ? { maxEstimatedTokensPerAgent: readAgentTokenBudgets()! } : {}),
+            ...(process.env.FORGE_MAX_TASK_DURATION_MS ? { maxTaskDurationMs: Number(process.env.FORGE_MAX_TASK_DURATION_MS) } : {}),
+            ...(process.env.FORGE_MAX_TASK_DURATION_MS_BY_AGENT ? { maxTaskDurationMsByAgent: readAgentDurationBudgets()! } : {}),
+            initialEstimatedTokensUsed: priorRunUsage, initialEstimatedTokensByAgent: priorAgentUsage, createProvider
+          });
+          const memory = await buildProjectMemoryContext(target, savedRun.goal);
+          // Re-check current workspace policy before resuming any task that has not completed.
+          // Previously applied hook guidance is kept in the saved prompt and is not appended twice.
+          const resumeHooks = await loadHooks(target);
+          for (const record of savedRun.tasks) {
+            if (record.status !== "pending" && record.status !== "awaiting_approval") continue;
+            const applied = applyBeforeAgentHooks(record.task, resumeHooks);
+            const additions = applied.context.filter(message => !record.task.prompt.includes(message));
+            record.task = {
+              ...applied.task,
+              prompt: additions.length ? record.task.prompt + "\n\nHook guidance:\n" + additions.join("\n") : record.task.prompt,
+            };
+            if (applied.blockedReason) {
+              record.status = "blocked";
+              record.error = "Blocked by current policy hook: " + applied.blockedReason;
+            }
+          }
+          const currentTokenUsage = () => {
+            const usage = router.traces.reduce((total, entry) => { total.estimatedTokensUsed += entry.inputTokensEstimate + entry.outputTokensEstimate; total.estimatedTokensByAgent[entry.agent] = (total.estimatedTokensByAgent[entry.agent] ?? 0) + entry.inputTokensEstimate + entry.outputTokensEstimate; return total; }, { estimatedTokensUsed: priorRunUsage, estimatedTokensByAgent: { ...priorAgentUsage } as Record<string, number> });
+            return usage;
+          };
+          let persistedTraceEntries = 0;
+          const persistRunSnapshot = async (snapshot: RunRecord) => {
+            await saveRun(target, { ...snapshot, tokenUsage: currentTokenUsage() });
+            const newEntries = router.traces.slice(persistedTraceEntries);
+            if (newEntries.length) { await saveExecutionTrace(target, snapshot.id, newEntries); persistedTraceEntries = router.traces.length; }
+          };
+          const completed = await advanceRun(savedRun, router, new Set(), { maxConcurrency: 4, projectContext: memory.text, projectContextForTask: task => buildAgentWorkspaceContext(target, task), shouldCancel: async () => (await loadRun(target, runId)).status === "cancelled", onTaskSettled: persistRunSnapshot, onUpdate: persistRunSnapshot });
+          const saved = await saveRun(target, { ...completed, tokenUsage: currentTokenUsage() });
+          const tracePath = await saveExecutionTrace(target, completed.id, router.traces.slice(persistedTraceEntries));
+          process.stdout.write("Resumed " + runId + ": " + completed.status + "\n");
+          process.stdout.write("Saved: " + path.relative(target, saved) + "\nTrace: " + path.relative(target, tracePath) + "\n");
         });
       } catch (error) { process.stderr.write("Could not resume run: " + (error instanceof Error ? error.message : String(error)) + "\n"); process.exitCode = 1; }
       return;
@@ -1163,66 +1166,66 @@ async function main(args: string[]): Promise<void> {
         process.stdout.write("Usage: anvil deps [path] [--audit-report FILE] [--outdated-report FILE] [--json]\n");
         return;
       }
-      const option = (name:string) => { const index=rest.indexOf(name); return index>=0 ? rest[index+1] : undefined; };
-      const target=path.resolve(rest.find((arg,index)=>!arg.startsWith("--")&&rest[index-1]!=="--audit-report"&&rest[index-1]!=="--outdated-report")??".");
+      const option = (name: string) => { const index = rest.indexOf(name); return index >= 0 ? rest[index + 1] : undefined; };
+      const target = path.resolve(rest.find((arg, index) => !arg.startsWith("--") && rest[index - 1] !== "--audit-report" && rest[index - 1] !== "--outdated-report") ?? ".");
       try {
-        const auditReport=option("--audit-report"),outdatedReport=option("--outdated-report");
-        const report=await analyzeDependencies(target,{...(auditReport?{auditReport}:{}),...(outdatedReport?{outdatedReport}:{})});
-        process.stdout.write(rest.includes("--json")?JSON.stringify(report,null,2)+"\n":formatDependencyIntelligence(report)+"\n");
-      } catch(error) {
-        process.stderr.write("FORGE dependency analysis failed: "+(error instanceof Error?error.message:String(error))+"\n");
-        process.exitCode=1;
+        const auditReport = option("--audit-report"), outdatedReport = option("--outdated-report");
+        const report = await analyzeDependencies(target, { ...(auditReport ? { auditReport } : {}), ...(outdatedReport ? { outdatedReport } : {}) });
+        process.stdout.write(rest.includes("--json") ? JSON.stringify(report, null, 2) + "\n" : formatDependencyIntelligence(report) + "\n");
+      } catch (error) {
+        process.stderr.write("FORGE dependency analysis failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
+        process.exitCode = 1;
       }
       return;
     }
     case "snapshot": {
-      const target=path.resolve(rest.find(arg=>!arg.startsWith("--"))??".");
-      try { const comparison=await captureIntelligenceSnapshot(target);process.stdout.write(formatIntelligenceComparison(comparison)+"\n"); }
-      catch(error){process.stderr.write("FORGE snapshot failed: "+(error instanceof Error?error.message:String(error))+"\n");process.exitCode=1;}
+      const target = path.resolve(rest.find(arg => !arg.startsWith("--")) ?? ".");
+      try { const comparison = await captureIntelligenceSnapshot(target); process.stdout.write(formatIntelligenceComparison(comparison) + "\n"); }
+      catch (error) { process.stderr.write("FORGE snapshot failed: " + (error instanceof Error ? error.message : String(error)) + "\n"); process.exitCode = 1; }
       return;
     }
     case "timeline": {
-      const target=path.resolve(rest.find(arg=>!arg.startsWith("--"))??".");
-      try { const comparison=await compareLatestIntelligence(target);process.stdout.write(comparison?formatIntelligenceComparison(comparison)+"\n":"No engineering snapshots found. Run forge snapshot . first.\n"); }
-      catch(error){process.stderr.write("FORGE timeline failed: "+(error instanceof Error?error.message:String(error))+"\n");process.exitCode=1;}
+      const target = path.resolve(rest.find(arg => !arg.startsWith("--")) ?? ".");
+      try { const comparison = await compareLatestIntelligence(target); process.stdout.write(comparison ? formatIntelligenceComparison(comparison) + "\n" : "No engineering snapshots found. Run forge snapshot . first.\n"); }
+      catch (error) { process.stderr.write("FORGE timeline failed: " + (error instanceof Error ? error.message : String(error)) + "\n"); process.exitCode = 1; }
       return;
     }
     case "change-risk": {
-      const pathIndex=rest.indexOf("--path"),baseIndex=rest.indexOf("--base");
-      const target=path.resolve(pathIndex>=0?rest[pathIndex+1]??".":rest.find((arg,index)=>!arg.startsWith("--")&&rest[index-1]!=="--base")??".");
-      const base=baseIndex>=0?rest[baseIndex+1]??"HEAD":"HEAD";
-      const json=rest.includes("--json");
-      try { const report=await analyzeChangeIntelligence(target,base);process.stdout.write(json?JSON.stringify(report,null,2)+"\n":formatChangeIntelligence(report)+"\n"); }
-      catch(error){process.stderr.write("FORGE change-risk analysis failed: "+(error instanceof Error?error.message:String(error))+"\n");process.exitCode=1;}
+      const pathIndex = rest.indexOf("--path"), baseIndex = rest.indexOf("--base");
+      const target = path.resolve(pathIndex >= 0 ? rest[pathIndex + 1] ?? "." : rest.find((arg, index) => !arg.startsWith("--") && rest[index - 1] !== "--base") ?? ".");
+      const base = baseIndex >= 0 ? rest[baseIndex + 1] ?? "HEAD" : "HEAD";
+      const json = rest.includes("--json");
+      try { const report = await analyzeChangeIntelligence(target, base); process.stdout.write(json ? JSON.stringify(report, null, 2) + "\n" : formatChangeIntelligence(report) + "\n"); }
+      catch (error) { process.stderr.write("FORGE change-risk analysis failed: " + (error instanceof Error ? error.message : String(error)) + "\n"); process.exitCode = 1; }
       return;
     }
     case "risk": {
-      const pathIndex=rest.indexOf("--path");
-      const target=path.resolve(pathIndex>=0?rest[pathIndex+1]??".":rest.find(arg=>!arg.startsWith("--"))??".");
-      const json=rest.includes("--json");
-      try { const report=await analyzeEngineeringRisk(target);process.stdout.write(json?JSON.stringify(report,null,2)+"\n":formatEngineeringRisk(report)+"\n"); }
-      catch(error){process.stderr.write("FORGE engineering risk analysis failed: "+(error instanceof Error?error.message:String(error))+"\n");process.exitCode=1;}
+      const pathIndex = rest.indexOf("--path");
+      const target = path.resolve(pathIndex >= 0 ? rest[pathIndex + 1] ?? "." : rest.find(arg => !arg.startsWith("--")) ?? ".");
+      const json = rest.includes("--json");
+      try { const report = await analyzeEngineeringRisk(target); process.stdout.write(json ? JSON.stringify(report, null, 2) + "\n" : formatEngineeringRisk(report) + "\n"); }
+      catch (error) { process.stderr.write("FORGE engineering risk analysis failed: " + (error instanceof Error ? error.message : String(error)) + "\n"); process.exitCode = 1; }
       return;
     }
     case "impact": {
-      const pathIndex=rest.indexOf("--path"),baseIndex=rest.indexOf("--base");
-      const target=path.resolve(pathIndex>=0?rest[pathIndex+1]??".":rest.find((arg,index)=>!arg.startsWith("--")&&rest[index-1]!=="--base")??".");
-      const base=baseIndex>=0?rest[baseIndex+1]??"HEAD":"HEAD";
-      const json=rest.includes("--json");
-      try { const report=await analyzeDependencyImpact(target,base);process.stdout.write(json?JSON.stringify(report,null,2)+"\n":formatDependencyImpact(report)+"\n"); }
-      catch(error){process.stderr.write("FORGE dependency impact analysis failed: "+(error instanceof Error?error.message:String(error))+"\n");process.exitCode=1;}
+      const pathIndex = rest.indexOf("--path"), baseIndex = rest.indexOf("--base");
+      const target = path.resolve(pathIndex >= 0 ? rest[pathIndex + 1] ?? "." : rest.find((arg, index) => !arg.startsWith("--") && rest[index - 1] !== "--base") ?? ".");
+      const base = baseIndex >= 0 ? rest[baseIndex + 1] ?? "HEAD" : "HEAD";
+      const json = rest.includes("--json");
+      try { const report = await analyzeDependencyImpact(target, base); process.stdout.write(json ? JSON.stringify(report, null, 2) + "\n" : formatDependencyImpact(report) + "\n"); }
+      catch (error) { process.stderr.write("FORGE dependency impact analysis failed: " + (error instanceof Error ? error.message : String(error)) + "\n"); process.exitCode = 1; }
       return;
     }
     case "search": {
-      const pathIndex=rest.indexOf("--path"),limitIndex=rest.indexOf("--limit");
-      const optionValues=new Set<number>();
-      if(pathIndex>=0)optionValues.add(pathIndex+1);
-      if(limitIndex>=0)optionValues.add(limitIndex+1);
-      const target=path.resolve(pathIndex>=0?rest[pathIndex+1]??".":".");
-      const query=rest.filter((arg,index)=>!arg.startsWith("--")&&!optionValues.has(index)).join(" ").trim();
-      const limit=limitIndex>=0?Number(rest[limitIndex+1]):80;
-      try { const report=await searchWorkspace(target,query,limit);process.stdout.write(JSON.stringify(report,null,2)+"\n"); }
-      catch(error){process.stderr.write("ANVIL code search failed: "+(error instanceof Error?error.message:String(error))+"\n");process.exitCode=1;}
+      const pathIndex = rest.indexOf("--path"), limitIndex = rest.indexOf("--limit");
+      const optionValues = new Set<number>();
+      if (pathIndex >= 0) optionValues.add(pathIndex + 1);
+      if (limitIndex >= 0) optionValues.add(limitIndex + 1);
+      const target = path.resolve(pathIndex >= 0 ? rest[pathIndex + 1] ?? "." : ".");
+      const query = rest.filter((arg, index) => !arg.startsWith("--") && !optionValues.has(index)).join(" ").trim();
+      const limit = limitIndex >= 0 ? Number(rest[limitIndex + 1]) : 80;
+      try { const report = await searchWorkspace(target, query, limit); process.stdout.write(JSON.stringify(report, null, 2) + "\n"); }
+      catch (error) { process.stderr.write("ANVIL code search failed: " + (error instanceof Error ? error.message : String(error)) + "\n"); process.exitCode = 1; }
       return;
     }
     case "dashboard": {
@@ -1298,11 +1301,11 @@ async function main(args: string[]): Promise<void> {
           process.stdout.write([
             profile.name + " — " + profile.description,
             "  network=" + profile.network + ", readOnlyRoot=" + profile.readOnlyRoot +
-              ", dropAllCapabilities=" + profile.dropAllCapabilities +
-              ", noNewPrivileges=" + profile.noNewPrivileges,
+            ", dropAllCapabilities=" + profile.dropAllCapabilities +
+            ", noNewPrivileges=" + profile.noNewPrivileges,
             "  memory=" + profile.maxMemory + ", cpus=" + profile.maxCpus +
-              ", processes=" + profile.maxProcesses +
-              ", requireRootless=" + profile.requireRootless,
+            ", processes=" + profile.maxProcesses +
+            ", requireRootless=" + profile.requireRootless,
             "",
           ].join("\n"));
         }
@@ -1481,7 +1484,7 @@ async function main(args: string[]): Promise<void> {
       const all = rest.includes("--all");
       const pathIndex = rest.indexOf("--path");
       const baseIndex = rest.indexOf("--base");
-      const target = path.resolve(pathIndex >= 0 ? rest[pathIndex + 1] ?? "." : rest.find((arg,index) => !arg.startsWith("--") && rest[index-1] !== "--base" && rest[index-1] !== "--path") ?? ".");
+      const target = path.resolve(pathIndex >= 0 ? rest[pathIndex + 1] ?? "." : rest.find((arg, index) => !arg.startsWith("--") && rest[index - 1] !== "--base" && rest[index - 1] !== "--path") ?? ".");
       const base = baseIndex >= 0 ? rest[baseIndex + 1] ?? "HEAD" : "HEAD";
       try {
         const report = await reviewProject(target, { base, all });
@@ -1502,38 +1505,38 @@ async function main(args: string[]): Promise<void> {
       return;
     }
     case "review-history": {
-      const target = path.resolve(rest.find((arg,index)=>!arg.startsWith("--")&&rest[index-1]!=="--path") ?? ".");
-      try { const records=await listReviews(target); process.stdout.write(records.length?records.map(r=>r.id+"  "+r.createdAt+"  "+r.report.findings.length+" static findings").join("\n")+"\n":"No saved reviews found.\n"); }
-      catch(error){process.stderr.write("ANVIL review history failed: "+(error instanceof Error?error.message:String(error))+"\n");process.exitCode=1;}
+      const target = path.resolve(rest.find((arg, index) => !arg.startsWith("--") && rest[index - 1] !== "--path") ?? ".");
+      try { const records = await listReviews(target); process.stdout.write(records.length ? records.map(r => r.id + "  " + r.createdAt + "  " + r.report.findings.length + " static findings").join("\n") + "\n" : "No saved reviews found.\n"); }
+      catch (error) { process.stderr.write("ANVIL review history failed: " + (error instanceof Error ? error.message : String(error)) + "\n"); process.exitCode = 1; }
       return;
     }
     case "review-show": {
-      const id=rest.find(arg=>!arg.startsWith("--")) ?? "";
-      const pathIndex=rest.indexOf("--path");const target=path.resolve(pathIndex>=0?rest[pathIndex+1]??".":".");
-      try { const record=await loadReview(target,id); process.stdout.write(formatReviewRecord(record)+"\n"); }
-      catch(error){process.stderr.write("ANVIL could not load review: "+(error instanceof Error?error.message:String(error))+"\n");process.exitCode=1;}
+      const id = rest.find(arg => !arg.startsWith("--")) ?? "";
+      const pathIndex = rest.indexOf("--path"); const target = path.resolve(pathIndex >= 0 ? rest[pathIndex + 1] ?? "." : ".");
+      try { const record = await loadReview(target, id); process.stdout.write(formatReviewRecord(record) + "\n"); }
+      catch (error) { process.stderr.write("ANVIL could not load review: " + (error instanceof Error ? error.message : String(error)) + "\n"); process.exitCode = 1; }
       return;
     }
     case "review-compare": {
-      const ids=rest.filter((arg,index)=>!arg.startsWith("--")&&rest[index-1]!=="--path");
-      const pathIndex=rest.indexOf("--path");const target=path.resolve(pathIndex>=0?rest[pathIndex+1]??".":".");
-      try { if(ids.length<2)throw new Error("Usage: anvil review-compare REVIEW_ID_A REVIEW_ID_B --path PROJECT"); const [a,b]=await Promise.all([loadReview(target,ids[0]!),loadReview(target,ids[1]!)]);const diff=compareReviews(a,b);process.stdout.write(["Review comparison", "Added ("+diff.added.length+")",...diff.added.map(x=>"+ "+x),"Resolved ("+diff.resolved.length+")",...diff.resolved.map(x=>"- "+x),"Persistent ("+diff.persistent.length+")",...diff.persistent.map(x=>"= "+x)].join("\n")+"\n"); }
-      catch(error){process.stderr.write("ANVIL review comparison failed: "+(error instanceof Error?error.message:String(error))+"\n");process.exitCode=1;}
+      const ids = rest.filter((arg, index) => !arg.startsWith("--") && rest[index - 1] !== "--path");
+      const pathIndex = rest.indexOf("--path"); const target = path.resolve(pathIndex >= 0 ? rest[pathIndex + 1] ?? "." : ".");
+      try { if (ids.length < 2) throw new Error("Usage: anvil review-compare REVIEW_ID_A REVIEW_ID_B --path PROJECT"); const [a, b] = await Promise.all([loadReview(target, ids[0]!), loadReview(target, ids[1]!)]); const diff = compareReviews(a, b); process.stdout.write(["Review comparison", "Added (" + diff.added.length + ")", ...diff.added.map(x => "+ " + x), "Resolved (" + diff.resolved.length + ")", ...diff.resolved.map(x => "- " + x), "Persistent (" + diff.persistent.length + ")", ...diff.persistent.map(x => "= " + x)].join("\n") + "\n"); }
+      catch (error) { process.stderr.write("ANVIL review comparison failed: " + (error instanceof Error ? error.message : String(error)) + "\n"); process.exitCode = 1; }
       return;
     }
     case "regression": {
-      const pathIndex=rest.indexOf("--path");
-      const baseIndex=rest.indexOf("--base");
-      const target=path.resolve(pathIndex>=0?rest[pathIndex+1]??".":rest.find((arg,index)=>!arg.startsWith("--")&&rest[index-1]!=="--base")??".");
-      const base=baseIndex>=0?rest[baseIndex+1]??"HEAD":"HEAD";
-      const json=rest.includes("--json");
+      const pathIndex = rest.indexOf("--path");
+      const baseIndex = rest.indexOf("--base");
+      const target = path.resolve(pathIndex >= 0 ? rest[pathIndex + 1] ?? "." : rest.find((arg, index) => !arg.startsWith("--") && rest[index - 1] !== "--base") ?? ".");
+      const base = baseIndex >= 0 ? rest[baseIndex + 1] ?? "HEAD" : "HEAD";
+      const json = rest.includes("--json");
       try {
-        const report=await generateRegressionReport(target,base);
-        process.stdout.write(json?JSON.stringify(report,null,2)+"\n":formatRegressionReport(report)+"\n");
-        if(report.summary.regressions>0)process.exitCode=1;
-      } catch(error) {
-        process.stderr.write("ANVIL regression analysis failed: "+(error instanceof Error?error.message:String(error))+"\n");
-        process.exitCode=1;
+        const report = await generateRegressionReport(target, base);
+        process.stdout.write(json ? JSON.stringify(report, null, 2) + "\n" : formatRegressionReport(report) + "\n");
+        if (report.summary.regressions > 0) process.exitCode = 1;
+      } catch (error) {
+        process.stderr.write("ANVIL regression analysis failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
+        process.exitCode = 1;
       }
       return;
     }
@@ -1603,19 +1606,19 @@ async function main(args: string[]): Promise<void> {
       return;
     }
     case "patch-check": {
-      const id=rest.find((arg,index)=>!arg.startsWith("--")&&rest[index-1]!=="--path") ?? "";
-      const pathIndex=rest.indexOf("--path");
-      const target=path.resolve(pathIndex>=0?rest[pathIndex+1]??".":".");
-      const numberArg=rest.find((arg,index)=>index>0&&!arg.startsWith("--")&&rest[index-1]!==id&&rest[index-1]!=="--path");
+      const id = rest.find((arg, index) => !arg.startsWith("--") && rest[index - 1] !== "--path") ?? "";
+      const pathIndex = rest.indexOf("--path");
+      const target = path.resolve(pathIndex >= 0 ? rest[pathIndex + 1] ?? "." : ".");
+      const numberArg = rest.find((arg, index) => index > 0 && !arg.startsWith("--") && rest[index - 1] !== id && rest[index - 1] !== "--path");
       try {
-        if(!id||!numberArg)throw new Error("Usage: anvil patch-check REVIEW_ID SUGGESTION_NUMBER --path PROJECT");
-        const record=await loadReview(target,id);
-        const result=await validateReviewPatch(target,record,Number(numberArg));
-        process.stdout.write(formatPatchValidation(result)+"\n");
-        if(result.status!=="applicable")process.exitCode=1;
-      } catch(error) {
-        process.stderr.write("ANVIL patch validation failed: "+(error instanceof Error?error.message:String(error))+"\n");
-        process.exitCode=1;
+        if (!id || !numberArg) throw new Error("Usage: anvil patch-check REVIEW_ID SUGGESTION_NUMBER --path PROJECT");
+        const record = await loadReview(target, id);
+        const result = await validateReviewPatch(target, record, Number(numberArg));
+        process.stdout.write(formatPatchValidation(result) + "\n");
+        if (result.status !== "applicable") process.exitCode = 1;
+      } catch (error) {
+        process.stderr.write("ANVIL patch validation failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
+        process.exitCode = 1;
       }
       return;
     }
