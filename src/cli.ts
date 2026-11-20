@@ -121,7 +121,7 @@ function readAgentDurationBudgets(): Record<string, number> | undefined {
   return budgets;
 }
 
-const VERSION = "1.0.4";
+const VERSION = "1.0.5";
 
 const HELP = `
 ANVIL — The AI Engineering Workbench

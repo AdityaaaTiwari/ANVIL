@@ -1,5 +1,16 @@
 # ANVIL Changelog
 
+## 1.0.5 — Seamless Single-Page Dashboard & Showcase Telemetry Hub
+
+ANVIL 1.0.5 enhances the local engineering experience with a seamless single-page dashboard architecture, pre-populated interactive showcase telemetry, automatic port fallback (`4173..4183`), and complete release pipeline synchronization.
+
+### Features & Improvements
+- **Seamless Single-Page Dashboard:** Converted the dashboard from hidden tabs into an all-in-one view where System Health, Self-Healing Cleaner, Specialist Agents & Workflow Studio, Architecture Graph, Benchmarks & Evaluation, and Workspace Explorer are all visible simultaneously, accompanied by sticky smooth-scroll navigation pills.
+- **✨ Showcase Telemetry Mode:** Embedded an interactive toggle (active by default when 0 local runs exist) that simulates multi-agent execution traces, benchmark candidate matrices, token budget gauges, and self-healing verification trails so developers can explore ANVIL's full power out of the box.
+- **Automatic Port Fallback Scanner:** Prevented `EADDRINUSE` fatal startup errors by automatically scanning available ports in range `4173..4183` if the default port is held by another process.
+- **Self-Healing Cleaner Dashboard Hub:** Direct interactive browser controls to preview junk cleanup (`/api/clean/preview`), trigger safe repairs, list snapshots (`/api/clean/snapshots`), and execute single-click undo rollback directly from the web interface.
+- **Client Script Hardening:** Eliminated font string escaping anomalies and reinforced element hydration lifecycle for error-free dashboard startup.
+
 ## 1.0.4 — Zero-Fear Rollback, Self-Healing Verification Loop & Framework Entrypoint Engine
 
 ANVIL 1.0.4 introduces production-grade safety nets and developer velocity superpowers: instant single-command rollback (`anvil undo`), an automated self-healing test verification gate (`--verify`), Git pre-commit hook automation (`anvil hook install`), and framework-aware entrypoint resolution for modern full-stack frameworks.
