@@ -3,6 +3,9 @@
   "version": "1.0.4",
   "author": "Aditya Tiwari <m.g.atiwari28@gmail.com> (https://github.com/AdityaaaTiwari)",
   "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
   "description": "ANVIL — An open-source AI engineering harness with codebase intelligence, review history, regression signals, and a local engineering dashboard.",
   "type": "module",
   "bin": {
