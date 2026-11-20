@@ -587,7 +587,7 @@ async function main(args: string[]): Promise<void> {
         const apiKey = process.env.FORGE_API_KEY ?? process.env.OPENAI_API_KEY ?? "";
         const baseUrl = process.env.FORGE_BASE_URL ?? "https://api.openai.com/v1";
         const report = await executeBenchmarkMatrix(config, async (candidate, _repeat) => {
-          
+
           const createProvider = (selectedModel: string) => candidate.provider === "claude-code"
             ? new ClaudeCodeProvider({ cwd: target, model: selectedModel })
             : createHostedAgentProvider({ ...process.env, FORGE_AI_PROVIDER: candidate.provider, ...(apiKey ? { FORGE_API_KEY: apiKey } : {}), ...(process.env.FORGE_BASE_URL ? { FORGE_BASE_URL: process.env.FORGE_BASE_URL } : {}) }, selectedModel);

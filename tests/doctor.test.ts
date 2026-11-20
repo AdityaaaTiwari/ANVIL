@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { formatDoctorReport, runDoctorChecks } from "../src/core/doctor.js";
 import path from "node:path";
 import os from "node:os";
-import { mkdtemp, mkdir, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir } from "node:fs/promises";
 import { safeRm } from "./test-helpers.js";
 
 afterEach(() => {

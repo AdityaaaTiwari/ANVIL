@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { safeRm } from "./test-helpers.js";
-import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";

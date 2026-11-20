@@ -1,6 +1,6 @@
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
-import type { AIMessage, AIProvider, AIRequest, AIResponse } from "./provider.js";
+import type { AIProvider, AIRequest, AIResponse } from "./provider.js";
 import type { AgentRequest, AgentResponse } from "../core/orchestrator.js";
 
 const execFileAsync = promisify(execFile);

@@ -1,4 +1,4 @@
-import { mkdtemp,mkdir,writeFile,rm } from "node:fs/promises";
+import { mkdtemp, mkdir, writeFile } from "node:fs/promises";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import os from "node:os";import path from "node:path";

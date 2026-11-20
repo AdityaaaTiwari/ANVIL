@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { safeRm } from "./test-helpers.js";
-import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, writeFile } from "node:fs/promises";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import os from "node:os";

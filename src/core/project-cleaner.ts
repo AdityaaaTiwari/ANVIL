@@ -166,6 +166,7 @@ async function scanJunk(
 interface ImportSpecifierInfo {
   importedName: string;
   localName: string;
+  isType: boolean;
 }
 
 function parseNamedImports(namedBlock: string): ImportSpecifierInfo[] {
@@ -174,12 +175,14 @@ function parseNamedImports(namedBlock: string): ImportSpecifierInfo[] {
     .map(spec => spec.trim())
     .filter(Boolean)
     .map(spec => {
-      const parts = spec.split(/\s+as\s+/).map(p => p.trim());
+      const isType = /^type\s+/.test(spec);
+      const cleanSpec = spec.replace(/^type\s+/, "").trim();
+      const parts = cleanSpec.split(/\s+as\s+/).map(p => p.trim());
       if (parts.length === 2 && parts[0] && parts[1]) {
-        return { importedName: parts[0], localName: parts[1] };
+        return { importedName: parts[0], localName: parts[1], isType };
       }
-      const single = parts[0] ?? spec;
-      return { importedName: single, localName: single };
+      const single = parts[0] ?? cleanSpec;
+      return { importedName: single, localName: single, isType };
     });
 }
 
@@ -250,10 +253,14 @@ export function autoFixCodeContent(content: string, filePath: string): { newCont
       const removedSpecifiers: string[] = [];
 
       for (const spec of specifiers) {
-        // Match identifier boundary: word character check
-        const wordRegex = new RegExp(`\\b${spec.localName}\\b`);
+        // Whole identifier boundary check for localName
+        const escaped = spec.localName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const wordRegex = new RegExp(`\\b${escaped}\\b`);
         if (wordRegex.test(contentWithoutImport)) {
-          survivingSpecifiers.push(spec.importedName === spec.localName ? spec.localName : `${spec.importedName} as ${spec.localName}`);
+          const formatted = spec.importedName === spec.localName
+            ? (spec.isType ? `type ${spec.localName}` : spec.localName)
+            : (spec.isType ? `type ${spec.importedName} as ${spec.localName}` : `${spec.importedName} as ${spec.localName}`);
+          survivingSpecifiers.push(formatted);
         } else {
           removedSpecifiers.push(spec.localName);
         }
