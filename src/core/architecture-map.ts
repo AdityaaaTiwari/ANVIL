@@ -50,9 +50,13 @@ function roleFor(file: string): ArchitectureNode["role"] {
 function resolveInternal(from: string, specifier: string, knownFiles: Set<string>): string | null {
   if (!specifier.startsWith(".")) return null;
   const base = path.posix.normalize(path.posix.join(path.posix.dirname(from), specifier));
+  const noExt = base.replace(/\.[mc]?[jt]sx?$/, "");
   const candidates = [
-    base, ...[".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".json"].map(ext => base + ext),
-    ...["index.ts", "index.tsx", "index.js", "index.jsx"].map(name => path.posix.join(base, name))
+    base,
+    ...[".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".json"].map(ext => noExt + ext),
+    ...[".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".json"].map(ext => base + ext),
+    ...["index.ts", "index.tsx", "index.js", "index.jsx"].map(name => path.posix.join(base, name)),
+    ...["index.ts", "index.tsx", "index.js", "index.jsx"].map(name => path.posix.join(noExt, name))
   ];
   return candidates.find(candidate => knownFiles.has(candidate)) ?? null;
 }

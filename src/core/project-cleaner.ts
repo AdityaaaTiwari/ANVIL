@@ -1,0 +1,508 @@
+import { readdir, readFile, stat, unlink, rmdir, writeFile } from "node:fs/promises";
+import path from "node:path";
+import { isExcludedScanDirectory } from "./workspace-scan-policy.js";
+import { mapArchitecture } from "./architecture-map.js";
+
+export type JunkCategory = "os" | "editor" | "temporary" | "download" | "log" | "cache" | "empty-dir";
+
+export interface JunkItem {
+  path: string;
+  absolutePath: string;
+  category: JunkCategory;
+  reason: string;
+  sizeBytes: number;
+  isDirectory?: boolean;
+}
+
+export interface CodeFixItem {
+  file: string;
+  type: "unused-import" | "whitespace" | "blank-lines";
+  detail: string;
+  applied: boolean;
+}
+
+export interface OrphanFileItem {
+  file: string;
+  lines: number;
+  reason: string;
+}
+
+export interface CleanOptions {
+  apply?: boolean;
+  fix?: boolean;
+  checkOrphans?: boolean;
+}
+
+export interface CleanResult {
+  root: string;
+  generatedAt: string;
+  applied: boolean;
+  dryRun: boolean;
+  junkItems: JunkItem[];
+  orphanFiles: OrphanFileItem[];
+  codeFixes: CodeFixItem[];
+  stats: {
+    junkFound: number;
+    junkDeleted: number;
+    bytesReclaimed: number;
+    codeFixesFound: number;
+    codeFixesApplied: number;
+    orphanFilesFound: number;
+  };
+  warnings: string[];
+}
+
+const OS_JUNK = new Set([
+  ".ds_store",
+  "thumbs.db",
+  "desktop.ini",
+  "ehthumbs.db",
+  "ehthumbs_vista.db"
+]);
+
+function classifyJunkFile(basename: string, relPath: string): { category: JunkCategory; reason: string } | null {
+  const lower = basename.toLowerCase();
+
+  // OS Clutter
+  if (OS_JUNK.has(lower) || lower.startsWith("._")) {
+    return { category: "os", reason: "Operating system metadata clutter" };
+  }
+
+  // Logs
+  if (
+    /^(npm-debug|yarn-debug|yarn-error|pnpm-debug|lerna-debug)\.log/i.test(basename) ||
+    (lower.endsWith(".log") && !relPath.startsWith(".anvil/") && !relPath.startsWith(".forge/"))
+  ) {
+    return { category: "log", reason: "Debug or error log leftover" };
+  }
+
+  // Temporary & incomplete downloads
+  if (lower.endsWith(".tmp") || lower.endsWith(".temp") || lower.endsWith(".crdownload") || lower.endsWith(".part")) {
+    return { category: lower.endsWith(".crdownload") || lower.endsWith(".part") ? "download" : "temporary", reason: "Incomplete download or temporary artifact" };
+  }
+
+  // Editor clutter
+  if (lower.endsWith("~") || lower.endsWith(".swp") || lower.endsWith(".swo") || lower.endsWith(".bak") || lower.endsWith(".orig") || lower.endsWith(".rej")) {
+    return { category: "editor", reason: "Editor backup, swap, or merge residue" };
+  }
+
+  // Transient build caches
+  if (basename === ".eslintcache" || basename === ".stylelintcache" || basename === ".tsbuildinfo.cache") {
+    return { category: "cache", reason: "Regenerable linter/compiler cache file" };
+  }
+
+  return null;
+}
+
+async function scanJunk(
+  root: string,
+  rel = "",
+  items: JunkItem[] = [],
+  emptyDirs: string[] = []
+): Promise<{ items: JunkItem[]; emptyDirs: string[] }> {
+  const fullDir = path.join(root, rel);
+  let entries;
+  try {
+    entries = await readdir(fullDir, { withFileTypes: true });
+  } catch {
+    return { items, emptyDirs };
+  }
+
+  // If directory is completely empty and not root
+  if (entries.length === 0 && rel && !isExcludedScanDirectory(path.basename(rel))) {
+    emptyDirs.push(rel.split(path.sep).join("/"));
+    return { items, emptyDirs };
+  }
+
+  for (const entry of entries) {
+    const relChild = rel ? path.join(rel, entry.name) : entry.name;
+    const normalizedRel = relChild.split(path.sep).join("/");
+    const fullPath = path.join(root, relChild);
+
+    if (entry.isDirectory()) {
+      if (isExcludedScanDirectory(entry.name)) {
+        // Special case: coverage directories can be considered cache junk if present at root
+        if (entry.name === "coverage" || entry.name === ".nyc_output") {
+          try {
+            const dirStat = await stat(fullPath);
+            items.push({
+              path: normalizedRel,
+              absolutePath: fullPath,
+              category: "cache",
+              reason: "Test coverage report output (regenerable)",
+              sizeBytes: dirStat.size || 4096,
+              isDirectory: true
+            });
+          } catch {
+            // Ignore stat error
+          }
+        }
+        continue;
+      }
+      await scanJunk(root, relChild, items, emptyDirs);
+    } else if (entry.isFile()) {
+      const classification = classifyJunkFile(entry.name, normalizedRel);
+      if (classification) {
+        try {
+          const fileStat = await stat(fullPath);
+          items.push({
+            path: normalizedRel,
+            absolutePath: fullPath,
+            category: classification.category,
+            reason: classification.reason,
+            sizeBytes: fileStat.size,
+            isDirectory: false
+          });
+        } catch {
+          // Ignore stat failure
+        }
+      }
+    }
+  }
+
+  return { items, emptyDirs };
+}
+
+interface ImportSpecifierInfo {
+  importedName: string;
+  localName: string;
+}
+
+function parseNamedImports(namedBlock: string): ImportSpecifierInfo[] {
+  return namedBlock
+    .split(",")
+    .map(spec => spec.trim())
+    .filter(Boolean)
+    .map(spec => {
+      const parts = spec.split(/\s+as\s+/).map(p => p.trim());
+      if (parts.length === 2 && parts[0] && parts[1]) {
+        return { importedName: parts[0], localName: parts[1] };
+      }
+      const single = parts[0] ?? spec;
+      return { importedName: single, localName: single };
+    });
+}
+
+export function autoFixCodeContent(content: string, filePath: string): { newContent: string; fixes: CodeFixItem[] } {
+  const fixes: CodeFixItem[] = [];
+  let updated = content;
+
+  // 1. Whitespace normalization: remove trailing spaces
+  const lines = updated.split("\n");
+  let trailingWhitespaceRemoved = false;
+  const cleanedLines = lines.map(line => {
+    const stripped = line.replace(/[ \t\r]+$/, "");
+    if (stripped !== line.replace(/\r$/, "")) {
+      trailingWhitespaceRemoved = true;
+    }
+    return stripped;
+  });
+
+  if (trailingWhitespaceRemoved) {
+    updated = cleanedLines.join("\n");
+    fixes.push({
+      file: filePath,
+      type: "whitespace",
+      detail: "Trimmed trailing whitespace from lines",
+      applied: true
+    });
+  }
+
+  // 2. Blank line normalization (collapse 3+ consecutive newlines to 2)
+  if (/\n{3,}/.test(updated)) {
+    updated = updated.replace(/\n{3,}/g, "\n\n");
+    fixes.push({
+      file: filePath,
+      type: "blank-lines",
+      detail: "Collapsed excessive consecutive blank lines",
+      applied: true
+    });
+  }
+
+  // 3. Ensure single trailing newline
+  if (updated.length > 0 && !updated.endsWith("\n")) {
+    updated += "\n";
+  }
+
+  // 4. Safe unused named imports removal for JS/TS source files
+  const ext = path.extname(filePath).toLowerCase();
+  if ([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"].includes(ext)) {
+    const importRegex = /^import\s+(?:type\s+)?\{([^}]+)\}\s+from\s+["']([^"']+)["'];?\r?$/gm;
+    let match: RegExpExecArray | null;
+
+    // We do replacement passes
+    let codePass = updated;
+    let importFixCount = 0;
+
+    while ((match = importRegex.exec(updated)) !== null) {
+      const fullStatement = match[0];
+      const rawSpecifiers = match[1];
+      const fromPath = match[2];
+      if (!rawSpecifiers || !fromPath) continue;
+
+      const specifiers = parseNamedImports(rawSpecifiers);
+      if (specifiers.length === 0) continue;
+
+      // Check occurrences of each localName in the rest of the file (excluding this import statement)
+      const contentWithoutImport = updated.slice(0, match.index) + updated.slice(match.index + fullStatement.length);
+
+      const survivingSpecifiers: string[] = [];
+      const removedSpecifiers: string[] = [];
+
+      for (const spec of specifiers) {
+        // Match identifier boundary: word character check
+        const wordRegex = new RegExp(`\\b${spec.localName}\\b`);
+        if (wordRegex.test(contentWithoutImport)) {
+          survivingSpecifiers.push(spec.importedName === spec.localName ? spec.localName : `${spec.importedName} as ${spec.localName}`);
+        } else {
+          removedSpecifiers.push(spec.localName);
+        }
+      }
+
+      if (removedSpecifiers.length > 0) {
+        importFixCount += removedSpecifiers.length;
+        if (survivingSpecifiers.length === 0) {
+          // Entire import is unused -> remove the line
+          codePass = codePass.replace(fullStatement + "\n", "").replace(fullStatement, "");
+        } else {
+          // Partially unused -> retain surviving
+          const isType = fullStatement.startsWith("import type");
+          const newStatement = `import ${isType ? "type " : ""}{ ${survivingSpecifiers.join(", ")} } from "${fromPath}";`;
+          codePass = codePass.replace(fullStatement, newStatement);
+        }
+        fixes.push({
+          file: filePath,
+          type: "unused-import",
+          detail: `Removed unused named import(s): ${removedSpecifiers.join(", ")} from "${fromPath}"`,
+          applied: true
+        });
+      }
+    }
+
+    if (importFixCount > 0) {
+      updated = codePass;
+    }
+  }
+
+  return { newContent: updated, fixes };
+}
+
+export async function cleanProject(inputPath: string, options: CleanOptions = {}): Promise<CleanResult> {
+  const root = path.resolve(inputPath);
+  const apply = Boolean(options.apply);
+  const fixCode = Boolean(options.fix);
+  const checkOrphans = options.checkOrphans !== false;
+
+  const { items: junkItems, emptyDirs } = await scanJunk(root);
+  const orphanFiles: OrphanFileItem[] = [];
+  const codeFixes: CodeFixItem[] = [];
+  const warnings: string[] = [];
+
+  let bytesReclaimed = 0;
+  let junkDeleted = 0;
+
+  // 1. Process junk files
+  for (const item of junkItems) {
+    if (apply) {
+      try {
+        if (item.isDirectory) {
+          await rmdir(item.absolutePath, { recursive: true } as any);
+        } else {
+          await unlink(item.absolutePath);
+        }
+        bytesReclaimed += item.sizeBytes;
+        junkDeleted++;
+      } catch (err: any) {
+        warnings.push(`Failed to delete ${item.path}: ${err?.message || String(err)}`);
+      }
+    } else {
+      bytesReclaimed += item.sizeBytes;
+    }
+  }
+
+  // 2. Process empty directories
+  for (const emptyDir of emptyDirs) {
+    const fullDirPath = path.join(root, emptyDir);
+    junkItems.push({
+      path: emptyDir,
+      absolutePath: fullDirPath,
+      category: "empty-dir",
+      reason: "Empty directory leftover",
+      sizeBytes: 0,
+      isDirectory: true
+    });
+    if (apply) {
+      try {
+        await rmdir(fullDirPath);
+        junkDeleted++;
+      } catch {
+        // Directory may not be empty or locked
+      }
+    }
+  }
+
+  // 3. Scan for orphan source files using architecture mapping
+  if (checkOrphans) {
+    try {
+      const arch = await mapArchitecture(root);
+      const incomingCounts = new Map<string, number>();
+      for (const node of arch.nodes) {
+        incomingCounts.set(node.file, 0);
+      }
+      for (const edge of arch.edges) {
+        if (edge.kind === "internal") {
+          incomingCounts.set(edge.to, (incomingCounts.get(edge.to) || 0) + 1);
+        }
+      }
+
+      for (const node of arch.nodes) {
+        const incoming = incomingCounts.get(node.file) || 0;
+        // If it's a module, not an entry point, not a test, not a config, and zero incoming links
+        if (node.role === "module" && incoming === 0) {
+          orphanFiles.push({
+            file: node.file,
+            lines: node.lines,
+            reason: "Source module with 0 incoming imports (unreferenced by mapped files)"
+          });
+        }
+      }
+    } catch {
+      // Architecture mapping is optional/heuristic
+    }
+  }
+
+  // 4. Code Auto-Repair (if fix is requested or previewing fixes)
+  if (fixCode) {
+    try {
+      const collectSource = async (dir: string, rel = ""): Promise<string[]> => {
+        const full = path.join(dir, rel);
+        let entries;
+        try { entries = await readdir(full, { withFileTypes: true }); }
+        catch { return []; }
+        const res: string[] = [];
+        for (const e of entries) {
+          const childRel = rel ? path.join(rel, e.name) : e.name;
+          if (e.isDirectory() && !isExcludedScanDirectory(e.name)) {
+            res.push(...await collectSource(dir, childRel));
+          } else if (e.isFile() && [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".json"].includes(path.extname(e.name).toLowerCase())) {
+            res.push(childRel.split(path.sep).join("/"));
+          }
+        }
+        return res;
+      };
+
+      const sourceFiles = await collectSource(root);
+      for (const file of sourceFiles) {
+        const fullFilePath = path.join(root, file);
+        try {
+          const raw = await readFile(fullFilePath, "utf8");
+          const { newContent, fixes } = autoFixCodeContent(raw, file);
+          if (fixes.length > 0) {
+            codeFixes.push(...fixes);
+            if (apply) {
+              await writeFile(fullFilePath, newContent, "utf8");
+            }
+          }
+        } catch {
+          // File read or write error, skip
+        }
+      }
+    } catch (err: any) {
+      warnings.push(`Code repair pass encountered an error: ${err?.message || String(err)}`);
+    }
+  }
+
+  const codeFixesApplied = apply ? codeFixes.length : 0;
+
+  return {
+    root,
+    generatedAt: new Date().toISOString(),
+    applied: apply,
+    dryRun: !apply,
+    junkItems,
+    orphanFiles,
+    codeFixes,
+    stats: {
+      junkFound: junkItems.length,
+      junkDeleted: apply ? junkDeleted : 0,
+      bytesReclaimed,
+      codeFixesFound: codeFixes.length,
+      codeFixesApplied,
+      orphanFilesFound: orphanFiles.length
+    },
+    warnings
+  };
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+}
+
+export function formatCleanReport(result: CleanResult): string {
+  const modeText = result.applied ? "**APPLIED** (Deleted junk & saved fixes)" : "**DRY RUN** (Preview only — pass `--apply` to execute)";
+  const lines = [
+    "# ANVIL Workspace Clean & Repair",
+    "",
+    `- **Target:** \`${result.root}\``,
+    `- **Status:** ${modeText}`,
+    `- **Junk items:** \`${result.stats.junkFound}\` found (${formatBytes(result.stats.bytesReclaimed)} space)${result.applied ? ` · \`${result.stats.junkDeleted}\` deleted` : ""}`,
+    `- **Code auto-fixes:** \`${result.stats.codeFixesFound}\` available${result.applied ? ` · \`${result.stats.codeFixesApplied}\` applied` : ""}`,
+    `- **Orphan files detected:** \`${result.stats.orphanFilesFound}\``,
+    `- **Timestamp:** \`${result.generatedAt}\``,
+    ""
+  ];
+
+  if (result.junkItems.length > 0) {
+    lines.push("## Farzi & Junk Artifacts");
+    for (const item of result.junkItems.slice(0, 50)) {
+      lines.push(`- \`[${item.category.toUpperCase()}]\` \`${item.path}\` (${formatBytes(item.sizeBytes)}) — ${item.reason}`);
+    }
+    if (result.junkItems.length > 50) {
+      lines.push(`- *...and ${result.junkItems.length - 50} more items.*`);
+    }
+    lines.push("");
+  } else {
+    lines.push("## Farzi & Junk Artifacts", "- No OS, editor, download, or log clutter detected. Workspace is clean!", "");
+  }
+
+  if (result.codeFixes.length > 0) {
+    lines.push("## Code Auto-Fixes");
+    for (const fix of result.codeFixes.slice(0, 30)) {
+      lines.push(`- \`[${fix.type.toUpperCase()}]\` \`${fix.file}\`: ${fix.detail}`);
+    }
+    if (result.codeFixes.length > 30) {
+      lines.push(`- *...and ${result.codeFixes.length - 30} more code fixes.*`);
+    }
+    lines.push("");
+  }
+
+  if (result.orphanFiles.length > 0) {
+    lines.push("## Orphan & Unreferenced Source Modules");
+    lines.push("> [!NOTE] These files exist in the project but are never imported or linked by other modules. Review them to decide if they should be pruned.");
+    for (const orphan of result.orphanFiles.slice(0, 20)) {
+      lines.push(`- \`${orphan.file}\` (${orphan.lines} lines) — ${orphan.reason}`);
+    }
+    if (result.orphanFiles.length > 20) {
+      lines.push(`- *...and ${result.orphanFiles.length - 20} more unreferenced files.*`);
+    }
+    lines.push("");
+  }
+
+  if (result.warnings.length > 0) {
+    lines.push("## Warnings");
+    for (const w of result.warnings) {
+      lines.push(`- ${w}`);
+    }
+    lines.push("");
+  }
+
+  if (result.dryRun) {
+    lines.push("> [!TIP] Run `anvil clean . --apply` to delete junk files, or `anvil clean . --apply --fix` to clean clutter AND auto-repair code issues.");
+    lines.push("");
+  }
+
+  lines.push("_Generated by ANVIL Workspace Cleaner._");
+  return lines.join("\n");
+}

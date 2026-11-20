@@ -62,6 +62,7 @@ import { buildAgentOptimizationPlan, formatAgentOptimizationPlan } from "./core/
 import { auditAgentConfiguration, formatAgentSecurityReport } from "./core/agent-security-audit.js";
 import { buildAgentEvaluationIntelligence, formatAgentEvaluationIntelligence } from "./core/agent-evaluation-intelligence.js";
 import { assessAgentEvolution, formatAgentEvolutionAssessment } from "./core/agent-evolution.js";
+import { cleanProject, formatCleanReport } from "./core/project-cleaner.js";
 import { createSkillExperimentMatrix, formatSkillExperimentMatrix, createModelComparisonMatrix, formatModelComparisonMatrix } from "./core/agent-experiment-studio.js";
 import { buildExperimentHistory, formatExperimentHistory } from "./core/experiment-history.js";
 import { captureAgentConfigVersion, compareAgentConfigVersions, formatAgentConfigVersion, listAgentConfigVersions, materializeAgentConfigVersion } from "./core/agent-config-versioning.js";
@@ -95,10 +96,10 @@ function runSandboxProbe(args: string[]): Promise<string> {
 }
 
 function readAgentTokenBudgets(): Record<string, number> | undefined {
-  const raw = process.env.FORGE_MAX_ESTIMATED_TOKENS_PER_AGENT;
+  const raw = process.env.ANVIL_MAX_ESTIMATED_TOKENS_PER_AGENT ?? process.env.FORGE_MAX_ESTIMATED_TOKENS_PER_AGENT;
   if (!raw) return undefined;
   const parsed: unknown = JSON.parse(raw);
-  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("FORGE_MAX_ESTIMATED_TOKENS_PER_AGENT must be a JSON object mapping agent IDs to token limits.");
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("ANVIL_MAX_ESTIMATED_TOKENS_PER_AGENT must be a JSON object mapping agent IDs to token limits.");
   const budgets: Record<string, number> = {};
   for (const [agent, value] of Object.entries(parsed)) {
     if (!agent.trim() || !Number.isSafeInteger(value) || (value as number) < 1) throw new Error("Every per-agent token budget must be a positive integer.");
@@ -108,10 +109,10 @@ function readAgentTokenBudgets(): Record<string, number> | undefined {
 }
 
 function readAgentDurationBudgets(): Record<string, number> | undefined {
-  const raw = process.env.FORGE_MAX_TASK_DURATION_MS_BY_AGENT;
+  const raw = process.env.ANVIL_MAX_TASK_DURATION_MS_BY_AGENT ?? process.env.FORGE_MAX_TASK_DURATION_MS_BY_AGENT;
   if (!raw) return undefined;
   const parsed: unknown = JSON.parse(raw);
-  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("FORGE_MAX_TASK_DURATION_MS_BY_AGENT must be a JSON object mapping agent IDs to milliseconds.");
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("ANVIL_MAX_TASK_DURATION_MS_BY_AGENT must be a JSON object mapping agent IDs to milliseconds.");
   const budgets: Record<string, number> = {};
   for (const [agent, value] of Object.entries(parsed)) {
     if (!agent.trim() || !Number.isSafeInteger(value) || (value as number) < 1) throw new Error("Every per-agent duration budget must be a positive integer number of milliseconds.");
@@ -144,6 +145,8 @@ Commands:
   agent-release <prepare|list|show|approve|reject> [options]  Gate agent configuration promotion
   experiment <capture|show|compare> [options]  Capture and compare reproducible benchmark manifests
   quality [path]   Generate an evidence-based static engineering quality report
+  clean [path]     Clean farzi/junk files and logs; use --apply to delete, --fix to repair code
+  fix [path]       Auto-fix code issues, unused imports, and formatting
   deps [path]       Analyze npm dependencies, licenses, and imported security reports
   remediate [path] Advisory remediation plan for vulnerable and outdated dependencies
   snapshot [path]   Capture a local engineering intelligence snapshot
@@ -201,6 +204,8 @@ Options:
 
 Examples:
   anvil inspect .
+  anvil clean .
+  anvil clean . --apply --fix
   anvil inspect ./my-app --json
   anvil map .
   anvil agents .
@@ -1592,6 +1597,26 @@ async function main(args: string[]): Promise<void> {
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         process.stderr.write(`ANVIL health report failed: ${message}\n`);
+        process.exitCode = 1;
+      }
+      return;
+    }
+    case "clean":
+    case "fix": {
+      if (rest.includes("--help")) {
+        process.stdout.write(`Usage: anvil ${command} [path] [--apply] [--fix] [--json]\n  Clean farzi/junk files, downloads, logs, and auto-repair code issues.\n`);
+        return;
+      }
+      const json = rest.includes("--json");
+      const apply = rest.includes("--apply") || (command === "fix" && !rest.includes("--dry-run"));
+      const fix = rest.includes("--fix") || command === "fix";
+      const target = rest.find(arg => !arg.startsWith("--")) ?? ".";
+      try {
+        const report = await cleanProject(path.resolve(target), { apply, fix });
+        process.stdout.write(json ? `${JSON.stringify(report, null, 2)}\n` : `${formatCleanReport(report)}\n`);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        process.stderr.write(`ANVIL ${command} failed: ${message}\n`);
         process.exitCode = 1;
       }
       return;

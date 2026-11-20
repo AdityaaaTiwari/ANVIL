@@ -45,7 +45,7 @@ function updateGuidance(item: DependencyRecord): { title: string; rationale: str
   }
   return {
     title: isMajor ? "Assess a major-version upgrade" : "Review the reported version gap",
-    rationale: `npm outdated reports current ${outdated.current}, wanted ${outdated.wanted}, latest ${outdated.latest}. FORGE cannot establish compatibility from version numbers alone.`,
+    rationale: `npm outdated reports current ${outdated.current}, wanted ${outdated.wanted}, latest ${outdated.latest}. ANVIL cannot establish compatibility from version numbers alone.`,
     action: "Review release notes, migration guidance, peer dependencies and downstream usage before choosing an upgrade.",
     command: null
   };
@@ -116,11 +116,11 @@ export function buildRemediationPlan(report: DependencyIntelligenceReport): Reme
     summary: { total: items.length, critical: count("critical"), high: count("high"), moderate: count("moderate"), low: count("low"), info: count("info"), evidenceBacked: items.filter(item=>item.confidence==="evidence-backed").length, advisory: items.filter(item=>item.confidence==="advisory").length },
     items,
     limitations: [
-      "This is a reviewable plan, not an automated repair. FORGE does not install, upgrade, remove, or modify dependencies.",
+      "This is a reviewable plan, not an automated repair. ANVIL does not install, upgrade, remove, or modify dependencies.",
       "Vulnerability and outdated recommendations are only as current as the imported local npm reports; no registry or advisory service is queried.",
       "Version compatibility cannot be inferred from semver alone. Review release notes, peer dependencies, lockfile changes, and project tests.",
       "License categories are heuristic metadata signals, not legal advice or a full SPDX compatibility analysis.",
-      "Commands are suggestions only and are never executed by FORGE."
+      "Commands are suggestions only and are never executed by ANVIL."
     ]
   };
 }

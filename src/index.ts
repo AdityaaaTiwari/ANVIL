@@ -46,6 +46,7 @@ export * from "./core/doctor.js";
 export * from "./core/engineering-risk.js";
 export * from "./core/git-intelligence.js";
 export * from "./core/intelligence-timeline.js";
+export * from "./core/project-cleaner.js";
 export * from "./core/project-health.js";
 export * from "./core/project-init.js";
 export * from "./core/project-inspector.js";

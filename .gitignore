@@ -9,10 +9,12 @@ coverage/
 .vscode/
 .idea/
 
-# Local FORGE state (never commit project memory or run history)
+# Local ANVIL / FORGE state (never commit project memory or run history)
+.anvil/
 .forge/memory.json
 .forge/runs/
 .forge/intelligence/
+.forge/health/
 
 # Local FORGE execution telemetry
 .forge/traces/
