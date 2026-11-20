@@ -755,11 +755,11 @@ For release-by-release changes, see [CHANGELOG.md](CHANGELOG.md).
 
 ## Support
 
-For questions about ANVIL or help with the GitHub App, contact [THEGODOFEARTH3@gmail.com](mailto:THEGODOFEARTH3@gmail.com).
+For questions about ANVIL or help with the GitHub App, contact [m.g.atiwari28@gmail.com](mailto:m.g.atiwari28@gmail.com).
 
 ## Maintainer
 
-**Ansh** · [@AdityaaaTiwari](https://github.com/AdityaaaTiwari)
+**Aditya Tiwari** · [@AdityaaaTiwari](https://github.com/AdityaaaTiwari)
 
 ## License
 

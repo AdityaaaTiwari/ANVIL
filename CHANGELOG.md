@@ -1,5 +1,13 @@
 # ANVIL Changelog
 
+## 1.0.2 — Maintainer & Contact Verification
+
+ANVIL 1.0.2 updates official maintainer contact information, aligning all security, support, and package metadata with Aditya Tiwari (`m.g.atiwari28@gmail.com`).
+
+### Changes
+- Updated maintainer and support contacts across `README.md`, `SECURITY.md`, and `package.json` to Aditya Tiwari (`m.g.atiwari28@gmail.com`).
+- Refreshed package metadata for npm registry synchronization.
+
 ## 1.0.1 — Rebranding, Modern Website & Documentation Polish
 
 ANVIL 1.0.1 introduces a completely redesigned product website, high-definition SVG iconography, comprehensive documentation unification under the ANVIL brand, and cross-platform stability improvements.
