@@ -1,4 +1,4 @@
-import { readdir, readFile, stat, unlink, rmdir, writeFile } from "node:fs/promises";
+import { readdir, readFile, stat, unlink, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { isExcludedScanDirectory } from "./workspace-scan-policy.js";
 import { mapArchitecture } from "./architecture-map.js";
@@ -423,7 +423,7 @@ export async function cleanProject(inputPath: string, options: CleanOptions = {}
     if (apply) {
       try {
         if (item.isDirectory) {
-          await rmdir(item.absolutePath, { recursive: true } as any);
+          await rm(item.absolutePath, { recursive: true, force: true });
         } else {
           await unlink(item.absolutePath);
         }
@@ -450,7 +450,7 @@ export async function cleanProject(inputPath: string, options: CleanOptions = {}
     });
     if (apply) {
       try {
-        await rmdir(fullDirPath);
+        await rm(fullDirPath, { recursive: true, force: true });
         junkDeleted++;
       } catch {
         // Directory may not be empty or locked
