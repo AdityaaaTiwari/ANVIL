@@ -859,17 +859,18 @@ export async function cleanProject(inputPath: string, options: CleanOptions = {}
       if (testCmd) {
         try {
           let stdout = "";
+          const execOpts = { cwd: root, timeout: 60000, shell: process.platform === "win32" };
           if (testCmd.includes("npm")) {
-            const res = await execFileAsync(testCmd, ["test"], { cwd: root, timeout: 60000 });
+            const res = await execFileAsync(testCmd, ["test"], execOpts);
             stdout = res.stdout;
           } else if (testCmd === "cargo") {
-            const res = await execFileAsync("cargo", ["test"], { cwd: root, timeout: 60000 });
+            const res = await execFileAsync("cargo", ["test"], execOpts);
             stdout = res.stdout;
           } else if (testCmd === "pytest") {
-            const res = await execFileAsync("pytest", [], { cwd: root, timeout: 60000 });
+            const res = await execFileAsync("pytest", [], execOpts);
             stdout = res.stdout;
           } else if (testCmd === "go") {
-            const res = await execFileAsync("go", ["test", "./..."], { cwd: root, timeout: 60000 });
+            const res = await execFileAsync("go", ["test", "./..."], execOpts);
             stdout = res.stdout;
           }
           verification = {
