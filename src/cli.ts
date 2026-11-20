@@ -121,7 +121,7 @@ function readAgentDurationBudgets(): Record<string, number> | undefined {
   return budgets;
 }
 
-const VERSION = "1.0.3";
+const VERSION = "1.0.4";
 
 const HELP = `
 ANVIL — The AI Engineering Workbench
@@ -1192,9 +1192,25 @@ async function main(args: string[]): Promise<void> {
         return;
       }
       try {
-        const dashboard = await startDashboard({ projectPath: target, port: portValue });
+        let dashboard;
+        let chosenPort = portValue;
+        if (portIndex < 0) {
+          for (let p = portValue; p < portValue + 10; p++) {
+            try {
+              dashboard = await startDashboard({ projectPath: target, port: p });
+              chosenPort = p;
+              break;
+            } catch (err: unknown) {
+              if (err && typeof err === "object" && "code" in err && (err as { code: string }).code === "EADDRINUSE" && p < portValue + 9) continue;
+              throw err;
+            }
+          }
+        } else {
+          dashboard = await startDashboard({ projectPath: target, port: portValue });
+        }
+        if (!dashboard) throw new Error("Could not bind an available dashboard port.");
         const address = dashboard.server.address();
-        const actualPort = address && typeof address !== "string" ? address.port : portValue;
+        const actualPort = address && typeof address !== "string" ? address.port : chosenPort;
         process.stdout.write(`ANVIL dashboard: http://127.0.0.1:${actualPort}\nProject: ${target}\nPress Ctrl+C to stop.\n`);
         const shutdown = () => dashboard.server.close(() => process.exit(0));
         process.once("SIGINT", shutdown);
