@@ -365,8 +365,8 @@ body{
   </div>
   <div class="header-actions">
     <label class="showcase-pill" title="Toggle between pre-populated showcase simulation and raw local project data">
-      <input type="checkbox" id="showcaseToggle" checked>
-      <span>✨ Showcase Telemetry</span>
+      <input type="checkbox" id="showcaseToggle">
+      <span>✨ Showcase Telemetry (Demo)</span>
     </label>
     <button class="btn btn-cyan" id="quickDoctorBtn">⚡ Doctor Check</button>
     <button class="btn btn-primary" id="quickCleanBtn">🧹 Self-Healing Scan</button>
@@ -383,9 +383,9 @@ body{
   <button class="tab-btn" data-tab="tab-workspace">🔍 Workspace & Search</button>
 </nav>
 
-<div id="showcaseNotice" class="showcase-banner">
+<div id="showcaseNotice" class="showcase-banner" style="display:none">
   <div>
-    <b>✨ Showcase Telemetry Mode Active:</b> <span>Displaying realistic multi-agent execution runs, benchmark matrices, token budgets, and verification trails so you can explore ANVIL without waiting to collect runs. Toggle switch above to see only raw local data.</span>
+    <b>⚠️ DEMO MODE — Synthetic Showcase Telemetry:</b> <span>Displaying simulated multi-agent execution runs, benchmark matrices, token budgets, and verification trails for demonstration. Toggle switch above off to view only raw local workspace data.</span>
   </div>
 </div>
 
@@ -637,7 +637,7 @@ body{
         <div class="section-head"><h3 style="margin:0">Pipeline canvas</h3><span class="pill" id="workflowTaskCount">0 TASKS</span></div>
         <div id="workflowCanvas" class="activity"><div class="empty">Add a specialist task to start composing your pipeline.</div></div>
         <div class="actions"><button class="btn" id="applyWorkflowLinks">Apply selected links</button></div>
-        <div class="actions"><button class="btn btn-primary" id="saveWorkflow">Save workflow</button><button class="btn btn-cyan" id="createWorkflowRun">Create draft run</button><button class="btn btn-emerald" id="executeWorkflowRun">⚡ Execute Live Pipeline</button></div>
+        <div class="actions"><button class="btn btn-primary" id="saveWorkflow">Save workflow</button><button class="btn btn-cyan" id="createWorkflowRun">Create draft run</button><button class="btn btn-emerald" id="executeWorkflowRun">⚡ Simulate Pipeline Execution</button></div>
         <div id="workflowMessage" class="run-meta" aria-live="polite"></div>
         <div class="section-head" style="margin-top:18px"><h3 style="margin:0">Saved workflows</h3><button class="btn" id="refreshWorkflows">Refresh</button></div>
         <div id="savedWorkflows" class="activity"><div class="loading">Loading reusable workflows…</div></div>
@@ -1035,7 +1035,7 @@ const el=id=>document.getElementById(id);
 const on=(id,event,handler)=>{const node=el(id);if(node)node.addEventListener(event,handler);};
 const esc=value=>String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
-let isShowcase = true;
+let isShowcase = false;
 const showcaseToggle = el("showcaseToggle");
 const showcaseNotice = el("showcaseNotice");
 if(showcaseToggle){
@@ -1883,11 +1883,11 @@ on("createWorkflowRun","click",async()=>{
 
 async function executeWorkflowById(id){
   const msgEl = el("workflowMessage");
-  if(msgEl) msgEl.innerHTML = '<span style="color:var(--cyan)">⚡ Executing multi-agent pipeline live...</span>';
+  if(msgEl) msgEl.innerHTML = '<span style="color:var(--cyan)">⚡ Simulating multi-agent pipeline execution (DemoAgentProvider)...</span>';
   try{
     const res = await fetch("/api/workflows/"+encodeURIComponent(id)+"/execute",{method:"POST",headers:{"content-type":"application/json"},body:"{}"});
     const run = await res.json();
-    if(msgEl) msgEl.innerHTML = '<span style="color:var(--emerald)">✓ Pipeline executed: ' + esc(run.id) + ' (' + esc(run.status) + ')</span>';
+    if(msgEl) msgEl.innerHTML = '<span style="color:var(--emerald)">✓ Pipeline simulated: ' + esc(run.id) + ' (' + esc(run.status) + ')</span>';
     loadRuns();
     loadActivity();
     if(run.id) inspectRun(run.id);
@@ -1905,7 +1905,7 @@ on("executeWorkflowRun","click",async()=>{
 async function refreshWorkflows(){
   try{
     const workflows=await api("/api/workflows");
-    el("savedWorkflows").innerHTML=workflows.length?workflows.map(w=>'<div class="run"><div class="run-title"><b>'+esc(w.name)+'</b><span class="pill">'+esc(w.tasks.length)+' TASKS</span></div><div class="run-meta" style="display:flex;justify-content:space-between;align-items:center"><span>'+esc(w.id)+'</span><button class="btn btn-emerald" style="padding:3px 8px;font-size:11px" onclick="executeWorkflowById(\''+esc(w.id)+'\')">⚡ Run Live</button></div></div>').join(""):'<div class="empty">No saved workflows yet.</div>';
+    el("savedWorkflows").innerHTML=workflows.length?workflows.map(w=>'<div class="run"><div class="run-title"><b>'+esc(w.name)+'</b><span class="pill">'+esc(w.tasks.length)+' TASKS</span></div><div class="run-meta" style="display:flex;justify-content:space-between;align-items:center"><span>'+esc(w.id)+'</span><button class="btn btn-emerald" style="padding:3px 8px;font-size:11px" onclick="executeWorkflowById(\''+esc(w.id)+'\')">⚡ Simulate Execution</button></div></div>').join(""):'<div class="empty">No saved workflows yet.</div>';
   }catch(e){el("savedWorkflows").innerHTML='<div class="error">'+esc(e.message)+'</div>';}
 }
 

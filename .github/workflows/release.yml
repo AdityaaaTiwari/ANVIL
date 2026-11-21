@@ -17,6 +17,7 @@ on:
 
 permissions:
   contents: write
+  id-token: write
 
 jobs:
   verify-and-release:
@@ -69,8 +70,8 @@ jobs:
           files: release-assets/*.tgz
           generate_release_notes: true
       - name: Publish package to npm
-        if: ${{ env.NPM_TOKEN != '' }}
+        if: ${{ secrets.NPM_TOKEN != '' }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm publish --access public
+        run: npm publish --access public --provenance

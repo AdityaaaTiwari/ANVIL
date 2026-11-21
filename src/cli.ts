@@ -148,7 +148,7 @@ Commands:
   agent-release <prepare|list|show|approve|reject> [options]  Gate agent configuration promotion
   experiment <capture|show|compare> [options]  Capture and compare reproducible benchmark manifests
   quality [path]   Generate an evidence-based static engineering quality report
-  clean [path]     Clean farzi/junk files and logs; use --apply to delete, --fix to repair code
+  clean [path]     Clean workspace junk files and logs; use --apply to delete, --fix to repair code
   fix [path]       Auto-fix code issues, unused imports, and formatting
   deps [path]       Analyze npm dependencies, licenses, and imported security reports
   remediate [path] Advisory remediation plan for vulnerable and outdated dependencies
@@ -1788,7 +1788,7 @@ Options:
     case "clean":
     case "fix": {
       if (rest.includes("--help")) {
-        process.stdout.write(`Usage: anvil ${command} [path] [--apply] [--fix] [--json]\n  Clean farzi/junk files, downloads, logs, and auto-repair code issues.\n`);
+        process.stdout.write(`Usage: anvil ${command} [path] [--apply] [--fix] [--json]\n  Clean workspace junk clutter, downloads, logs, and auto-repair code issues.\n`);
         return;
       }
       const json = rest.includes("--json");

@@ -9,8 +9,7 @@
   "description": "ANVIL — An open-source AI engineering harness with codebase intelligence, review history, regression signals, and a local engineering dashboard.",
   "type": "module",
   "bin": {
-    "anvil": "./dist/cli.js",
-    "forge": "./dist/cli.js"
+    "anvil": "./dist/cli.js"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

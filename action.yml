@@ -10,7 +10,7 @@ inputs:
   version:
     description: ANVIL Git ref to install (tag, branch, or commit)
     required: false
-    default: v1.0.4
+    default: v1.0.7
   project-path:
     description: Repository directory to analyze
     required: false

@@ -53,6 +53,38 @@ describe("autoFixCodeContent", () => {
     expect(newContent).not.toContain("floor");
     expect(fixes.some(f => f.type === "unused-import" && f.detail.includes("ceil"))).toBe(true);
   });
+
+  it("preserves Python re-exports in __init__.py and exports in __all__", () => {
+    const initPy = "from .models import User, Post\nfrom .auth import authenticate\n";
+    const initResult = autoFixCodeContent(initPy, "__init__.py");
+    expect(initResult.newContent).toContain("from .models import User, Post");
+    expect(initResult.newContent).toContain("from .auth import authenticate");
+    expect(initResult.fixes.filter(f => f.type === "unused-import")).toHaveLength(0);
+
+    const modulePy = 'from .internal import Engine, Driver, unused\n\n__all__ = ["Engine", "Driver"]\n';
+    const modResult = autoFixCodeContent(modulePy, "pkg.py");
+    expect(modResult.newContent).toContain("Engine, Driver");
+    expect(modResult.newContent).not.toContain("unused");
+  });
+
+  it("preserves JSX pragma imports like { h } from preact and React when JSX is present", () => {
+    const jsxCode = '/** @jsx h */\nimport { h, Fragment, unusedFn } from "preact";\n\nexport const App = () => <div>Hello</div>;\n';
+    const result = autoFixCodeContent(jsxCode, "component.tsx");
+    expect(result.newContent).toContain("h, Fragment");
+    expect(result.newContent).not.toContain("unusedFn");
+  });
+
+  it("does not alter markdown or json files (preserves line-breaks and strings)", () => {
+    const md = "# Title  \nHard break above with two trailing spaces.  \n";
+    const mdResult = autoFixCodeContent(md, "README.md");
+    expect(mdResult.newContent).toBe(md);
+    expect(mdResult.fixes).toHaveLength(0);
+
+    const json = '{\n  "msg": "trailing spaces   "\n}\n';
+    const jsonResult = autoFixCodeContent(json, "config.json");
+    expect(jsonResult.newContent).toBe(json);
+    expect(jsonResult.fixes).toHaveLength(0);
+  });
 });
 
 describe("cleanProject", () => {

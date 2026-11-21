@@ -18,12 +18,12 @@ async function walk(dir:string,root:string,out:string[],depth=0):Promise<void>{
 function inspectLines(file:string,source:string):ReviewFinding[]{
  const findings:ReviewFinding[]=[];const lines=source.split(/\r?\n/);
  const rules:Array<{id:string;severity:ReviewSeverity;title:string;pattern:RegExp;recommendation:string}>= [
-  {id:"FORGE-R001",severity:"high",title:"Dynamic code evaluation",pattern:/\beval\s*\(|\bnew\s+Function\s*\(/,recommendation:"Avoid evaluating generated strings. Prefer explicit parsers or allow-listed operations."},
-  {id:"FORGE-R002",severity:"medium",title:"Shell execution API usage",pattern:/\b(?:exec|execSync|execFile|execFileSync|spawn|spawnSync)\s*\(/,recommendation:"Review argument handling, executable allow-lists, and whether shell mode is enabled. Prefer argument arrays and avoid shell interpolation."},
-  {id:"FORGE-R003",severity:"medium",title:"HTML injection sink",pattern:/\.(?:innerHTML|outerHTML)\s*=/,recommendation:"Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."},
-  {id:"FORGE-R004",severity:"low",title:"TypeScript error suppression",pattern:/@ts-ignore\b/,recommendation:"Prefer @ts-expect-error with an explanation, or correct the underlying type mismatch."},
-  {id:"FORGE-R005",severity:"low",title:"Potentially empty catch block",pattern:/catch\s*(?:\([^)]*\))?\s*\{\s*\}/,recommendation:"Handle, report, or deliberately document the error instead of silently discarding it."},
-  {id:"FORGE-R006",severity:"medium",title:"Dangerously injected HTML property",pattern:/dangerouslySetInnerHTML/,recommendation:"Ensure content is trusted or sanitized immediately before rendering."}
+  {id:"ANVIL-R001",severity:"high",title:"Dynamic code evaluation",pattern:/\beval\s*\(|\bnew\s+Function\s*\(/,recommendation:"Avoid evaluating generated strings. Prefer explicit parsers or allow-listed operations."},
+  {id:"ANVIL-R002",severity:"medium",title:"Shell execution API usage",pattern:/\b(?:exec|execSync|execFile|execFileSync|spawn|spawnSync)\s*\(/,recommendation:"Review argument handling, executable allow-lists, and whether shell mode is enabled. Prefer argument arrays and avoid shell interpolation."},
+  {id:"ANVIL-R003",severity:"medium",title:"HTML injection sink",pattern:/\.(?:innerHTML|outerHTML)\s*=/,recommendation:"Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."},
+  {id:"ANVIL-R004",severity:"low",title:"TypeScript error suppression",pattern:/@ts-ignore\b/,recommendation:"Prefer @ts-expect-error with an explanation, or correct the underlying type mismatch."},
+  {id:"ANVIL-R005",severity:"low",title:"Potentially empty catch block",pattern:/catch\s*(?:\([^)]*\))?\s*\{\s*\}/,recommendation:"Handle, report, or deliberately document the error instead of silently discarding it."},
+  {id:"ANVIL-R006",severity:"medium",title:"Dangerously injected HTML property",pattern:/dangerouslySetInnerHTML/,recommendation:"Ensure content is trusted or sanitized immediately before rendering."}
  ];
  for(let i=0;i<lines.length;i++){const line=lines[i] ?? "";if(/^\s*(?:\/\/|\*|\*)/.test(line))continue;for(const rule of rules)if(rule.pattern.test(line))findings.push({ruleId:rule.id,severity:rule.severity,file,line:i+1,title:rule.title,evidence:line.trim().slice(0,240),recommendation:rule.recommendation,confidence:"heuristic"});}
  return findings;

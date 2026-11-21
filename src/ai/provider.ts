@@ -53,25 +53,26 @@ const PROVIDER_ENV: Record<Exclude<AIProviderId, "mock" | "claude-code">, {
 };
 
 export function readAIProviderConfig(env: NodeJS.ProcessEnv = process.env): AIProviderConfig {
-  const raw = (env.FORGE_AI_PROVIDER ?? "mock").trim().toLowerCase();
+  const raw = (env.ANVIL_AI_PROVIDER ?? env.FORGE_AI_PROVIDER ?? "mock").trim().toLowerCase();
   if (!["mock", "claude-code", "anthropic", "openai", "google", "ollama"].includes(raw)) {
-    throw new Error(`Unsupported FORGE_AI_PROVIDER "${raw}". Choose mock, claude-code, anthropic, openai, google, or ollama.`);
+    throw new Error(`Unsupported ANVIL_AI_PROVIDER "${raw}". Choose mock, claude-code, anthropic, openai, google, or ollama.`);
   }
 
   const provider = raw as AIProviderId;
-  if (provider === "mock" || provider === "claude-code") return { provider, ...(env.FORGE_AI_MODEL ? { model: env.FORGE_AI_MODEL } : {}) };
+  const modelOverride = env.ANVIL_AI_MODEL ?? env.FORGE_AI_MODEL;
+  if (provider === "mock" || provider === "claude-code") return { provider, ...(modelOverride ? { model: modelOverride } : {}) };
 
   const defaults = PROVIDER_ENV[provider];
   const apiKey = provider === "ollama" ? undefined : env[defaults.key];
   const baseUrl = provider === "ollama" ? (env.OLLAMA_HOST ?? defaults.baseUrl) : undefined;
 
   if (provider !== "ollama" && !apiKey) {
-    throw new Error(`${provider} is selected but ${defaults.key} is not set. Use FORGE_AI_PROVIDER=mock to work without a paid provider account.`);
+    throw new Error(`${provider} is selected but ${defaults.key} is not set. Use ANVIL_AI_PROVIDER=mock to work without a paid provider account.`);
   }
 
   return {
     provider,
-    model: env.FORGE_AI_MODEL ?? defaults.model,
+    model: modelOverride ?? defaults.model,
     ...(apiKey ? { apiKey } : {}),
     ...(baseUrl ? { baseUrl } : {}),
   };

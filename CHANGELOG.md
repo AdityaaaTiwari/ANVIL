@@ -60,9 +60,9 @@ ANVIL 1.0.4 introduces production-grade safety nets and developer velocity super
 - **Framework-Aware Entry Point Manifests:** Solves false-positive orphan file detection across modern full-stack frameworks including Next.js, Remix, Nuxt, SvelteKit, FastAPI, Django, Celery, and Go/Rust CLI binaries. Convention-based routes (`page.tsx`, `layout.tsx`, `route.ts`, `urls.py`, `conftest.py`, `build.rs`, `cmd/**/main.go`) are automatically recognized as entrypoints.
 - **Automated Git Pre-commit Hook (`anvil hook install`):** Generates and installs a lightweight `.git/hooks/pre-commit` hook that intercepts commits and prevents OS junk, partial downloads, and syntax errors from entering Git staging.
 
-## 1.0.3 — Multi-Language Architecture Mapping, Farzi Cleaner & Self-Healing Wizard
+## 1.0.3 — Multi-Language Architecture Mapping, Workspace Cleaner & Self-Healing Wizard
 
-ANVIL 1.0.3 introduces comprehensive multi-language architecture mapping (Python, Go, Rust, Java, C/C++), an automated junk/farzi-file scrubber (`anvil clean`), automated code repair (`anvil fix`), and a one-command environment doctor auto-fix wizard (`anvil doctor --fix`).
+ANVIL 1.0.3 introduces comprehensive multi-language architecture mapping (Python, Go, Rust, Java, C/C++), an automated junk/clutter-file scrubber (`anvil clean`), automated code repair (`anvil fix`), and a one-command environment doctor auto-fix wizard (`anvil doctor --fix`).
 
 ### Features & Capabilities
 - **Multi-Language Architecture Mapping (`anvil map`):** Expanded from JS/TS to Python (with relative package imports), Go, Rust (`mod` resolution), Java/Kotlin, and C/C++ (`#include`). Internal import resolution accurately maps hundreds of module relationships across mixed-language repositories with 0 false-positive circular loops.

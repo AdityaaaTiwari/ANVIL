@@ -266,6 +266,14 @@ function parseNamedImports(namedBlock: string): ImportSpecifierInfo[] {
 
 export function autoFixCodeContent(content: string, filePath: string): { newContent: string; fixes: CodeFixItem[] } {
   const fixes: CodeFixItem[] = [];
+  const ext = path.extname(filePath).toLowerCase();
+  const baseName = path.basename(filePath).toLowerCase();
+
+  // Safety: never touch Markdown or JSON files (Markdown trailing whitespace is semantic hard break; JSON strings can contain whitespace)
+  if ([".md", ".markdown", ".json", ".jsonc"].includes(ext)) {
+    return { newContent: content, fixes: [] };
+  }
+
   let updated = content;
 
   // 1. Whitespace normalization: remove trailing spaces
@@ -306,10 +314,13 @@ export function autoFixCodeContent(content: string, filePath: string): { newCont
   }
 
   // 4. Safe unused named imports removal for JS/TS source files
-  const ext = path.extname(filePath).toLowerCase();
   if ([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"].includes(ext)) {
     const importRegex = /^import\s+(?:type\s+)?\{([^}]+)\}\s+from\s+["']([^"']+)["'];?\r?$/gm;
     let match: RegExpExecArray | null;
+
+    // Detect JSX syntax or pragma in file
+    const hasJsxPragma = /@jsx\b|@jsxFrag\b|@jsxImportSource\b/.test(updated);
+    const hasJsxSyntax = /<[A-Za-z0-9_$.]+(\s|>|\/>)/.test(updated) || /<\s*>/.test(updated);
 
     // We do replacement passes
     let codePass = updated;
@@ -331,10 +342,13 @@ export function autoFixCodeContent(content: string, filePath: string): { newCont
       const removedSpecifiers: string[] = [];
 
       for (const spec of specifiers) {
+        // Protect JSX runtime identifiers (h from preact, React from react, Fragment) when JSX is used
+        const isJsxProtected = (hasJsxPragma || hasJsxSyntax) && ["h", "React", "Fragment"].includes(spec.localName);
+
         // Whole identifier boundary check for localName
         const escaped = spec.localName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
         const wordRegex = new RegExp(`\\b${escaped}\\b`);
-        if (wordRegex.test(contentWithoutImport)) {
+        if (isJsxProtected || wordRegex.test(contentWithoutImport)) {
           const formatted = spec.importedName === spec.localName
             ? (spec.isType ? `type ${spec.localName}` : spec.localName)
             : (spec.isType ? `type ${spec.importedName} as ${spec.localName}` : `${spec.importedName} as ${spec.localName}`);
@@ -371,6 +385,23 @@ export function autoFixCodeContent(content: string, filePath: string): { newCont
 
   // 5. Safe unused import removal for Python source files
   if ([".py", ".pyw"].includes(ext)) {
+    // Skip __init__.py entirely: re-exports are intentionally not referenced in the file itself
+    if (baseName === "__init__.py") {
+      return { newContent: updated, fixes };
+    }
+
+    // Parse __all__ list if defined in the file
+    const allMatch = updated.match(/__all__\s*=\s*(\[[^\]]*\]|\([^)]*\))/s);
+    const allExports = new Set<string>();
+    if (allMatch && allMatch[1]) {
+      const exportTokens = allMatch[1].match(/["']([^"']+)["']/g);
+      if (exportTokens) {
+        for (const token of exportTokens) {
+          allExports.add(token.replace(/["']/g, ""));
+        }
+      }
+    }
+
     const pyImportRegex = /^from\s+([.\w]+)\s+import\s+([^#\r\n]+)/gm;
     let match: RegExpExecArray | null;
     let codePass = updated;
@@ -398,9 +429,10 @@ export function autoFixCodeContent(content: string, filePath: string): { newCont
       const removed: string[] = [];
 
       for (const spec of parsed) {
+        const inAll = allExports.has(spec.localName) || allExports.has(spec.importedName);
         const escaped = spec.localName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
         const wordRegex = new RegExp(`\\b${escaped}\\b`);
-        if (wordRegex.test(contentWithoutImport)) {
+        if (inAll || wordRegex.test(contentWithoutImport)) {
           surviving.push(spec.raw);
         } else {
           removed.push(spec.localName);
@@ -789,8 +821,7 @@ export async function cleanProject(inputPath: string, options: CleanOptions = {}
             ".rs",
             ".java", ".kt",
             ".c", ".cpp", ".cc", ".cxx", ".h", ".hpp",
-            ".cs",
-            ".json", ".md"
+            ".cs"
           ].includes(path.extname(e.name).toLowerCase())) {
             res.push(childRel.split(path.sep).join("/"));
           }
@@ -945,7 +976,7 @@ export function formatCleanReport(result: CleanResult): string {
   ];
 
   if (result.junkItems.length > 0) {
-    lines.push("## Farzi & Junk Artifacts");
+    lines.push("## Workspace Junk Artifacts");
     for (const item of result.junkItems.slice(0, 50)) {
       lines.push(`- \`[${item.category.toUpperCase()}]\` \`${item.path}\` (${formatBytes(item.sizeBytes)}) — ${item.reason}`);
     }
@@ -954,7 +985,7 @@ export function formatCleanReport(result: CleanResult): string {
     }
     lines.push("");
   } else {
-    lines.push("## Farzi & Junk Artifacts", "- No OS, editor, download, or log clutter detected. Workspace is clean!", "");
+    lines.push("## Workspace Junk Artifacts", "- No OS, editor, download, or log clutter detected. Workspace is clean!", "");
   }
 
   if (result.codeFixes.length > 0) {

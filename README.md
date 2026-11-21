@@ -33,19 +33,6 @@
 </p>
 
 <p align="center">
-  <a href="https://www.star-history.com/anvil-workbench/ANVIL">
-    <img src="https://img.shields.io/badge/GitHub%20Trending-Not%20ranked%20yet-64748b?style=for-the-badge&logo=github&logoColor=white" alt="GitHub Trending — not ranked yet" />
-  </a>
-  <a href="https://www.star-history.com/anvil-workbench/ANVIL">
-    <img src="https://img.shields.io/badge/Star%20History%20Global%20Rank-Pending-64748b?style=for-the-badge&logo=starship&logoColor=white" alt="Star History global rank — pending" />
-  </a>
-</p>
-
-<p align="center">
-  <sub>These are live-status placeholders until Star History publishes a trending record and global rank for ANVIL. They will be replaced with Star History's live badge images once those records are available.</sub>
-</p>
-
-<p align="center">
   <strong>Built and maintained by <a href="https://github.com/AdityaaaTiwari">Aditya Tiwari</a></strong>
 </p>
 
@@ -134,17 +121,22 @@ Open a terminal in the repository you want to work on:
 ```bash
 cd /path/to/your-project
 
-# Initialize or auto-scaffold workspace configuration
-anvil doctor --fix
+# 1. Run environment and project health diagnostics
+anvil doctor
 
-# Clean temporary farzi files, caches, and auto-fix code issues
-anvil clean . --apply --fix
-
-# Inspect the project
+# 2. Inspect project architecture, tooling, and dependencies
 anvil inspect .
 
-# Start the local dashboard
+# 3. Preview workspace clutter and unused imports (safe dry run)
+anvil clean .
+
+# 4. Start the local engineering dashboard
 anvil dashboard .
+```
+
+To execute cleanup and code auto-repair with automatic byte-accurate snapshot backup:
+```bash
+anvil clean . --apply --fix
 ```
 
 ANVIL prints the dashboard's local URL. Open that address in your browser.
@@ -163,10 +155,10 @@ npm install --global git+https://github.com/anvil-workbench/ANVIL.git#v1.0.7
 # Move into your project
 cd C:\Users\YourName\Projects\my-project
 
-# Initialize, clean, inspect and launch
-anvil doctor --fix
-anvil clean . --apply --fix
+# Run diagnostics, inspect, preview clean, and launch dashboard
+anvil doctor
 anvil inspect .
+anvil clean .
 anvil dashboard .
 ```
 
@@ -335,7 +327,7 @@ Run `anvil --help` for the complete command list and `anvil <command> --help` fo
 | Command | Purpose |
 |---|---|
 | `anvil init [path]` | Create a local `.ANVIL` starter workspace |
-| `anvil clean [path]` | Scan & scrub farzi files, logs, temp downloads; add `--apply` to delete, `--fix` to repair code, `--verify` to run test gate |
+| `anvil clean [path]` | Scan & scrub junk files, logs, temp downloads; add `--apply` to delete, `--fix` to repair code, `--verify` to run test gate |
 | `anvil fix [path]` | Auto-repair code: prune unused imports, normalize whitespace and blank lines; add `--verify` |
 | `anvil undo [path]` | Instant single-command rollback of last clean/fix operation using saved snapshot backup |
 | `anvil hook install` | Install automated ANVIL quality gate into `.git/hooks/pre-commit` |
@@ -441,19 +433,19 @@ Set `ANVIL_AI_PROVIDER` to the provider name and optionally set `ANVIL_AI_MODEL`
 
 ```bash
 # OpenAI
-ANVIL_AI_PROVIDER=openai OPENAI_API_KEY=YOUR_KEY ANVIL run --goal "Review the authentication flow" --path .
+ANVIL_AI_PROVIDER=openai OPENAI_API_KEY=YOUR_KEY anvil run --goal "Review the authentication flow" --path .
 
 # Anthropic
-ANVIL_AI_PROVIDER=anthropic ANTHROPIC_API_KEY=YOUR_KEY ANVIL run --goal "Map the service boundaries" --path .
+ANVIL_AI_PROVIDER=anthropic ANTHROPIC_API_KEY=YOUR_KEY anvil run --goal "Map the service boundaries" --path .
 
 # Google Gemini
-ANVIL_AI_PROVIDER=google GOOGLE_API_KEY=YOUR_KEY ANVIL run --goal "Identify reliability risks" --path .
+ANVIL_AI_PROVIDER=google GOOGLE_API_KEY=YOUR_KEY anvil run --goal "Identify reliability risks" --path .
 
 # Local Ollama
-ANVIL_AI_PROVIDER=ollama OLLAMA_HOST=http://localhost:11434 ANVIL_AI_MODEL=llama3.2 ANVIL run --goal "Explain the architecture" --path .
+ANVIL_AI_PROVIDER=ollama OLLAMA_HOST=http://localhost:11434 ANVIL_AI_MODEL=llama3.2 anvil run --goal "Explain the architecture" --path .
 
 # Claude Code CLI
-ANVIL_AI_PROVIDER=claude-code ANVIL_AI_MODEL=sonnet ANVIL run --goal "Plan a safe refactor" --path .
+ANVIL_AI_PROVIDER=claude-code ANVIL_AI_MODEL=sonnet anvil run --goal "Plan a safe refactor" --path .
 ```
 
 > [!IMPORTANT]
@@ -751,7 +743,7 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request.
 
 ANVIL's v1.0.7 release introduces an integrated Architecture Decision Records (ADR) Engine (`anvil adr init/new/list/sync` with MADR standard and project memory sync), a comprehensive Security & Secret Scanner (`anvil security [--fix] [--json]` detecting exposed OpenAI, Anthropic, GitHub, AWS, Google, and Slack tokens, private keys, and risky scripts with automated `.gitignore` remediation), and a real-time Interactive Live DAG Workflow Runner in the local dashboard with Server-Sent Events (SSE) streaming and live task state visual animations.
 
-ANVIL's v1.0.6 release introduced an automated AI harness MCP setup wizard (`anvil mcp setup --client cursor|claude|windsurf|all`), a durable Project Memory & Architectural Decisions hub (`anvil memory` and live dashboard panel), dual-path memory retention (`.anvil/memory.json` / `.forge/memory.json`), seamless single-page dashboard execution, rich pre-populated showcase telemetry, automatic port fallback (`4173..4183`), single-command byte-accurate rollback (`anvil undo`), automated test verification gate (`--verify`), Git pre-commit hook automation (`anvil hook install`), framework-aware entrypoint resolution, full multi-language architecture mapping, automated farzi-file scrubbing, code auto-repair, one-command doctor self-healing, the local CLI, engineering intelligence, agent workflows, MCP integration, GitHub Action and GitHub App installation foundation into one versioned product.
+ANVIL's v1.0.6 release introduced an automated AI harness MCP setup wizard (`anvil mcp setup --client cursor|claude|windsurf|all`), a durable Project Memory & Architectural Decisions hub (`anvil memory` and live dashboard panel), dual-path memory retention (`.anvil/memory.json` / `.forge/memory.json`), seamless single-page dashboard execution, rich pre-populated showcase telemetry, automatic port fallback (`4173..4183`), single-command byte-accurate rollback (`anvil undo`), automated test verification gate (`--verify`), Git pre-commit hook automation (`anvil hook install`), framework-aware entrypoint resolution, full multi-language architecture mapping, automated clutter scrubbing, code auto-repair, one-command doctor self-healing, the local CLI, engineering intelligence, agent workflows, MCP integration, GitHub Action and GitHub App installation foundation into one versioned product.
 
 The project is maintained as an original ANVIL codebase. ECC is a capability and documentation reference; ANVIL maintains its own identity, implementation, data models and roadmap.
 
