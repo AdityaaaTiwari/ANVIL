@@ -25,8 +25,8 @@ describe("initializeProject", () => {
   it("does not overwrite existing project instructions", async () => {
     root = await mkdtemp(path.join(os.tmpdir(), "forge-init-"));
     const target = path.join(root, ".forge", "agents", "planner.md");
-    await import("node:fs/promises").then(fs => fs.mkdir(path.dirname(target), { recursive: true }));
-    await import("node:fs/promises").then(fs => fs.writeFile(target, "my custom planner", "utf8"));
+    await import("node:fs/promises").then((fs) => fs.mkdir(path.dirname(target), { recursive: true }));
+    await import("node:fs/promises").then((fs) => fs.writeFile(target, "my custom planner", "utf8"));
     const result = await initializeProject(root);
     expect(result.skipped).toContain(".forge/agents/planner.md");
     expect(await readFile(target, "utf8")).toBe("my custom planner");

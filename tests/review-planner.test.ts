@@ -4,7 +4,7 @@ import { createReviewPlan } from "../src/core/review-planner.js";
 describe("specialist review plan", () => {
   it("creates a dependency-aware workflow with all specialist perspectives", () => {
     const plan = createReviewPlan("Improve the MCP server reliability");
-    const byId = new Map(plan.tasks.map(record => [record.task.id, record.task]));
+    const byId = new Map(plan.tasks.map((record) => [record.task.id, record.task]));
     expect(plan.tasks).toHaveLength(10);
     expect(byId.get("understand")?.agent).toBe("architect");
     expect(byId.get("plan")?.dependsOn).toEqual(["understand"]);

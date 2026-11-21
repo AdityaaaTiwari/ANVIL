@@ -14,7 +14,7 @@ async function createWorkspace(): Promise<string> {
 }
 
 afterEach(async () => {
-  await Promise.all(temporaryDirectories.splice(0).map(directory => safeRm(directory)));
+  await Promise.all(temporaryDirectories.splice(0).map((directory) => safeRm(directory)));
 });
 
 describe("Architecture Decision Records Engine", () => {
@@ -37,7 +37,7 @@ describe("Architecture Decision Records Engine", () => {
     const record = await createAdr(ws, "Use Vitest for Parallel Test Execution", {
       status: "Accepted",
       context: "We need faster test runs with native TypeScript support.",
-      decision: "Adopt Vitest across all 75+ test suites."
+      decision: "Adopt Vitest across all 75+ test suites.",
     });
 
     expect(record.number).toBe(2);
@@ -59,7 +59,7 @@ describe("Architecture Decision Records Engine", () => {
 
     const adrs = await listAdrs(ws);
     expect(adrs).toHaveLength(3);
-    expect(adrs.map(a => a.number)).toEqual([1, 2, 3]);
+    expect(adrs.map((a) => a.number)).toEqual([1, 2, 3]);
   });
 
   it("syncs decision items from project memory into ADRs without duplication", async () => {
@@ -69,7 +69,7 @@ describe("Architecture Decision Records Engine", () => {
     await addProjectMemory(ws, {
       kind: "decision",
       content: "Require pre-commit quality gate before merge",
-      tags: ["git", "workflow"]
+      tags: ["git", "workflow"],
     });
 
     const sync1 = await syncMemoryToAdrs(ws);

@@ -48,7 +48,7 @@ const DEFAULT_IGNORED_DIRS = new Set([
   ".cache",
   ".turbo",
   ".anvil-snapshots",
-  ".forge-snapshots"
+  ".forge-snapshots",
 ]);
 
 const SECRET_PATTERNS: Array<{
@@ -63,50 +63,52 @@ const SECRET_PATTERNS: Array<{
     regex: /(?:sk-[a-zA-Z0-9]{20,}|sk-proj-[a-zA-Z0-9_-]{20,})/,
     severity: "critical",
     description: "Hardcoded OpenAI API key detected.",
-    remediation: "Move the key to an environment variable (e.g. process.env.OPENAI_API_KEY) and revoke the exposed key."
+    remediation:
+      "Move the key to an environment variable (e.g. process.env.OPENAI_API_KEY) and revoke the exposed key.",
   },
   {
     rule: "anthropic-api-key",
     regex: /sk-ant-[a-zA-Z0-9_-]{20,}/,
     severity: "critical",
     description: "Hardcoded Anthropic API key detected.",
-    remediation: "Move the key to an environment variable (e.g. process.env.ANTHROPIC_API_KEY) and rotate it immediately."
+    remediation:
+      "Move the key to an environment variable (e.g. process.env.ANTHROPIC_API_KEY) and rotate it immediately.",
   },
   {
     rule: "github-pat",
     regex: /(?:ghp_[a-zA-Z0-9]{36}|github_pat_[a-zA-Z0-9_]{50,})/,
     severity: "critical",
     description: "Exposed GitHub Personal Access Token detected.",
-    remediation: "Revoke this token in GitHub settings and use GitHub Actions secrets or environment variables."
+    remediation: "Revoke this token in GitHub settings and use GitHub Actions secrets or environment variables.",
   },
   {
     rule: "aws-access-key",
     regex: /\bAKIA[0-9A-Z]{16}\b/,
     severity: "critical",
     description: "AWS Access Key ID exposed in code.",
-    remediation: "Rotate IAM user credentials and use AWS IAM roles or environment variables."
+    remediation: "Rotate IAM user credentials and use AWS IAM roles or environment variables.",
   },
   {
     rule: "google-api-key",
     regex: /\bAIza[0-9A-Za-z\\-_]{35}\b/,
     severity: "high",
     description: "Google / Gemini API Key exposed in source code.",
-    remediation: "Restrict API key permissions in Google Cloud Console and pass via environment variables."
+    remediation: "Restrict API key permissions in Google Cloud Console and pass via environment variables.",
   },
   {
     rule: "slack-token",
     regex: /\bxox[baprs]-[0-9]{10,13}-[0-9]{10,13}-[a-zA-Z0-9]{24}\b/,
     severity: "high",
     description: "Slack API / Bot token detected.",
-    remediation: "Rotate the token in Slack App settings and supply it via secure configuration."
+    remediation: "Rotate the token in Slack App settings and supply it via secure configuration.",
   },
   {
     rule: "private-cryptographic-key",
     regex: /-----BEGIN (?:RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----/,
     severity: "critical",
     description: "Private cryptographic key embedded in repository file.",
-    remediation: "Remove the private key from the repository, add to .gitignore, and regenerate new key pairs."
-  }
+    remediation: "Remove the private key from the repository, add to .gitignore, and regenerate new key pairs.",
+  },
 ];
 
 const DANGEROUS_SCRIPT_PATTERNS: Array<{
@@ -121,22 +123,22 @@ const DANGEROUS_SCRIPT_PATTERNS: Array<{
     regex: /(?:curl|wget)\s+[^|;]+\|\s*(?:bash|sh|zsh)\b/,
     severity: "high",
     description: "Remote script piped directly to shell interpreter without integrity check.",
-    remediation: "Download script, verify SHA256 checksum or GPG signature, then execute."
+    remediation: "Download script, verify SHA256 checksum or GPG signature, then execute.",
   },
   {
     rule: "eval-code-execution",
     regex: /\beval\s*\(\s*(?:\$|process\.env|request|params|req\.)/i,
     severity: "high",
     description: "Dynamic eval() execution on potentially untrusted input.",
-    remediation: "Avoid eval(); parse input using structured JSON or a safe expression parser."
+    remediation: "Avoid eval(); parse input using structured JSON or a safe expression parser.",
   },
   {
     rule: "unsafe-rm-wildcard",
     regex: /rm\s+-rf\s+(?:\/|\.\*|\*)\s*$/,
     severity: "critical",
     description: "Unbounded destructive rimraf command detected in script.",
-    remediation: "Specify explicit relative paths with boundary validation before deleting files."
-  }
+    remediation: "Specify explicit relative paths with boundary validation before deleting files.",
+  },
 ];
 
 function maskSecret(text: string): string {
@@ -162,10 +164,14 @@ export async function scanProjectSecurity(
   }
 
   const isGitignored = (fileName: string) => {
-    return gitignoreContent.split("\n").some(line => {
+    return gitignoreContent.split("\n").some((line) => {
       const trimmed = line.trim();
       if (!trimmed || trimmed.startsWith("#")) return false;
-      return trimmed === fileName || trimmed === `*${path.extname(fileName)}` || fileName.startsWith(trimmed.replace(/\*$/, ""));
+      return (
+        trimmed === fileName ||
+        trimmed === `*${path.extname(fileName)}` ||
+        fileName.startsWith(trimmed.replace(/\*$/, ""))
+      );
     });
   };
 
@@ -185,14 +191,21 @@ export async function scanProjectSecurity(
 
       if (entry.isDirectory()) {
         if (DEFAULT_IGNORED_DIRS.has(entry.name)) continue;
-        if (!options.includeTests && (entry.name === "tests" || entry.name === "test" || entry.name === "__tests__" || entry.name === "fixtures")) continue;
+        if (
+          !options.includeTests &&
+          (entry.name === "tests" || entry.name === "test" || entry.name === "__tests__" || entry.name === "fixtures")
+        )
+          continue;
         if (options.customIgnore?.includes(entry.name)) continue;
         await walk(fullPath);
       } else if (entry.isFile()) {
         if (!options.includeTests && /\.(test|spec)\.[jt]sx?$/.test(entry.name)) continue;
         scannedFiles++;
 
-        if (entry.name === ".env" || entry.name.startsWith(".env.") && !entry.name.endsWith(".example") && !entry.name.endsWith(".sample")) {
+        if (
+          entry.name === ".env" ||
+          (entry.name.startsWith(".env.") && !entry.name.endsWith(".example") && !entry.name.endsWith(".sample"))
+        ) {
           if (!isGitignored(entry.name)) {
             findings.push({
               id: `sec-file-${relativePath}`,
@@ -201,7 +214,7 @@ export async function scanProjectSecurity(
               file: relativePath,
               rule: "exposed-env-file",
               description: `Environment configuration file "${entry.name}" is present but not excluded in .gitignore.`,
-              remediation: "Add .env and .env.* to your .gitignore to prevent secret leakage in version control."
+              remediation: "Add .env and .env.* to your .gitignore to prevent secret leakage in version control.",
             });
           }
         }
@@ -215,7 +228,7 @@ export async function scanProjectSecurity(
               file: relativePath,
               rule: "exposed-key-file",
               description: `Cryptographic key / certificate file "${entry.name}" found in repository.`,
-              remediation: "Store private keys in a secure secret manager, not in the project working tree."
+              remediation: "Store private keys in a secure secret manager, not in the project working tree.",
             });
           }
         }
@@ -232,8 +245,8 @@ export async function scanProjectSecurity(
               try {
                 const pkg = JSON.parse(content) as Record<string, unknown>;
                 const allDeps = {
-                  ...(pkg.dependencies as Record<string, string> || {}),
-                  ...(pkg.devDependencies as Record<string, string> || {})
+                  ...((pkg.dependencies as Record<string, string>) || {}),
+                  ...((pkg.devDependencies as Record<string, string>) || {}),
                 };
                 for (const [dep, spec] of Object.entries(allDeps)) {
                   if (typeof spec === "string" && spec.startsWith("http://")) {
@@ -244,7 +257,7 @@ export async function scanProjectSecurity(
                       file: relativePath,
                       rule: "insecure-http-dependency",
                       description: `Dependency "${dep}" is loaded over unencrypted HTTP protocol (${spec}).`,
-                      remediation: "Upgrade dependency specifier to use HTTPS or npm registry version."
+                      remediation: "Upgrade dependency specifier to use HTTPS or npm registry version.",
                     });
                   }
                 }
@@ -258,7 +271,11 @@ export async function scanProjectSecurity(
                 const match = line.match(pattern.regex);
                 if (match) {
                   const rawMatch = match[0];
-                  if (rawMatch.includes("1234567890abcdef") || rawMatch.includes("EXAMPLE") || rawMatch.includes("placeholder")) {
+                  if (
+                    rawMatch.includes("1234567890abcdef") ||
+                    rawMatch.includes("EXAMPLE") ||
+                    rawMatch.includes("placeholder")
+                  ) {
                     continue;
                   }
                   findings.push({
@@ -270,7 +287,7 @@ export async function scanProjectSecurity(
                     rule: pattern.rule,
                     description: pattern.description,
                     snippet: maskSecret(rawMatch),
-                    remediation: pattern.remediation
+                    remediation: pattern.remediation,
                   });
                 }
               }
@@ -290,7 +307,7 @@ export async function scanProjectSecurity(
                       rule: pattern.rule,
                       description: pattern.description,
                       snippet: match[0].trim().slice(0, 60),
-                      remediation: pattern.remediation
+                      remediation: pattern.remediation,
                     });
                   }
                 }
@@ -305,11 +322,11 @@ export async function scanProjectSecurity(
   await walk(root);
 
   const summary = {
-    critical: findings.filter(f => f.severity === "critical").length,
-    high: findings.filter(f => f.severity === "high").length,
-    medium: findings.filter(f => f.severity === "medium").length,
-    low: findings.filter(f => f.severity === "low").length,
-    total: findings.length
+    critical: findings.filter((f) => f.severity === "critical").length,
+    high: findings.filter((f) => f.severity === "high").length,
+    medium: findings.filter((f) => f.severity === "medium").length,
+    low: findings.filter((f) => f.severity === "low").length,
+    total: findings.length,
   };
 
   return {
@@ -317,7 +334,7 @@ export async function scanProjectSecurity(
     durationMs: Date.now() - startTime,
     findings,
     summary,
-    passed: summary.critical === 0 && summary.high === 0
+    passed: summary.critical === 0 && summary.high === 0,
   };
 }
 
@@ -377,8 +394,14 @@ export function formatSecurityReport(report: SecurityAuditReport): string {
     return lines.join("\n");
   }
 
-  lines.push(`Audit Summary: ${report.summary.total} findings (${report.summary.critical} critical, ${report.summary.high} high, ${report.summary.medium} medium, ${report.summary.low} low)`);
-  lines.push(report.passed ? "Status: PASSED (No critical or high severity issues)\n" : "Status: ACTION REQUIRED (Critical or high severity findings)\n");
+  lines.push(
+    `Audit Summary: ${report.summary.total} findings (${report.summary.critical} critical, ${report.summary.high} high, ${report.summary.medium} medium, ${report.summary.low} low)`
+  );
+  lines.push(
+    report.passed
+      ? "Status: PASSED (No critical or high severity issues)\n"
+      : "Status: ACTION REQUIRED (Critical or high severity findings)\n"
+  );
 
   for (const f of report.findings) {
     const sevTag = `[${f.severity.toUpperCase()}]`;

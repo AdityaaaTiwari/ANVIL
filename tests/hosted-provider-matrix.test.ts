@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { validateBenchmarkMatrix } from "../src/core/benchmark-matrix.js";
 
 describe("hosted provider benchmark candidates", () => {
-  it.each(["openai", "anthropic", "google", "ollama", "claude-code"] as const)("accepts %s candidates", provider => {
+  it.each(["openai", "anthropic", "google", "ollama", "claude-code"] as const)("accepts %s candidates", (provider) => {
     const matrix = {
       id: "provider-matrix",
       name: "Provider matrix",

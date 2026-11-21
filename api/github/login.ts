@@ -6,7 +6,10 @@ import { isValidInstallationId } from "../_lib/github-app.js";
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Cache-Control", "no-store");
   res.setHeader("Referrer-Policy", "no-referrer");
-  if (req.method !== "GET") { res.setHeader("Allow", "GET"); return res.status(405).json({ error: "Method not allowed" }); }
+  if (req.method !== "GET") {
+    res.setHeader("Allow", "GET");
+    return res.status(405).json({ error: "Method not allowed" });
+  }
   try {
     const { clientId, callbackUrl } = oauthConfig();
     const rawId = getQuery(req, "installation_id");

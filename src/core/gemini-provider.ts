@@ -88,9 +88,11 @@ export class GeminiProvider implements AgentProvider {
       throw new Error("Gemini returned an unexpected response format.");
     }
 
-    const firstCandidate = payload.candidates[0] as {
-      content?: { parts?: Array<{ text?: unknown }> };
-    } | undefined;
+    const firstCandidate = payload.candidates[0] as
+      | {
+          content?: { parts?: Array<{ text?: unknown }> };
+        }
+      | undefined;
 
     const firstPart = firstCandidate?.content?.parts?.[0];
     if (!firstPart || typeof firstPart.text !== "string") {

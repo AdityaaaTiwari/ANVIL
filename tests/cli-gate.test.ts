@@ -44,7 +44,10 @@ describe("ANVIL gate CLI command", () => {
     try {
       await writeFile(path.join(tempDir, "package.json"), JSON.stringify({ name: "dirty-project", version: "1.0.0" }));
       // Hardcoded token
-      await writeFile(path.join(tempDir, "leak.ts"), "const key = 'sk-proj-123456789012345678901234567890123456789012345678';\n");
+      await writeFile(
+        path.join(tempDir, "leak.ts"),
+        "const key = 'sk-proj-123456789012345678901234567890123456789012345678';\n"
+      );
 
       let failed = false;
       try {

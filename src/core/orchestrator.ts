@@ -5,13 +5,7 @@
  * shell, filesystem-write, network, or tool-execution capability.
  */
 
-export type TaskStatus =
-  | "pending"
-  | "awaiting_approval"
-  | "running"
-  | "completed"
-  | "failed"
-  | "blocked";
+export type TaskStatus = "pending" | "awaiting_approval" | "running" | "completed" | "failed" | "blocked";
 
 export interface AgentTask {
   id: string;
@@ -59,7 +53,15 @@ export interface RunRecord {
   events: Array<{
     at: string;
     taskId: string;
-    type: "approval_required" | "approved" | "rejected" | "started" | "completed" | "failed" | "blocked" | "budget_exceeded";
+    type:
+      | "approval_required"
+      | "approved"
+      | "rejected"
+      | "started"
+      | "completed"
+      | "failed"
+      | "blocked"
+      | "budget_exceeded";
     message: string;
   }>;
 }
@@ -94,7 +96,7 @@ function validatePlan(tasks: readonly AgentTask[]): void {
 
   const visiting = new Set<string>();
   const visited = new Set<string>();
-  const byId = new Map(tasks.map(task => [task.id, task]));
+  const byId = new Map(tasks.map((task) => [task.id, task]));
   const visit = (id: string): void => {
     if (visiting.has(id)) throw new PlanValidationError("Task dependencies contain a cycle.");
     if (visited.has(id)) return;
@@ -122,7 +124,7 @@ export function createRun(goal: string, tasks: readonly AgentTask[]): RunRecord 
     createdAt: now,
     updatedAt: now,
     status: "pending",
-    tasks: tasks.map(task => ({
+    tasks: tasks.map((task) => ({
       task: { ...task, dependsOn: [...(task.dependsOn ?? [])] },
       status: "pending",
     })),
@@ -154,7 +156,7 @@ export async function advanceRun(
   run: RunRecord,
   provider: AgentProvider,
   approvedTaskIds: ReadonlySet<string> = new Set(),
-  options: AdvanceRunOptions = {},
+  options: AdvanceRunOptions = {}
 ): Promise<RunRecord> {
   const requestedConcurrency = options.maxConcurrency ?? 4;
   if (!Number.isSafeInteger(requestedConcurrency) || requestedConcurrency < 1 || requestedConcurrency > 16) {
@@ -163,12 +165,12 @@ export async function advanceRun(
   const maxConcurrency = requestedConcurrency;
   const next: RunRecord = {
     ...run,
-    tasks: run.tasks.map(record => ({ ...record })),
+    tasks: run.tasks.map((record) => ({ ...record })),
     events: [...run.events],
     updatedAt: timestamp(),
   };
-  const records = new Map(next.tasks.map(record => [record.task.id, record]));
-  const previous = new Map(run.tasks.map(record => [record.task.id, record]));
+  const records = new Map(next.tasks.map((record) => [record.task.id, record]));
+  const previous = new Map(run.tasks.map((record) => [record.task.id, record]));
   const appendEvent = (taskId: string, type: RunRecord["events"][number]["type"], message: string) => {
     next.events.push({ at: timestamp(), taskId, type, message });
   };
@@ -176,7 +178,8 @@ export async function advanceRun(
   // Keep processing newly unblocked dependency layers until no task can start.
   while (true) {
     if (await options.shouldCancel?.()) {
-      next.status = "cancelled"; next.updatedAt = timestamp();
+      next.status = "cancelled";
+      next.updatedAt = timestamp();
       appendEvent("*", "blocked", "Cancellation requested; no further tasks will be started.");
       await options.onUpdate?.(next);
       break;
@@ -185,26 +188,34 @@ export async function advanceRun(
 
     for (const record of next.tasks) {
       if (record.status === "completed" || record.status === "failed" || record.status === "blocked") continue;
-      const dependencies = (record.task.dependsOn ?? []).map(id => records.get(id)!);
-      if (dependencies.some(dependency => dependency.status === "failed" || dependency.status === "blocked")) {
+      const dependencies = (record.task.dependsOn ?? []).map((id) => records.get(id)!);
+      if (dependencies.some((dependency) => dependency.status === "failed" || dependency.status === "blocked")) {
         record.status = "blocked";
         appendEvent(record.task.id, "blocked", "A required dependency did not complete.");
         changed = true;
       }
     }
 
-    const ready = next.tasks.filter(record => {
+    const ready = next.tasks.filter((record) => {
       if (record.status === "completed" || record.status === "failed" || record.status === "blocked") return false;
-      const dependencies = (record.task.dependsOn ?? []).map(id => records.get(id)!);
-      return dependencies.every(dependency => dependency.status === "completed");
+      const dependencies = (record.task.dependsOn ?? []).map((id) => records.get(id)!);
+      return dependencies.every((dependency) => dependency.status === "completed");
     });
 
     const approved: TaskRecord[] = [];
     for (const record of ready) {
-      if (record.task.requiresApproval && record.approval?.decision !== "approved" && !approvedTaskIds.has(record.task.id)) {
+      if (
+        record.task.requiresApproval &&
+        record.approval?.decision !== "approved" &&
+        !approvedTaskIds.has(record.task.id)
+      ) {
         record.status = "awaiting_approval";
         if (previous.get(record.task.id)?.status !== "awaiting_approval") {
-          appendEvent(record.task.id, "approval_required", "Explicit approval is required before this task can be sent to the provider.");
+          appendEvent(
+            record.task.id,
+            "approval_required",
+            "Explicit approval is required before this task can be sent to the provider."
+          );
         }
       } else {
         approved.push(record);
@@ -217,59 +228,72 @@ export async function advanceRun(
     }
 
     const batch = approved.slice(0, maxConcurrency);
-    for (const record of batch) { record.status = "running"; appendEvent(record.task.id, "started", `Sent to provider "${provider.name}".`); }
-    next.status = "running"; next.updatedAt = timestamp();
+    for (const record of batch) {
+      record.status = "running";
+      appendEvent(record.task.id, "started", `Sent to provider "${provider.name}".`);
+    }
+    next.status = "running";
+    next.updatedAt = timestamp();
     await options.onUpdate?.(next);
     let settlementQueue = Promise.resolve();
     const persistSettledTask = (record: TaskRecord): Promise<void> => {
       if (!options.onTaskSettled) return Promise.resolve();
       const snapshot: RunRecord = {
         ...next,
-        tasks: next.tasks.map(item => ({ ...item })),
+        tasks: next.tasks.map((item) => ({ ...item })),
         events: [...next.events],
         updatedAt: timestamp(),
       };
       settlementQueue = settlementQueue.then(() => options.onTaskSettled!(snapshot, record.task.id));
       return settlementQueue;
     };
-    const batchResults = await Promise.all(batch.map(async record => {
-      const dependencies = (record.task.dependsOn ?? []).map(id => records.get(id)!);
-      let outcome: { record: TaskRecord; result: AgentResponse } | { record: TaskRecord; error: string };
-      try {
-        const taskSpecificContext = await options.projectContextForTask?.(record.task);
-        const projectContext = [options.projectContext, taskSpecificContext].filter(Boolean).join("\n\n");
-        const result = await provider.complete({
-          task: record.task,
-          completedDependencies: dependencies.map(dependency => ({
-            id: dependency.task.id,
-            fromAgent: dependency.task.agent,
-            taskTitle: dependency.task.title,
-            result: dependency.result?.content ?? "",
-          })),
-          ...(projectContext ? { projectContext } : {}),
-        });
-        if (!result || typeof result.content !== "string" || !result.content.trim() ||
-            typeof result.provider !== "string" || !result.provider.trim() ||
-            (result.model !== undefined && typeof result.model !== "string")) {
-          throw new Error("Provider returned an invalid or empty agent proposal.");
+    const batchResults = await Promise.all(
+      batch.map(async (record) => {
+        const dependencies = (record.task.dependsOn ?? []).map((id) => records.get(id)!);
+        let outcome: { record: TaskRecord; result: AgentResponse } | { record: TaskRecord; error: string };
+        try {
+          const taskSpecificContext = await options.projectContextForTask?.(record.task);
+          const projectContext = [options.projectContext, taskSpecificContext].filter(Boolean).join("\n\n");
+          const result = await provider.complete({
+            task: record.task,
+            completedDependencies: dependencies.map((dependency) => ({
+              id: dependency.task.id,
+              fromAgent: dependency.task.agent,
+              taskTitle: dependency.task.title,
+              result: dependency.result?.content ?? "",
+            })),
+            ...(projectContext ? { projectContext } : {}),
+          });
+          if (
+            !result ||
+            typeof result.content !== "string" ||
+            !result.content.trim() ||
+            typeof result.provider !== "string" ||
+            !result.provider.trim() ||
+            (result.model !== undefined && typeof result.model !== "string")
+          ) {
+            throw new Error("Provider returned an invalid or empty agent proposal.");
+          }
+          outcome = { record, result };
+        } catch (error) {
+          outcome = { record, error: error instanceof Error ? error.message : String(error) };
         }
-        outcome = { record, result };
-      } catch (error) {
-        outcome = { record, error: error instanceof Error ? error.message : String(error) };
-      }
-      if ("result" in outcome) {
-        record.result = outcome.result;
-        record.status = "completed";
-        appendEvent(record.task.id, "completed", "Provider returned a proposal.");
-      } else {
-        record.status = "failed";
-        record.error = outcome.error;
-        appendEvent(record.task.id, "failed", outcome.error);
-      }
-      await persistSettledTask(record);
-      return outcome;
-    }));
-    const budgetExceeded = batchResults.some(outcome => "error" in outcome && outcome.error.startsWith("FORGE budget exceeded:"));
+        if ("result" in outcome) {
+          record.result = outcome.result;
+          record.status = "completed";
+          appendEvent(record.task.id, "completed", "Provider returned a proposal.");
+        } else {
+          record.status = "failed";
+          record.error = outcome.error;
+          appendEvent(record.task.id, "failed", outcome.error);
+        }
+        await persistSettledTask(record);
+        return outcome;
+      })
+    );
+    const budgetExceeded = batchResults.some(
+      (outcome) => "error" in outcome && outcome.error.startsWith("FORGE budget exceeded:")
+    );
     if (budgetExceeded) {
       for (const record of next.tasks) {
         if (record.status === "pending" || record.status === "awaiting_approval") {
@@ -280,26 +304,39 @@ export async function advanceRun(
       }
       next.status = "failed";
       next.updatedAt = timestamp();
-      appendEvent("*", "budget_exceeded", "A configured token budget was exceeded; no additional tasks will be started.");
+      appendEvent(
+        "*",
+        "budget_exceeded",
+        "A configured token budget was exceeded; no additional tasks will be started."
+      );
       await options.onUpdate?.(next);
       break;
     }
     if (await options.shouldCancel?.()) {
-      next.status = "cancelled"; next.updatedAt = timestamp();
-      appendEvent("*", "blocked", "Cancellation requested; the active batch has finished and no further tasks will be started.");
+      next.status = "cancelled";
+      next.updatedAt = timestamp();
+      appendEvent(
+        "*",
+        "blocked",
+        "Cancellation requested; the active batch has finished and no further tasks will be started."
+      );
     } else {
-      next.status = "running"; next.updatedAt = timestamp();
+      next.status = "running";
+      next.updatedAt = timestamp();
     }
     await options.onUpdate?.(next);
     if (next.status === "cancelled") break;
   }
 
-  if (next.status === "cancelled") { await options.onUpdate?.(next); return next; }
-  const statuses = next.tasks.map(record => record.status);
-  if (statuses.every(status => status === "completed")) next.status = "completed";
-  else if (statuses.some(status => status === "failed" || status === "blocked")) next.status = "failed";
-  else if (statuses.some(status => status === "awaiting_approval")) next.status = "awaiting_approval";
-  else if (statuses.some(status => status === "running")) next.status = "running";
+  if (next.status === "cancelled") {
+    await options.onUpdate?.(next);
+    return next;
+  }
+  const statuses = next.tasks.map((record) => record.status);
+  if (statuses.every((status) => status === "completed")) next.status = "completed";
+  else if (statuses.some((status) => status === "failed" || status === "blocked")) next.status = "failed";
+  else if (statuses.some((status) => status === "awaiting_approval")) next.status = "awaiting_approval";
+  else if (statuses.some((status) => status === "running")) next.status = "running";
   else next.status = "pending";
   next.updatedAt = timestamp();
   await options.onUpdate?.(next);
@@ -319,7 +356,7 @@ export class DemoAgentProvider implements AgentProvider {
         `Proposal from ${request.task.agent}: ${request.task.title}`,
         request.task.prompt,
         request.completedDependencies.length
-          ? `Completed context: ${request.completedDependencies.map(item => item.id).join(", ")}`
+          ? `Completed context: ${request.completedDependencies.map((item) => item.id).join(", ")}`
           : "No completed task dependencies.",
         "This is a demonstration proposal, not an executed code change.",
       ].join("\n\n"),

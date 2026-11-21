@@ -28,12 +28,14 @@ export function adrDirectory(projectPath: string, customSubdir = "docs/adr"): st
 }
 
 export function slugifyTitle(title: string): string {
-  return title
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-    .slice(0, 50) || "decision";
+  return (
+    title
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "")
+      .slice(0, 50) || "decision"
+  );
 }
 
 export async function initAdrDirectory(
@@ -79,10 +81,7 @@ Chosen option: "In-repo Architecture Decision Records (ADRs)", because it keeps 
   }
 }
 
-export async function listAdrs(
-  projectPath: string,
-  customSubdir = "docs/adr"
-): Promise<AdrRecord[]> {
+export async function listAdrs(projectPath: string, customSubdir = "docs/adr"): Promise<AdrRecord[]> {
   const dir = adrDirectory(projectPath, customSubdir);
   const records: AdrRecord[] = [];
   try {
@@ -103,9 +102,9 @@ export async function listAdrs(
       // Extract status
       const statusMatch = text.match(/\*\s*Status:\s*([^\r\n]+)/i);
       const rawStatus = statusMatch ? statusMatch[1]!.trim() : "Proposed";
-      const status: AdrStatus = (["Accepted", "Proposed", "Superseded", "Deprecated", "Rejected"].includes(rawStatus)
-        ? rawStatus
-        : "Proposed") as AdrStatus;
+      const status: AdrStatus = (
+        ["Accepted", "Proposed", "Superseded", "Deprecated", "Rejected"].includes(rawStatus) ? rawStatus : "Proposed"
+      ) as AdrStatus;
 
       // Extract date
       const dateMatch = text.match(/\*\s*Date:\s*([^\r\n]+)/i);
@@ -138,7 +137,7 @@ export async function createAdr(
   await mkdir(dir, { recursive: true });
 
   const existing = await listAdrs(projectPath, customSubdir);
-  const nextNum = existing.length > 0 ? Math.max(...existing.map(r => r.number)) + 1 : 1;
+  const nextNum = existing.length > 0 ? Math.max(...existing.map((r) => r.number)) + 1 : 1;
   const numStr = String(nextNum).padStart(4, "0");
   const slug = slugifyTitle(title);
   const filename = `${numStr}-${slug}.md`;
@@ -163,8 +162,8 @@ ${context.trim()}
 ${decision.trim()}
 
 ### Positive Consequences
-${positive.map(p => `* ${p}`).join("\n")}
-${negative.length ? `\n### Negative Consequences\n${negative.map(n => `* ${n}`).join("\n")}` : ""}
+${positive.map((p) => `* ${p}`).join("\n")}
+${negative.length ? `\n### Negative Consequences\n${negative.map((n) => `* ${n}`).join("\n")}` : ""}
 `;
 
   await writeFile(filePath, content, "utf8");
@@ -186,12 +185,10 @@ export async function syncMemoryToAdrs(
 ): Promise<{ syncedCount: number; createdAdrs: AdrRecord[] }> {
   await initAdrDirectory(projectPath, customSubdir);
   const existingAdrs = await listAdrs(projectPath, customSubdir);
-  const existingTitles = new Set(existingAdrs.map(a => a.title.toLowerCase().trim()));
+  const existingTitles = new Set(existingAdrs.map((a) => a.title.toLowerCase().trim()));
 
   const memoryEntries = await listProjectMemory(projectPath);
-  const decisionEntries = memoryEntries.filter(
-    e => e.kind === "decision" || e.kind === "architecture"
-  );
+  const decisionEntries = memoryEntries.filter((e) => e.kind === "decision" || e.kind === "architecture");
 
   const createdAdrs: AdrRecord[] = [];
 
@@ -208,7 +205,7 @@ export async function syncMemoryToAdrs(
         status: "Accepted",
         context: `Recorded from ANVIL project memory (${entry.id}). Tags: ${(entry.tags || []).join(", ") || "none"}.`,
         decision: entry.content,
-        positiveConsequences: ["Co-located in version control for automated agent adherence."]
+        positiveConsequences: ["Co-located in version control for automated agent adherence."],
       },
       customSubdir
     );

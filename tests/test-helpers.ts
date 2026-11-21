@@ -9,7 +9,13 @@ export async function trySymlink(target: string, path: string, type?: "file" | "
     await symlink(target, path, type);
     return true;
   } catch (error: unknown) {
-    if (error && typeof error === "object" && "code" in error && error.code === "EPERM" && process.platform === "win32") {
+    if (
+      error &&
+      typeof error === "object" &&
+      "code" in error &&
+      error.code === "EPERM" &&
+      process.platform === "win32"
+    ) {
       return false;
     }
     throw error;
@@ -24,7 +30,12 @@ export async function safeRm(targetPath: string): Promise<void> {
   try {
     await rm(targetPath, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
   } catch (error: unknown) {
-    if (error && typeof error === "object" && "code" in error && (error.code === "EBUSY" || error.code === "ENOTEMPTY")) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "code" in error &&
+      (error.code === "EBUSY" || error.code === "ENOTEMPTY")
+    ) {
       return;
     }
     throw error;

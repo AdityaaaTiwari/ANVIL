@@ -1,0 +1,42 @@
+import { describe, expect, it } from "vitest";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
+
+describe("README and package version/tool synchronization", () => {
+  it("synchronizes README install tags with package.json version", async () => {
+    const pkgRaw = await readFile(path.resolve("package.json"), "utf8");
+    const pkg = JSON.parse(pkgRaw);
+    const expectedTag = `v${pkg.version}`;
+
+    const readme = await readFile(path.resolve("README.md"), "utf8");
+
+    // Must not contain outdated #v1.0.7 install tags
+    expect(readme).not.toContain("ANVIL.git#v1.0.7");
+    expect(readme).not.toContain("anvil-workbench/ANVIL@v1.0.7");
+
+    // Must contain current version tag in install guides
+    expect(readme).toContain(`ANVIL.git#${expectedTag}`);
+  });
+
+  it("ensures MCP tools documented in README match lowercase anvil_ naming convention", async () => {
+    const readme = await readFile(path.resolve("README.md"), "utf8");
+
+    // Must not contain uppercase ANVIL_ tool names
+    expect(readme).not.toContain("`ANVIL_inspect_project`");
+    expect(readme).not.toContain("`ANVIL_map_architecture`");
+
+    // Must contain canonical lowercase anvil_ tool names
+    expect(readme).toContain("`anvil_inspect_project`");
+    expect(readme).toContain("`anvil_map_architecture`");
+    expect(readme).toContain("`anvil_quality_audit`");
+    expect(readme).toContain("`anvil_security_audit`");
+  });
+
+  it("avoids legally sensitive clean-room claims while maintaining attribution", async () => {
+    const readme = await readFile(path.resolve("README.md"), "utf8");
+
+    expect(readme).not.toContain("clean-room");
+    expect(readme).toContain("independent, original implementation");
+    expect(readme).toContain("MIT license");
+  });
+});

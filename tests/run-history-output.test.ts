@@ -27,21 +27,23 @@ describe("run history JSON contract", () => {
     const output = JSON.parse(formatRunHistoryJson([run]));
     expect(output).toEqual({
       schemaVersion: 1,
-      runs: [{
-        id: run.id,
-        goal: run.goal,
-        status: run.status,
-        createdAt: run.createdAt,
-        updatedAt: run.updatedAt,
-        taskCount: 6,
-        pendingTaskCount: 1,
-        awaitingApprovalTaskCount: 1,
-        runningTaskCount: 1,
-        completedTaskCount: 1,
-        failedTaskCount: 1,
-        blockedTaskCount: 1,
-        eventCount: 1,
-      }],
+      runs: [
+        {
+          id: run.id,
+          goal: run.goal,
+          status: run.status,
+          createdAt: run.createdAt,
+          updatedAt: run.updatedAt,
+          taskCount: 6,
+          pendingTaskCount: 1,
+          awaitingApprovalTaskCount: 1,
+          runningTaskCount: 1,
+          completedTaskCount: 1,
+          failedTaskCount: 1,
+          blockedTaskCount: 1,
+          eventCount: 1,
+        },
+      ],
     });
     expect(formatRunHistoryJson([run])).not.toContain("Secret prompt");
     expect(formatRunHistoryJson([run])).not.toContain("estimatedTokensUsed");

@@ -4,7 +4,10 @@ import os from "node:os";
 import path from "node:path";
 import { analyzeEngineeringRisk } from "../src/core/engineering-risk.js";
 let root = "";
-afterEach(async () => { if (root) await rm(root, { recursive: true, force: true }); root = ""; });
+afterEach(async () => {
+  if (root) await rm(root, { recursive: true, force: true });
+  root = "";
+});
 describe("engineering risk intelligence", () => {
   it("ranks shared modules and exposes transparent structural signals", async () => {
     root = await mkdtemp(path.join(os.tmpdir(), "forge-risk-"));
@@ -21,8 +24,8 @@ describe("engineering risk intelligence", () => {
     expect(report.summary.scannedFiles).toBe(5);
     expect(report.hotspots[0]?.file).toBe("src/shared.ts");
     expect(report.hotspots[0]?.fanIn).toBe(4); // Three source consumers plus the test import.
-    expect(report.hotspots.find(item => item.file === "src/shared.ts")?.hasMatchingTest).toBe(true);
+    expect(report.hotspots.find((item) => item.file === "src/shared.ts")?.hasMatchingTest).toBe(true);
     expect(report.methodology).toContain("fan-in 30%");
-    expect(report.warnings.some(item => item.includes("do not measure defect probability"))).toBe(true);
+    expect(report.warnings.some((item) => item.includes("do not measure defect probability"))).toBe(true);
   });
 });

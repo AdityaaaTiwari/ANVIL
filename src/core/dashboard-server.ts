@@ -1,6 +1,10 @@
 import { createServer, type Server, type ServerResponse } from "node:http";
 import { captureAgentConfigVersion, listAgentConfigVersions } from "./agent-config-versioning.js";
-import { decideAgentConfigRelease, listAgentConfigReleases, prepareAgentConfigRelease } from "./agent-config-release.js";
+import {
+  decideAgentConfigRelease,
+  listAgentConfigReleases,
+  prepareAgentConfigRelease,
+} from "./agent-config-release.js";
 import { mkdir, readFile, readdir, lstat, writeFile, realpath } from "node:fs/promises";
 import path from "node:path";
 import { inspectProject } from "./project-inspector.js";
@@ -45,13 +49,20 @@ let heartbeatInterval: ReturnType<typeof setInterval> | null = null;
 export function broadcastEvent(type: string, data: unknown): void {
   const payload = `event: ${type}\ndata: ${JSON.stringify(data)}\n\n`;
   for (const client of sseClients) {
-    try { client.write(payload); } catch { sseClients.delete(client); }
+    try {
+      client.write(payload);
+    } catch {
+      sseClients.delete(client);
+    }
   }
 }
 
 function safeProviderOrigin(value: string): string {
-  try { return new URL(value).origin; }
-  catch { return "configured endpoint (invalid URL)"; }
+  try {
+    return new URL(value).origin;
+  } catch {
+    return "configured endpoint (invalid URL)";
+  }
 }
 
 const PAGE = String.raw`<!doctype html>
@@ -2032,7 +2043,10 @@ export async function startDashboard(options: DashboardOptions): Promise<Dashboa
     const requestUrl = new URL(request.url ?? "/", `http://${host}:${port}`);
     response.setHeader("X-Content-Type-Options", "nosniff");
     response.setHeader("Referrer-Policy", "no-referrer");
-    response.setHeader("Content-Security-Policy", "default-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:");
+    response.setHeader(
+      "Content-Security-Policy",
+      "default-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:"
+    );
     response.setHeader("Cache-Control", "no-store");
 
     try {
@@ -2040,61 +2054,138 @@ export async function startDashboard(options: DashboardOptions): Promise<Dashboa
       // DNS-rebinding page cannot reach local APIs with a matching attacker Origin.
       const expectedHost = `${host}:${request.socket.localPort}`;
       if (request.headers.host !== expectedHost) {
-        response.writeHead(421, { "content-type": "application/json" }).end(JSON.stringify({ error: "Unexpected Host header." }));
+        response
+          .writeHead(421, { "content-type": "application/json" })
+          .end(JSON.stringify({ error: "Unexpected Host header." }));
         return;
       }
       if (request.method !== "GET" && request.method !== "POST") {
-        response.writeHead(405, { "content-type": "application/json" }).end(JSON.stringify({ error: "Method not allowed." }));
+        response
+          .writeHead(405, { "content-type": "application/json" })
+          .end(JSON.stringify({ error: "Method not allowed." }));
         return;
       }
-      if (request.method === "POST" && (requestUrl.pathname === "/api/memory" || requestUrl.pathname === "/api/memory/delete" || requestUrl.pathname === "/api/adrs" || requestUrl.pathname === "/api/adrs/sync" || requestUrl.pathname === "/api/security/fix" || requestUrl.pathname === "/api/workflows" || requestUrl.pathname === "/api/clean/run" || requestUrl.pathname === "/api/clean/undo" || requestUrl.pathname === "/api/config-files" || requestUrl.pathname === "/api/config-snapshots" || /^\/api\/providers\/(?:openai|anthropic|google|ollama)\/diagnose$/.test(requestUrl.pathname) || requestUrl.pathname === "/api/config-releases" || /^\/api\/config-releases\/rel-[a-f0-9]{12}\/(?:approve|reject)$/.test(requestUrl.pathname) || requestUrl.pathname.endsWith("/run") && requestUrl.pathname.startsWith("/api/workflows/") || requestUrl.pathname.endsWith("/execute") && requestUrl.pathname.startsWith("/api/workflows/") || /^\/api\/runs\/[^/]+\/(?:replay|cancel)$/.test(requestUrl.pathname) || /^\/api\/runs\/[^/]+\/tasks\/[^/]+\/retry$/.test(requestUrl.pathname))) {
+      if (
+        request.method === "POST" &&
+        (requestUrl.pathname === "/api/memory" ||
+          requestUrl.pathname === "/api/memory/delete" ||
+          requestUrl.pathname === "/api/adrs" ||
+          requestUrl.pathname === "/api/adrs/sync" ||
+          requestUrl.pathname === "/api/security/fix" ||
+          requestUrl.pathname === "/api/workflows" ||
+          requestUrl.pathname === "/api/clean/run" ||
+          requestUrl.pathname === "/api/clean/undo" ||
+          requestUrl.pathname === "/api/config-files" ||
+          requestUrl.pathname === "/api/config-snapshots" ||
+          /^\/api\/providers\/(?:openai|anthropic|google|ollama)\/diagnose$/.test(requestUrl.pathname) ||
+          requestUrl.pathname === "/api/config-releases" ||
+          /^\/api\/config-releases\/rel-[a-f0-9]{12}\/(?:approve|reject)$/.test(requestUrl.pathname) ||
+          (requestUrl.pathname.endsWith("/run") && requestUrl.pathname.startsWith("/api/workflows/")) ||
+          (requestUrl.pathname.endsWith("/execute") && requestUrl.pathname.startsWith("/api/workflows/")) ||
+          /^\/api\/runs\/[^/]+\/(?:replay|cancel)$/.test(requestUrl.pathname) ||
+          /^\/api\/runs\/[^/]+\/tasks\/[^/]+\/retry$/.test(requestUrl.pathname))
+      ) {
         const origin = request.headers.origin;
         if (origin && new URL(origin).host !== request.headers.host) {
-          response.writeHead(403, { "content-type": "application/json" }).end(JSON.stringify({ error: "Cross-origin requests are not allowed." }));
+          response
+            .writeHead(403, { "content-type": "application/json" })
+            .end(JSON.stringify({ error: "Cross-origin requests are not allowed." }));
           return;
         }
         if (!request.headers["content-type"]?.includes("application/json")) {
-          response.writeHead(415, { "content-type": "application/json" }).end(JSON.stringify({ error: "Expected application/json." }));
+          response
+            .writeHead(415, { "content-type": "application/json" })
+            .end(JSON.stringify({ error: "Expected application/json." }));
           return;
         }
-        const chunks: Buffer[] = []; let size = 0;
-        for await (const chunk of request) { size += chunk.length; if (size > (requestUrl.pathname === "/api/config-files" ? 140000 : 16384)) { response.writeHead(413, { "content-type": "application/json" }).end(JSON.stringify({ error: "Request body is too large." })); return; } chunks.push(Buffer.from(chunk)); }
+        const chunks: Buffer[] = [];
+        let size = 0;
+        for await (const chunk of request) {
+          size += chunk.length;
+          if (size > (requestUrl.pathname === "/api/config-files" ? 140000 : 16384)) {
+            response
+              .writeHead(413, { "content-type": "application/json" })
+              .end(JSON.stringify({ error: "Request body is too large." }));
+            return;
+          }
+          chunks.push(Buffer.from(chunk));
+        }
         const body = JSON.parse(Buffer.concat(chunks).toString("utf8")) as unknown;
-        const providerDiagnosticRoute = requestUrl.pathname.match(/^\/api\/providers\/(openai|anthropic|google|ollama)\/diagnose$/);
+        const providerDiagnosticRoute = requestUrl.pathname.match(
+          /^\/api\/providers\/(openai|anthropic|google|ollama)\/diagnose$/
+        );
         if (providerDiagnosticRoute) {
           const diagnostic = await diagnoseProvider(providerDiagnosticRoute[1] as DiagnosableProvider);
-          response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(JSON.stringify(diagnostic));
+          response
+            .writeHead(200, { "content-type": "application/json; charset=utf-8" })
+            .end(JSON.stringify(diagnostic));
           return;
         }
         if (requestUrl.pathname === "/api/config-releases") {
           const input = body as { candidateVersionId?: unknown; baselineVersionId?: unknown; matrixId?: unknown };
-          if (typeof input?.candidateVersionId !== "string" || typeof input.baselineVersionId !== "string" || typeof input.matrixId !== "string" || !input.matrixId.trim()) throw new Error("Candidate, baseline and benchmark matrix IDs are required.");
+          if (
+            typeof input?.candidateVersionId !== "string" ||
+            typeof input.baselineVersionId !== "string" ||
+            typeof input.matrixId !== "string" ||
+            !input.matrixId.trim()
+          )
+            throw new Error("Candidate, baseline and benchmark matrix IDs are required.");
           const regression = await loadBenchmarkRegression(projectPath, input.matrixId);
-          const release = await prepareAgentConfigRelease(projectPath, { candidateVersionId: input.candidateVersionId, baselineVersionId: input.baselineVersionId, regression });
+          const release = await prepareAgentConfigRelease(projectPath, {
+            candidateVersionId: input.candidateVersionId,
+            baselineVersionId: input.baselineVersionId,
+            regression,
+          });
           response.writeHead(201, { "content-type": "application/json; charset=utf-8" }).end(JSON.stringify(release));
           return;
         }
-        const releaseDecision = requestUrl.pathname.match(/^\/api\/config-releases\/(rel-[a-f0-9]{12})\/(approve|reject)$/);
+        const releaseDecision = requestUrl.pathname.match(
+          /^\/api\/config-releases\/(rel-[a-f0-9]{12})\/(approve|reject)$/
+        );
         if (releaseDecision) {
           const input = body as { reviewer?: unknown };
-          if (typeof input?.reviewer !== "string" || !input.reviewer.trim() || input.reviewer.length > 80) throw new Error("Reviewer label must contain 1–80 characters.");
-          const release = await decideAgentConfigRelease(projectPath, releaseDecision[1]!, input.reviewer.trim(), releaseDecision[2] as "approve" | "reject");
+          if (typeof input?.reviewer !== "string" || !input.reviewer.trim() || input.reviewer.length > 80)
+            throw new Error("Reviewer label must contain 1–80 characters.");
+          const release = await decideAgentConfigRelease(
+            projectPath,
+            releaseDecision[1]!,
+            input.reviewer.trim(),
+            releaseDecision[2] as "approve" | "reject"
+          );
           response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(JSON.stringify(release));
           return;
         }
-      if (requestUrl.pathname === "/api/config-snapshots") {
+        if (requestUrl.pathname === "/api/config-snapshots") {
           const input = body as { note?: unknown };
-          if (input?.note !== undefined && typeof input.note !== "string") throw new Error("Snapshot note must be text.");
-          const version = await captureAgentConfigVersion(projectPath, { note: typeof input.note === "string" ? input.note : "" });
-          response.writeHead(201, { "content-type": "application/json; charset=utf-8" }).end(JSON.stringify({ id: version.id, status: version.status, files: version.files.map(file => ({ path: file.path, sha256: file.sha256 })), createdAt: version.createdAt }));
+          if (input?.note !== undefined && typeof input.note !== "string")
+            throw new Error("Snapshot note must be text.");
+          const version = await captureAgentConfigVersion(projectPath, {
+            note: typeof input.note === "string" ? input.note : "",
+          });
+          response.writeHead(201, { "content-type": "application/json; charset=utf-8" }).end(
+            JSON.stringify({
+              id: version.id,
+              status: version.status,
+              files: version.files.map((file) => ({ path: file.path, sha256: file.sha256 })),
+              createdAt: version.createdAt,
+            })
+          );
           return;
         }
         if (requestUrl.pathname === "/api/config-files") {
-          if (!body || typeof body !== "object" || Array.isArray(body)) throw new Error("Invalid configuration payload.");
+          if (!body || typeof body !== "object" || Array.isArray(body))
+            throw new Error("Invalid configuration payload.");
           const input = body as { category?: unknown; id?: unknown; content?: unknown };
           if (input.category !== "agents" && input.category !== "skills") throw new Error("Choose agents or skills.");
-          if (typeof input.id !== "string" || !/^[a-z0-9][a-z0-9-]{0,63}$/.test(input.id)) throw new Error("File ID must be a lowercase slug (letters, numbers and hyphens).");
-          if (typeof input.content !== "string" || !input.content.trim() || Buffer.byteLength(input.content, "utf8") > 128 * 1024 || input.content.includes("\\0")) throw new Error("Markdown content must be non-empty and at most 128 KiB.");
+          if (typeof input.id !== "string" || !/^[a-z0-9][a-z0-9-]{0,63}$/.test(input.id))
+            throw new Error("File ID must be a lowercase slug (letters, numbers and hyphens).");
+          if (
+            typeof input.content !== "string" ||
+            !input.content.trim() ||
+            Buffer.byteLength(input.content, "utf8") > 128 * 1024 ||
+            input.content.includes("\\0")
+          )
+            throw new Error("Markdown content must be non-empty and at most 128 KiB.");
           const root = path.resolve(projectPath);
           const forgeDirectory = path.join(root, ".forge");
           const directory = path.join(forgeDirectory, input.category);
@@ -2102,24 +2193,47 @@ export async function startDashboard(options: DashboardOptions): Promise<Dashboa
           const realRoot = await realpath(root);
           const realForge = await realpath(forgeDirectory);
           const realDirectory = await realpath(directory);
-          if (realForge !== path.join(realRoot, ".forge") || realDirectory !== path.join(realForge, input.category)) throw new Error("Configuration directories must not be symbolic links.");
+          if (realForge !== path.join(realRoot, ".forge") || realDirectory !== path.join(realForge, input.category))
+            throw new Error("Configuration directories must not be symbolic links.");
           const file = path.join(directory, input.id + ".md");
-          try { if ((await lstat(file)).isSymbolicLink()) throw new Error("Configuration file must not be a symbolic link."); }
-          catch (error) { if (!(error && typeof error === "object" && "code" in error && error.code === "ENOENT")) throw error; }
+          try {
+            if ((await lstat(file)).isSymbolicLink())
+              throw new Error("Configuration file must not be a symbolic link.");
+          } catch (error) {
+            if (!(error && typeof error === "object" && "code" in error && error.code === "ENOENT")) throw error;
+          }
           await writeFile(file, input.content, { encoding: "utf8", mode: 0o600 });
-          response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(JSON.stringify({ category: input.category, id: input.id, bytes: Buffer.byteLength(input.content, "utf8") }));
+          response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(
+            JSON.stringify({
+              category: input.category,
+              id: input.id,
+              bytes: Buffer.byteLength(input.content, "utf8"),
+            })
+          );
           return;
         }
         const cancelRoute = requestUrl.pathname.match(/^\/api\/runs\/([^/]+)\/cancel$/);
         if (cancelRoute) {
           const run = await loadRun(projectPath, decodeURIComponent(cancelRoute[1]!));
           if (["completed", "failed", "cancelled"].includes(run.status)) {
-            response.writeHead(409, { "content-type": "application/json" }).end(JSON.stringify({ error: "This run is already terminal." })); return;
+            response
+              .writeHead(409, { "content-type": "application/json" })
+              .end(JSON.stringify({ error: "This run is already terminal." }));
+            return;
           }
-          run.status = "cancelled"; run.updatedAt = new Date().toISOString();
-          run.events.push({ at: run.updatedAt, taskId: "*", type: "blocked", message: "Cancellation requested from the dashboard. Active provider calls may finish before the run stops." });
+          run.status = "cancelled";
+          run.updatedAt = new Date().toISOString();
+          run.events.push({
+            at: run.updatedAt,
+            taskId: "*",
+            type: "blocked",
+            message:
+              "Cancellation requested from the dashboard. Active provider calls may finish before the run stops.",
+          });
           await saveRun(projectPath, run);
-          response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(JSON.stringify({ id: run.id, status: run.status }));
+          response
+            .writeHead(200, { "content-type": "application/json; charset=utf-8" })
+            .end(JSON.stringify({ id: run.id, status: run.status }));
           return;
         }
         const retryRoute = requestUrl.pathname.match(/^\/api\/runs\/([^/]+)\/tasks\/([^/]+)\/retry$/);
@@ -2127,7 +2241,9 @@ export async function startDashboard(options: DashboardOptions): Promise<Dashboa
           const source = await loadRun(projectPath, decodeURIComponent(retryRoute[1]!));
           const retry = createTaskRetryRun(source, decodeURIComponent(retryRoute[2]!));
           await saveRun(projectPath, retry);
-          response.writeHead(201, { "content-type": "application/json; charset=utf-8" }).end(JSON.stringify({ id: retry.id, status: retry.status, sourceRunId: source.id }));
+          response
+            .writeHead(201, { "content-type": "application/json; charset=utf-8" })
+            .end(JSON.stringify({ id: retry.id, status: retry.status, sourceRunId: source.id }));
           return;
         }
         const replayRoute = requestUrl.pathname.match(/^\/api\/runs\/([^/]+)\/replay$/);
@@ -2135,7 +2251,9 @@ export async function startDashboard(options: DashboardOptions): Promise<Dashboa
           const source = await loadRun(projectPath, decodeURIComponent(replayRoute[1]!));
           const replay = createReplayRun(source);
           await saveRun(projectPath, replay);
-          response.writeHead(201, { "content-type": "application/json; charset=utf-8" }).end(JSON.stringify({ id: replay.id, status: replay.status, sourceRunId: source.id }));
+          response
+            .writeHead(201, { "content-type": "application/json; charset=utf-8" })
+            .end(JSON.stringify({ id: replay.id, status: replay.status, sourceRunId: source.id }));
           return;
         }
         if (requestUrl.pathname === "/api/clean/run") {
@@ -2161,7 +2279,9 @@ export async function startDashboard(options: DashboardOptions): Promise<Dashboa
           const record = (body && typeof body === "object" ? body : {}) as Record<string, unknown>;
           const id = String(record.id || "");
           const success = await removeProjectMemory(projectPath, id);
-          response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(JSON.stringify({ success }));
+          response
+            .writeHead(200, { "content-type": "application/json; charset=utf-8" })
+            .end(JSON.stringify({ success }));
           return;
         }
         if (requestUrl.pathname === "/api/adrs") {
@@ -2191,23 +2311,43 @@ export async function startDashboard(options: DashboardOptions): Promise<Dashboa
           const workflow = await loadWorkflow(projectPath, decodeURIComponent(workflowId));
           const run = createRunFromWorkflow(workflow);
           await saveRun(projectPath, run);
-          broadcastEvent("workflow_started", { runId: run.id, workflowName: workflow.name, taskCount: run.tasks.length });
+          broadcastEvent("workflow_started", {
+            runId: run.id,
+            workflowName: workflow.name,
+            taskCount: run.tasks.length,
+          });
           const provider = new DemoAgentProvider();
           const completed = await advanceRun(run, provider, new Set(), {
             maxConcurrency: 4,
             onUpdate: async (updatedRun) => {
               await saveRun(projectPath, updatedRun);
-              broadcastEvent("workflow_update", { runId: updatedRun.id, status: updatedRun.status, tasks: updatedRun.tasks });
+              broadcastEvent("workflow_update", {
+                runId: updatedRun.id,
+                status: updatedRun.status,
+                tasks: updatedRun.tasks,
+              });
             },
             onTaskSettled: async (updatedRun, settledTaskId) => {
               await saveRun(projectPath, updatedRun);
-              const taskRecord = updatedRun.tasks.find(t => t.task.id === settledTaskId);
-              broadcastEvent("workflow_task_settled", { runId: updatedRun.id, taskId: settledTaskId, status: taskRecord?.status, result: taskRecord?.result });
-            }
+              const taskRecord = updatedRun.tasks.find((t) => t.task.id === settledTaskId);
+              broadcastEvent("workflow_task_settled", {
+                runId: updatedRun.id,
+                taskId: settledTaskId,
+                status: taskRecord?.status,
+                result: taskRecord?.result,
+              });
+            },
           });
           await saveRun(projectPath, completed);
           broadcastEvent("workflow_completed", { runId: completed.id, status: completed.status });
-          response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(JSON.stringify({ id: completed.id, status: completed.status, taskCount: completed.tasks.length, tasks: completed.tasks }));
+          response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(
+            JSON.stringify({
+              id: completed.id,
+              status: completed.status,
+              taskCount: completed.tasks.length,
+              tasks: completed.tasks,
+            })
+          );
           return;
         }
         if (requestUrl.pathname === "/api/workflows") {
@@ -2219,22 +2359,30 @@ export async function startDashboard(options: DashboardOptions): Promise<Dashboa
         const workflow = await loadWorkflow(projectPath, decodeURIComponent(runId));
         const run = createRunFromWorkflow(workflow);
         await saveRun(projectPath, run);
-        response.writeHead(201, { "content-type": "application/json; charset=utf-8" }).end(JSON.stringify({ id: run.id, status: run.status, taskCount: run.tasks.length }));
+        response
+          .writeHead(201, { "content-type": "application/json; charset=utf-8" })
+          .end(JSON.stringify({ id: run.id, status: run.status, taskCount: run.tasks.length }));
         return;
       }
       if (request.method === "POST") {
         const approvalRoute = requestUrl.pathname.match(/^\/api\/runs\/([^/]+)\/tasks\/([^/]+)\/approval$/);
         if (!approvalRoute) {
-          response.writeHead(405, { "content-type": "application/json" }).end(JSON.stringify({ error: "Method not allowed." }));
+          response
+            .writeHead(405, { "content-type": "application/json" })
+            .end(JSON.stringify({ error: "Method not allowed." }));
           return;
         }
         const origin = request.headers.origin;
         if (origin && new URL(origin).host !== request.headers.host) {
-          response.writeHead(403, { "content-type": "application/json" }).end(JSON.stringify({ error: "Cross-origin requests are not allowed." }));
+          response
+            .writeHead(403, { "content-type": "application/json" })
+            .end(JSON.stringify({ error: "Cross-origin requests are not allowed." }));
           return;
         }
         if (!request.headers["content-type"]?.includes("application/json")) {
-          response.writeHead(415, { "content-type": "application/json" }).end(JSON.stringify({ error: "Expected application/json." }));
+          response
+            .writeHead(415, { "content-type": "application/json" })
+            .end(JSON.stringify({ error: "Expected application/json." }));
           return;
         }
         const chunks: Buffer[] = [];
@@ -2242,39 +2390,72 @@ export async function startDashboard(options: DashboardOptions): Promise<Dashboa
         for await (const chunk of request) {
           size += chunk.length;
           if (size > 8192) {
-            response.writeHead(413, { "content-type": "application/json" }).end(JSON.stringify({ error: "Request body is too large." }));
+            response
+              .writeHead(413, { "content-type": "application/json" })
+              .end(JSON.stringify({ error: "Request body is too large." }));
             return;
           }
           chunks.push(Buffer.from(chunk));
         }
-        const body = JSON.parse(Buffer.concat(chunks).toString("utf8")) as { taskId?: string; decision?: string; reviewer?: string; reason?: string };
-        if (!["approved", "rejected"].includes(body.decision ?? "") || typeof body.taskId !== "string" || typeof body.reviewer !== "string" || (body.reason !== undefined && typeof body.reason !== "string")) {
-          response.writeHead(400, { "content-type": "application/json" }).end(JSON.stringify({ error: "Invalid approval request." }));
+        const body = JSON.parse(Buffer.concat(chunks).toString("utf8")) as {
+          taskId?: string;
+          decision?: string;
+          reviewer?: string;
+          reason?: string;
+        };
+        if (
+          !["approved", "rejected"].includes(body.decision ?? "") ||
+          typeof body.taskId !== "string" ||
+          typeof body.reviewer !== "string" ||
+          (body.reason !== undefined && typeof body.reason !== "string")
+        ) {
+          response
+            .writeHead(400, { "content-type": "application/json" })
+            .end(JSON.stringify({ error: "Invalid approval request." }));
           return;
         }
         const runId = decodeURIComponent(approvalRoute[1]!);
         const taskId = decodeURIComponent(approvalRoute[2]!);
         if (body.taskId !== taskId) {
-          response.writeHead(400, { "content-type": "application/json" }).end(JSON.stringify({ error: "Task identifier mismatch." }));
+          response
+            .writeHead(400, { "content-type": "application/json" })
+            .end(JSON.stringify({ error: "Task identifier mismatch." }));
           return;
         }
-        const run = await decideTaskApproval(projectPath, runId, taskId, body.decision as "approved" | "rejected", body.reviewer, body.reason);
+        const run = await decideTaskApproval(
+          projectPath,
+          runId,
+          taskId,
+          body.decision as "approved" | "rejected",
+          body.reviewer,
+          body.reason
+        );
         broadcastEvent("run-updated", { runId: run.id, taskId, decision: body.decision, at: new Date().toISOString() });
-        response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(JSON.stringify({ id: run.id, status: run.status, task: run.tasks.find(item => item.task.id === taskId) }));
+        response
+          .writeHead(200, { "content-type": "application/json; charset=utf-8" })
+          .end(
+            JSON.stringify({ id: run.id, status: run.status, task: run.tasks.find((item) => item.task.id === taskId) })
+          );
         return;
       }
       if (requestUrl.pathname === "/api/events") {
         response.writeHead(200, {
           "Content-Type": "text/event-stream",
           "Cache-Control": "no-cache",
-          "Connection": "keep-alive",
+          Connection: "keep-alive",
           "X-Accel-Buffering": "no",
         });
         response.write("retry: 3000\n\n");
         sseClients.add(response);
         // Send initial connected event only to this client
-        try { response.write(`event: connected\ndata: ${JSON.stringify({ at: new Date().toISOString() })}\n\n`); } catch { sseClients.delete(response); }
-        request.on("close", () => { sseClients.delete(response); });
+        try {
+          response.write(`event: connected\ndata: ${JSON.stringify({ at: new Date().toISOString() })}\n\n`);
+        } catch {
+          sseClients.delete(response);
+        }
+        request.on("close", () => {
+          sseClients.delete(response);
+        });
         // Keep connection open — do not call response.end()
         return;
       }
@@ -2290,26 +2471,82 @@ export async function startDashboard(options: DashboardOptions): Promise<Dashboa
       if (requestUrl.pathname === "/api/providers") {
         const selected = (process.env.ANVIL_AI_PROVIDER ?? process.env.FORGE_AI_PROVIDER ?? "openai").toLowerCase();
         const rows = [
-          { id: "openai", configured: Boolean(process.env.ANVIL_API_KEY || process.env.FORGE_API_KEY || process.env.OPENAI_API_KEY), model: process.env.ANVIL_AI_MODEL || process.env.FORGE_AI_MODEL || process.env.ANVIL_MODEL || process.env.FORGE_MODEL || "gpt-4.1-mini", detail: "API credential presence only; connectivity is not tested." },
-          { id: "anthropic", configured: Boolean(process.env.ANTHROPIC_API_KEY), model: process.env.ANVIL_AI_MODEL || process.env.FORGE_AI_MODEL || "claude-sonnet-4-5", detail: "API credential presence only; connectivity is not tested." },
-          { id: "google", configured: Boolean(process.env.GOOGLE_API_KEY), model: process.env.ANVIL_AI_MODEL || process.env.FORGE_AI_MODEL || "gemini-2.5-flash", detail: "API credential presence only; connectivity is not tested." },
-          { id: "ollama", configured: true, model: process.env.ANVIL_AI_MODEL || process.env.FORGE_AI_MODEL || "llama3.2", detail: "Endpoint origin: " + safeProviderOrigin(process.env.ANVIL_BASE_URL || process.env.FORGE_BASE_URL || process.env.OLLAMA_HOST || "http://localhost:11434") + "; connectivity is not tested." },
-          { id: "claude-code", configured: false, model: process.env.ANVIL_AI_MODEL || process.env.FORGE_AI_MODEL || "sonnet", detail: "Local CLI installation and account authentication are not checked by the dashboard." }
-        ].map(item => ({ ...item, selected: selected === item.id, status: item.id === "claude-code" ? "not-checked" : item.configured ? "configured" : "needs-credentials" }));
+          {
+            id: "openai",
+            configured: Boolean(process.env.ANVIL_API_KEY || process.env.FORGE_API_KEY || process.env.OPENAI_API_KEY),
+            model:
+              process.env.ANVIL_AI_MODEL ||
+              process.env.FORGE_AI_MODEL ||
+              process.env.ANVIL_MODEL ||
+              process.env.FORGE_MODEL ||
+              "gpt-4.1-mini",
+            detail: "API credential presence only; connectivity is not tested.",
+          },
+          {
+            id: "anthropic",
+            configured: Boolean(process.env.ANTHROPIC_API_KEY),
+            model: process.env.ANVIL_AI_MODEL || process.env.FORGE_AI_MODEL || "claude-sonnet-4-5",
+            detail: "API credential presence only; connectivity is not tested.",
+          },
+          {
+            id: "google",
+            configured: Boolean(process.env.GOOGLE_API_KEY),
+            model: process.env.ANVIL_AI_MODEL || process.env.FORGE_AI_MODEL || "gemini-2.5-flash",
+            detail: "API credential presence only; connectivity is not tested.",
+          },
+          {
+            id: "ollama",
+            configured: true,
+            model: process.env.ANVIL_AI_MODEL || process.env.FORGE_AI_MODEL || "llama3.2",
+            detail:
+              "Endpoint origin: " +
+              safeProviderOrigin(
+                process.env.ANVIL_BASE_URL ||
+                  process.env.FORGE_BASE_URL ||
+                  process.env.OLLAMA_HOST ||
+                  "http://localhost:11434"
+              ) +
+              "; connectivity is not tested.",
+          },
+          {
+            id: "claude-code",
+            configured: false,
+            model: process.env.ANVIL_AI_MODEL || process.env.FORGE_AI_MODEL || "sonnet",
+            detail: "Local CLI installation and account authentication are not checked by the dashboard.",
+          },
+        ].map((item) => ({
+          ...item,
+          selected: selected === item.id,
+          status: item.id === "claude-code" ? "not-checked" : item.configured ? "configured" : "needs-credentials",
+        }));
         response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(JSON.stringify(rows));
         return;
       }
       if (requestUrl.pathname === "/api/config-snapshots") {
         const versions = await listAgentConfigVersions(projectPath);
-        response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(JSON.stringify(versions.map(item => ({ id: item.id, createdAt: item.createdAt, createdBy: item.createdBy, note: item.note, status: item.status, approvedBy: item.approvedBy, files: item.files.map(file => ({ path: file.path, sha256: file.sha256 })) }))));
+        response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(
+          JSON.stringify(
+            versions.map((item) => ({
+              id: item.id,
+              createdAt: item.createdAt,
+              createdBy: item.createdBy,
+              note: item.note,
+              status: item.status,
+              approvedBy: item.approvedBy,
+              files: item.files.map((file) => ({ path: file.path, sha256: file.sha256 })),
+            }))
+          )
+        );
         return;
       }
       if (requestUrl.pathname === "/api/config-files") {
         const category = requestUrl.searchParams.get("category");
         const id = requestUrl.searchParams.get("id");
-        if (category !== null && category !== "agents" && category !== "skills") throw new Error("Choose agents or skills.");
+        if (category !== null && category !== "agents" && category !== "skills")
+          throw new Error("Choose agents or skills.");
         if (id !== null && !/^[a-z0-9][a-z0-9-]{0,63}$/.test(id)) throw new Error("Invalid configuration file ID.");
-        if (id !== null && category === null) throw new Error("A category is required when reading one configuration file.");
+        if (id !== null && category === null)
+          throw new Error("A category is required when reading one configuration file.");
         const root = path.resolve(projectPath);
         const forgeDirectory = path.join(root, ".forge");
         if (id !== null) {
@@ -2318,11 +2555,15 @@ export async function startDashboard(options: DashboardOptions): Promise<Dashboa
           const realRoot = await realpath(root);
           const realForge = await realpath(forgeDirectory);
           const realDirectory = await realpath(directory);
-          if (realForge !== path.join(realRoot, ".forge") || realDirectory !== path.join(realForge, category!)) throw new Error("Configuration directories must not be symbolic links.");
+          if (realForge !== path.join(realRoot, ".forge") || realDirectory !== path.join(realForge, category!))
+            throw new Error("Configuration directories must not be symbolic links.");
           const info = await lstat(file);
-          if (!info.isFile() || info.isSymbolicLink() || info.size > 128 * 1024) throw new Error("Configuration file is not a supported regular Markdown file.");
+          if (!info.isFile() || info.isSymbolicLink() || info.size > 128 * 1024)
+            throw new Error("Configuration file is not a supported regular Markdown file.");
           const content = await readFile(file, "utf8");
-          response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(JSON.stringify({ category, id, content }));
+          response
+            .writeHead(200, { "content-type": "application/json; charset=utf-8" })
+            .end(JSON.stringify({ category, id, content }));
           return;
         }
         const categories = category ? [category] : ["agents", "skills"];
@@ -2334,9 +2575,13 @@ export async function startDashboard(options: DashboardOptions): Promise<Dashboa
             const realRoot = await realpath(root);
             const realForge = await realpath(forgeDirectory);
             const realDirectory = await realpath(directory);
-            if (realForge !== path.join(realRoot, ".forge") || realDirectory !== path.join(realForge, kind)) throw new Error("Configuration directories must not be symbolic links.");
+            if (realForge !== path.join(realRoot, ".forge") || realDirectory !== path.join(realForge, kind))
+              throw new Error("Configuration directories must not be symbolic links.");
             entries = await readdir(directory, { withFileTypes: true });
-          } catch (error) { if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") continue; throw error; }
+          } catch (error) {
+            if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") continue;
+            throw error;
+          }
           for (const entry of entries) {
             const name = entry.name.replace(/\.md$/, "");
             if (!entry.isFile() || !entry.name.endsWith(".md") || !/^[a-z0-9][a-z0-9-]{0,63}$/.test(name)) continue;
@@ -2345,7 +2590,9 @@ export async function startDashboard(options: DashboardOptions): Promise<Dashboa
             items.push({ category: kind, id: name, bytes: info.size });
           }
         }
-        response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(JSON.stringify(items.sort((a,b)=>a.category.localeCompare(b.category)||a.id.localeCompare(b.id))));
+        response
+          .writeHead(200, { "content-type": "application/json; charset=utf-8" })
+          .end(JSON.stringify(items.sort((a, b) => a.category.localeCompare(b.category) || a.id.localeCompare(b.id))));
         return;
       }
       if (requestUrl.pathname === "/api/workflows") {
@@ -2356,30 +2603,37 @@ export async function startDashboard(options: DashboardOptions): Promise<Dashboa
       if (requestUrl.pathname === "/api/overview") {
         const report = await inspectProject(projectPath);
         const runs = await listRuns(projectPath);
-        response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(JSON.stringify({
-          summary: report.summary,
-          dependencies: report.dependencies,
-          packageManagers: report.packageManagers,
-          frameworks: report.frameworks,
-          scripts: report.scripts,
-          importantFiles: report.importantFiles,
-          warnings: report.warnings,
-          runCount: runs.length,
-        }));
+        response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(
+          JSON.stringify({
+            summary: report.summary,
+            dependencies: report.dependencies,
+            packageManagers: report.packageManagers,
+            frameworks: report.frameworks,
+            scripts: report.scripts,
+            importantFiles: report.importantFiles,
+            warnings: report.warnings,
+            runCount: runs.length,
+          })
+        );
         return;
       }
       if (requestUrl.pathname === "/api/config-files") {
         const category = requestUrl.searchParams.get("category");
         const id = requestUrl.searchParams.get("id");
-        if (category !== null && category !== "agents" && category !== "skills") throw new Error("Choose agents or skills.");
+        if (category !== null && category !== "agents" && category !== "skills")
+          throw new Error("Choose agents or skills.");
         if (id !== null && !/^[a-z0-9][a-z0-9-]{0,63}$/.test(id)) throw new Error("Invalid configuration file ID.");
-        if (id !== null && category === null) throw new Error("A category is required when reading one configuration file.");
+        if (id !== null && category === null)
+          throw new Error("A category is required when reading one configuration file.");
         if (id !== null) {
           const file = path.join(path.resolve(projectPath), ".forge", category!, id + ".md");
           const info = await lstat(file);
-          if (!info.isFile() || info.isSymbolicLink() || info.size > 128 * 1024) throw new Error("Configuration file is not a supported regular Markdown file.");
+          if (!info.isFile() || info.isSymbolicLink() || info.size > 128 * 1024)
+            throw new Error("Configuration file is not a supported regular Markdown file.");
           const content = await readFile(file, "utf8");
-          response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(JSON.stringify({ category, id, content }));
+          response
+            .writeHead(200, { "content-type": "application/json; charset=utf-8" })
+            .end(JSON.stringify({ category, id, content }));
           return;
         }
         const categories = category ? [category] : ["agents", "skills"];
@@ -2387,8 +2641,12 @@ export async function startDashboard(options: DashboardOptions): Promise<Dashboa
         for (const kind of categories) {
           const directory = path.join(path.resolve(projectPath), ".forge", kind);
           let entries;
-          try { entries = await readdir(directory, { withFileTypes: true }); }
-          catch (error) { if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") continue; throw error; }
+          try {
+            entries = await readdir(directory, { withFileTypes: true });
+          } catch (error) {
+            if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") continue;
+            throw error;
+          }
           for (const entry of entries) {
             const name = entry.name.replace(/\.md$/, "");
             if (!entry.isFile() || !entry.name.endsWith(".md") || !/^[a-z0-9][a-z0-9-]{0,63}$/.test(name)) continue;
@@ -2397,14 +2655,23 @@ export async function startDashboard(options: DashboardOptions): Promise<Dashboa
             items.push({ category: kind, id: name, bytes: info.size });
           }
         }
-        response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(JSON.stringify(items.sort((a,b)=>a.category.localeCompare(b.category)||a.id.localeCompare(b.id))));
+        response
+          .writeHead(200, { "content-type": "application/json; charset=utf-8" })
+          .end(JSON.stringify(items.sort((a, b) => a.category.localeCompare(b.category) || a.id.localeCompare(b.id))));
         return;
       }
       if (requestUrl.pathname === "/api/agents") {
         const agents = await loadAgentRegistry(projectPath);
-        response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(JSON.stringify(agents.map(agent => ({
-          id: agent.id, name: agent.name, description: agent.description, source: agent.source,
-        }))));
+        response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(
+          JSON.stringify(
+            agents.map((agent) => ({
+              id: agent.id,
+              name: agent.name,
+              description: agent.description,
+              source: agent.source,
+            }))
+          )
+        );
         return;
       }
       if (requestUrl.pathname === "/api/agent-security") {
@@ -2414,7 +2681,28 @@ export async function startDashboard(options: DashboardOptions): Promise<Dashboa
       }
       if (requestUrl.pathname === "/api/evaluations") {
         const reports = await listEvaluationReports(projectPath);
-        response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(JSON.stringify(reports.map(report => ({ suiteId: report.suiteId, suiteName: report.suiteName, runId: report.runId, evaluatedAt: report.evaluatedAt, score: report.score, passed: report.passed, summary: report.summary, cases: report.cases.map(item => ({ caseId: item.caseId, agent: item.agent, score: item.score, passed: item.passed, status: item.status })), judge: "judge" in report ? report.judge : null, judgedCases: "judgedCases" in report ? report.judgedCases : [] }))));
+        response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(
+          JSON.stringify(
+            reports.map((report) => ({
+              suiteId: report.suiteId,
+              suiteName: report.suiteName,
+              runId: report.runId,
+              evaluatedAt: report.evaluatedAt,
+              score: report.score,
+              passed: report.passed,
+              summary: report.summary,
+              cases: report.cases.map((item) => ({
+                caseId: item.caseId,
+                agent: item.agent,
+                score: item.score,
+                passed: item.passed,
+                status: item.status,
+              })),
+              judge: "judge" in report ? report.judge : null,
+              judgedCases: "judgedCases" in report ? report.judgedCases : [],
+            }))
+          )
+        );
         return;
       }
       if (requestUrl.pathname === "/api/benchmarks") {
@@ -2437,7 +2725,11 @@ export async function startDashboard(options: DashboardOptions): Promise<Dashboa
         const matrices = await listBenchmarkMatrices(projectPath);
         const suiteId = requestUrl.searchParams.get("suite") ?? undefined;
         const candidateId = requestUrl.searchParams.get("candidate") ?? undefined;
-        const report = buildExperimentHistory(matrices, { ...(suiteId ? { suiteId } : {}), ...(candidateId ? { candidateId } : {}), limit: 100 });
+        const report = buildExperimentHistory(matrices, {
+          ...(suiteId ? { suiteId } : {}),
+          ...(candidateId ? { candidateId } : {}),
+          limit: 100,
+        });
         response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(JSON.stringify(report));
         return;
       }
@@ -2450,8 +2742,17 @@ export async function startDashboard(options: DashboardOptions): Promise<Dashboa
       if (requestUrl.pathname === "/api/agent-performance") {
         const matrices = await listBenchmarkMatrices(projectPath);
         const latest = matrices.at(-1);
-        const leaderboard = (latest?.agentSummary ?? []).slice().sort((a, b) => b.averageScore - a.averageScore || b.passRate - a.passRate);
-        response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(JSON.stringify({ matrixId: latest?.matrixId ?? null, matrixName: latest?.matrixName ?? null, createdAt: latest?.createdAt ?? null, agents: leaderboard }));
+        const leaderboard = (latest?.agentSummary ?? [])
+          .slice()
+          .sort((a, b) => b.averageScore - a.averageScore || b.passRate - a.passRate);
+        response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(
+          JSON.stringify({
+            matrixId: latest?.matrixId ?? null,
+            matrixName: latest?.matrixName ?? null,
+            createdAt: latest?.createdAt ?? null,
+            agents: leaderboard,
+          })
+        );
         return;
       }
       if (requestUrl.pathname === "/api/agent-intelligence") {
@@ -2463,33 +2764,133 @@ export async function startDashboard(options: DashboardOptions): Promise<Dashboa
         const report = buildAgentEvaluationIntelligence(matrices, {
           ...(suiteId ? { suiteId } : {}),
           ...(candidateId ? { candidateId } : {}),
-          ...(limit !== undefined && Number.isSafeInteger(limit) ? { limit } : {})
+          ...(limit !== undefined && Number.isSafeInteger(limit) ? { limit } : {}),
         });
         response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(JSON.stringify(report));
         return;
       }
       if (requestUrl.pathname === "/api/observability") {
         const runs = await listRuns(projectPath);
-        const agents = new Map<string, { name: string; requests: number; successes: number; fallbacks: number; failures: number; inputTokensEstimate: number; outputTokensEstimate: number; durationMs: number; retries: number }>();
-        const providers = new Map<string, { name: string; requests: number; successes: number; fallbacks: number; failures: number; durationMs: number; retries: number }>();
+        const agents = new Map<
+          string,
+          {
+            name: string;
+            requests: number;
+            successes: number;
+            fallbacks: number;
+            failures: number;
+            inputTokensEstimate: number;
+            outputTokensEstimate: number;
+            durationMs: number;
+            retries: number;
+          }
+        >();
+        const providers = new Map<
+          string,
+          {
+            name: string;
+            requests: number;
+            successes: number;
+            fallbacks: number;
+            failures: number;
+            durationMs: number;
+            retries: number;
+          }
+        >();
         const recent: Array<{ runId: string; createdAt: string; entries: unknown[] }> = [];
         for (const run of runs.slice(0, 30)) {
           try {
             const trace = await loadExecutionTrace(projectPath, run.id);
             recent.push({ runId: run.id, createdAt: trace.createdAt, entries: trace.entries.slice(-20) });
             for (const entry of trace.entries) {
-              const agent = agents.get(entry.agent) ?? { name: entry.agent, requests: 0, successes: 0, fallbacks: 0, failures: 0, inputTokensEstimate: 0, outputTokensEstimate: 0, durationMs: 0, retries: 0 };
-              agent.requests += 1; agent.successes += entry.outcome === "success" ? 1 : 0; agent.fallbacks += entry.outcome === "fallback" ? 1 : 0; agent.failures += entry.outcome === "failed" ? 1 : 0;
-              agent.inputTokensEstimate += entry.inputTokensEstimate; agent.outputTokensEstimate += entry.outputTokensEstimate; agent.durationMs += entry.durationMs; agent.retries += entry.retries ?? 0; agents.set(entry.agent, agent);
-              const provider = providers.get(entry.provider) ?? { name: entry.provider, requests: 0, successes: 0, fallbacks: 0, failures: 0, durationMs: 0, retries: 0 };
-              provider.requests += 1; provider.successes += entry.outcome === "success" ? 1 : 0; provider.fallbacks += entry.outcome === "fallback" ? 1 : 0; provider.failures += entry.outcome === "failed" ? 1 : 0; provider.durationMs += entry.durationMs; provider.retries += entry.retries ?? 0; providers.set(entry.provider, provider);
+              const agent = agents.get(entry.agent) ?? {
+                name: entry.agent,
+                requests: 0,
+                successes: 0,
+                fallbacks: 0,
+                failures: 0,
+                inputTokensEstimate: 0,
+                outputTokensEstimate: 0,
+                durationMs: 0,
+                retries: 0,
+              };
+              agent.requests += 1;
+              agent.successes += entry.outcome === "success" ? 1 : 0;
+              agent.fallbacks += entry.outcome === "fallback" ? 1 : 0;
+              agent.failures += entry.outcome === "failed" ? 1 : 0;
+              agent.inputTokensEstimate += entry.inputTokensEstimate;
+              agent.outputTokensEstimate += entry.outputTokensEstimate;
+              agent.durationMs += entry.durationMs;
+              agent.retries += entry.retries ?? 0;
+              agents.set(entry.agent, agent);
+              const provider = providers.get(entry.provider) ?? {
+                name: entry.provider,
+                requests: 0,
+                successes: 0,
+                fallbacks: 0,
+                failures: 0,
+                durationMs: 0,
+                retries: 0,
+              };
+              provider.requests += 1;
+              provider.successes += entry.outcome === "success" ? 1 : 0;
+              provider.fallbacks += entry.outcome === "fallback" ? 1 : 0;
+              provider.failures += entry.outcome === "failed" ? 1 : 0;
+              provider.durationMs += entry.durationMs;
+              provider.retries += entry.retries ?? 0;
+              providers.set(entry.provider, provider);
             }
           } catch (error) {
             if (!(error && typeof error === "object" && "code" in error && error.code === "ENOENT")) throw error;
           }
         }
-        const parseBudgetMap = (raw: string | undefined): Record<string, number> => { if (!raw) return {}; try { const value: unknown = JSON.parse(raw); return value && typeof value === "object" && !Array.isArray(value) ? Object.fromEntries(Object.entries(value).filter((item): item is [string, number] => typeof item[1] === "number" && Number.isFinite(item[1]) && item[1] > 0)) : {}; } catch { return {}; } };
-        response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(JSON.stringify({ generatedAt: new Date().toISOString(), runsScanned: runs.slice(0, 30).length, totals: { requests: [...agents.values()].reduce((n, a) => n + a.requests, 0), inputTokensEstimate: [...agents.values()].reduce((n, a) => n + a.inputTokensEstimate, 0), outputTokensEstimate: [...agents.values()].reduce((n, a) => n + a.outputTokensEstimate, 0), durationMs: [...agents.values()].reduce((n, a) => n + a.durationMs, 0), failures: [...agents.values()].reduce((n, a) => n + a.failures, 0), fallbacks: [...agents.values()].reduce((n, a) => n + a.fallbacks, 0) }, agents: [...agents.values()].sort((a, b) => b.durationMs - a.durationMs), providers: [...providers.values()].sort((a, b) => b.requests - a.requests), budgets: { perAgentTokens: parseBudgetMap(process.env.ANVIL_MAX_ESTIMATED_TOKENS_PER_AGENT || process.env.FORGE_MAX_ESTIMATED_TOKENS_PER_AGENT), perAgentDurationMs: parseBudgetMap(process.env.ANVIL_MAX_TASK_DURATION_MS_BY_AGENT || process.env.FORGE_MAX_TASK_DURATION_MS_BY_AGENT), runTokens: Number(process.env.ANVIL_MAX_ESTIMATED_TOKENS_PER_RUN || process.env.FORGE_MAX_ESTIMATED_TOKENS_PER_RUN) || null, taskDurationMs: Number(process.env.ANVIL_MAX_TASK_DURATION_MS || process.env.FORGE_MAX_TASK_DURATION_MS) || null }, recent }));
+        const parseBudgetMap = (raw: string | undefined): Record<string, number> => {
+          if (!raw) return {};
+          try {
+            const value: unknown = JSON.parse(raw);
+            return value && typeof value === "object" && !Array.isArray(value)
+              ? Object.fromEntries(
+                  Object.entries(value).filter(
+                    (item): item is [string, number] =>
+                      typeof item[1] === "number" && Number.isFinite(item[1]) && item[1] > 0
+                  )
+                )
+              : {};
+          } catch {
+            return {};
+          }
+        };
+        response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(
+          JSON.stringify({
+            generatedAt: new Date().toISOString(),
+            runsScanned: runs.slice(0, 30).length,
+            totals: {
+              requests: [...agents.values()].reduce((n, a) => n + a.requests, 0),
+              inputTokensEstimate: [...agents.values()].reduce((n, a) => n + a.inputTokensEstimate, 0),
+              outputTokensEstimate: [...agents.values()].reduce((n, a) => n + a.outputTokensEstimate, 0),
+              durationMs: [...agents.values()].reduce((n, a) => n + a.durationMs, 0),
+              failures: [...agents.values()].reduce((n, a) => n + a.failures, 0),
+              fallbacks: [...agents.values()].reduce((n, a) => n + a.fallbacks, 0),
+            },
+            agents: [...agents.values()].sort((a, b) => b.durationMs - a.durationMs),
+            providers: [...providers.values()].sort((a, b) => b.requests - a.requests),
+            budgets: {
+              perAgentTokens: parseBudgetMap(
+                process.env.ANVIL_MAX_ESTIMATED_TOKENS_PER_AGENT || process.env.FORGE_MAX_ESTIMATED_TOKENS_PER_AGENT
+              ),
+              perAgentDurationMs: parseBudgetMap(
+                process.env.ANVIL_MAX_TASK_DURATION_MS_BY_AGENT || process.env.FORGE_MAX_TASK_DURATION_MS_BY_AGENT
+              ),
+              runTokens:
+                Number(
+                  process.env.ANVIL_MAX_ESTIMATED_TOKENS_PER_RUN || process.env.FORGE_MAX_ESTIMATED_TOKENS_PER_RUN
+                ) || null,
+              taskDurationMs:
+                Number(process.env.ANVIL_MAX_TASK_DURATION_MS || process.env.FORGE_MAX_TASK_DURATION_MS) || null,
+            },
+            recent,
+          })
+        );
         return;
       }
       const traceRoute = requestUrl.pathname.match(/^\/api\/runs\/([^/]+)\/trace$/);
@@ -2499,7 +2900,9 @@ export async function startDashboard(options: DashboardOptions): Promise<Dashboa
           response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(JSON.stringify(trace));
         } catch (error) {
           if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") {
-            response.writeHead(404, { "content-type": "application/json; charset=utf-8" }).end(JSON.stringify({ error: "No execution trace has been saved for this run." }));
+            response
+              .writeHead(404, { "content-type": "application/json; charset=utf-8" })
+              .end(JSON.stringify({ error: "No execution trace has been saved for this run." }));
             return;
           }
           throw error;
@@ -2509,26 +2912,59 @@ export async function startDashboard(options: DashboardOptions): Promise<Dashboa
       if (requestUrl.pathname.startsWith("/api/runs/")) {
         const runId = decodeURIComponent(requestUrl.pathname.slice("/api/runs/".length));
         const run = await loadRun(projectPath, runId);
-        response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(JSON.stringify({
-          id: run.id, goal: run.goal, status: run.status, createdAt: run.createdAt, updatedAt: run.updatedAt,
-          tasks: run.tasks.map(record => ({
-            id: record.task.id, title: record.task.title, agent: record.task.agent, status: record.status,
-            dependsOn: record.task.dependsOn ?? [],
-            result: record.result ? { provider: record.result.provider, model: record.result.model, content: record.result.content } : undefined,
-            error: record.error,
-            approval: record.approval,
-          })),
-          events: run.events.map(event => ({ at: event.at, taskId: event.taskId, type: event.type, message: event.message })),
-        }));
+        response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(
+          JSON.stringify({
+            id: run.id,
+            goal: run.goal,
+            status: run.status,
+            createdAt: run.createdAt,
+            updatedAt: run.updatedAt,
+            tasks: run.tasks.map((record) => ({
+              id: record.task.id,
+              title: record.task.title,
+              agent: record.task.agent,
+              status: record.status,
+              dependsOn: record.task.dependsOn ?? [],
+              result: record.result
+                ? { provider: record.result.provider, model: record.result.model, content: record.result.content }
+                : undefined,
+              error: record.error,
+              approval: record.approval,
+            })),
+            events: run.events.map((event) => ({
+              at: event.at,
+              taskId: event.taskId,
+              type: event.type,
+              message: event.message,
+            })),
+          })
+        );
         return;
       }
       if (requestUrl.pathname === "/api/runs") {
         const runs = await listRuns(projectPath);
-        response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(JSON.stringify(runs.map(run => ({
-          id: run.id, goal: run.goal, status: run.status, createdAt: run.createdAt,
-          tasks: run.tasks.map(task => ({ id: task.task.id, title: task.task.title, agent: task.task.agent, status: task.status })),
-          events: run.events.map(event => ({ at: event.at, taskId: event.taskId, type: event.type, message: event.message })),
-        }))));
+        response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(
+          JSON.stringify(
+            runs.map((run) => ({
+              id: run.id,
+              goal: run.goal,
+              status: run.status,
+              createdAt: run.createdAt,
+              tasks: run.tasks.map((task) => ({
+                id: task.task.id,
+                title: task.task.title,
+                agent: task.task.agent,
+                status: task.status,
+              })),
+              events: run.events.map((event) => ({
+                at: event.at,
+                taskId: event.taskId,
+                type: event.type,
+                message: event.message,
+              })),
+            }))
+          )
+        );
         return;
       }
       if (requestUrl.pathname === "/api/health") {
@@ -2538,27 +2974,57 @@ export async function startDashboard(options: DashboardOptions): Promise<Dashboa
       }
       if (requestUrl.pathname === "/api/quality") {
         const report = await auditProject(projectPath);
-        response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(JSON.stringify({
-          score: report.score, grade: report.grade, generatedAt: report.generatedAt, metrics: report.metrics,
-          findings: report.findings.map(item => ({ id: item.id, severity: item.severity, title: item.title, recommendation: item.recommendation })),
-        }));
+        response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(
+          JSON.stringify({
+            score: report.score,
+            grade: report.grade,
+            generatedAt: report.generatedAt,
+            metrics: report.metrics,
+            findings: report.findings.map((item) => ({
+              id: item.id,
+              severity: item.severity,
+              title: item.title,
+              recommendation: item.recommendation,
+            })),
+          })
+        );
         return;
       }
       if (requestUrl.pathname === "/api/verifications") {
         const history = await listVerifications(projectPath, 25);
-        response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(JSON.stringify(history.map(item => ({
-          id: item.id, script: item.script, status: item.status, exitCode: item.exitCode, durationMs: item.durationMs, startedAt: item.startedAt, finishedAt: item.finishedAt,
-        }))));
+        response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(
+          JSON.stringify(
+            history.map((item) => ({
+              id: item.id,
+              script: item.script,
+              status: item.status,
+              exitCode: item.exitCode,
+              durationMs: item.durationMs,
+              startedAt: item.startedAt,
+              finishedAt: item.finishedAt,
+            }))
+          )
+        );
         return;
       }
       if (requestUrl.pathname === "/api/reviews") {
         const records = await listReviews(projectPath);
-        response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(JSON.stringify(records.slice(0, 50).map(record => ({
-          id: record.id, createdAt: record.createdAt, scope: record.report.scope,
-          filesReviewed: record.report.filesReviewed.length, staticFindings: record.report.findings.length,
-          aiSuggestions: record.ai?.suggestions.length ?? 0,
-          topFindings: [...record.report.findings.slice(0, 3).map(item => item.title), ...(record.ai?.suggestions.slice(0, 2).map(item => item.title) ?? [])],
-        }))));
+        response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(
+          JSON.stringify(
+            records.slice(0, 50).map((record) => ({
+              id: record.id,
+              createdAt: record.createdAt,
+              scope: record.report.scope,
+              filesReviewed: record.report.filesReviewed.length,
+              staticFindings: record.report.findings.length,
+              aiSuggestions: record.ai?.suggestions.length ?? 0,
+              topFindings: [
+                ...record.report.findings.slice(0, 3).map((item) => item.title),
+                ...(record.ai?.suggestions.slice(0, 2).map((item) => item.title) ?? []),
+              ],
+            }))
+          )
+        );
         return;
       }
       if (requestUrl.pathname === "/api/regression") {
@@ -2593,9 +3059,12 @@ export async function startDashboard(options: DashboardOptions): Promise<Dashboa
       }
       if (requestUrl.pathname === "/api/intelligence-timeline") {
         const [comparison, snapshots] = await Promise.all([
-          compareLatestIntelligence(projectPath), listIntelligenceSnapshots(projectPath)
+          compareLatestIntelligence(projectPath),
+          listIntelligenceSnapshots(projectPath),
         ]);
-        response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(JSON.stringify({ comparison, snapshots }));
+        response
+          .writeHead(200, { "content-type": "application/json; charset=utf-8" })
+          .end(JSON.stringify({ comparison, snapshots }));
         return;
       }
       if (requestUrl.pathname === "/api/change-intelligence") {
@@ -2624,10 +3093,7 @@ export async function startDashboard(options: DashboardOptions): Promise<Dashboa
         return;
       }
       if (requestUrl.pathname === "/api/clean/snapshots") {
-        const backupDirs = [
-          path.join(projectPath, ".anvil", "backups"),
-          path.join(projectPath, ".forge", "backups")
-        ];
+        const backupDirs = [path.join(projectPath, ".anvil", "backups"), path.join(projectPath, ".forge", "backups")];
         const snapshots: Array<{ id: string; at: string; files: number }> = [];
         for (const dir of backupDirs) {
           try {
@@ -2641,7 +3107,7 @@ export async function startDashboard(options: DashboardOptions): Promise<Dashboa
                   snapshots.push({
                     id: entry.name,
                     at: data.timestamp || new Date().toISOString(),
-                    files: Array.isArray(data.files) ? data.files.length : 0
+                    files: Array.isArray(data.files) ? data.files.length : 0,
                   });
                 } catch {
                   snapshots.push({ id: entry.name, at: new Date().toISOString(), files: 0 });
@@ -2650,7 +3116,9 @@ export async function startDashboard(options: DashboardOptions): Promise<Dashboa
             }
           } catch {}
         }
-        response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(JSON.stringify({ snapshots: snapshots.sort((a,b) => b.at.localeCompare(a.at)) }));
+        response
+          .writeHead(200, { "content-type": "application/json; charset=utf-8" })
+          .end(JSON.stringify({ snapshots: snapshots.sort((a, b) => b.at.localeCompare(a.at)) }));
         return;
       }
       if (requestUrl.pathname === "/api/memory") {
@@ -2676,7 +3144,9 @@ export async function startDashboard(options: DashboardOptions): Promise<Dashboa
       response.writeHead(404, { "content-type": "application/json" }).end(JSON.stringify({ error: "Not found." }));
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unexpected dashboard error.";
-      response.writeHead(500, { "content-type": "application/json; charset=utf-8" }).end(JSON.stringify({ error: message }));
+      response
+        .writeHead(500, { "content-type": "application/json; charset=utf-8" })
+        .end(JSON.stringify({ error: message }));
     }
   });
 
@@ -2694,7 +3164,10 @@ export async function startDashboard(options: DashboardOptions): Promise<Dashboa
     broadcastEvent("heartbeat", { at: new Date().toISOString() });
   }, 15000);
   server.once("close", () => {
-    if (heartbeatInterval) { clearInterval(heartbeatInterval); heartbeatInterval = null; }
+    if (heartbeatInterval) {
+      clearInterval(heartbeatInterval);
+      heartbeatInterval = null;
+    }
     sseClients.clear();
   });
 

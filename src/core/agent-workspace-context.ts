@@ -12,10 +12,41 @@ export interface AgentWorkspaceContextOptions {
 }
 
 const STOP_WORDS = new Set([
-  "about", "after", "again", "also", "before", "build", "change", "check", "create",
-  "does", "from", "into", "make", "need", "project", "should", "that", "their",
-  "there", "these", "this", "through", "using", "what", "when", "where", "which",
-  "with", "would", "your", "agent", "review", "implement", "update", "write"
+  "about",
+  "after",
+  "again",
+  "also",
+  "before",
+  "build",
+  "change",
+  "check",
+  "create",
+  "does",
+  "from",
+  "into",
+  "make",
+  "need",
+  "project",
+  "should",
+  "that",
+  "their",
+  "there",
+  "these",
+  "this",
+  "through",
+  "using",
+  "what",
+  "when",
+  "where",
+  "which",
+  "with",
+  "would",
+  "your",
+  "agent",
+  "review",
+  "implement",
+  "update",
+  "write",
 ]);
 
 function queryTerms(task: AgentWorkspaceTask): string[] {
@@ -23,9 +54,9 @@ function queryTerms(task: AgentWorkspaceTask): string[] {
   const tokens = source.match(/[A-Za-z_$][A-Za-z0-9_$.-]{2,}/g) ?? [];
   const seen = new Set<string>();
   return tokens
-    .filter(token => !STOP_WORDS.has(token.toLowerCase()))
+    .filter((token) => !STOP_WORDS.has(token.toLowerCase()))
     .sort((a, b) => b.length - a.length)
-    .filter(token => {
+    .filter((token) => {
       const normalized = token.toLowerCase();
       if (seen.has(normalized)) return false;
       seen.add(normalized);
@@ -41,7 +72,7 @@ function queryTerms(task: AgentWorkspaceTask): string[] {
 export async function buildAgentWorkspaceContext(
   projectPath: string,
   task: AgentWorkspaceTask,
-  options: AgentWorkspaceContextOptions = {},
+  options: AgentWorkspaceContextOptions = {}
 ): Promise<string> {
   const maxResults = Math.max(1, Math.min(20, Math.floor(options.maxResults ?? 10)));
   const maxCharacters = Math.max(500, Math.min(12_000, Math.floor(options.maxCharacters ?? 6_000)));

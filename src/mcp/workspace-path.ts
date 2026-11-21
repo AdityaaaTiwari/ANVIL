@@ -16,8 +16,8 @@ export function createWorkspaceResolver(workspaceRoot: string): (input?: string)
       throw new Error("Project path must be a workspace-relative directory.");
     }
     const normalized = input.replace(/\\/g, "/");
-    const segments = normalized.split("/").filter(part => part && part !== ".");
-    if (segments.some(part => part === "..")) {
+    const segments = normalized.split("/").filter((part) => part && part !== ".");
+    if (segments.some((part) => part === "..")) {
       throw new Error("Requested project path is outside the configured FORGE workspace.");
     }
     assertWorkspacePathAllowed(segments.join("/"));

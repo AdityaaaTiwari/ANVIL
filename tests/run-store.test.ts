@@ -4,7 +4,14 @@ import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { trySymlink } from "./test-helpers.js";
 import { createRun } from "../src/core/orchestrator.js";
-import { decideTaskApproval, listRuns, loadRun, recoverInterruptedRun, saveRun, withRunExecutionLock } from "../src/core/run-store.js";
+import {
+  decideTaskApproval,
+  listRuns,
+  loadRun,
+  recoverInterruptedRun,
+  saveRun,
+  withRunExecutionLock,
+} from "../src/core/run-store.js";
 
 let root = "";
 afterEach(async () => {
@@ -15,9 +22,7 @@ afterEach(async () => {
 describe("local run history", () => {
   it("saves, loads, and lists run records", async () => {
     root = await mkdtemp(path.join(os.tmpdir(), "forge-run-store-"));
-    const run = createRun("Track a plan", [
-      { id: "draft", agent: "planner", title: "Draft", prompt: "Draft a plan" },
-    ]);
+    const run = createRun("Track a plan", [{ id: "draft", agent: "planner", title: "Draft", prompt: "Draft a plan" }]);
     await saveRun(root, run);
     const loaded = await loadRun(root, run.id);
     const history = await listRuns(root);
@@ -43,10 +48,7 @@ describe("local run history", () => {
       { id: "draft", agent: "planner", title: "Draft", prompt: "Draft a plan" },
     ]);
     await saveRun(root, validRun);
-    await writeFile(
-      path.join(root, ".forge", "runs", "run_malformed.json"),
-      "{ this is not valid JSON",
-    );
+    await writeFile(path.join(root, ".forge", "runs", "run_malformed.json"), "{ this is not valid JSON");
 
     const history = await listRuns(root);
     expect(history.map((run) => run.id)).toEqual([validRun.id]);
@@ -59,7 +61,10 @@ describe("local run history", () => {
     ]);
     await saveRun(root, run);
     const file = path.join(root, ".forge", "runs", run.id + ".json");
-    await writeFile(file, JSON.stringify({ ...run, tokenUsage: { estimatedTokensUsed: -1, estimatedTokensByAgent: { planner: 3 } } }));
+    await writeFile(
+      file,
+      JSON.stringify({ ...run, tokenUsage: { estimatedTokensUsed: -1, estimatedTokensByAgent: { planner: 3 } } })
+    );
     await expect(loadRun(root, run.id)).rejects.toThrow(/invalid token usage/);
   });
   it("records one-time approval and rejection decisions with audit events", async () => {
@@ -68,7 +73,11 @@ describe("local run history", () => {
       { id: "approve-me", agent: "reviewer", title: "Review", prompt: "Review", requiresApproval: true },
       { id: "reject-me", agent: "reviewer", title: "Reject", prompt: "Reject", requiresApproval: true },
     ]);
-    const held = { ...run, status: "awaiting_approval" as const, tasks: run.tasks.map(task => ({ ...task, status: "awaiting_approval" as const })) };
+    const held = {
+      ...run,
+      status: "awaiting_approval" as const,
+      tasks: run.tasks.map((task) => ({ ...task, status: "awaiting_approval" as const })),
+    };
     await saveRun(root, held);
     const approved = await decideTaskApproval(root, run.id, "approve-me", "approved", "local-user");
     expect(approved.tasks[0]?.status).toBe("pending");
@@ -77,7 +86,7 @@ describe("local run history", () => {
     const rejected = await decideTaskApproval(root, run.id, "reject-me", "rejected", "local-user", "Needs changes");
     expect(rejected.tasks[1]?.status).toBe("failed");
     expect(rejected.tasks[1]?.approval?.reason).toBe("Needs changes");
-    expect(rejected.events.map(event => event.type)).toContain("rejected");
+    expect(rejected.events.map((event) => event.type)).toContain("rejected");
   });
 
   it("recovers interrupted provider work without replaying it", async () => {
@@ -90,21 +99,27 @@ describe("local run history", () => {
     const interrupted = {
       ...run,
       status: "running" as const,
-      tasks: run.tasks.map(task => ({
+      tasks: run.tasks.map((task) => ({
         ...task,
-        status: task.task.id === "finished" ? "completed" as const
-          : task.task.id === "interrupted" ? "running" as const : "pending" as const,
+        status:
+          task.task.id === "finished"
+            ? ("completed" as const)
+            : task.task.id === "interrupted"
+              ? ("running" as const)
+              : ("pending" as const),
         ...(task.task.id === "finished" ? { result: { provider: "test", content: "done" } } : {}),
       })),
     };
     await saveRun(root, interrupted);
     const recovered = await recoverInterruptedRun(root, run.id);
     expect(recovered.status).toBe("failed");
-    expect(recovered.tasks.find(task => task.task.id === "finished")?.status).toBe("completed");
-    expect(recovered.tasks.find(task => task.task.id === "interrupted")?.status).toBe("failed");
-    expect(recovered.tasks.find(task => task.task.id === "interrupted")?.error).toContain("did not automatically retry");
-    expect(recovered.tasks.find(task => task.task.id === "not-started")?.status).toBe("pending");
-    expect(recovered.events.some(event => event.message.includes("outcome may be unknown"))).toBe(true);
+    expect(recovered.tasks.find((task) => task.task.id === "finished")?.status).toBe("completed");
+    expect(recovered.tasks.find((task) => task.task.id === "interrupted")?.status).toBe("failed");
+    expect(recovered.tasks.find((task) => task.task.id === "interrupted")?.error).toContain(
+      "did not automatically retry"
+    );
+    expect(recovered.tasks.find((task) => task.task.id === "not-started")?.status).toBe("pending");
+    expect(recovered.events.some((event) => event.message.includes("outcome may be unknown"))).toBe(true);
     await expect(recoverInterruptedRun(root, run.id)).resolves.toMatchObject({ status: "failed" });
   });
 
@@ -117,10 +132,8 @@ describe("local run history", () => {
     root = await mkdtemp(path.join(os.tmpdir(), "forge-run-symlink-"));
     const outside = await mkdtemp(path.join(os.tmpdir(), "forge-run-outside-"));
     try {
-      if (!await trySymlink(outside, path.join(root, ".forge"))) return;
-      const run = createRun("Symlink check", [
-        { id: "draft", agent: "planner", title: "Draft", prompt: "Draft" },
-      ]);
+      if (!(await trySymlink(outside, path.join(root, ".forge")))) return;
+      const run = createRun("Symlink check", [{ id: "draft", agent: "planner", title: "Draft", prompt: "Draft" }]);
       await expect(saveRun(root, run)).rejects.toThrow(/symbolic links/);
     } finally {
       await rm(outside, { recursive: true, force: true });
@@ -129,9 +142,7 @@ describe("local run history", () => {
 
   it("rejects symlinked run files and malformed stored task records", async () => {
     root = await mkdtemp(path.join(os.tmpdir(), "forge-run-file-"));
-    const run = createRun("File validation", [
-      { id: "draft", agent: "planner", title: "Draft", prompt: "Draft" },
-    ]);
+    const run = createRun("File validation", [{ id: "draft", agent: "planner", title: "Draft", prompt: "Draft" }]);
     await saveRun(root, run);
     const directory = path.join(root, ".forge", "runs");
     const file = path.join(directory, run.id + ".json");
@@ -151,17 +162,21 @@ describe("local run history", () => {
     const run = createRun("Serialize approvals", [
       { id: "review", agent: "reviewer", title: "Review", prompt: "Review", requiresApproval: true },
     ]);
-    const held = { ...run, status: "awaiting_approval" as const, tasks: run.tasks.map(task => ({ ...task, status: "awaiting_approval" as const })) };
+    const held = {
+      ...run,
+      status: "awaiting_approval" as const,
+      tasks: run.tasks.map((task) => ({ ...task, status: "awaiting_approval" as const })),
+    };
     await saveRun(root, held);
     const decisions = await Promise.allSettled([
       decideTaskApproval(root, run.id, "review", "approved", "reviewer-a"),
       decideTaskApproval(root, run.id, "review", "rejected", "reviewer-b"),
     ]);
-    expect(decisions.filter(result => result.status === "fulfilled")).toHaveLength(1);
-    expect(decisions.filter(result => result.status === "rejected")).toHaveLength(1);
+    expect(decisions.filter((result) => result.status === "fulfilled")).toHaveLength(1);
+    expect(decisions.filter((result) => result.status === "rejected")).toHaveLength(1);
     const saved = await loadRun(root, run.id);
     expect(saved.tasks[0]?.approval?.decision).toBeDefined();
-    expect(saved.events.filter(event => event.type === "approved" || event.type === "rejected")).toHaveLength(1);
+    expect(saved.events.filter((event) => event.type === "approved" || event.type === "rejected")).toHaveLength(1);
   });
 
   it("shares one lock between approval and interrupted-run recovery", async () => {
@@ -172,7 +187,7 @@ describe("local run history", () => {
     const held = {
       ...run,
       status: "awaiting_approval" as const,
-      tasks: run.tasks.map(task => ({ ...task, status: "awaiting_approval" as const })),
+      tasks: run.tasks.map((task) => ({ ...task, status: "awaiting_approval" as const })),
     };
     await saveRun(root, held);
     const directory = path.join(root, ".forge", "runs");
@@ -187,7 +202,7 @@ describe("local run history", () => {
     const running = {
       ...held,
       status: "running" as const,
-      tasks: held.tasks.map(task => ({ ...task, status: "running" as const })),
+      tasks: held.tasks.map((task) => ({ ...task, status: "running" as const })),
     };
     await saveRun(root, running);
     await (await import("node:fs/promises")).mkdir(lock);
@@ -203,16 +218,22 @@ describe("local run history", () => {
     await saveRun(root, run);
     let release!: () => void;
     let entered!: () => void;
-    const started = new Promise<void>(resolve => { entered = resolve; });
-    const hold = new Promise<void>(resolve => { release = resolve; });
+    const started = new Promise<void>((resolve) => {
+      entered = resolve;
+    });
+    const hold = new Promise<void>((resolve) => {
+      release = resolve;
+    });
     const first = withRunExecutionLock(root, run.id, async () => {
       entered();
       await hold;
     });
     await started;
-    await expect(withRunExecutionLock(root, run.id, async () => {
-      throw new Error("second execution must never start");
-    })).rejects.toThrow(/locked by another or interrupted/);
+    await expect(
+      withRunExecutionLock(root, run.id, async () => {
+        throw new Error("second execution must never start");
+      })
+    ).rejects.toThrow(/locked by another or interrupted/);
     release();
     await expect(first).resolves.toBeUndefined();
     await expect(withRunExecutionLock(root, run.id, async () => "acquired")).resolves.toBe("acquired");
@@ -226,20 +247,25 @@ describe("local run history", () => {
     const awaiting = {
       ...run,
       status: "awaiting_approval" as const,
-      tasks: run.tasks.map(task => ({ ...task, status: "awaiting_approval" as const })),
+      tasks: run.tasks.map((task) => ({ ...task, status: "awaiting_approval" as const })),
     };
     await saveRun(root, awaiting);
     let release!: () => void;
     let entered!: () => void;
-    const started = new Promise<void>(resolve => { entered = resolve; });
-    const hold = new Promise<void>(resolve => { release = resolve; });
+    const started = new Promise<void>((resolve) => {
+      entered = resolve;
+    });
+    const hold = new Promise<void>((resolve) => {
+      release = resolve;
+    });
     const execution = withRunExecutionLock(root, run.id, async () => {
       entered();
       await hold;
     });
     await started;
-    await expect(decideTaskApproval(root, run.id, "review", "approved", "reviewer"))
-      .rejects.toThrow(/locked by another or interrupted/);
+    await expect(decideTaskApproval(root, run.id, "review", "approved", "reviewer")).rejects.toThrow(
+      /locked by another or interrupted/
+    );
     release();
     await execution;
     const approved = await decideTaskApproval(root, run.id, "review", "approved", "reviewer");
@@ -254,12 +280,13 @@ describe("local run history", () => {
 
   it("rejects malformed persisted run events and duplicate task IDs", async () => {
     root = await mkdtemp(path.join(os.tmpdir(), "forge-run-invalid-records-"));
-    const run = createRun("Validate run records", [
-      { id: "draft", agent: "planner", title: "Draft", prompt: "Draft" },
-    ]);
+    const run = createRun("Validate run records", [{ id: "draft", agent: "planner", title: "Draft", prompt: "Draft" }]);
     await saveRun(root, run);
     const file = path.join(root, ".forge", "runs", run.id + ".json");
-    await writeFile(file, JSON.stringify({ ...run, events: [{ at: "not-a-date", taskId: "draft", type: "started", message: "bad" }] }));
+    await writeFile(
+      file,
+      JSON.stringify({ ...run, events: [{ at: "not-a-date", taskId: "draft", type: "started", message: "bad" }] })
+    );
     await expect(loadRun(root, run.id)).rejects.toThrow(/invalid event record/);
     await writeFile(file, JSON.stringify({ ...run, tasks: [run.tasks[0], run.tasks[0]] }));
     await expect(loadRun(root, run.id)).rejects.toThrow(/duplicate task identifiers/);
@@ -267,17 +294,21 @@ describe("local run history", () => {
 
   it("rejects invalid task results, approvals, and unknown dependencies", async () => {
     root = await mkdtemp(path.join(os.tmpdir(), "forge-run-invalid-task-fields-"));
-    const run = createRun("Validate task fields", [
-      { id: "draft", agent: "planner", title: "Draft", prompt: "Draft" },
-    ]);
+    const run = createRun("Validate task fields", [{ id: "draft", agent: "planner", title: "Draft", prompt: "Draft" }]);
     await saveRun(root, run);
     const file = path.join(root, ".forge", "runs", run.id + ".json");
     const task = run.tasks[0]!;
     await writeFile(file, JSON.stringify({ ...run, tasks: [{ ...task, result: { content: 42, provider: "test" } }] }));
     await expect(loadRun(root, run.id)).rejects.toThrow(/invalid task result/);
-    await writeFile(file, JSON.stringify({ ...run, tasks: [{ ...task, approval: { decision: "maybe", reviewer: "x", at: "bad" } }] }));
+    await writeFile(
+      file,
+      JSON.stringify({ ...run, tasks: [{ ...task, approval: { decision: "maybe", reviewer: "x", at: "bad" } }] })
+    );
     await expect(loadRun(root, run.id)).rejects.toThrow(/invalid approval record/);
-    await writeFile(file, JSON.stringify({ ...run, tasks: [{ ...task, task: { ...task.task, dependsOn: ["missing"] } }] }));
+    await writeFile(
+      file,
+      JSON.stringify({ ...run, tasks: [{ ...task, task: { ...task.task, dependsOn: ["missing"] } }] })
+    );
     await expect(loadRun(root, run.id)).rejects.toThrow(/unknown or self-referencing/);
   });
 
@@ -313,13 +344,10 @@ describe("local run history", () => {
 
   it("rejects oversized run-history files before parsing them", async () => {
     root = await mkdtemp(path.join(os.tmpdir(), "forge-run-oversized-read-"));
-    const run = createRun("Oversized stored run", [
-      { id: "draft", agent: "planner", title: "Draft", prompt: "Draft" },
-    ]);
+    const run = createRun("Oversized stored run", [{ id: "draft", agent: "planner", title: "Draft", prompt: "Draft" }]);
     await saveRun(root, run);
     const file = path.join(root, ".forge", "runs", run.id + ".json");
     await writeFile(file, " ".repeat(5 * 1024 * 1024 + 1));
     await expect(loadRun(root, run.id)).rejects.toThrow(/exceeds the size limit/);
   });
-
 });

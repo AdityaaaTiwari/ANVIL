@@ -4,6 +4,7 @@ import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { isExcludedScanDirectory } from "./workspace-scan-policy.js";
 import { mapArchitecture } from "./architecture-map.js";
+import ts from "typescript";
 
 const execFileAsync = promisify(execFile);
 
@@ -80,13 +81,7 @@ export interface CleanResult {
   warnings: string[];
 }
 
-const OS_JUNK = new Set([
-  ".ds_store",
-  "thumbs.db",
-  "desktop.ini",
-  "ehthumbs.db",
-  "ehthumbs_vista.db"
-]);
+const OS_JUNK = new Set([".ds_store", "thumbs.db", "desktop.ini", "ehthumbs.db", "ehthumbs_vista.db"]);
 
 function classifyJunkFile(basename: string, relPath: string): { category: JunkCategory; reason: string } | null {
   const lower = basename.toLowerCase();
@@ -113,11 +108,27 @@ function classifyJunkFile(basename: string, relPath: string): { category: JunkCa
     lower.endsWith(".aria2") ||
     lower.endsWith(".download")
   ) {
-    return { category: lower.endsWith(".crdownload") || lower.endsWith(".part") || lower.endsWith(".aria2") || lower.endsWith(".download") ? "download" : "temporary", reason: "Incomplete download or temporary artifact" };
+    return {
+      category:
+        lower.endsWith(".crdownload") ||
+        lower.endsWith(".part") ||
+        lower.endsWith(".aria2") ||
+        lower.endsWith(".download")
+          ? "download"
+          : "temporary",
+      reason: "Incomplete download or temporary artifact",
+    };
   }
 
   // Editor clutter
-  if (lower.endsWith("~") || lower.endsWith(".swp") || lower.endsWith(".swo") || lower.endsWith(".bak") || lower.endsWith(".orig") || lower.endsWith(".rej")) {
+  if (
+    lower.endsWith("~") ||
+    lower.endsWith(".swp") ||
+    lower.endsWith(".swo") ||
+    lower.endsWith(".bak") ||
+    lower.endsWith(".orig") ||
+    lower.endsWith(".rej")
+  ) {
     return { category: "editor", reason: "Editor backup, swap, or merge residue" };
   }
 
@@ -132,7 +143,13 @@ function classifyJunkFile(basename: string, relPath: string): { category: JunkCa
   }
 
   // C / C++ / Rust / Windows object and debug files
-  if (lower.endsWith(".o") || lower.endsWith(".obj") || lower.endsWith(".pdb") || lower.endsWith(".ilk") || lower.endsWith(".idb")) {
+  if (
+    lower.endsWith(".o") ||
+    lower.endsWith(".obj") ||
+    lower.endsWith(".pdb") ||
+    lower.endsWith(".ilk") ||
+    lower.endsWith(".idb")
+  ) {
     return { category: "cache", reason: "Native object or debug symbol artifact" };
   }
 
@@ -191,7 +208,7 @@ async function scanJunk(
             category: "cache",
             reason: "Python runtime or test cache directory (regenerable)",
             sizeBytes: dirStat.size || 4096,
-            isDirectory: true
+            isDirectory: true,
           });
         } catch {
           // Ignore stat error
@@ -209,7 +226,7 @@ async function scanJunk(
               category: "cache",
               reason: "Test coverage report output (regenerable)",
               sizeBytes: dirStat.size || 4096,
-              isDirectory: true
+              isDirectory: true,
             });
           } catch {
             // Ignore stat error
@@ -229,7 +246,7 @@ async function scanJunk(
             category: classification.category,
             reason: classification.reason,
             sizeBytes: fileStat.size,
-            isDirectory: false
+            isDirectory: false,
           });
         } catch {
           // Ignore stat failure
@@ -250,12 +267,12 @@ interface ImportSpecifierInfo {
 function parseNamedImports(namedBlock: string): ImportSpecifierInfo[] {
   return namedBlock
     .split(",")
-    .map(spec => spec.trim())
+    .map((spec) => spec.trim())
     .filter(Boolean)
-    .map(spec => {
+    .map((spec) => {
       const isType = /^type\s+/.test(spec);
       const cleanSpec = spec.replace(/^type\s+/, "").trim();
-      const parts = cleanSpec.split(/\s+as\s+/).map(p => p.trim());
+      const parts = cleanSpec.split(/\s+as\s+/).map((p) => p.trim());
       if (parts.length === 2 && parts[0] && parts[1]) {
         return { importedName: parts[0], localName: parts[1], isType };
       }
@@ -283,79 +300,67 @@ export function getProtectedMultilineLines(content: string, ext: string): Set<nu
   const lines = content.split("\n");
 
   if (isJsTs) {
-    let inBacktick = false;
-    let inBlockComment = false;
-    let templateBraceDepth = 0;
+    const isJsx = ext === ".tsx" || ext === ".jsx";
+    const scriptKind =
+      ext === ".tsx"
+        ? ts.ScriptKind.TSX
+        : ext === ".jsx"
+          ? ts.ScriptKind.JSX
+          : ext === ".ts"
+            ? ts.ScriptKind.TS
+            : ts.ScriptKind.JS;
+    const sf = ts.createSourceFile("file" + ext, content, ts.ScriptTarget.Latest, true, scriptKind);
 
-    for (let lineIdx = 0; lineIdx < lines.length; lineIdx++) {
-      const line = lines[lineIdx] ?? "";
-      let i = 0;
-      const startedInTemplate = inBacktick;
+    const getLine = (pos: number): number => sf.getLineAndCharacterOfPosition(pos).line;
 
-      while (i < line.length) {
-        if (inBlockComment) {
-          if (line.charAt(i) === "*" && line.charAt(i + 1) === "/") {
-            inBlockComment = false;
-            i += 2;
-          } else {
-            i++;
-          }
-          continue;
-        }
-
-        if (!inBacktick) {
-          if (line.charAt(i) === "/" && line.charAt(i + 1) === "/") {
-            break; // Single line comment
-          }
-          if (line.charAt(i) === "/" && line.charAt(i + 1) === "*") {
-            inBlockComment = true;
-            i += 2;
-            continue;
-          }
-          if (line.charAt(i) === '"' || line.charAt(i) === "'") {
-            const quote = line.charAt(i);
-            i++;
-            while (i < line.length && line.charAt(i) !== quote) {
-              if (line.charAt(i) === "\\") i++;
-              i++;
-            }
-            if (i < line.length) i++;
-            continue;
-          }
-          if (line.charAt(i) === "`") {
-            inBacktick = true;
-            i++;
-            continue;
-          }
-        } else {
-          // Inside template literal
-          if (line.charAt(i) === "\\") {
-            i += 2;
-            continue;
-          }
-          if (line.charAt(i) === "$" && line.charAt(i + 1) === "{") {
-            templateBraceDepth++;
-            i += 2;
-            continue;
-          }
-          if (templateBraceDepth > 0) {
-            if (line.charAt(i) === "{") templateBraceDepth++;
-            else if (line.charAt(i) === "}") templateBraceDepth--;
-            i++;
-            continue;
-          }
-          if (line.charAt(i) === "`") {
-            inBacktick = false;
-            i++;
-            continue;
+    const visit = (node: ts.Node): void => {
+      if (
+        ts.isNoSubstitutionTemplateLiteral(node) ||
+        ts.isTemplateHead(node) ||
+        ts.isTemplateMiddle(node) ||
+        ts.isTemplateTail(node) ||
+        ts.isStringLiteral(node)
+      ) {
+        const startLine = getLine(node.getStart(sf));
+        const endLine = getLine(node.getEnd());
+        if (
+          endLine > startLine ||
+          ts.isNoSubstitutionTemplateLiteral(node) ||
+          ts.isTemplateHead(node) ||
+          ts.isTemplateMiddle(node) ||
+          ts.isTemplateTail(node)
+        ) {
+          for (let l = startLine; l <= endLine; l++) {
+            protectedLines.add(l);
           }
         }
-        i++;
       }
+      ts.forEachChild(node, visit);
+    };
 
-      if (startedInTemplate || inBacktick) {
-        protectedLines.add(lineIdx);
+    visit(sf);
+
+    // Also protect multiline comment trivia (/* ... */)
+    const scanner = ts.createScanner(
+      ts.ScriptTarget.Latest,
+      false,
+      isJsx ? ts.LanguageVariant.JSX : ts.LanguageVariant.Standard,
+      content
+    );
+    let token = scanner.scan();
+    while (token !== ts.SyntaxKind.EndOfFileToken) {
+      if (token === ts.SyntaxKind.MultiLineCommentTrivia) {
+        const start = scanner.getTokenPos();
+        const end = scanner.getTextPos();
+        if (content.slice(start, end).includes("\n")) {
+          const startLine = sf.getLineAndCharacterOfPosition(start).line;
+          const endLine = sf.getLineAndCharacterOfPosition(end).line;
+          for (let l = startLine; l <= endLine; l++) {
+            protectedLines.add(l);
+          }
+        }
       }
+      token = scanner.scan();
     }
   } else if (isPython) {
     let inTripleDouble = false;
@@ -470,7 +475,7 @@ export function autoFixCodeContent(content: string, filePath: string): { newCont
       file: filePath,
       type: "whitespace",
       detail: "Trimmed trailing whitespace from lines (string literals preserved)",
-      applied: true
+      applied: true,
     });
   }
 
@@ -482,7 +487,7 @@ export function autoFixCodeContent(content: string, filePath: string): { newCont
         file: filePath,
         type: "blank-lines",
         detail: "Collapsed excessive consecutive blank lines",
-        applied: true
+        applied: true,
       });
     }
   } else {
@@ -516,7 +521,7 @@ export function autoFixCodeContent(content: string, filePath: string): { newCont
         file: filePath,
         type: "blank-lines",
         detail: "Collapsed excessive consecutive blank lines outside string literals",
-        applied: true
+        applied: true,
       });
     }
   }
@@ -562,9 +567,14 @@ export function autoFixCodeContent(content: string, filePath: string): { newCont
         const escaped = spec.localName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
         const wordRegex = new RegExp(`\\b${escaped}\\b`);
         if (isJsxProtected || wordRegex.test(contentWithoutImport)) {
-          const formatted = spec.importedName === spec.localName
-            ? (spec.isType ? `type ${spec.localName}` : spec.localName)
-            : (spec.isType ? `type ${spec.importedName} as ${spec.localName}` : `${spec.importedName} as ${spec.localName}`);
+          const formatted =
+            spec.importedName === spec.localName
+              ? spec.isType
+                ? `type ${spec.localName}`
+                : spec.localName
+              : spec.isType
+                ? `type ${spec.importedName} as ${spec.localName}`
+                : `${spec.importedName} as ${spec.localName}`;
           survivingSpecifiers.push(formatted);
         } else {
           removedSpecifiers.push(spec.localName);
@@ -586,7 +596,7 @@ export function autoFixCodeContent(content: string, filePath: string): { newCont
           file: filePath,
           type: "unused-import",
           detail: `Removed unused named import(s): ${removedSpecifiers.join(", ")} from "${fromPath}"`,
-          applied: true
+          applied: true,
         });
       }
     }
@@ -627,13 +637,16 @@ export function autoFixCodeContent(content: string, filePath: string): { newCont
       if (!fromModule || !rawSpecifiers) continue;
       if (rawSpecifiers.trim() === "*") continue;
 
-      const specs = rawSpecifiers.split(",").map(s => s.trim()).filter(Boolean);
-      const parsed = specs.map(s => {
-        const parts = s.split(/\s+as\s+/).map(p => p.trim());
+      const specs = rawSpecifiers
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+      const parsed = specs.map((s) => {
+        const parts = s.split(/\s+as\s+/).map((p) => p.trim());
         return {
           importedName: parts[0] || s,
           localName: parts[1] || parts[0] || s,
-          raw: s
+          raw: s,
         };
       });
 
@@ -664,7 +677,7 @@ export function autoFixCodeContent(content: string, filePath: string): { newCont
           file: filePath,
           type: "unused-import",
           detail: `Removed unused Python import(s): ${removed.join(", ")} from "${fromModule}"`,
-          applied: true
+          applied: true,
         });
       }
     }
@@ -676,7 +689,6 @@ export function autoFixCodeContent(content: string, filePath: string): { newCont
 
   return { newContent: updated, fixes };
 }
-
 
 interface BackupManifest {
   backupId: string;
@@ -711,7 +723,7 @@ async function createBackupSnapshot(
     root,
     deletedFiles: [],
     deletedDirs: [...emptyDirsToDelete],
-    modifiedFiles: []
+    modifiedFiles: [],
   };
 
   // 1. Back up junk files before deletion
@@ -725,7 +737,7 @@ async function createBackupSnapshot(
       manifest.deletedFiles.push({
         relPath: item.path,
         backupRelative: backupRel,
-        sizeBytes: item.sizeBytes
+        sizeBytes: item.sizeBytes,
       });
     } catch {
       // Ignore copy error
@@ -741,7 +753,7 @@ async function createBackupSnapshot(
       await writeFile(backupDest, item.originalContent, "utf8");
       manifest.modifiedFiles.push({
         relPath: item.file,
-        backupRelative: backupRel
+        backupRelative: backupRel,
       });
     } catch {
       // Ignore
@@ -772,7 +784,7 @@ export async function undoLastClean(inputPath: string): Promise<UndoResult> {
       restoredFiles: [],
       restoredDirs: [],
       revertedCodeFixes: [],
-      errors: ["No previous ANVIL clean/fix backup found in this workspace."]
+      errors: ["No previous ANVIL clean/fix backup found in this workspace."],
     };
   }
 
@@ -790,7 +802,7 @@ export async function undoLastClean(inputPath: string): Promise<UndoResult> {
       restoredFiles: [],
       restoredDirs: [],
       revertedCodeFixes: [],
-      errors: [`Backup manifest not found or corrupted at ${manifestPath}`]
+      errors: [`Backup manifest not found or corrupted at ${manifestPath}`],
     };
   }
 
@@ -851,7 +863,7 @@ export async function undoLastClean(inputPath: string): Promise<UndoResult> {
     restoredFiles,
     restoredDirs,
     revertedCodeFixes,
-    errors
+    errors,
   };
 }
 
@@ -882,7 +894,9 @@ async function detectTestCommand(root: string): Promise<string | null> {
   return null;
 }
 
-export async function installPrecommitHook(inputPath: string): Promise<{ success: boolean; hookPath: string; detail: string }> {
+export async function installPrecommitHook(
+  inputPath: string
+): Promise<{ success: boolean; hookPath: string; detail: string }> {
   const root = path.resolve(inputPath);
   const gitHooksDir = path.join(root, ".git", "hooks");
   try {
@@ -897,13 +911,13 @@ anvil clean --apply --json > /dev/null 2>&1 || true
     return {
       success: true,
       hookPath,
-      detail: "Installed ANVIL pre-commit hook into .git/hooks/pre-commit"
+      detail: "Installed ANVIL pre-commit hook into .git/hooks/pre-commit",
     };
   } catch (err: any) {
     return {
       success: false,
       hookPath: path.join(gitHooksDir, "pre-commit"),
-      detail: `Failed to install pre-commit hook: ${err?.message || String(err)}`
+      detail: `Failed to install pre-commit hook: ${err?.message || String(err)}`,
     };
   }
 }
@@ -918,7 +932,7 @@ export function formatUndoReport(result: UndoResult): string {
     `- **Reverted code fixes:** \`${result.revertedCodeFixes.length}\` files restored to original content`,
     `- **Restored deleted files:** \`${result.restoredFiles.length}\` files recovered`,
     `- **Restored directories:** \`${result.restoredDirs.length}\` directories re-created`,
-    ""
+    "",
   ];
 
   if (result.revertedCodeFixes.length > 0) {
@@ -979,7 +993,7 @@ export async function cleanProject(inputPath: string, options: CleanOptions = {}
       category: "empty-dir",
       reason: "Empty directory leftover",
       sizeBytes: 0,
-      isDirectory: true
+      isDirectory: true,
     });
   }
 
@@ -1003,7 +1017,7 @@ export async function cleanProject(inputPath: string, options: CleanOptions = {}
           orphanFiles.push({
             file: node.file,
             lines: node.lines,
-            reason: "Source module with 0 incoming imports (unreferenced by mapped files)"
+            reason: "Source module with 0 incoming imports (unreferenced by mapped files)",
           });
         }
       }
@@ -1013,29 +1027,53 @@ export async function cleanProject(inputPath: string, options: CleanOptions = {}
   }
 
   // 2. Prepare Code Auto-Repair
-  const filesToModify: Array<{ file: string; fullFilePath: string; originalContent: string; newContent: string; fixes: CodeFixItem[] }> = [];
+  const filesToModify: Array<{
+    file: string;
+    fullFilePath: string;
+    originalContent: string;
+    newContent: string;
+    fixes: CodeFixItem[];
+  }> = [];
 
   if (fixCode) {
     try {
       const collectSource = async (dir: string, rel = ""): Promise<string[]> => {
         const full = path.join(dir, rel);
         let entries;
-        try { entries = await readdir(full, { withFileTypes: true }); }
-        catch { return []; }
+        try {
+          entries = await readdir(full, { withFileTypes: true });
+        } catch {
+          return [];
+        }
         const res: string[] = [];
         for (const e of entries) {
           const childRel = rel ? path.join(rel, e.name) : e.name;
           if (e.isDirectory() && !isExcludedScanDirectory(e.name)) {
-            res.push(...await collectSource(dir, childRel));
-          } else if (e.isFile() && [
-            ".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs",
-            ".py", ".pyw",
-            ".go",
-            ".rs",
-            ".java", ".kt",
-            ".c", ".cpp", ".cc", ".cxx", ".h", ".hpp",
-            ".cs"
-          ].includes(path.extname(e.name).toLowerCase())) {
+            res.push(...(await collectSource(dir, childRel)));
+          } else if (
+            e.isFile() &&
+            [
+              ".ts",
+              ".tsx",
+              ".js",
+              ".jsx",
+              ".mjs",
+              ".cjs",
+              ".py",
+              ".pyw",
+              ".go",
+              ".rs",
+              ".java",
+              ".kt",
+              ".c",
+              ".cpp",
+              ".cc",
+              ".cxx",
+              ".h",
+              ".hpp",
+              ".cs",
+            ].includes(path.extname(e.name).toLowerCase())
+          ) {
             res.push(childRel.split(path.sep).join("/"));
           }
         }
@@ -1099,7 +1137,7 @@ export async function cleanProject(inputPath: string, options: CleanOptions = {}
 
     // D. Self-Healing Verification Loop
     if (verify) {
-      const testCmd = options.testCommand || await detectTestCommand(root);
+      const testCmd = options.testCommand || (await detectTestCommand(root));
       if (testCmd) {
         try {
           let stdout = "";
@@ -1122,7 +1160,7 @@ export async function cleanProject(inputPath: string, options: CleanOptions = {}
             passed: true,
             rolledBack: false,
             command: testCmd,
-            output: stdout.trim().slice(0, 500)
+            output: stdout.trim().slice(0, 500),
           };
         } catch (testErr: any) {
           // Tests failed! Auto-rollback to restore original workspace
@@ -1132,7 +1170,7 @@ export async function cleanProject(inputPath: string, options: CleanOptions = {}
             passed: false,
             rolledBack: true,
             command: testCmd,
-            error: `Project tests failed after code repairs: ${testErr?.message || String(testErr)}. Workspace was automatically restored.`
+            error: `Project tests failed after code repairs: ${testErr?.message || String(testErr)}. Workspace was automatically restored.`,
           };
           warnings.push("Verification failed! Workspace was automatically rolled back to prevent regression.");
         }
@@ -1142,7 +1180,7 @@ export async function cleanProject(inputPath: string, options: CleanOptions = {}
     }
   }
 
-  const codeFixesApplied = (apply && (!verification || !verification.rolledBack)) ? codeFixes.length : 0;
+  const codeFixesApplied = apply && (!verification || !verification.rolledBack) ? codeFixes.length : 0;
 
   return {
     root,
@@ -1156,13 +1194,13 @@ export async function cleanProject(inputPath: string, options: CleanOptions = {}
     codeFixes,
     stats: {
       junkFound: junkItems.length,
-      junkDeleted: (apply && (!verification || !verification.rolledBack)) ? junkDeleted : 0,
+      junkDeleted: apply && (!verification || !verification.rolledBack) ? junkDeleted : 0,
       bytesReclaimed,
       codeFixesFound: codeFixes.length,
       codeFixesApplied,
-      orphanFilesFound: orphanFiles.length
+      orphanFilesFound: orphanFiles.length,
     },
-    warnings
+    warnings,
   };
 }
 
@@ -1173,7 +1211,9 @@ function formatBytes(bytes: number): string {
 }
 
 export function formatCleanReport(result: CleanResult): string {
-  const modeText = result.applied ? "**APPLIED** (Deleted junk & saved fixes)" : "**DRY RUN** (Preview only — pass `--apply` to execute)";
+  const modeText = result.applied
+    ? "**APPLIED** (Deleted junk & saved fixes)"
+    : "**DRY RUN** (Preview only — pass `--apply` to execute)";
   const lines = [
     "# ANVIL Workspace Clean & Repair",
     "",
@@ -1182,23 +1222,37 @@ export function formatCleanReport(result: CleanResult): string {
     `- **Junk items:** \`${result.stats.junkFound}\` found (${formatBytes(result.stats.bytesReclaimed)} space)${result.applied ? ` · \`${result.stats.junkDeleted}\` deleted` : ""}`,
     `- **Code auto-fixes:** \`${result.stats.codeFixesFound}\` available${result.applied ? ` · \`${result.stats.codeFixesApplied}\` applied` : ""}`,
     `- **Orphan files detected:** \`${result.stats.orphanFilesFound}\``,
-    ...(result.backupId ? [`- **Rollback backup:** \`${result.backupId}\` (Run \`anvil undo\` to restore anytime)`] : []),
-    ...(result.verification ? [(result.verification.passed ? `- **Self-Healing Verification:** PASSED (\`${result.verification.command}\`)` : `- **Self-Healing Verification:** FAILED -> AUTO-ROLLED BACK (\`${result.verification.command}\`)`)] : []),
+    ...(result.backupId
+      ? [`- **Rollback backup:** \`${result.backupId}\` (Run \`anvil undo\` to restore anytime)`]
+      : []),
+    ...(result.verification
+      ? [
+          result.verification.passed
+            ? `- **Self-Healing Verification:** PASSED (\`${result.verification.command}\`)`
+            : `- **Self-Healing Verification:** FAILED -> AUTO-ROLLED BACK (\`${result.verification.command}\`)`,
+        ]
+      : []),
     `- **Timestamp:** \`${result.generatedAt}\``,
-    ""
+    "",
   ];
 
   if (result.junkItems.length > 0) {
     lines.push("## Workspace Junk Artifacts");
     for (const item of result.junkItems.slice(0, 50)) {
-      lines.push(`- \`[${item.category.toUpperCase()}]\` \`${item.path}\` (${formatBytes(item.sizeBytes)}) — ${item.reason}`);
+      lines.push(
+        `- \`[${item.category.toUpperCase()}]\` \`${item.path}\` (${formatBytes(item.sizeBytes)}) — ${item.reason}`
+      );
     }
     if (result.junkItems.length > 50) {
       lines.push(`- *...and ${result.junkItems.length - 50} more items.*`);
     }
     lines.push("");
   } else {
-    lines.push("## Workspace Junk Artifacts", "- No OS, editor, download, or log clutter detected. Workspace is clean!", "");
+    lines.push(
+      "## Workspace Junk Artifacts",
+      "- No OS, editor, download, or log clutter detected. Workspace is clean!",
+      ""
+    );
   }
 
   if (result.codeFixes.length > 0) {
@@ -1214,7 +1268,9 @@ export function formatCleanReport(result: CleanResult): string {
 
   if (result.orphanFiles.length > 0) {
     lines.push("## Orphan & Unreferenced Source Modules");
-    lines.push("> [!NOTE] These files exist in the project but are never imported or linked by other modules. Review them to decide if they should be pruned.");
+    lines.push(
+      "> [!NOTE] These files exist in the project but are never imported or linked by other modules. Review them to decide if they should be pruned."
+    );
     for (const orphan of result.orphanFiles.slice(0, 20)) {
       lines.push(`- \`${orphan.file}\` (${orphan.lines} lines) — ${orphan.reason}`);
     }
@@ -1233,7 +1289,9 @@ export function formatCleanReport(result: CleanResult): string {
   }
 
   if (result.dryRun) {
-    lines.push("> [!TIP] Run `anvil clean . --apply` to delete junk files, or `anvil clean . --apply --fix` to clean clutter AND auto-repair code issues.");
+    lines.push(
+      "> [!TIP] Run `anvil clean . --apply` to delete junk files, or `anvil clean . --apply --fix` to clean clutter AND auto-repair code issues."
+    );
     lines.push("");
   }
 

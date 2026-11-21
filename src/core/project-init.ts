@@ -29,7 +29,7 @@ Turn a user goal into a small, reviewable implementation plan.
 - Risks and open questions
 
 Do not claim to have inspected files you have not read. Do not edit files while planning.
-`
+`,
   },
   {
     path: "agents/architect.md",
@@ -53,7 +53,7 @@ Evaluate system boundaries, interfaces, dependencies, and maintainability.
 - Migration and verification notes
 
 Do not invent requirements or silently introduce new infrastructure.
-`
+`,
   },
   {
     path: "agents/code-reviewer.md",
@@ -72,7 +72,7 @@ Find actionable defects in a proposed change, prioritizing correctness and regre
 ## Output
 For each finding include severity, file and line, impact, and a concrete remediation.
 Separate confirmed defects from questions and suggestions. If no findings are identified, state the review scope and limitations.
-`
+`,
   },
   {
     path: "agents/test-engineer.md",
@@ -89,7 +89,7 @@ Design a proportionate verification strategy and improve confidence in behavior.
 5. Report exact commands and observed outcomes.
 
 Never claim tests passed unless the command actually completed successfully.
-`
+`,
   },
   {
     path: "agents/security-reviewer.md",
@@ -106,8 +106,8 @@ Review trust boundaries, permissions, secrets handling, and unsafe defaults.
 5. Explain severity, evidence, and practical remediation.
 
 A review is not a guarantee of security. Do not expose secrets in reports.
-`
-  }
+`,
+  },
 ];
 
 const SKILLS: StarterFile[] = [
@@ -122,7 +122,7 @@ Use when a task spans multiple files or has meaningful design choices.
 3. Create a sequenced plan with file-level scope.
 4. Define observable acceptance criteria.
 5. Wait for approval before consequential changes.
-`
+`,
   },
   {
     path: "skills/verification-loop.md",
@@ -138,7 +138,7 @@ For every meaningful change:
 6. Report commands, outcomes, and anything not verified.
 
 Never convert a skipped check into a passing result.
-`
+`,
   },
   {
     path: "skills/secure-changes.md",
@@ -150,33 +150,55 @@ Never convert a skipped check into a passing result.
 - Avoid shell execution when a direct API is available.
 - Validate paths and user-controlled arguments.
 - Explain residual risk; scanners cannot prove software secure.
-`
-  }
+`,
+  },
 ];
 
 export const starterFiles: StarterFile[] = [
   {
     path: "forge.json",
-    content: JSON.stringify({
-      schemaVersion: 1,
-      project: { name: "my-project" },
-      defaults: {
-        approvalRequiredForFileWrites: true,
-        approvalRequiredForCommands: true,
-        memoryEnabled: true
-      },
-      agents: ["planner", "architect", "code-reviewer", "test-engineer", "security-reviewer"],
-      skills: ["implementation-planning", "verification-loop", "secure-changes"]
-    }, null, 2) + "\n"
+    content:
+      JSON.stringify(
+        {
+          schemaVersion: 1,
+          project: { name: "my-project" },
+          defaults: {
+            approvalRequiredForFileWrites: true,
+            approvalRequiredForCommands: true,
+            memoryEnabled: true,
+          },
+          agents: ["planner", "architect", "code-reviewer", "test-engineer", "security-reviewer"],
+          skills: ["implementation-planning", "verification-loop", "secure-changes"],
+        },
+        null,
+        2
+      ) + "\n",
   },
   ...AGENTS,
   ...SKILLS,
   {
     path: "hooks.json",
-    content: JSON.stringify([
-      { id: "require-auth-review", event: "before-agent", action: "require-approval", match: { contains: ["authentication", "authorization", "permission"] }, message: "Security-sensitive identity or permission work requires human review." },
-      { id: "security-guidance", event: "before-agent", action: "append-context", match: { agents: ["security-reviewer"] }, message: "Prioritize least privilege, trust boundaries, and secret handling." }
-    ], null, 2) + "\n"
+    content:
+      JSON.stringify(
+        [
+          {
+            id: "require-auth-review",
+            event: "before-agent",
+            action: "require-approval",
+            match: { contains: ["authentication", "authorization", "permission"] },
+            message: "Security-sensitive identity or permission work requires human review.",
+          },
+          {
+            id: "security-guidance",
+            event: "before-agent",
+            action: "append-context",
+            match: { agents: ["security-reviewer"] },
+            message: "Prioritize least privilege, trust boundaries, and secret handling.",
+          },
+        ],
+        null,
+        2
+      ) + "\n",
   },
   {
     path: "skills/research-first/SKILL.md",
@@ -198,7 +220,7 @@ version: 1.0.0
 6. Recommend the smallest option that meets the requirements.
 
 Do not invent sources or claim research was performed when it was not.
-`
+`,
   },
   {
     path: "skills/test-driven-development/SKILL.md",
@@ -220,7 +242,7 @@ version: 1.0.0
 6. Inspect the final diff and report exact verification evidence.
 
 Never claim a red-green cycle unless both outcomes were observed.
-`
+`,
   },
   {
     path: "memory/README.md",
@@ -234,8 +256,8 @@ Store concise, reviewable project context here:
 - Lessons learned from verified fixes
 
 Do not store API keys, passwords, access tokens, personal data, or entire conversation transcripts. Review memory updates before committing them.
-`
-  }
+`,
+  },
 ];
 
 export async function initializeProject(inputPath: string): Promise<{ created: string[]; skipped: string[] }> {

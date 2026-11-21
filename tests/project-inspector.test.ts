@@ -18,11 +18,14 @@ describe("inspectProject", () => {
     await mkdir(path.join(root, "node_modules", "ignored"), { recursive: true });
     await writeFile(path.join(root, "src", "index.ts"), "export {};");
     await writeFile(path.join(root, "node_modules", "ignored", "fake.js"), "");
-    await writeFile(path.join(root, "package.json"), JSON.stringify({
-      scripts: { test: "vitest run" },
-      dependencies: { react: "^19.0.0" },
-      devDependencies: { typescript: "^5.0.0" }
-    }));
+    await writeFile(
+      path.join(root, "package.json"),
+      JSON.stringify({
+        scripts: { test: "vitest run" },
+        dependencies: { react: "^19.0.0" },
+        devDependencies: { typescript: "^5.0.0" },
+      })
+    );
     await writeFile(path.join(root, "package-lock.json"), "{}");
     await writeFile(path.join(root, "README.md"), "# Demo");
 
@@ -34,7 +37,6 @@ describe("inspectProject", () => {
     expect(report.scripts.test).toBe("vitest run");
     expect(report.importantFiles).toContain("README.md");
   });
-
 
   it("does not traverse private configuration directories", async () => {
     root = await mkdtemp(path.join(os.tmpdir(), "forge-private-scan-"));

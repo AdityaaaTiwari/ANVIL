@@ -21,7 +21,7 @@ async function createWorkspace(): Promise<string> {
 }
 
 afterEach(async () => {
-  await Promise.all(temporaryDirectories.splice(0).map(directory => safeRm(directory)));
+  await Promise.all(temporaryDirectories.splice(0).map((directory) => safeRm(directory)));
 });
 
 describe("ANVIL adr CLI", () => {
@@ -51,7 +51,7 @@ describe("ANVIL adr CLI", () => {
     await addProjectMemory(ws, {
       kind: "decision",
       content: "Require strict test coverage for all parsers",
-      tags: ["testing", "quality"]
+      tags: ["testing", "quality"],
     });
 
     const syncOutput = runCli("adr", "sync", ws);

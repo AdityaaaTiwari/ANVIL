@@ -11,8 +11,7 @@ describe("GitHub App helpers", () => {
   it("verifies a valid GitHub SHA-256 webhook signature", () => {
     const body = Buffer.from('{"action":"created"}');
     const secret = "test-webhook-secret";
-    const signature =
-      "sha256=" + createHmac("sha256", secret).update(body).digest("hex");
+    const signature = "sha256=" + createHmac("sha256", secret).update(body).digest("hex");
     expect(verifyGitHubSignature(body, signature, secret)).toBe(true);
     expect(verifyGitHubSignature(body, signature, "wrong-secret")).toBe(false);
   });
@@ -33,10 +32,7 @@ describe("GitHub App helpers", () => {
     const parsed = parseInstallationRecord(stored);
     expect(parsed).toEqual(original);
 
-    const updated = installationRecord(
-      { id: 123, suspended_at: "2026-11-17T00:00:00Z" },
-      parsed,
-    );
+    const updated = installationRecord({ id: 123, suspended_at: "2026-11-17T00:00:00Z" }, parsed);
     expect(updated.account.login).toBe("sample-org");
     expect(updated.repositorySelection).toBe("selected");
   });
@@ -61,10 +57,7 @@ describe("GitHub App helpers", () => {
       account: { id: 789, login: "sample-org", type: "Organization" },
       repository_selection: "selected",
     });
-    const updated = installationRecord(
-      { id: 123, suspended_at: "2026-11-17T00:00:00Z" },
-      initial,
-    );
+    const updated = installationRecord({ id: 123, suspended_at: "2026-11-17T00:00:00Z" }, initial);
     expect(updated.appId).toBe(456);
     expect(updated.account.login).toBe("sample-org");
     expect(updated.repositorySelection).toBe("selected");

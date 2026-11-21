@@ -35,7 +35,7 @@ async function createWorkspace(): Promise<string> {
 }
 
 afterEach(async () => {
-  await Promise.all(temporaryDirectories.splice(0).map(directory => safeRm(directory)));
+  await Promise.all(temporaryDirectories.splice(0).map((directory) => safeRm(directory)));
 });
 
 describe("run-history CLI help", () => {
@@ -69,13 +69,19 @@ describe("run-history CLI help", () => {
 
   it("limits text and JSON history to the newest runs", async () => {
     const directory = await createWorkspace();
-    const older = createRun("Older run", [{ id: "older-task", agent: "planner", title: "Older task", prompt: "Plan older run" }]);
+    const older = createRun("Older run", [
+      { id: "older-task", agent: "planner", title: "Older task", prompt: "Plan older run" },
+    ]);
     older.createdAt = "2026-01-01T00:00:00.000Z";
     older.status = "failed";
-    const newer = createRun("Newer run", [{ id: "newer-task", agent: "planner", title: "Newer task", prompt: "Plan newer run" }]);
+    const newer = createRun("Newer run", [
+      { id: "newer-task", agent: "planner", title: "Newer task", prompt: "Plan newer run" },
+    ]);
     newer.createdAt = "2026-01-02T00:00:00.000Z";
     newer.status = "completed";
-    const newest = createRun("Newest run", [{ id: "newest-task", agent: "planner", title: "Newest task", prompt: "Plan newest run" }]);
+    const newest = createRun("Newest run", [
+      { id: "newest-task", agent: "planner", title: "Newest task", prompt: "Plan newest run" },
+    ]);
     newest.createdAt = "2026-01-03T00:00:00.000Z";
     newest.status = "completed";
     await saveRun(directory, older);
@@ -105,8 +111,13 @@ describe("run-history CLI help", () => {
   it("rejects missing and invalid run-history option values", async () => {
     const directory = await createWorkspace();
     for (const args of [
-      ["--limit"], ["--limit", "0"], ["--limit", "many"], ["--limit", "--json"],
-      ["--status"], ["--status", "unknown"], ["--status", "--json"],
+      ["--limit"],
+      ["--limit", "0"],
+      ["--limit", "many"],
+      ["--limit", "--json"],
+      ["--status"],
+      ["--status", "unknown"],
+      ["--status", "--json"],
     ]) {
       expect(() => runCli("runs", directory, ...args)).toThrow();
     }
@@ -115,8 +126,10 @@ describe("run-history CLI help", () => {
   it("rejects duplicate and unknown run-history options", async () => {
     const directory = await createWorkspace();
     for (const args of [
-      ["--limit", "1", "--limit", "2"], ["--status", "completed", "--status", "failed"],
-      ["--json", "--json"], ["--unexpected"],
+      ["--limit", "1", "--limit", "2"],
+      ["--status", "completed", "--status", "failed"],
+      ["--json", "--json"],
+      ["--unexpected"],
       ["first-project", "second-project"],
       ["--limit", "1", "first-project", "second-project"],
     ]) {
@@ -153,7 +166,12 @@ describe("agent-intelligence CLI flags", () => {
       // Uses runCliRaw so we can inspect output even when exit code is 2.
       const { stdout, exitCode } = runCliRaw("agent-intelligence", "--path", directory, "--json");
       expect(exitCode).toBe(2);
-      const report = JSON.parse(stdout.trim()) as { status: string; cards: unknown[]; recommendations: string[]; caveats: string[] };
+      const report = JSON.parse(stdout.trim()) as {
+        status: string;
+        cards: unknown[];
+        recommendations: string[];
+        caveats: string[];
+      };
       expect(report.status).toBe("insufficient-data");
       expect(report.cards).toHaveLength(0);
       expect(Array.isArray(report.recommendations)).toBe(true);
@@ -170,27 +188,67 @@ describe("agent-intelligence CLI flags", () => {
       const benchmarkDir = path.join(directory, ".forge", "benchmark-matrices");
       await mkdir(benchmarkDir, { recursive: true });
       const matrixReport: BenchmarkMatrixReport = {
-        version: 1, matrixId: "matrix-a", matrixName: "Matrix A",
-        suiteId: "suite-a", goal: "review changes",
+        version: 1,
+        matrixId: "matrix-a",
+        matrixName: "Matrix A",
+        suiteId: "suite-a",
+        goal: "review changes",
         createdAt: new Date().toISOString(),
-        results: [{
-          candidateId: "candidate-a", provider: "openai", model: "gpt-4",
-          repeat: 1, runId: "run-a", score: 85, passed: true,
-          durationMs: 1000, estimatedTokens: 300, status: "completed",
-          agentScores: [{ agent: "code-reviewer", caseId: "case-a", score: 85, passed: true, skillIds: [], failedCriteria: [] }]
-        }],
-        summary: [{ candidateId: "candidate-a", provider: "openai", model: "gpt-4", trials: 1, completed: 1, averageScore: 85, passRate: 100, scoreStdDev: 0, averageDurationMs: 1000, averageEstimatedTokens: 300 }],
-        agentSummary: [{ candidateId: "candidate-a", provider: "openai", model: "gpt-4", agent: "code-reviewer", trials: 1, completed: 1, averageScore: 85, passRate: 100, skillsObserved: [] }]
+        results: [
+          {
+            candidateId: "candidate-a",
+            provider: "openai",
+            model: "gpt-4",
+            repeat: 1,
+            runId: "run-a",
+            score: 85,
+            passed: true,
+            durationMs: 1000,
+            estimatedTokens: 300,
+            status: "completed",
+            agentScores: [
+              { agent: "code-reviewer", caseId: "case-a", score: 85, passed: true, skillIds: [], failedCriteria: [] },
+            ],
+          },
+        ],
+        summary: [
+          {
+            candidateId: "candidate-a",
+            provider: "openai",
+            model: "gpt-4",
+            trials: 1,
+            completed: 1,
+            averageScore: 85,
+            passRate: 100,
+            scoreStdDev: 0,
+            averageDurationMs: 1000,
+            averageEstimatedTokens: 300,
+          },
+        ],
+        agentSummary: [
+          {
+            candidateId: "candidate-a",
+            provider: "openai",
+            model: "gpt-4",
+            agent: "code-reviewer",
+            trials: 1,
+            completed: 1,
+            averageScore: 85,
+            passRate: 100,
+            skillsObserved: [],
+          },
+        ],
       };
-      await writeFile(
-        path.join(benchmarkDir, "matrix-a-report.json"),
-        JSON.stringify(matrixReport, null, 2),
-        { encoding: "utf8" }
-      );
+      await writeFile(path.join(benchmarkDir, "matrix-a-report.json"), JSON.stringify(matrixReport, null, 2), {
+        encoding: "utf8",
+      });
       // trim() strips any trailing newline / whitespace before parsing.
       const { stdout, exitCode } = runCliRaw("agent-intelligence", "--path", directory, "--json");
       expect(exitCode).toBe(0);
-      const report = JSON.parse(stdout.trim()) as { status: string; cards: Array<{ agent: string; averageScore: number; confidence: string }> };
+      const report = JSON.parse(stdout.trim()) as {
+        status: string;
+        cards: Array<{ agent: string; averageScore: number; confidence: string }>;
+      };
       expect(report.status).toBe("ready");
       expect(report.cards).toHaveLength(1);
       expect(report.cards[0]!.agent).toBe("code-reviewer");

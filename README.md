@@ -49,7 +49,7 @@
 ---
 
 > [!NOTE]
-> **ANVIL v1.0.7 — AI harness foundation.** The local CLI, local dashboard, agent orchestration, MCP server, provider adapters, GitHub Action, automated self-healing cleaner, byte-accurate rollback (`anvil undo`), pre-commit hooks (`anvil hook install`), AI harness wizard (`anvil mcp setup`), Architecture Decision Records (`anvil adr`), Security & Secret Scanner (`anvil security --fix`), and live interactive workflow DAG runner are available. See [Current capabilities and boundaries](#current-capabilities-and-boundaries).
+> **ANVIL v1.0.9 — AI harness foundation.** The local CLI, local dashboard, agent orchestration, MCP server, provider adapters, GitHub Action, automated self-healing cleaner, byte-accurate rollback (`anvil undo`), pre-commit hooks (`anvil hook install`), AI harness wizard (`anvil mcp setup`), Architecture Decision Records (`anvil adr`), Security & Secret Scanner (`anvil security --fix`), deterministic CI quality & security gate (`anvil gate` with SARIF v2.1.0 and policy-as-code), and live interactive workflow DAG runner are available. See [Current capabilities and boundaries](#current-capabilities-and-boundaries).
 
 ## What is ANVIL?
 
@@ -104,7 +104,7 @@ npm install --global anvil-engineering-workbench
 Or install directly from the GitHub repository:
 
 ```bash
-npm install --global git+https://github.com/anvil-workbench/ANVIL.git#v1.0.7
+npm install --global git+https://github.com/anvil-workbench/ANVIL.git#v1.0.9
 ```
 
 Verify the installation:
@@ -150,7 +150,7 @@ npm --version
 git --version
 
 # Install ANVIL
-npm install --global git+https://github.com/anvil-workbench/ANVIL.git#v1.0.7
+npm install --global git+https://github.com/anvil-workbench/ANVIL.git#v1.0.9
 
 # Move into your project
 cd C:\Users\YourName\Projects\my-project
@@ -500,23 +500,28 @@ npm run build
 ANVIL_WORKSPACE=/absolute/path/to/project npm run mcp
 ```
 
-The current MCP server exposes nine bounded, read-only tools:
+The current MCP server exposes bounded, read-only tools:
 
 | Tool | Function |
 |---|---|
-| `ANVIL_inspect_project` | Inspect project structure and tooling |
-| `ANVIL_map_architecture` | Map source files and imports |
-| `ANVIL_search_code` | Search supported project source |
-| `ANVIL_list_files` | List supported workspace files |
-| `ANVIL_read_file` | Read a bounded text/source file |
-| `ANVIL_quality_audit` | Run static project-quality checks |
-| `ANVIL_git_intelligence` | Analyze Git changes and impact |
-| `ANVIL_list_agents` | List built-in and workspace agent roles |
-| `ANVIL_create_review_plan` | Create a draft engineering review plan |
+| `anvil_inspect_project` | Inspect project structure and tooling |
+| `anvil_map_architecture` | Map source files and imports |
+| `anvil_search_code` | Search supported project source |
+| `anvil_list_files` | List supported workspace files |
+| `anvil_read_file` | Read a bounded text/source file |
+| `anvil_quality_audit` | Run static project-quality checks |
+| `anvil_git_intelligence` | Analyze Git changes and impact |
+| `anvil_list_agents` | List built-in and workspace agent roles |
+| `anvil_create_review_plan` | Create a draft engineering review plan |
+| `anvil_agent_intelligence` | Score agent performance from benchmark history |
+| `anvil_project_health` | Unified health snapshot & telemetry |
+| `anvil_change_risk` | Risk analysis for pending changes |
+| `anvil_dependency_impact` | Dependency blast radius & impact analysis |
+| `anvil_security_audit` | Scan secrets, tokens, and script risks |
 
 MCP workspace paths are constrained to the configured workspace root. Hidden paths, generated/dependency directories, secret-like filenames and symlinks are excluded or rejected. Reads are bounded. The MCP server does not expose arbitrary shell execution, project-file writes, patch application or test execution.
 
-Some workspace browsing/search operations require an explicit restricted-mode allowlist in `.ANVIL/permissions.json`; the default proposal-only policy denies them.
+Some workspace browsing/search operations require an explicit restricted-mode allowlist in `.anvil/permissions.json`; the default proposal-only policy denies them.
 
 ### GitHub Action
 
@@ -535,11 +540,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: anvil-workbench/ANVIL@v1.0.7
+      - uses: anvil-workbench/ANVIL@v1.0.9
         with:
-          version: v1.0.7
+          version: v1.0.9
           project-path: .
-          operation: inspect
+          operation: gate
 ```
 
 Supported `operation` values:
@@ -747,7 +752,7 @@ ANVIL's v1.0.6 release introduced an automated AI harness MCP setup wizard (`anv
 
 ### Provenance & Architectural Origin
 
-ANVIL is 100% original, clean-room software created and maintained by Aditya Tiwari under the permissive MIT license.
+ANVIL is an independent, original implementation created and maintained by Aditya Tiwari under the permissive MIT license.
 - **Architectural Reference:** ANVIL draws inspiration from patterns in the Everything-Claude-Code (ECC) ecosystem and modern local-first developer harnesses.
 - **Independent Codebase:** Every line of TypeScript, AST parser, DAG workflow engine, SARIF generator, and MCP integration is independently authored and maintained with dedicated test suites.
 - **No Upstream License Baggage:** ANVIL contains zero proprietary dependencies or borrowed non-permissive code.

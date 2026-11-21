@@ -21,7 +21,7 @@ describe("mapArchitecture", () => {
     await writeFile(path.join(root, ".ssh", "helper.ts"), "export const privateHelper = true;");
 
     const result = await mapArchitecture(root);
-    expect(result.nodes.map(node => node.file)).toEqual(["src/main.ts"]);
+    expect(result.nodes.map((node) => node.file)).toEqual(["src/main.ts"]);
     expect(JSON.stringify(result)).not.toContain("privateAgent");
     expect(JSON.stringify(result)).not.toContain("privateHelper");
   });

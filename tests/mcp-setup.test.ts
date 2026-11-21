@@ -2,7 +2,13 @@ import { mkdtemp, readFile, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { setupHarnessMcp, setupCursorMcp, setupVsCodeMcp, setupWindsurfMcp, getClaudeCodeSnippet } from "../src/core/mcp-setup.js";
+import {
+  setupHarnessMcp,
+  setupCursorMcp,
+  setupVsCodeMcp,
+  setupWindsurfMcp,
+  getClaudeCodeSnippet,
+} from "../src/core/mcp-setup.js";
 
 describe("MCP harness setup wizard", () => {
   let tempDir = "";
@@ -74,6 +80,6 @@ describe("MCP harness setup wizard", () => {
     const root = await createWorkspace();
     const report = await setupHarnessMcp(root, "all", "/fake/server.js");
     expect(report.results.length).toBe(4);
-    expect(report.results.map(r => r.client)).toEqual(["cursor", "vscode", "windsurf", "claude"]);
+    expect(report.results.map((r) => r.client)).toEqual(["cursor", "vscode", "windsurf", "claude"]);
   });
 });

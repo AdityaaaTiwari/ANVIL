@@ -4,28 +4,44 @@ import { isExcludedScanDirectory } from "./workspace-scan-policy.js";
 
 const SOURCE_EXTENSIONS = new Set([
   // JavaScript / TypeScript
-  ".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs",
+  ".ts",
+  ".tsx",
+  ".js",
+  ".jsx",
+  ".mjs",
+  ".cjs",
   // Python
-  ".py", ".pyw",
+  ".py",
+  ".pyw",
   // Go
   ".go",
   // Rust
   ".rs",
   // Java & JVM
-  ".java", ".kt", ".kts", ".scala",
+  ".java",
+  ".kt",
+  ".kts",
+  ".scala",
   // C / C++
-  ".c", ".cpp", ".cc", ".cxx", ".h", ".hpp", ".hxx",
+  ".c",
+  ".cpp",
+  ".cc",
+  ".cxx",
+  ".h",
+  ".hpp",
+  ".hxx",
   // C#
   ".cs",
   // Ruby & PHP
-  ".rb", ".php"
+  ".rb",
+  ".php",
 ]);
 
 const JS_IMPORT_PATTERNS = [
   /\bimport\s+(?:type\s+)?(?:[^"'()]*?\s+from\s+)?["']([^"']+)["']/g,
   /\bexport\s+(?:\*|\{[^}]*\})\s+from\s+["']([^"']+)["']/g,
   /\brequire\(\s*["']([^"']+)["']\s*\)/g,
-  /\bimport\(\s*["']([^"']+)["']\s*\)/g
+  /\bimport\(\s*["']([^"']+)["']\s*\)/g,
 ];
 
 export interface ArchitectureNode {
@@ -143,7 +159,10 @@ function extractImports(file: string, content: string): string[] {
     for (const match of content.matchAll(importPattern)) {
       if (match[1]) {
         for (const item of match[1].split(",")) {
-          const mod = item.trim().split(/\s+as\s+/)[0]?.trim();
+          const mod = item
+            .trim()
+            .split(/\s+as\s+/)[0]
+            ?.trim();
           if (mod) imports.push(mod);
         }
       }
@@ -214,10 +233,46 @@ function resolveInternal(from: string, rawSpecifier: string, knownFiles: Set<str
     const noExt = base.replace(/\.[a-zA-Z0-9]+$/, "");
     candidates.push(
       base,
-      ...[".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".py", ".go", ".rs", ".java", ".c", ".cpp", ".h", ".hpp", ".json"].map(ext => noExt + ext),
-      ...[".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".py", ".go", ".rs", ".java", ".c", ".cpp", ".h", ".hpp", ".json"].map(ext => base + ext),
-      ...["index.ts", "index.tsx", "index.js", "index.jsx", "__init__.py", "mod.rs"].map(name => path.posix.join(base, name)),
-      ...["index.ts", "index.tsx", "index.js", "index.jsx", "__init__.py", "mod.rs"].map(name => path.posix.join(noExt, name))
+      ...[
+        ".ts",
+        ".tsx",
+        ".js",
+        ".jsx",
+        ".mjs",
+        ".cjs",
+        ".py",
+        ".go",
+        ".rs",
+        ".java",
+        ".c",
+        ".cpp",
+        ".h",
+        ".hpp",
+        ".json",
+      ].map((ext) => noExt + ext),
+      ...[
+        ".ts",
+        ".tsx",
+        ".js",
+        ".jsx",
+        ".mjs",
+        ".cjs",
+        ".py",
+        ".go",
+        ".rs",
+        ".java",
+        ".c",
+        ".cpp",
+        ".h",
+        ".hpp",
+        ".json",
+      ].map((ext) => base + ext),
+      ...["index.ts", "index.tsx", "index.js", "index.jsx", "__init__.py", "mod.rs"].map((name) =>
+        path.posix.join(base, name)
+      ),
+      ...["index.ts", "index.tsx", "index.js", "index.jsx", "__init__.py", "mod.rs"].map((name) =>
+        path.posix.join(noExt, name)
+      )
     );
   } else {
     // Non-relative import that might resolve to a project file (Python `from utils.helpers ...`, Go `app/pkg ...`)
@@ -237,7 +292,7 @@ function resolveInternal(from: string, rawSpecifier: string, knownFiles: Set<str
     );
   }
 
-  return candidates.find(candidate => knownFiles.has(candidate)) ?? null;
+  return candidates.find((candidate) => knownFiles.has(candidate)) ?? null;
 }
 
 function packageName(specifier: string): string {
@@ -251,14 +306,15 @@ export async function mapArchitecture(inputPath: string): Promise<ArchitectureMa
   const root = path.resolve(inputPath);
   const entries = await readdir(root, { recursive: true, withFileTypes: true });
   const sourceFiles = entries
-    .filter(entry => entry.isFile())
-    .map(entry => {
+    .filter((entry) => entry.isFile())
+    .map((entry) => {
       const parentPath = (entry as { parentPath?: string }).parentPath ?? root;
       return path.relative(root, path.join(parentPath, entry.name)).split(path.sep).join("/");
     });
-  const eligibleSourceFiles = sourceFiles.filter(file =>
-    SOURCE_EXTENSIONS.has(path.extname(file)) &&
-    !file.split("/").some(part => part.startsWith(".") || isExcludedScanDirectory(part))
+  const eligibleSourceFiles = sourceFiles.filter(
+    (file) =>
+      SOURCE_EXTENSIONS.has(path.extname(file)) &&
+      !file.split("/").some((part) => part.startsWith(".") || isExcludedScanDirectory(part))
   );
   const filtered = eligibleSourceFiles.slice(0, 3000);
   const knownFiles = new Set(filtered);
@@ -290,11 +346,12 @@ export async function mapArchitecture(inputPath: string): Promise<ArchitectureMa
     }
   }
 
-  if (eligibleSourceFiles.length > filtered.length) warnings.push("Architecture scan was limited to 3,000 source files.");
-  const importedInternally = new Set(edges.map(edge => edge.to));
+  if (eligibleSourceFiles.length > filtered.length)
+    warnings.push("Architecture scan was limited to 3,000 source files.");
+  const importedInternally = new Set(edges.map((edge) => edge.to));
   const entryPoints = nodes
-    .filter(node => node.role === "entry" || !importedInternally.has(node.file))
-    .map(node => node.file)
+    .filter((node) => node.role === "entry" || !importedInternally.has(node.file))
+    .map((node) => node.file)
     .sort();
 
   return {
@@ -307,27 +364,41 @@ export async function mapArchitecture(inputPath: string): Promise<ArchitectureMa
     externalPackages: [...external.entries()]
       .map(([name, files]) => ({ name, importedBy: files.size }))
       .sort((a, b) => b.importedBy - a.importedBy || a.name.localeCompare(b.name)),
-    warnings
+    warnings,
   };
 }
 
 export function formatArchitectureMap(map: ArchitectureMap): string {
   const lines = [
-    "# ANVIL Architecture Map", "",
+    "# ANVIL Architecture Map",
+    "",
     `- **Project:** \`${map.root}\``,
     `- **Source files mapped:** ${map.scannedFiles}`,
     `- **Internal import relationships:** ${map.edges.length}`,
-    `- **Generated:** ${map.generatedAt}`, "",
-    "## Entry points", ...(map.entryPoints.length ? map.entryPoints.map(file => `- \`${file}\``) : ["- None confidently identified."]), "",
+    `- **Generated:** ${map.generatedAt}`,
+    "",
+    "## Entry points",
+    ...(map.entryPoints.length ? map.entryPoints.map((file) => `- \`${file}\``) : ["- None confidently identified."]),
+    "",
     "## Module graph",
-    ...(map.edges.length ? map.edges.map(edge => `- \`${edge.from}\` → \`${edge.to}\``) : ["- No relative import links detected."]), "",
+    ...(map.edges.length
+      ? map.edges.map((edge) => `- \`${edge.from}\` → \`${edge.to}\``)
+      : ["- No relative import links detected."]),
+    "",
     "## External packages",
-    ...(map.externalPackages.length ? map.externalPackages.map(item => `- \`${item.name}\` (imported by ${item.importedBy} file(s))`) : ["- None detected."]), "",
-    "## Files", ...map.nodes.map(node => `- \`${node.file}\` — ${node.role}, ${node.lines} lines, ${node.imports.length} imports`), "",
+    ...(map.externalPackages.length
+      ? map.externalPackages.map((item) => `- \`${item.name}\` (imported by ${item.importedBy} file(s))`)
+      : ["- None detected."]),
+    "",
+    "## Files",
+    ...map.nodes.map(
+      (node) => `- \`${node.file}\` — ${node.role}, ${node.lines} lines, ${node.imports.length} imports`
+    ),
+    "",
     "## Limitations",
     "- This is a static, heuristic import map, not a complete compiler-level dependency graph.",
     "- Dynamic imports assembled from variables, path aliases, and generated modules may not resolve.",
-    ...(map.warnings.length ? map.warnings.map(warning => `- ${warning}`) : ["- No scan warnings."])
+    ...(map.warnings.length ? map.warnings.map((warning) => `- ${warning}`) : ["- No scan warnings."]),
   ];
   return lines.join("\n");
 }

@@ -15,63 +15,84 @@ describe("Anthropic Claude provider", () => {
   });
 
   it("rejects non-HTTPS remote endpoints", () => {
-    expect(() => new AnthropicProvider({
-      apiKey: "key",
-      model: "claude-3-7-sonnet",
-      baseUrl: "http://api.anthropic.com",
-    })).toThrow(/HTTPS/);
+    expect(
+      () =>
+        new AnthropicProvider({
+          apiKey: "key",
+          model: "claude-3-7-sonnet",
+          baseUrl: "http://api.anthropic.com",
+        })
+    ).toThrow(/HTTPS/);
   });
 
   it("allows loopback HTTP endpoints", () => {
-    expect(() => new AnthropicProvider({
-      apiKey: "key",
-      model: "claude-3-7-sonnet",
-      baseUrl: "http://localhost:8080",
-    })).not.toThrow();
+    expect(
+      () =>
+        new AnthropicProvider({
+          apiKey: "key",
+          model: "claude-3-7-sonnet",
+          baseUrl: "http://localhost:8080",
+        })
+    ).not.toThrow();
   });
 
   it("rejects endpoints containing credentials or query parameters", () => {
-    expect(() => new AnthropicProvider({
-      apiKey: "key",
-      model: "claude-3-7-sonnet",
-      baseUrl: "https://user:pass@api.anthropic.com",
-    })).toThrow(/credentials/);
+    expect(
+      () =>
+        new AnthropicProvider({
+          apiKey: "key",
+          model: "claude-3-7-sonnet",
+          baseUrl: "https://user:pass@api.anthropic.com",
+        })
+    ).toThrow(/credentials/);
 
-    expect(() => new AnthropicProvider({
-      apiKey: "key",
-      model: "claude-3-7-sonnet",
-      baseUrl: "https://api.anthropic.com?debug=true",
-    })).toThrow(/query/);
+    expect(
+      () =>
+        new AnthropicProvider({
+          apiKey: "key",
+          model: "claude-3-7-sonnet",
+          baseUrl: "https://api.anthropic.com?debug=true",
+        })
+    ).toThrow(/query/);
   });
 
   it("rejects invalid timeout values", async () => {
     const provider = new AnthropicProvider({ apiKey: "key", model: "claude-3-7-sonnet", timeoutMs: 50 });
-    await expect(provider.complete({
-      task: { id: "t1", agent: "planner", title: "Plan", prompt: "Do plan" },
-      completedDependencies: [],
-    })).rejects.toThrow(/timeout must be between 1000 and 180000/);
+    await expect(
+      provider.complete({
+        task: { id: "t1", agent: "planner", title: "Plan", prompt: "Do plan" },
+        completedDependencies: [],
+      })
+    ).rejects.toThrow(/timeout must be between 1000 and 180000/);
   });
 
   it("rejects out-of-range maxTokens", async () => {
     const provider = new AnthropicProvider({ apiKey: "key", model: "claude-3-7-sonnet", maxTokens: 99999 });
-    await expect(provider.complete({
-      task: { id: "t1", agent: "planner", title: "Plan", prompt: "Do plan" },
-      completedDependencies: [],
-    })).rejects.toThrow(/maxTokens must be an integer between 1 and 8192/);
+    await expect(
+      provider.complete({
+        task: { id: "t1", agent: "planner", title: "Plan", prompt: "Do plan" },
+        completedDependencies: [],
+      })
+    ).rejects.toThrow(/maxTokens must be an integer between 1 and 8192/);
   });
 
   it("successfully parses a valid Anthropic messages response", async () => {
-    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({
-      id: "msg_123",
-      type: "message",
-      role: "assistant",
-      content: [
-        {
-          type: "text",
-          text: "Here is the rigorous code review proposal.",
-        },
-      ],
-    }), { status: 200, headers: { "content-type": "application/json" } }));
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          id: "msg_123",
+          type: "message",
+          role: "assistant",
+          content: [
+            {
+              type: "text",
+              text: "Here is the rigorous code review proposal.",
+            },
+          ],
+        }),
+        { status: 200, headers: { "content-type": "application/json" } }
+      )
+    );
     vi.stubGlobal("fetch", fetchMock);
 
     const provider = new AnthropicProvider({
@@ -104,22 +125,31 @@ describe("Anthropic Claude provider", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("private quota exceeded", { status: 429 })));
     const provider = new AnthropicProvider({ apiKey: "key", model: "claude-3-7-sonnet" });
 
-    await expect(provider.complete({
-      task: { id: "t1", agent: "planner", title: "Plan", prompt: "Do plan" },
-      completedDependencies: [],
-    })).rejects.toThrow("Anthropic request failed with HTTP 429.");
+    await expect(
+      provider.complete({
+        task: { id: "t1", agent: "planner", title: "Plan", prompt: "Do plan" },
+        completedDependencies: [],
+      })
+    ).rejects.toThrow("Anthropic request failed with HTTP 429.");
   });
 
   it("throws on unexpected response schema", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({ content: [] }), {
-      status: 200,
-      headers: { "content-type": "application/json" },
-    })));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ content: [] }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        })
+      )
+    );
     const provider = new AnthropicProvider({ apiKey: "key", model: "claude-3-7-sonnet" });
 
-    await expect(provider.complete({
-      task: { id: "t1", agent: "planner", title: "Plan", prompt: "Do plan" },
-      completedDependencies: [],
-    })).rejects.toThrow("Anthropic returned an unexpected response format.");
+    await expect(
+      provider.complete({
+        task: { id: "t1", agent: "planner", title: "Plan", prompt: "Do plan" },
+        completedDependencies: [],
+      })
+    ).rejects.toThrow("Anthropic returned an unexpected response format.");
   });
 });

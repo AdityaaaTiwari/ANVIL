@@ -12,10 +12,7 @@ export interface SandboxCleanupAuditEntry {
 const MAX_ENTRIES = 200;
 const FILE_NAME = "sandbox-cleanup-history.json";
 
-export async function appendSandboxCleanupAudit(
-  projectRoot: string,
-  entry: SandboxCleanupAuditEntry,
-): Promise<void> {
+export async function appendSandboxCleanupAudit(projectRoot: string, entry: SandboxCleanupAuditEntry): Promise<void> {
   const directory = path.join(projectRoot, ".forge");
   const file = path.join(directory, FILE_NAME);
   await mkdir(directory, { recursive: true, mode: 0o700 });
@@ -53,12 +50,14 @@ export function formatSandboxCleanupHistory(entries: SandboxCleanupAuditEntry[])
   return [
     "# ANVIL Sandbox Cleanup History",
     "",
-    ...entries.map(entry => [
-      "## " + entry.timestamp + " — " + entry.mode.toUpperCase(),
-      "- Run: " + entry.id,
-      "- Candidates: " + entry.candidates.length,
-      "- Removed: " + entry.removed.length,
-      ...(entry.removed.length ? ["- Removed IDs: " + entry.removed.join(", ")] : []),
-    ].join("\n")),
+    ...entries.map((entry) =>
+      [
+        "## " + entry.timestamp + " — " + entry.mode.toUpperCase(),
+        "- Run: " + entry.id,
+        "- Candidates: " + entry.candidates.length,
+        "- Removed: " + entry.removed.length,
+        ...(entry.removed.length ? ["- Removed IDs: " + entry.removed.join(", ")] : []),
+      ].join("\n")
+    ),
   ].join("\n\n");
 }

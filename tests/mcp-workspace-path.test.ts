@@ -6,7 +6,10 @@ import { createWorkspaceResolver } from "../src/mcp/workspace-path.js";
 import { trySymlink } from "./test-helpers.js";
 
 let root = "";
-afterEach(async () => { if (root) await rm(root, { recursive: true, force: true }); root = ""; });
+afterEach(async () => {
+  if (root) await rm(root, { recursive: true, force: true });
+  root = "";
+});
 
 describe("MCP workspace path resolver", () => {
   it("allows the workspace root and safe nested project directories", async () => {
@@ -30,7 +33,7 @@ describe("MCP workspace path resolver", () => {
   it("rejects symlinked path components even when they resolve inside the workspace", async () => {
     root = await mkdtemp(path.join(os.tmpdir(), "forge-mcp-path-"));
     await mkdir(path.join(root, "real-project"));
-    if (!await trySymlink(path.join(root, "real-project"), path.join(root, "linked-project"), "dir")) return;
+    if (!(await trySymlink(path.join(root, "real-project"), path.join(root, "linked-project"), "dir"))) return;
     const resolve = createWorkspaceResolver(root);
     await expect(resolve("linked-project")).rejects.toThrow(/Symbolic links/);
   });
@@ -39,7 +42,7 @@ describe("MCP workspace path resolver", () => {
     root = await mkdtemp(path.join(os.tmpdir(), "forge-mcp-path-"));
     const outside = await mkdtemp(path.join(os.tmpdir(), "forge-mcp-outside-"));
     try {
-      if (!await trySymlink(outside, path.join(root, "external"), "dir")) return;
+      if (!(await trySymlink(outside, path.join(root, "external"), "dir"))) return;
       await expect(createWorkspaceResolver(root)("external")).rejects.toThrow(/Symbolic links/);
     } finally {
       await rm(outside, { recursive: true, force: true });

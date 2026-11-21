@@ -15,53 +15,72 @@ describe("Google Gemini provider", () => {
   });
 
   it("rejects non-HTTPS remote endpoints", () => {
-    expect(() => new GeminiProvider({
-      apiKey: "key",
-      model: "gemini-1.5-pro",
-      baseUrl: "http://generativelanguage.googleapis.com",
-    })).toThrow(/HTTPS/);
+    expect(
+      () =>
+        new GeminiProvider({
+          apiKey: "key",
+          model: "gemini-1.5-pro",
+          baseUrl: "http://generativelanguage.googleapis.com",
+        })
+    ).toThrow(/HTTPS/);
   });
 
   it("allows loopback HTTP endpoints", () => {
-    expect(() => new GeminiProvider({
-      apiKey: "key",
-      model: "gemini-1.5-pro",
-      baseUrl: "http://localhost:8080",
-    })).not.toThrow();
+    expect(
+      () =>
+        new GeminiProvider({
+          apiKey: "key",
+          model: "gemini-1.5-pro",
+          baseUrl: "http://localhost:8080",
+        })
+    ).not.toThrow();
   });
 
   it("rejects endpoints containing credentials or query parameters", () => {
-    expect(() => new GeminiProvider({
-      apiKey: "key",
-      model: "gemini-1.5-pro",
-      baseUrl: "https://user:pass@generativelanguage.googleapis.com",
-    })).toThrow(/credentials/);
+    expect(
+      () =>
+        new GeminiProvider({
+          apiKey: "key",
+          model: "gemini-1.5-pro",
+          baseUrl: "https://user:pass@generativelanguage.googleapis.com",
+        })
+    ).toThrow(/credentials/);
 
-    expect(() => new GeminiProvider({
-      apiKey: "key",
-      model: "gemini-1.5-pro",
-      baseUrl: "https://generativelanguage.googleapis.com?query=1",
-    })).toThrow(/query/);
+    expect(
+      () =>
+        new GeminiProvider({
+          apiKey: "key",
+          model: "gemini-1.5-pro",
+          baseUrl: "https://generativelanguage.googleapis.com?query=1",
+        })
+    ).toThrow(/query/);
   });
 
   it("rejects invalid timeout values", async () => {
     const provider = new GeminiProvider({ apiKey: "key", model: "gemini-1.5-pro", timeoutMs: 50 });
-    await expect(provider.complete({
-      task: { id: "t1", agent: "planner", title: "Plan", prompt: "Do plan" },
-      completedDependencies: [],
-    })).rejects.toThrow(/timeout must be between 1000 and 180000/);
+    await expect(
+      provider.complete({
+        task: { id: "t1", agent: "planner", title: "Plan", prompt: "Do plan" },
+        completedDependencies: [],
+      })
+    ).rejects.toThrow(/timeout must be between 1000 and 180000/);
   });
 
   it("successfully parses a valid Gemini response", async () => {
-    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({
-      candidates: [
-        {
-          content: {
-            parts: [{ text: "Here is the architectural evaluation proposal." }],
-          },
-        },
-      ],
-    }), { status: 200, headers: { "content-type": "application/json" } }));
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          candidates: [
+            {
+              content: {
+                parts: [{ text: "Here is the architectural evaluation proposal." }],
+              },
+            },
+          ],
+        }),
+        { status: 200, headers: { "content-type": "application/json" } }
+      )
+    );
     vi.stubGlobal("fetch", fetchMock);
 
     const provider = new GeminiProvider({
@@ -89,22 +108,31 @@ describe("Google Gemini provider", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("secret error message", { status: 403 })));
     const provider = new GeminiProvider({ apiKey: "key", model: "gemini-1.5-pro" });
 
-    await expect(provider.complete({
-      task: { id: "t1", agent: "planner", title: "Plan", prompt: "Do plan" },
-      completedDependencies: [],
-    })).rejects.toThrow("Gemini request failed with HTTP 403.");
+    await expect(
+      provider.complete({
+        task: { id: "t1", agent: "planner", title: "Plan", prompt: "Do plan" },
+        completedDependencies: [],
+      })
+    ).rejects.toThrow("Gemini request failed with HTTP 403.");
   });
 
   it("throws on unexpected response schema", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({ candidates: [] }), {
-      status: 200,
-      headers: { "content-type": "application/json" },
-    })));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ candidates: [] }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        })
+      )
+    );
     const provider = new GeminiProvider({ apiKey: "key", model: "gemini-1.5-pro" });
 
-    await expect(provider.complete({
-      task: { id: "t1", agent: "planner", title: "Plan", prompt: "Do plan" },
-      completedDependencies: [],
-    })).rejects.toThrow("Gemini returned an unexpected response format.");
+    await expect(
+      provider.complete({
+        task: { id: "t1", agent: "planner", title: "Plan", prompt: "Do plan" },
+        completedDependencies: [],
+      })
+    ).rejects.toThrow("Gemini returned an unexpected response format.");
   });
 });

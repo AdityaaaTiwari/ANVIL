@@ -43,9 +43,10 @@ async function safelyMergeMcpJson(
     existing = {};
   }
 
-  const mcpServers = (existing.mcpServers && typeof existing.mcpServers === "object")
-    ? (existing.mcpServers as Record<string, unknown>)
-    : {};
+  const mcpServers =
+    existing.mcpServers && typeof existing.mcpServers === "object"
+      ? (existing.mcpServers as Record<string, unknown>)
+      : {};
 
   mcpServers[serverName] = serverConfig;
   existing.mcpServers = mcpServers;
@@ -61,15 +62,15 @@ export async function setupCursorMcp(projectPath: string, serverScriptPath: stri
     command: "node",
     args: [serverScriptPath],
     env: {
-      ANVIL_WORKSPACE: "${workspaceFolder}"
-    }
+      ANVIL_WORKSPACE: "${workspaceFolder}",
+    },
   };
   await safelyMergeMcpJson(configPath, "anvil", serverConfig);
   return {
     client: "cursor",
     configPath,
     configured: true,
-    details: `Configured ANVIL MCP server in ${path.relative(resolved, configPath)}`
+    details: `Configured ANVIL MCP server in ${path.relative(resolved, configPath)}`,
   };
 }
 
@@ -80,15 +81,15 @@ export async function setupVsCodeMcp(projectPath: string, serverScriptPath: stri
     command: "node",
     args: [serverScriptPath],
     env: {
-      ANVIL_WORKSPACE: "${workspaceFolder}"
-    }
+      ANVIL_WORKSPACE: "${workspaceFolder}",
+    },
   };
   await safelyMergeMcpJson(configPath, "anvil", serverConfig);
   return {
     client: "vscode",
     configPath,
     configured: true,
-    details: `Configured ANVIL MCP server in ${path.relative(resolved, configPath)}`
+    details: `Configured ANVIL MCP server in ${path.relative(resolved, configPath)}`,
   };
 }
 
@@ -99,15 +100,15 @@ export async function setupWindsurfMcp(projectPath: string, serverScriptPath: st
     command: "node",
     args: [serverScriptPath],
     env: {
-      ANVIL_WORKSPACE: resolved
-    }
+      ANVIL_WORKSPACE: resolved,
+    },
   };
   await safelyMergeMcpJson(configPath, "anvil", serverConfig);
   return {
     client: "windsurf",
     configPath,
     configured: true,
-    details: `Configured ANVIL MCP server in ${path.relative(resolved, configPath)}`
+    details: `Configured ANVIL MCP server in ${path.relative(resolved, configPath)}`,
   };
 }
 
@@ -116,13 +117,16 @@ export function getClaudeCodeSnippet(projectPath: string, serverScriptPath: stri
   return `claude mcp add --transport stdio anvil --env ANVIL_WORKSPACE="${resolved}" -- node "${serverScriptPath}"`;
 }
 
-export async function setupClaudeCodeMcp(projectPath: string, serverScriptPath: string): Promise<McpClientConfigResult> {
+export async function setupClaudeCodeMcp(
+  projectPath: string,
+  serverScriptPath: string
+): Promise<McpClientConfigResult> {
   const snippet = getClaudeCodeSnippet(projectPath, serverScriptPath);
   return {
     client: "claude",
     configured: true,
     commandSnippet: snippet,
-    details: `Run this command in your terminal to register with Claude Code:\n  ${snippet}`
+    details: `Run this command in your terminal to register with Claude Code:\n  ${snippet}`,
   };
 }
 
@@ -151,6 +155,6 @@ export async function setupHarnessMcp(
   return {
     projectPath: resolved,
     serverScriptPath: serverScript,
-    results
+    results,
   };
 }

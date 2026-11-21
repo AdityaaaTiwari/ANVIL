@@ -41,11 +41,14 @@ export interface AIProviderConfig {
   apiKey?: string;
 }
 
-const PROVIDER_ENV: Record<Exclude<AIProviderId, "mock" | "claude-code">, {
-  key: string;
-  model: string;
-  baseUrl?: string;
-}> = {
+const PROVIDER_ENV: Record<
+  Exclude<AIProviderId, "mock" | "claude-code">,
+  {
+    key: string;
+    model: string;
+    baseUrl?: string;
+  }
+> = {
   anthropic: { key: "ANTHROPIC_API_KEY", model: "claude-sonnet" },
   openai: { key: "OPENAI_API_KEY", model: "gpt-4.1-mini" },
   google: { key: "GOOGLE_API_KEY", model: "gemini-flash" },
@@ -55,19 +58,24 @@ const PROVIDER_ENV: Record<Exclude<AIProviderId, "mock" | "claude-code">, {
 export function readAIProviderConfig(env: NodeJS.ProcessEnv = process.env): AIProviderConfig {
   const raw = (env.ANVIL_AI_PROVIDER ?? env.FORGE_AI_PROVIDER ?? "mock").trim().toLowerCase();
   if (!["mock", "claude-code", "anthropic", "openai", "google", "ollama"].includes(raw)) {
-    throw new Error(`Unsupported ANVIL_AI_PROVIDER "${raw}". Choose mock, claude-code, anthropic, openai, google, or ollama.`);
+    throw new Error(
+      `Unsupported ANVIL_AI_PROVIDER "${raw}". Choose mock, claude-code, anthropic, openai, google, or ollama.`
+    );
   }
 
   const provider = raw as AIProviderId;
   const modelOverride = env.ANVIL_AI_MODEL ?? env.FORGE_AI_MODEL;
-  if (provider === "mock" || provider === "claude-code") return { provider, ...(modelOverride ? { model: modelOverride } : {}) };
+  if (provider === "mock" || provider === "claude-code")
+    return { provider, ...(modelOverride ? { model: modelOverride } : {}) };
 
   const defaults = PROVIDER_ENV[provider];
   const apiKey = provider === "ollama" ? undefined : env[defaults.key];
   const baseUrl = provider === "ollama" ? (env.OLLAMA_HOST ?? defaults.baseUrl) : undefined;
 
   if (provider !== "ollama" && !apiKey) {
-    throw new Error(`${provider} is selected but ${defaults.key} is not set. Use ANVIL_AI_PROVIDER=mock to work without a paid provider account.`);
+    throw new Error(
+      `${provider} is selected but ${defaults.key} is not set. Use ANVIL_AI_PROVIDER=mock to work without a paid provider account.`
+    );
   }
 
   return {
@@ -83,7 +91,7 @@ export class MockAIProvider implements AIProvider {
   readonly id = "mock" as const;
 
   async generate(request: AIRequest): Promise<AIResponse> {
-    const latestUserMessage = [...request.messages].reverse().find(message => message.role === "user");
+    const latestUserMessage = [...request.messages].reverse().find((message) => message.role === "user");
     return {
       provider: this.id,
       model: request.model ?? "forge-mock",
@@ -105,6 +113,6 @@ export function createAIProvider(config: AIProviderConfig): AIProvider {
   if (config.provider === "mock") return new MockAIProvider();
   if (config.provider === "claude-code") return new ClaudeCodeProvider(config.model ? { model: config.model } : {});
   throw new Error(
-    `The ${config.provider} provider adapter is not installed yet. ANVIL core and MCP work without it; use ANVIL_AI_PROVIDER=mock until an adapter is configured.`,
+    `The ${config.provider} provider adapter is not installed yet. ANVIL core and MCP work without it; use ANVIL_AI_PROVIDER=mock until an adapter is configured.`
   );
 }

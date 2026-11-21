@@ -82,10 +82,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const stored = await redisCommand<string | null>(["GET", recordKey]);
     const previous = parseInstallationRecord(stored);
-    const record = installationRecord(
-      { ...installation, app_id: installation.app_id ?? appId },
-      previous ?? undefined,
-    );
+    const record = installationRecord({ ...installation, app_id: installation.app_id ?? appId }, previous ?? undefined);
     if (record.appId !== appId) {
       return res.status(403).json({ error: "Installation App ID mismatch" });
     }

@@ -2,7 +2,14 @@ import { mkdir, mkdtemp, writeFile, readFile, stat } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { cleanProject, autoFixCodeContent, formatCleanReport, undoLastClean, formatUndoReport, installPrecommitHook } from "../src/core/project-cleaner.js";
+import {
+  cleanProject,
+  autoFixCodeContent,
+  formatCleanReport,
+  undoLastClean,
+  formatUndoReport,
+  installPrecommitHook,
+} from "../src/core/project-cleaner.js";
 import { safeRm } from "./test-helpers.js";
 
 const temporaryDirectories: string[] = [];
@@ -14,7 +21,7 @@ async function createTempWorkspace(): Promise<string> {
 }
 
 afterEach(async () => {
-  await Promise.all(temporaryDirectories.splice(0).map(d => safeRm(d)));
+  await Promise.all(temporaryDirectories.splice(0).map((d) => safeRm(d)));
 });
 
 describe("autoFixCodeContent", () => {
@@ -23,8 +30,8 @@ describe("autoFixCodeContent", () => {
     const { newContent, fixes } = autoFixCodeContent(code, "test.ts");
 
     expect(newContent).toBe("const a = 1;\n\nconst b = 2;\n");
-    expect(fixes.some(f => f.type === "whitespace")).toBe(true);
-    expect(fixes.some(f => f.type === "blank-lines")).toBe(true);
+    expect(fixes.some((f) => f.type === "whitespace")).toBe(true);
+    expect(fixes.some((f) => f.type === "blank-lines")).toBe(true);
   });
 
   it("preserves trailing whitespace and consecutive blank lines inside JS/TS template literals", () => {
@@ -55,7 +62,7 @@ describe("autoFixCodeContent", () => {
 
     expect(newContent).toContain(`import { usedFn } from "./helpers.js";`);
     expect(newContent).not.toContain("unusedFn");
-    expect(fixes.some(f => f.type === "unused-import" && f.detail.includes("unusedFn"))).toBe(true);
+    expect(fixes.some((f) => f.type === "unused-import" && f.detail.includes("unusedFn"))).toBe(true);
   });
 
   it("removes the entire import line when all named specifiers are unused", () => {
@@ -63,7 +70,7 @@ describe("autoFixCodeContent", () => {
     const { newContent, fixes } = autoFixCodeContent(code, "example.ts");
 
     expect(newContent).not.toContain("./dead.js");
-    expect(fixes.some(f => f.type === "unused-import")).toBe(true);
+    expect(fixes.some((f) => f.type === "unused-import")).toBe(true);
   });
 
   it("removes unused imports in Python files while keeping used ones", () => {
@@ -73,7 +80,7 @@ describe("autoFixCodeContent", () => {
     expect(newContent).toContain("from math import sqrt");
     expect(newContent).not.toContain("ceil");
     expect(newContent).not.toContain("floor");
-    expect(fixes.some(f => f.type === "unused-import" && f.detail.includes("ceil"))).toBe(true);
+    expect(fixes.some((f) => f.type === "unused-import" && f.detail.includes("ceil"))).toBe(true);
   });
 
   it("preserves Python re-exports in __init__.py and exports in __all__", () => {
@@ -81,7 +88,7 @@ describe("autoFixCodeContent", () => {
     const initResult = autoFixCodeContent(initPy, "__init__.py");
     expect(initResult.newContent).toContain("from .models import User, Post");
     expect(initResult.newContent).toContain("from .auth import authenticate");
-    expect(initResult.fixes.filter(f => f.type === "unused-import")).toHaveLength(0);
+    expect(initResult.fixes.filter((f) => f.type === "unused-import")).toHaveLength(0);
 
     const modulePy = 'from .internal import Engine, Driver, unused\n\n__all__ = ["Engine", "Driver"]\n';
     const modResult = autoFixCodeContent(modulePy, "pkg.py");
@@ -90,7 +97,8 @@ describe("autoFixCodeContent", () => {
   });
 
   it("preserves JSX pragma imports like { h } from preact and React when JSX is present", () => {
-    const jsxCode = '/** @jsx h */\nimport { h, Fragment, unusedFn } from "preact";\n\nexport const App = () => <div>Hello</div>;\n';
+    const jsxCode =
+      '/** @jsx h */\nimport { h, Fragment, unusedFn } from "preact";\n\nexport const App = () => <div>Hello</div>;\n';
     const result = autoFixCodeContent(jsxCode, "component.tsx");
     expect(result.newContent).toContain("h, Fragment");
     expect(result.newContent).not.toContain("unusedFn");
@@ -177,19 +185,16 @@ describe("cleanProject", () => {
 
     const result = await cleanProject(root, { apply: false });
     expect(result.junkItems.length).toBeGreaterThanOrEqual(4);
-    expect(result.junkItems.some(i => i.path.includes("__pycache__") || i.path.includes(".pyc"))).toBe(true);
-    expect(result.junkItems.some(i => i.path.includes("main.o"))).toBe(true);
-    expect(result.junkItems.some(i => i.path.includes("App.class"))).toBe(true);
-    expect(result.junkItems.some(i => i.path.includes(".part"))).toBe(true);
+    expect(result.junkItems.some((i) => i.path.includes("__pycache__") || i.path.includes(".pyc"))).toBe(true);
+    expect(result.junkItems.some((i) => i.path.includes("main.o"))).toBe(true);
+    expect(result.junkItems.some((i) => i.path.includes("App.class"))).toBe(true);
+    expect(result.junkItems.some((i) => i.path.includes(".part"))).toBe(true);
   });
 
   it("auto-fixes source code files when fix and apply are both true", async () => {
     const root = await createTempWorkspace();
     const sourceFile = path.join(root, "main.ts");
-    await writeFile(
-      sourceFile,
-      `import { alpha, unusedBeta } from "./lib.js";  \n\n\n\nconsole.log(alpha);   \n`
-    );
+    await writeFile(sourceFile, `import { alpha, unusedBeta } from "./lib.js";  \n\n\n\nconsole.log(alpha);   \n`);
 
     const result = await cleanProject(root, { apply: true, fix: true });
 
@@ -256,5 +261,24 @@ describe("cleanProject", () => {
     const hookContent = await readFile(hookResult.hookPath, "utf8");
     expect(hookContent).toContain("#!/usr/bin/env sh");
     expect(hookContent).toContain("anvil clean");
+  });
+
+  it("protects template literal whitespace even when an apostrophe in JSX text precedes it on the same line", async () => {
+    const root = await createTempWorkspace();
+    const tsxCode = `export function Banner() {
+  return (
+    <div>
+      <p>Don't miss out</p> {\`multi-line
+template with space   
+end\`}
+    </div>
+  );
+}`;
+    const filePath = path.join(root, "Banner.tsx");
+    await writeFile(filePath, tsxCode, "utf8");
+
+    await cleanProject(root, { apply: true, fix: true });
+    const cleaned = await readFile(filePath, "utf8");
+    expect(cleaned).toContain("template with space   \n");
   });
 });

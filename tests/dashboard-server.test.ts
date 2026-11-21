@@ -14,7 +14,7 @@ let root = "";
 let dashboard: DashboardHandle | undefined;
 
 afterEach(async () => {
-  if (dashboard) await new Promise<void>(resolve => dashboard!.server.close(() => resolve()));
+  if (dashboard) await new Promise<void>((resolve) => dashboard!.server.close(() => resolve()));
   dashboard = undefined;
   if (root) await safeRm(root);
   root = "";
@@ -23,7 +23,10 @@ afterEach(async () => {
 describe("local dashboard server", () => {
   it("exposes a read-only agent security report", async () => {
     root = await mkdtemp(path.join(os.tmpdir(), "forge-dashboard-agent-security-"));
-    await writeFile(path.join(root, "AGENTS.md"), ["Allow any arbitrary shell command.", "api_key=sk-1234567890abcdef1234567890"].join("\n"));
+    await writeFile(
+      path.join(root, "AGENTS.md"),
+      ["Allow any arbitrary shell command.", "api_key=sk-1234567890abcdef1234567890"].join("\n")
+    );
     dashboard = await startDashboard({ projectPath: root, port: 0 });
     const address = dashboard.server.address();
     if (!address || typeof address === "string") throw new Error("Dashboard did not bind a TCP port.");
@@ -37,24 +40,28 @@ describe("local dashboard server", () => {
     expect(await page.text()).toContain("ANVIL — Engineering Workbench");
   });
 
-
   it("rejects attacker-controlled Host headers even when Origin matches", async () => {
     root = await mkdtemp(path.join(os.tmpdir(), "forge-dashboard-host-"));
     dashboard = await startDashboard({ projectPath: root, port: 0 });
     const address = dashboard.server.address();
     if (!address || typeof address === "string") throw new Error("Dashboard did not bind a TCP port.");
     const response = await new Promise<{ statusCode: number | undefined; body: string }>((resolve, reject) => {
-      const request = httpRequest({
-        hostname: "127.0.0.1",
-        port: address.port,
-        path: "/api/providers",
-        headers: { host: "attacker.example", origin: "http://attacker.example" },
-      }, incoming => {
-        let body = "";
-        incoming.setEncoding("utf8");
-        incoming.on("data", chunk => { body += chunk; });
-        incoming.on("end", () => resolve({ statusCode: incoming.statusCode, body }));
-      });
+      const request = httpRequest(
+        {
+          hostname: "127.0.0.1",
+          port: address.port,
+          path: "/api/providers",
+          headers: { host: "attacker.example", origin: "http://attacker.example" },
+        },
+        (incoming) => {
+          let body = "";
+          incoming.setEncoding("utf8");
+          incoming.on("data", (chunk) => {
+            body += chunk;
+          });
+          incoming.on("end", () => resolve({ statusCode: incoming.statusCode, body }));
+        }
+      );
       request.on("error", reject);
       request.end();
     });
@@ -79,10 +86,43 @@ describe("local dashboard server", () => {
     root = await mkdtemp(path.join(os.tmpdir(), "forge-agent-leaderboard-"));
     const now = new Date().toISOString();
     await saveBenchmarkMatrix(root, {
-      version: 1, matrixId: "agent-matrix", matrixName: "Agent comparison", suiteId: "engineering-basics", goal: "Review reliability", createdAt: now,
-      results: [{ candidateId: "candidate-a", provider: "openai", model: "test-model", repeat: 1, runId: "forge-test", score: 88, passed: true, durationMs: 100, estimatedTokens: 50, status: "completed", agentScores: [{ agent: "security-reviewer", caseId: "security", score: 88, passed: true, skillIds: ["secure-changes"] }] }],
+      version: 1,
+      matrixId: "agent-matrix",
+      matrixName: "Agent comparison",
+      suiteId: "engineering-basics",
+      goal: "Review reliability",
+      createdAt: now,
+      results: [
+        {
+          candidateId: "candidate-a",
+          provider: "openai",
+          model: "test-model",
+          repeat: 1,
+          runId: "forge-test",
+          score: 88,
+          passed: true,
+          durationMs: 100,
+          estimatedTokens: 50,
+          status: "completed",
+          agentScores: [
+            { agent: "security-reviewer", caseId: "security", score: 88, passed: true, skillIds: ["secure-changes"] },
+          ],
+        },
+      ],
       summary: [],
-      agentSummary: [{ candidateId: "candidate-a", provider: "openai", model: "test-model", agent: "security-reviewer", trials: 1, completed: 1, averageScore: 88, passRate: 100, skillsObserved: ["secure-changes"] }],
+      agentSummary: [
+        {
+          candidateId: "candidate-a",
+          provider: "openai",
+          model: "test-model",
+          agent: "security-reviewer",
+          trials: 1,
+          completed: 1,
+          averageScore: 88,
+          passRate: 100,
+          skillsObserved: ["secure-changes"],
+        },
+      ],
     });
     dashboard = await startDashboard({ projectPath: root, port: 0 });
     const address = dashboard.server.address();
@@ -103,7 +143,12 @@ describe("local dashboard server", () => {
     expect(response.status).toBe(200);
     const providers = await response.json();
     expect(providers).toHaveLength(5);
-    expect(providers.find((item: { id: string }) => item.id === "openai")).toMatchObject({ id: "openai", status: "needs-credentials", configured: false, selected: true });
+    expect(providers.find((item: { id: string }) => item.id === "openai")).toMatchObject({
+      id: "openai",
+      status: "needs-credentials",
+      configured: false,
+      selected: true,
+    });
     expect(JSON.stringify(providers)).not.toContain("sk-");
     expect(providers.every((item: { status: string }) => item.status !== "connected")).toBe(true);
     const previousBase = process.env.FORGE_BASE_URL;
@@ -113,12 +158,13 @@ describe("local dashboard server", () => {
       const refreshedProviders = await refreshed.json();
       expect(JSON.stringify(refreshedProviders)).not.toContain("private-token");
       expect(JSON.stringify(refreshedProviders)).not.toContain("private-query");
-      expect(refreshedProviders.find((item: { id: string }) => item.id === "ollama").detail).toContain("https://example.test:9443");
+      expect(refreshedProviders.find((item: { id: string }) => item.id === "ollama").detail).toContain(
+        "https://example.test:9443"
+      );
     } finally {
       if (previousBase === undefined) delete process.env.FORGE_BASE_URL;
       else process.env.FORGE_BASE_URL = previousBase;
     }
-
   });
 
   it("runs an explicit provider diagnostic without requiring a credential to be echoed", async () => {
@@ -127,11 +173,13 @@ describe("local dashboard server", () => {
     const address = dashboard.server.address();
     if (!address || typeof address === "string") throw new Error("Dashboard did not bind a TCP port.");
     const names = ["FORGE_API_KEY", "OPENAI_API_KEY", "ANTHROPIC_API_KEY", "GOOGLE_API_KEY"] as const;
-    const previous = Object.fromEntries(names.map(name => [name, process.env[name]]));
+    const previous = Object.fromEntries(names.map((name) => [name, process.env[name]]));
     for (const name of names) delete process.env[name];
     try {
       const response = await fetch(`http://127.0.0.1:${address.port}/api/providers/openai/diagnose`, {
-        method: "POST", headers: { "content-type": "application/json" }, body: "{}",
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: "{}",
       });
       expect(response.status).toBe(200);
       const result = await response.json();
@@ -161,28 +209,38 @@ describe("local dashboard server", () => {
     const read = await fetch(base + "/api/config-files?category=agents&id=planner");
     expect((await read.json()).content).toContain("Plan safely");
     const saved = await fetch(base + "/api/config-files", {
-      method: "POST", headers: { "content-type": "application/json" },
-      body: JSON.stringify({ category: "skills", id: "api-safety", content: "# API safety\\nValidate every boundary.\\n" })
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        category: "skills",
+        id: "api-safety",
+        content: "# API safety\\nValidate every boundary.\\n",
+      }),
     });
     expect(saved.status).toBe(200);
     expect((await saved.json()).id).toBe("api-safety");
     const invalid = await fetch(base + "/api/config-files", {
-      method: "POST", headers: { "content-type": "application/json" },
-      body: JSON.stringify({ category: "agents", id: "../escape", content: "# Nope" })
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ category: "agents", id: "../escape", content: "# Nope" }),
     });
     expect(invalid.status).toBe(500);
-    expect(await readFile(path.join(root, ".forge", "skills", "api-safety.md"), "utf8")).toContain("Validate every boundary");
+    expect(await readFile(path.join(root, ".forge", "skills", "api-safety.md"), "utf8")).toContain(
+      "Validate every boundary"
+    );
     const snapshot = await fetch(base + "/api/config-snapshots", {
-      method: "POST", headers: { "content-type": "application/json" },
-      body: JSON.stringify({ note: "dashboard studio test" })
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ note: "dashboard studio test" }),
     });
     expect(snapshot.status).toBe(201);
     const version = await snapshot.json();
     expect(version.status).toBe("candidate");
     expect(version.files).toHaveLength(4);
     const bypassApproval = await fetch(base + "/api/config-snapshots/" + version.id + "/approve", {
-      method: "POST", headers: { "content-type": "application/json" },
-      body: JSON.stringify({ reviewer: "test-reviewer" })
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ reviewer: "test-reviewer" }),
     });
     expect(bypassApproval.status).toBe(405);
     const versions = await fetch(base + "/api/config-snapshots");
@@ -190,7 +248,6 @@ describe("local dashboard server", () => {
     const releases = await fetch(base + "/api/config-releases");
     expect(releases.status).toBe(200);
     expect(await releases.json()).toEqual([]);
-
   });
 
   it("serves the dashboard and read-only project APIs on loopback", async () => {
@@ -231,7 +288,7 @@ describe("local dashboard server", () => {
     const addMem = await fetch(base + "/api/memory", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ kind: "decision", content: "Always use Vitest", tags: ["testing"] })
+      body: JSON.stringify({ kind: "decision", content: "Always use Vitest", tags: ["testing"] }),
     });
     expect(addMem.status).toBe(201);
     const added = await addMem.json();
@@ -346,7 +403,9 @@ describe("local dashboard server", () => {
     const experimentReport = await experimentHistory.json();
     expect(experimentReport.entries).toEqual([]);
     expect(experimentReport).toHaveProperty("reportsAnalyzed", 0);
-    const filteredExperimentHistory = await fetch(base + "/api/experiment-history?suite=engineering-basics&candidate=missing");
+    const filteredExperimentHistory = await fetch(
+      base + "/api/experiment-history?suite=engineering-basics&candidate=missing"
+    );
     expect(filteredExperimentHistory.status).toBe(200);
     expect((await filteredExperimentHistory.json()).entries).toEqual([]);
 
@@ -376,14 +435,24 @@ describe("local dashboard server", () => {
     expect(forbidden.status).toBe(405);
 
     const workflowResponse = await fetch(base + "/api/workflows", {
-      method: "POST", headers: { "content-type": "application/json" },
+      method: "POST",
+      headers: { "content-type": "application/json" },
       body: JSON.stringify({
-        id: "dashboard-flow", name: "Dashboard flow", description: "Test pipeline",
+        id: "dashboard-flow",
+        name: "Dashboard flow",
+        description: "Test pipeline",
         tasks: [
           { id: "plan", agent: "planner", title: "Plan", prompt: "Create a plan." },
-          { id: "review", agent: "code-reviewer", title: "Review", prompt: "Review the plan.", dependsOn: ["plan"], requiresApproval: true }
-        ]
-      })
+          {
+            id: "review",
+            agent: "code-reviewer",
+            title: "Review",
+            prompt: "Review the plan.",
+            dependsOn: ["plan"],
+            requiresApproval: true,
+          },
+        ],
+      }),
     });
     expect(workflowResponse.status).toBe(201);
     const savedWorkflow = await workflowResponse.json();
@@ -391,7 +460,9 @@ describe("local dashboard server", () => {
     const workflowListResponse = await fetch(base + "/api/workflows");
     expect((await workflowListResponse.json()).some((item: { id: string }) => item.id === "dashboard-flow")).toBe(true);
     const workflowRunResponse = await fetch(base + "/api/workflows/dashboard-flow/run", {
-      method: "POST", headers: { "content-type": "application/json" }, body: "{}"
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: "{}",
     });
     expect(workflowRunResponse.status).toBe(201);
     const workflowRun = await workflowRunResponse.json();
@@ -401,9 +472,18 @@ describe("local dashboard server", () => {
     expect(createdDraftJson.status).toBe("pending");
     expect(createdDraftJson.tasks[1].dependsOn).toEqual(["plan"]);
 
-    const pendingRun = await advanceRun(createRun("Review a release", [
-      { id: "review", agent: "reviewer", title: "Review release", prompt: "Review the proposed release", requiresApproval: true },
-    ]), new DemoAgentProvider());
+    const pendingRun = await advanceRun(
+      createRun("Review a release", [
+        {
+          id: "review",
+          agent: "reviewer",
+          title: "Review release",
+          prompt: "Review the proposed release",
+          requiresApproval: true,
+        },
+      ]),
+      new DemoAgentProvider()
+    );
     await saveRun(root, pendingRun);
     const approval = await fetch(base + "/api/runs/" + pendingRun.id + "/tasks/review/approval", {
       method: "POST",
@@ -423,7 +503,9 @@ describe("local dashboard server", () => {
     failedRun.tasks[0]!.error = "Temporary provider failure";
     await saveRun(root, failedRun);
     const replayResponse = await fetch(base + "/api/runs/" + failedRun.id + "/replay", {
-      method: "POST", headers: { "content-type": "application/json" }, body: "{}",
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: "{}",
     });
     expect(replayResponse.status).toBe(201);
     const replayResult = await replayResponse.json();
@@ -433,7 +515,9 @@ describe("local dashboard server", () => {
     expect(replayJson.tasks[0].status).toBe("pending");
 
     const cancelResponse = await fetch(base + "/api/runs/" + pendingRun.id + "/cancel", {
-      method: "POST", headers: { "content-type": "application/json" }, body: "{}",
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: "{}",
     });
     expect(cancelResponse.status).toBe(200);
     const cancelledDetail = await fetch(base + "/api/runs/" + pendingRun.id);
@@ -450,12 +534,18 @@ describe("local dashboard server", () => {
     retrySource.tasks[2]!.status = "blocked";
     await saveRun(root, retrySource);
     const taskRetryResponse = await fetch(base + "/api/runs/" + retrySource.id + "/tasks/broken/retry", {
-      method: "POST", headers: { "content-type": "application/json" }, body: "{}",
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: "{}",
     });
     expect(taskRetryResponse.status).toBe(201);
     const taskRetry = await taskRetryResponse.json();
     const taskRetryDetail = await fetch(base + "/api/runs/" + taskRetry.id);
-    expect((await taskRetryDetail.json()).tasks.map((task: { status: string }) => task.status)).toEqual(["completed", "pending", "pending"]);
+    expect((await taskRetryDetail.json()).tasks.map((task: { status: string }) => task.status)).toEqual([
+      "completed",
+      "pending",
+      "pending",
+    ]);
 
     const detail = await fetch(base + "/api/runs/" + pendingRun.id);
     const detailResult = await detail.json();
@@ -468,11 +558,20 @@ describe("local dashboard server", () => {
     const handoffDetail = await fetch(base + "/api/runs/" + handoffRun.id);
     const handoffJson = await handoffDetail.json();
     expect(handoffJson.tasks[1].dependsOn).toEqual(["architect"]);
-    await saveExecutionTrace(root, handoffRun.id, [{
-      taskId: "architect", agent: "architect", tier: "reasoning", model: "test-model",
-      provider: "test-provider", startedAt: new Date().toISOString(), durationMs: 42,
-      outcome: "success", inputTokensEstimate: 20, outputTokensEstimate: 10,
-    }]);
+    await saveExecutionTrace(root, handoffRun.id, [
+      {
+        taskId: "architect",
+        agent: "architect",
+        tier: "reasoning",
+        model: "test-model",
+        provider: "test-provider",
+        startedAt: new Date().toISOString(),
+        durationMs: 42,
+        outcome: "success",
+        inputTokensEstimate: 20,
+        outputTokensEstimate: 10,
+      },
+    ]);
     const traceResponse = await fetch(base + "/api/runs/" + handoffRun.id + "/trace");
     expect(traceResponse.status).toBe(200);
     const traceJson = await traceResponse.json();
@@ -497,23 +596,26 @@ describe("local dashboard server", () => {
     const address = dashboard.server.address();
     if (!address || typeof address === "string") throw new Error("Dashboard did not bind a TCP port.");
     const received = await new Promise<string>((resolve, reject) => {
-      const req = httpRequest({
-        hostname: "127.0.0.1",
-        port: address.port,
-        path: "/api/events",
-        headers: { accept: "text/event-stream" },
-      }, (incoming) => {
-        expect(incoming.headers["content-type"]).toContain("text/event-stream");
-        let buf = "";
-        incoming.on("data", (chunk: Buffer) => {
-          buf += chunk.toString();
-          if (buf.includes("event: connected")) {
-            incoming.destroy();
-            resolve(buf);
-          }
-        });
-        incoming.on("error", () => resolve(buf));
-      });
+      const req = httpRequest(
+        {
+          hostname: "127.0.0.1",
+          port: address.port,
+          path: "/api/events",
+          headers: { accept: "text/event-stream" },
+        },
+        (incoming) => {
+          expect(incoming.headers["content-type"]).toContain("text/event-stream");
+          let buf = "";
+          incoming.on("data", (chunk: Buffer) => {
+            buf += chunk.toString();
+            if (buf.includes("event: connected")) {
+              incoming.destroy();
+              resolve(buf);
+            }
+          });
+          incoming.on("error", () => resolve(buf));
+        }
+      );
       req.on("error", reject);
       req.end();
     });
@@ -529,26 +631,29 @@ describe("local dashboard server", () => {
 
     // Connect a client and wait for the initial "connected" event before broadcasting
     const received = await new Promise<string>((resolve, reject) => {
-      const req = httpRequest({
-        hostname: "127.0.0.1",
-        port: address.port,
-        path: "/api/events",
-        headers: { accept: "text/event-stream" },
-      }, (incoming) => {
-        let buf = "";
-        incoming.on("data", (chunk: Buffer) => {
-          buf += chunk.toString();
-          if (buf.includes("event: connected")) {
-            // Once connected, broadcast a custom event
-            broadcastEvent("test-broadcast", { hello: "world" });
-          }
-          if (buf.includes("event: test-broadcast")) {
-            incoming.destroy();
-            resolve(buf);
-          }
-        });
-        incoming.on("error", () => resolve(buf));
-      });
+      const req = httpRequest(
+        {
+          hostname: "127.0.0.1",
+          port: address.port,
+          path: "/api/events",
+          headers: { accept: "text/event-stream" },
+        },
+        (incoming) => {
+          let buf = "";
+          incoming.on("data", (chunk: Buffer) => {
+            buf += chunk.toString();
+            if (buf.includes("event: connected")) {
+              // Once connected, broadcast a custom event
+              broadcastEvent("test-broadcast", { hello: "world" });
+            }
+            if (buf.includes("event: test-broadcast")) {
+              incoming.destroy();
+              resolve(buf);
+            }
+          });
+          incoming.on("error", () => resolve(buf));
+        }
+      );
       req.on("error", reject);
       req.end();
     });
@@ -566,7 +671,7 @@ describe("local dashboard server", () => {
     const postRes = await fetch(`http://127.0.0.1:${address.port}/api/adrs`, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ title: "Adopt Local-First Storage", status: "Accepted" })
+      body: JSON.stringify({ title: "Adopt Local-First Storage", status: "Accepted" }),
     });
     expect(postRes.status).toBe(201);
     const created = await postRes.json();
@@ -583,7 +688,7 @@ describe("local dashboard server", () => {
     const syncRes = await fetch(`http://127.0.0.1:${address.port}/api/adrs/sync`, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({})
+      body: JSON.stringify({}),
     });
     expect(syncRes.status).toBe(200);
     const syncData = await syncRes.json();
@@ -607,7 +712,7 @@ describe("local dashboard server", () => {
     const fixRes = await fetch(`http://127.0.0.1:${address.port}/api/security/fix`, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({})
+      body: JSON.stringify({}),
     });
     expect(fixRes.status).toBe(200);
     const fixData = await fixRes.json();
@@ -630,9 +735,15 @@ describe("local dashboard server", () => {
         description: "Test execution of multi-agent pipeline",
         tasks: [
           { id: "task-1", agent: "planner", title: "Create Plan", prompt: "Formulate task plan" },
-          { id: "task-2", agent: "code-reviewer", title: "Review Code", prompt: "Inspect boundaries", dependsOn: ["task-1"] }
-        ]
-      })
+          {
+            id: "task-2",
+            agent: "code-reviewer",
+            title: "Review Code",
+            prompt: "Inspect boundaries",
+            dependsOn: ["task-1"],
+          },
+        ],
+      }),
     });
     expect(saveRes.status).toBe(201);
 
@@ -640,7 +751,7 @@ describe("local dashboard server", () => {
     const execRes = await fetch(`http://127.0.0.1:${address.port}/api/workflows/pipeline-live-test/execute`, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({})
+      body: JSON.stringify({}),
     });
     expect(execRes.status).toBe(200);
     const execData = await execRes.json();

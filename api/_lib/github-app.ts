@@ -25,12 +25,10 @@ export type InstallationRecord = {
 export function verifyGitHubSignature(
   rawBody: string | Buffer,
   signature: string | undefined,
-  secret: string,
+  secret: string
 ): boolean {
   if (!signature || !/^sha256=[a-f0-9]{64}$/i.test(signature)) return false;
-  const expected = Buffer.from(
-    "sha256=" + createHmac("sha256", secret).update(rawBody).digest("hex"),
-  );
+  const expected = Buffer.from("sha256=" + createHmac("sha256", secret).update(rawBody).digest("hex"));
   const supplied = Buffer.from(signature);
   return expected.length === supplied.length && timingSafeEqual(expected, supplied);
 }
@@ -62,7 +60,7 @@ export function parseInstallationRecord(value: string | null): InstallationRecor
 
 export function installationRecord(
   installation: GitHubInstallation,
-  previous?: InstallationRecord,
+  previous?: InstallationRecord
 ): InstallationRecord {
   const account = installation.account;
   return {
@@ -74,12 +72,8 @@ export function installationRecord(
       type: account?.type ?? previous?.account.type ?? null,
     },
     targetType: installation.target_type ?? previous?.targetType ?? null,
-    repositorySelection:
-      installation.repository_selection ?? previous?.repositorySelection ?? null,
-    suspendedAt:
-      installation.suspended_at === undefined
-        ? previous?.suspendedAt ?? null
-        : installation.suspended_at,
+    repositorySelection: installation.repository_selection ?? previous?.repositorySelection ?? null,
+    suspendedAt: installation.suspended_at === undefined ? (previous?.suspendedAt ?? null) : installation.suspended_at,
     createdAt: installation.created_at ?? previous?.createdAt ?? null,
     updatedAt: installation.updated_at ?? previous?.updatedAt ?? null,
   };

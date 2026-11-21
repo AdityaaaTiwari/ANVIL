@@ -15,13 +15,15 @@ describe("bounded provider response parsing", () => {
   });
 
   it("rejects a streamed response that exceeds the limit without a content length", async () => {
-    const response = new Response(new ReadableStream({
-      start(controller) {
-        controller.enqueue(new Uint8Array(24));
-        controller.enqueue(new Uint8Array(24));
-        controller.close();
-      },
-    }));
+    const response = new Response(
+      new ReadableStream({
+        start(controller) {
+          controller.enqueue(new Uint8Array(24));
+          controller.enqueue(new Uint8Array(24));
+          controller.close();
+        },
+      })
+    );
     await expect(readProviderJson(response, 32)).rejects.toThrow("1 MiB size limit");
   });
 
@@ -31,9 +33,14 @@ describe("bounded provider response parsing", () => {
 
   it("cancels unread provider error bodies without reading their contents", async () => {
     let cancelled = false;
-    const response = new Response(new ReadableStream({
-      cancel() { cancelled = true; },
-    }), { status: 500 });
+    const response = new Response(
+      new ReadableStream({
+        cancel() {
+          cancelled = true;
+        },
+      }),
+      { status: 500 }
+    );
     await discardProviderResponse(response);
     expect(cancelled).toBe(true);
   });

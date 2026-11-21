@@ -42,7 +42,7 @@ function createReport(options: MockReportOptions = {}): BenchmarkMatrixReport {
 
   const passed = score >= 80;
   const passRate = passed ? 100 : 0;
-  const mappedCriteria = failedCriteria.map(id => ({
+  const mappedCriteria = failedCriteria.map((id) => ({
     id,
     failedChecks: ["missed a security boundary"],
   }));
@@ -174,7 +174,7 @@ describe("agent evaluation intelligence", () => {
   it("filters by suiteId and reports insufficient data when no reports match", () => {
     const result = buildAgentEvaluationIntelligence(
       [createReport({ createdAt: "2026-01-01T00:00:00.000Z", score: 90 })],
-      { suiteId: "missing" },
+      { suiteId: "missing" }
     );
     expect(result.status).toBe("insufficient-data");
     expect(result.cards).toHaveLength(0);
@@ -183,7 +183,7 @@ describe("agent evaluation intelligence", () => {
   it("filters by candidateId and returns insufficient-data when no candidates match", () => {
     const result = buildAgentEvaluationIntelligence(
       [createReport({ createdAt: "2026-01-01T00:00:00.000Z", score: 90 })],
-      { candidateId: "ghost-candidate" },
+      { candidateId: "ghost-candidate" }
     );
     // Previously the implementation returned status:"ready" with 0 cards here.
     expect(result.status).toBe("insufficient-data");
@@ -235,7 +235,7 @@ describe("agent evaluation intelligence", () => {
     });
     const result = buildAgentEvaluationIntelligence([current]);
     const card = result.cards[0]!;
-    expect(card.caseMetrics.map(item => item.caseId)).toEqual(["case-security"]);
+    expect(card.caseMetrics.map((item) => item.caseId)).toEqual(["case-security"]);
     expect(card.evaluations).toBe(1);
   });
 
@@ -281,10 +281,20 @@ describe("agent evaluation intelligence", () => {
     // Add 3 more agentScore entries so scores.length reaches 4 total across both runs.
     for (const extra of ["case-b", "case-c"] as const) {
       r.results[0]!.agentScores!.push({
-        agent: "code-reviewer", caseId: extra, score: 80, passed: true, skillIds: [], failedCriteria: [],
+        agent: "code-reviewer",
+        caseId: extra,
+        score: 80,
+        passed: true,
+        skillIds: [],
+        failedCriteria: [],
       });
       r2.results[0]!.agentScores!.push({
-        agent: "code-reviewer", caseId: extra, score: 85, passed: true, skillIds: [], failedCriteria: [],
+        agent: "code-reviewer",
+        caseId: extra,
+        score: 85,
+        passed: true,
+        skillIds: [],
+        failedCriteria: [],
       });
     }
     const result = buildAgentEvaluationIntelligence([r, r2]);
@@ -301,7 +311,12 @@ describe("agent evaluation intelligence", () => {
     for (const r of runs) {
       for (let i = 2; i <= 5; i++) {
         r.results[0]!.agentScores!.push({
-          agent: "code-reviewer", caseId: `case-${i}`, score: 80, passed: true, skillIds: [], failedCriteria: [],
+          agent: "code-reviewer",
+          caseId: `case-${i}`,
+          score: 80,
+          passed: true,
+          skillIds: [],
+          failedCriteria: [],
         });
       }
     }
@@ -335,7 +350,7 @@ describe("agent evaluation intelligence", () => {
       createReport({ createdAt: "2026-01-02T00:00:00.000Z", score: 82 }),
     ];
     const result = buildAgentEvaluationIntelligence(history);
-    expect(result.recommendations.some(r => r.includes("8-point score decline"))).toBe(true);
+    expect(result.recommendations.some((r) => r.includes("8-point score decline"))).toBe(true);
   });
 
   it("does not emit a decline recommendation for a small drop under 5 points", () => {
@@ -344,14 +359,14 @@ describe("agent evaluation intelligence", () => {
       createReport({ createdAt: "2026-01-02T00:00:00.000Z", score: 82 }),
     ];
     const result = buildAgentEvaluationIntelligence(history);
-    expect(result.recommendations.some(r => r.includes("score decline"))).toBe(false);
+    expect(result.recommendations.some((r) => r.includes("score decline"))).toBe(false);
   });
 
   it("recommends collecting more trials when evaluations < 3", () => {
     const result = buildAgentEvaluationIntelligence([
       createReport({ createdAt: "2026-01-01T00:00:00.000Z", score: 70 }),
     ]);
-    expect(result.recommendations.some(r => r.includes("collect more trials"))).toBe(true);
+    expect(result.recommendations.some((r) => r.includes("collect more trials"))).toBe(true);
   });
 
   it("recommends targeting improvement areas when weak cases or criteria exist", () => {
@@ -360,7 +375,7 @@ describe("agent evaluation intelligence", () => {
       createReport({ createdAt: "2026-01-02T00:00:00.000Z", score: 70, failedCriteria: ["auth-gap"] }),
     ];
     const result = buildAgentEvaluationIntelligence(history);
-    expect(result.recommendations.some(r => r.includes("targeted evaluation cases"))).toBe(true);
+    expect(result.recommendations.some((r) => r.includes("targeted evaluation cases"))).toBe(true);
   });
 
   it("falls back to no-weak-areas recommendation when everything looks good", () => {
@@ -370,9 +385,7 @@ describe("agent evaluation intelligence", () => {
       createReport({ createdAt: "2026-01-03T00:00:00.000Z", score: 90 }),
     ];
     const result = buildAgentEvaluationIntelligence(history);
-    expect(result.recommendations).toContain(
-      "No repeated weak areas detected in the analyzed benchmark evidence.",
-    );
+    expect(result.recommendations).toContain("No repeated weak areas detected in the analyzed benchmark evidence.");
   });
 });
 

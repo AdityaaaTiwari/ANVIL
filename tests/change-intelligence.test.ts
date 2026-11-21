@@ -8,7 +8,10 @@ import { analyzeChangeIntelligence } from "../src/core/change-intelligence.js";
 import { safeRm } from "./test-helpers.js";
 const exec = promisify(execFile);
 let root = "";
-afterEach(async () => { if (root) await safeRm(root); root = ""; });
+afterEach(async () => {
+  if (root) await safeRm(root);
+  root = "";
+});
 describe("change risk intelligence", () => {
   it("combines changed files, downstream impact, structural hotspots and existing test candidates", async () => {
     root = await mkdtemp(path.join(os.tmpdir(), "forge-change-risk-"));
@@ -16,7 +19,10 @@ describe("change risk intelligence", () => {
     await mkdir(path.join(root, "tests"), { recursive: true });
     await writeFile(path.join(root, "package.json"), JSON.stringify({ scripts: { test: "vitest run" } }));
     await writeFile(path.join(root, "src", "shared.ts"), "export const shared = 1;\n");
-    await writeFile(path.join(root, "src", "consumer.ts"), "import { shared } from './shared';\nexport const value = shared;\n");
+    await writeFile(
+      path.join(root, "src", "consumer.ts"),
+      "import { shared } from './shared';\nexport const value = shared;\n"
+    );
     await writeFile(path.join(root, "tests", "shared.test.ts"), "import { shared } from '../src/shared';\n");
     await exec("git", ["init", "-q"], { cwd: root });
     await exec("git", ["config", "user.email", "forge@example.test"], { cwd: root });
@@ -28,8 +34,10 @@ describe("change risk intelligence", () => {
     expect(report.summary.changedFiles).toBe(1);
     expect(report.changes[0]?.file).toBe("src/shared.ts");
     expect(report.changes[0]?.affectedModules).toContain("src/consumer.ts");
-    expect(report.changes[0]?.recommendedTests.some(item => item.file === "tests/shared.test.ts" && item.exists)).toBe(true);
+    expect(
+      report.changes[0]?.recommendedTests.some((item) => item.file === "tests/shared.test.ts" && item.exists)
+    ).toBe(true);
     expect(report.overallRisk.score).toBeGreaterThanOrEqual(0);
-    expect(report.warnings.some(item => item.includes("not predictions of defects"))).toBe(true);
+    expect(report.warnings.some((item) => item.includes("not predictions of defects"))).toBe(true);
   });
 });

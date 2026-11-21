@@ -21,7 +21,7 @@ async function createWorkspace(): Promise<string> {
 }
 
 afterEach(async () => {
-  await Promise.all(temporaryDirectories.splice(0).map(directory => safeRm(directory)));
+  await Promise.all(temporaryDirectories.splice(0).map((directory) => safeRm(directory)));
 });
 
 describe("ANVIL security CLI", () => {

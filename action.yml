@@ -10,7 +10,7 @@ inputs:
   version:
     description: ANVIL Git ref to install (tag, branch, or commit)
     required: false
-    default: v1.0.7
+    default: v1.0.9
   project-path:
     description: Repository directory to analyze
     required: false
@@ -23,6 +23,14 @@ inputs:
     description: File path to write the OASIS SARIF v2.1.0 report (e.g. anvil-results.sarif)
     required: false
     default: anvil-results.sarif
+  policy-file:
+    description: Custom JSON policy file path (defaults to .anvil/policy.json if present)
+    required: false
+    default: ""
+  baseline-file:
+    description: Baseline JSON file to suppress known existing findings
+    required: false
+    default: ""
   fail-on-warnings:
     description: Whether the gate should fail on medium-severity warnings (true/false)
     required: false
@@ -49,6 +57,8 @@ runs:
         ANVIL_PROJECT_PATH: ${{ inputs.project-path }}
         ANVIL_OPERATION: ${{ inputs.operation }}
         ANVIL_SARIF_FILE: ${{ inputs.sarif-file }}
+        ANVIL_POLICY_FILE: ${{ inputs.policy-file }}
+        ANVIL_BASELINE_FILE: ${{ inputs.baseline-file }}
         ANVIL_FAIL_ON_WARNINGS: ${{ inputs.fail-on-warnings }}
       run: |
         set -euo pipefail
@@ -56,6 +66,8 @@ runs:
           gate)
             EXTRA_ARGS=""
             if [[ -n "$ANVIL_SARIF_FILE" ]]; then EXTRA_ARGS="$EXTRA_ARGS --sarif $ANVIL_SARIF_FILE"; fi
+            if [[ -n "$ANVIL_POLICY_FILE" ]]; then EXTRA_ARGS="$EXTRA_ARGS --policy $ANVIL_POLICY_FILE"; fi
+            if [[ -n "$ANVIL_BASELINE_FILE" ]]; then EXTRA_ARGS="$EXTRA_ARGS --baseline $ANVIL_BASELINE_FILE"; fi
             if [[ "$ANVIL_FAIL_ON_WARNINGS" == "true" ]]; then EXTRA_ARGS="$EXTRA_ARGS --fail-on-warnings"; fi
             anvil gate "$ANVIL_PROJECT_PATH" $EXTRA_ARGS
             ;;

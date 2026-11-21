@@ -16,8 +16,12 @@ export function randomToken(bytes = 32): string {
 export function pkceChallenge(verifier: string): string {
   return createHash("sha256").update(verifier).digest("base64url");
 }
-export function stateKey(state: string): string { return `forge:github:oauth-state:${state}`; }
-export function sessionKey(id: string): string { return `forge:github:session:${id}`; }
+export function stateKey(state: string): string {
+  return `forge:github:oauth-state:${state}`;
+}
+export function sessionKey(id: string): string {
+  return `forge:github:session:${id}`;
+}
 export function getCookie(req: VercelRequest, name: string): string | undefined {
   const raw = req.headers.cookie;
   const cookie = Array.isArray(raw) ? raw[0] : raw;
@@ -26,13 +30,20 @@ export function getCookie(req: VercelRequest, name: string): string | undefined 
     const index = part.indexOf("=");
     if (index < 0) continue;
     if (part.slice(0, index).trim() === name) {
-      try { return decodeURIComponent(part.slice(index + 1).trim()); } catch { return undefined; }
+      try {
+        return decodeURIComponent(part.slice(index + 1).trim());
+      } catch {
+        return undefined;
+      }
     }
   }
   return undefined;
 }
 export function setSessionCookie(res: VercelResponse, id: string): void {
-  res.setHeader("Set-Cookie", `${COOKIE_NAME}=${encodeURIComponent(id)}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${SESSION_TTL_SECONDS}`);
+  res.setHeader(
+    "Set-Cookie",
+    `${COOKIE_NAME}=${encodeURIComponent(id)}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${SESSION_TTL_SECONDS}`
+  );
 }
 export function clearSessionCookie(res: VercelResponse): void {
   res.setHeader("Set-Cookie", `${COOKIE_NAME}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`);
@@ -44,11 +55,18 @@ export async function readSession(req: VercelRequest): Promise<AuthSession | und
   if (!stored) return undefined;
   try {
     const value = JSON.parse(stored) as AuthSession;
-    if (!Number.isSafeInteger(value.userId) || value.userId <= 0 ||
-        typeof value.login !== "string" || !Array.isArray(value.installationIds) ||
-        !value.installationIds.every(isValidInstallationId)) return undefined;
+    if (
+      !Number.isSafeInteger(value.userId) ||
+      value.userId <= 0 ||
+      typeof value.login !== "string" ||
+      !Array.isArray(value.installationIds) ||
+      !value.installationIds.every(isValidInstallationId)
+    )
+      return undefined;
     return value;
-  } catch { return undefined; }
+  } catch {
+    return undefined;
+  }
 }
 export async function createSession(session: AuthSession): Promise<string> {
   const id = randomToken();
@@ -60,7 +78,12 @@ export async function getVerifiedInstallations(ids: number[]): Promise<Installat
   for (const id of ids.slice(0, 100)) {
     const raw = await redisCommand<string | null>(["GET", `forge:github:installation:${id}`]);
     const record = parseInstallationRecord(raw);
-    if (record && record.installationId === id && record.appId === Number(process.env.GITHUB_APP_ID) && !record.suspendedAt) {
+    if (
+      record &&
+      record.installationId === id &&
+      record.appId === Number(process.env.GITHUB_APP_ID) &&
+      !record.suspendedAt
+    ) {
       records.push(record);
     }
   }
@@ -75,8 +98,13 @@ export function oauthConfig() {
   const clientSecret = process.env.GITHUB_CLIENT_SECRET;
   const appId = Number(process.env.GITHUB_APP_ID);
   const callbackUrl = process.env.GITHUB_CALLBACK_URL ?? "https://forge-ecc.vercel.app/api/github/callback";
-  if (!clientId || !clientSecret || !Number.isSafeInteger(appId) || appId <= 0 ||
-      callbackUrl !== "https://forge-ecc.vercel.app/api/github/callback") {
+  if (
+    !clientId ||
+    !clientSecret ||
+    !Number.isSafeInteger(appId) ||
+    appId <= 0 ||
+    callbackUrl !== "https://forge-ecc.vercel.app/api/github/callback"
+  ) {
     throw new Error("GitHub OAuth configuration is incomplete or callback URL is not the approved production URL");
   }
   return { clientId, clientSecret, appId, callbackUrl };
@@ -92,7 +120,7 @@ export async function githubApi<T>(path: string, token: string): Promise<T> {
     cache: "no-store",
   });
   if (!response.ok) throw new Error(`GitHub API request failed: ${response.status}`);
-  return await response.json() as T;
+  return (await response.json()) as T;
 }
 export function jsonError(res: VercelResponse, status: number, message: string) {
   return res.status(status).json({ error: message });

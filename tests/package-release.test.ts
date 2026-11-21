@@ -15,7 +15,9 @@ describe("npm package release metadata", () => {
 
     expect(packageJson.version).toMatch(/^1\.\d+\.\d+$/);
     expect(packageJson.bin?.anvil).toMatch(/^(?:\.\/)?dist\/cli\.js$/);
-    expect(packageJson.files).toEqual(expect.arrayContaining(["dist", "README.md", "CHANGELOG.md", "LICENSE", "SECURITY.md"]));
+    expect(packageJson.files).toEqual(
+      expect.arrayContaining(["dist", "README.md", "CHANGELOG.md", "LICENSE", "SECURITY.md"])
+    );
     expect(packageJson.engines?.node).toBe(">=22");
     expect(packageJson.scripts?.prepack).toContain("npm run build");
     expect(packageJson.scripts?.prepublishOnly).toContain("npm run typecheck");

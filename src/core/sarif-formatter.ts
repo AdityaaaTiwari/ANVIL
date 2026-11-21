@@ -5,6 +5,7 @@ export interface SarifFormatOptions {
   securityReport?: SecurityAuditReport;
   reviewReport?: CodeReviewReport;
   targetRoot?: string;
+  version?: string;
 }
 
 interface SarifRule {
@@ -78,7 +79,7 @@ export function generateSarif(options: SarifFormatOptions): string {
           name: finding.category ? `Security_${finding.category}` : finding.rule,
           shortDescription: { text: finding.description || "Security finding" },
           helpUri: "https://github.com/anvil-workbench/ANVIL/blob/main/docs/security-model.md",
-          defaultConfiguration: { level }
+          defaultConfiguration: { level },
         });
       }
 
@@ -86,22 +87,22 @@ export function generateSarif(options: SarifFormatOptions): string {
         ruleId: finding.rule,
         level,
         message: {
-          text: `${finding.description}${finding.remediation ? ` Remediation: ${finding.remediation}` : ""}`
+          text: `${finding.description}${finding.remediation ? ` Remediation: ${finding.remediation}` : ""}`,
         },
         locations: [
           {
             physicalLocation: {
               artifactLocation: {
                 uri: finding.file.replace(/\\/g, "/"),
-                uriBaseId: "%SRCROOT%"
+                uriBaseId: "%SRCROOT%",
               },
               region: {
                 startLine: finding.line && finding.line > 0 ? finding.line : 1,
-                startColumn: 1
-              }
-            }
-          }
-        ]
+                startColumn: 1,
+              },
+            },
+          },
+        ],
       });
     }
   }
@@ -116,7 +117,7 @@ export function generateSarif(options: SarifFormatOptions): string {
           shortDescription: { text: finding.title },
           fullDescription: { text: finding.recommendation },
           helpUri: "https://github.com/anvil-workbench/ANVIL/blob/main/docs/ci-gate-and-sarif.md",
-          defaultConfiguration: { level }
+          defaultConfiguration: { level },
         });
       }
 
@@ -124,22 +125,22 @@ export function generateSarif(options: SarifFormatOptions): string {
         ruleId: finding.ruleId,
         level,
         message: {
-          text: `${finding.title}: ${finding.recommendation}`
+          text: `${finding.title}: ${finding.recommendation}`,
         },
         locations: [
           {
             physicalLocation: {
               artifactLocation: {
                 uri: finding.file.replace(/\\/g, "/"),
-                uriBaseId: "%SRCROOT%"
+                uriBaseId: "%SRCROOT%",
               },
               region: {
                 startLine: finding.line && finding.line > 0 ? finding.line : 1,
-                startColumn: 1
-              }
-            }
-          }
-        ]
+                startColumn: 1,
+              },
+            },
+          },
+        ],
       });
     }
   }
@@ -152,14 +153,14 @@ export function generateSarif(options: SarifFormatOptions): string {
         tool: {
           driver: {
             name: "ANVIL",
-            version: "1.0.7",
+            version: options.version ?? "1.0.9",
             informationUri: "https://github.com/anvil-workbench/ANVIL",
-            rules: Array.from(rulesMap.values())
-          }
+            rules: Array.from(rulesMap.values()),
+          },
         },
-        results
-      }
-    ]
+        results,
+      },
+    ],
   };
 
   return JSON.stringify(sarifLog, null, 2);

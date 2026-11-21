@@ -6,8 +6,12 @@ import { trySymlink } from "./test-helpers.js";
 import { loadHooks } from "../src/core/hook-engine.js";
 import { loadPermissionPolicy, validatePermissionPolicy } from "../src/core/permission-policy.js";
 import {
-  approveAgentConfigVersion, captureAgentConfigVersion, compareAgentConfigVersions,
-  listAgentConfigVersions, loadAgentConfigVersion, materializeAgentConfigVersion
+  approveAgentConfigVersion,
+  captureAgentConfigVersion,
+  compareAgentConfigVersions,
+  listAgentConfigVersions,
+  loadAgentConfigVersion,
+  materializeAgentConfigVersion,
 } from "../src/core/agent-config-versioning.js";
 
 const roots: string[] = [];
@@ -18,11 +22,26 @@ async function project(): Promise<string> {
   await mkdir(path.join(root, ".forge", "skills"), { recursive: true });
   await writeFile(path.join(root, ".forge", "agents", "planner.md"), "# Planner\nPlan carefully.\n");
   await writeFile(path.join(root, ".forge", "skills", "secure-changes.md"), "# Secure changes\nUse least privilege.\n");
-  await writeFile(path.join(root, ".forge", "hooks.json"), JSON.stringify([{ id: "candidate-policy", event: "before-agent", action: "append-context", message: "Snapshot-specific policy guidance." }]));
-  await writeFile(path.join(root, ".forge", "permissions.json"), JSON.stringify({ version: 1, mode: "proposal-only", allowedTools: [] }));
+  await writeFile(
+    path.join(root, ".forge", "hooks.json"),
+    JSON.stringify([
+      {
+        id: "candidate-policy",
+        event: "before-agent",
+        action: "append-context",
+        message: "Snapshot-specific policy guidance.",
+      },
+    ])
+  );
+  await writeFile(
+    path.join(root, ".forge", "permissions.json"),
+    JSON.stringify({ version: 1, mode: "proposal-only", allowedTools: [] })
+  );
   return root;
 }
-afterEach(async () => { await Promise.all(roots.splice(0).map(root => rm(root, { recursive: true, force: true }))); });
+afterEach(async () => {
+  await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true })));
+});
 
 describe("agent configuration versioning", () => {
   it("captures snapshots and compares changes without bypassing benchmark-gated approval", async () => {
@@ -36,7 +55,9 @@ describe("agent configuration versioning", () => {
     expect(diff.changed).toEqual(["agents/planner.md"]);
     expect(diff.added).toEqual(["skills/documentation.md"]);
     expect(diff.removed).toEqual(["skills/secure-changes.md"]);
-    await expect(approveAgentConfigVersion(root, second.id, "reviewer")).rejects.toThrow("Direct configuration approval is disabled");
+    await expect(approveAgentConfigVersion(root, second.id, "reviewer")).rejects.toThrow(
+      "Direct configuration approval is disabled"
+    );
     expect(await readFile(path.join(root, ".forge", "agents", "planner.md"), "utf8")).toContain("acceptance criteria");
     expect(await listAgentConfigVersions(root)).toHaveLength(2);
     expect((await loadAgentConfigVersion(root, second.id)).status).toBe("candidate");
@@ -58,7 +79,7 @@ describe("agent configuration versioning", () => {
     await mkdir(outside);
     await writeFile(path.join(outside, "external.md"), "# External\\n");
     await rm(path.join(root, ".forge", "agents"), { recursive: true });
-    if (!await trySymlink(outside, path.join(root, ".forge", "agents"), "dir")) return;
+    if (!(await trySymlink(outside, path.join(root, ".forge", "agents"), "dir"))) return;
     await expect(captureAgentConfigVersion(root)).rejects.toThrow("must not be symbolic links");
   });
   it("materializes only verified snapshot files into a separate workspace", async () => {
@@ -68,17 +89,29 @@ describe("agent configuration versioning", () => {
     await mkdir(isolated);
     await materializeAgentConfigVersion(root, version.id, isolated);
     expect(await readFile(path.join(isolated, ".forge", "agents", "planner.md"), "utf8")).toContain("Plan carefully");
-    expect(await readFile(path.join(isolated, ".forge", "skills", "secure-changes.md"), "utf8")).toContain("least privilege");
-    await expect(readFile(path.join(root, ".forge", "agents", "planner.md"), "utf8")).resolves.toContain("Plan carefully");
-    await expect(readFile(path.join(isolated, ".forge", "hooks.json"), "utf8")).resolves.toContain("Snapshot-specific policy guidance.");
-    await expect(loadHooks(isolated)).resolves.toMatchObject([{ id: "candidate-policy", message: "Snapshot-specific policy guidance." }]);
-    await expect(loadPermissionPolicy(isolated)).resolves.toEqual({ version: 1, mode: "proposal-only", allowedTools: [] });
+    expect(await readFile(path.join(isolated, ".forge", "skills", "secure-changes.md"), "utf8")).toContain(
+      "least privilege"
+    );
+    await expect(readFile(path.join(root, ".forge", "agents", "planner.md"), "utf8")).resolves.toContain(
+      "Plan carefully"
+    );
+    await expect(readFile(path.join(isolated, ".forge", "hooks.json"), "utf8")).resolves.toContain(
+      "Snapshot-specific policy guidance."
+    );
+    await expect(loadHooks(isolated)).resolves.toMatchObject([
+      { id: "candidate-policy", message: "Snapshot-specific policy guidance." },
+    ]);
+    await expect(loadPermissionPolicy(isolated)).resolves.toEqual({
+      version: 1,
+      mode: "proposal-only",
+      allowedTools: [],
+    });
   });
   it("captures an explicit empty hook policy when the workspace has no hooks file", async () => {
     const root = await project();
     await unlink(path.join(root, ".forge", "hooks.json"));
     const version = await captureAgentConfigVersion(root);
-    const hooks = version.files.find(file => file.path === "hooks.json");
+    const hooks = version.files.find((file) => file.path === "hooks.json");
     expect(hooks?.content.trim()).toBe("[]");
     const isolated = path.join(root, "isolated-no-hooks");
     await mkdir(isolated);
@@ -87,8 +120,12 @@ describe("agent configuration versioning", () => {
   });
   it("rejects benchmark permission policies that enable tools or unknown fields", () => {
     expect(() => validatePermissionPolicy({ version: 1, mode: "restricted", allowedTools: ["shell"] })).not.toThrow();
-    expect(() => validatePermissionPolicy({ version: 1, mode: "proposal-only", allowedTools: ["shell"] })).not.toThrow();
-    expect(() => validatePermissionPolicy({ version: 1, mode: "proposal-only", allowedTools: [], execute: true })).toThrow("unsupported fields");
+    expect(() =>
+      validatePermissionPolicy({ version: 1, mode: "proposal-only", allowedTools: ["shell"] })
+    ).not.toThrow();
+    expect(() =>
+      validatePermissionPolicy({ version: 1, mode: "proposal-only", allowedTools: [], execute: true })
+    ).toThrow("unsupported fields");
   });
   it("requires a workspace configuration to snapshot", async () => {
     const root = await mkdtemp(path.join(os.tmpdir(), "forge-agent-config-empty-"));

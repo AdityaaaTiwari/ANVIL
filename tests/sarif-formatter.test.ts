@@ -19,9 +19,9 @@ describe("SARIF v2.1.0 generation", () => {
           line: 14,
           rule: "AWS_ACCESS_KEY",
           description: "Potential hardcoded AWS Access Key ID found",
-          remediation: "Move secrets to environment variables"
-        }
-      ]
+          remediation: "Move secrets to environment variables",
+        },
+      ],
     };
 
     const mockReview: CodeReviewReport = {
@@ -41,14 +41,14 @@ describe("SARIF v2.1.0 generation", () => {
           title: "Dynamic code evaluation",
           evidence: "eval(userInput)",
           recommendation: "Avoid evaluating generated strings",
-          confidence: "heuristic"
-        }
-      ]
+          confidence: "heuristic",
+        },
+      ],
     };
 
     const sarifJson = generateSarif({
       securityReport: mockSecurity,
-      reviewReport: mockReview
+      reviewReport: mockReview,
     });
 
     const parsed = JSON.parse(sarifJson);

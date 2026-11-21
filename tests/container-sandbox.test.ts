@@ -1,12 +1,28 @@
 import { describe, expect, it } from "vitest";
-import { buildContainerRunArgs, detectDockerRootless, runContainerVerification } from "../src/core/container-sandbox.js";
+import {
+  buildContainerRunArgs,
+  detectDockerRootless,
+  runContainerVerification,
+} from "../src/core/container-sandbox.js";
 import { formatSandboxRuntimeReport, parseSandboxRuntimeReport } from "../src/core/sandbox-runtime.js";
-import { getSandboxSecurityProfile, listSandboxSecurityProfiles, validateSandboxSecurityProfile } from "../src/core/sandbox-security-profiles.js";
+import {
+  getSandboxSecurityProfile,
+  listSandboxSecurityProfiles,
+  validateSandboxSecurityProfile,
+} from "../src/core/sandbox-security-profiles.js";
 import { createSandboxComplianceReport, formatSandboxComplianceReport } from "../src/core/sandbox-compliance.js";
 import { loadSandboxPolicy, validateSandboxPolicy } from "../src/core/sandbox-policy.js";
 import { verifyStagedPatch } from "../src/core/staged-verification.js";
-import { formatSandboxCleanupReport, parseManagedContainers, selectStoppedManagedContainers } from "../src/core/sandbox-lifecycle.js";
-import { appendSandboxCleanupAudit, formatSandboxCleanupHistory, readSandboxCleanupAudit } from "../src/core/sandbox-cleanup-audit.js";
+import {
+  formatSandboxCleanupReport,
+  parseManagedContainers,
+  selectStoppedManagedContainers,
+} from "../src/core/sandbox-lifecycle.js";
+import {
+  appendSandboxCleanupAudit,
+  formatSandboxCleanupHistory,
+  readSandboxCleanupAudit,
+} from "../src/core/sandbox-cleanup-audit.js";
 import { mkdtemp, rm, writeFile, symlink, chmod, readFile } from "node:fs/promises";
 import { spawnSync } from "node:child_process";
 import os from "node:os";
@@ -16,8 +32,9 @@ const image = "node:22-alpine@sha256:" + "a".repeat(64);
 
 describe("container sandbox arguments", () => {
   it("requires an immutable image digest", () => {
-    expect(() => buildContainerRunArgs("/tmp/project", "node:22", "test", "forge-test"))
-      .toThrow(/pinned by an immutable sha256 digest/);
+    expect(() => buildContainerRunArgs("/tmp/project", "node:22", "test", "forge-test")).toThrow(
+      /pinned by an immutable sha256 digest/
+    );
   });
 
   it("disables networking and privilege escalation while bounding resources", () => {
@@ -31,10 +48,10 @@ describe("container sandbox arguments", () => {
     expect(args).toContain("--cpus=2");
     expect(args).toContain("--pull=never");
     expect(args).toContain("--tmpfs");
-    expect(args.some(value => value.includes("readonly"))).toBe(true);
+    expect(args.some((value) => value.includes("readonly"))).toBe(true);
     expect(args).toContain("--entrypoint");
     expect(args).toContain("node");
-    expect(args.some(value => value.includes("fs.cpSync"))).toBe(true);
+    expect(args.some((value) => value.includes("fs.cpSync"))).toBe(true);
     const runner = args[args.indexOf("-e") + 1] ?? "";
     expect(runner).toContain("const filter=src=>");
     expect(runner).toContain("fs.lstatSync(src)");
@@ -47,28 +64,43 @@ describe("container sandbox arguments", () => {
   });
 
   it("rejects lifecycle hooks and unsafe script names", () => {
-    expect(() => buildContainerRunArgs("/tmp/project", image, "pretest", "forge-test"))
-      .toThrow(/explicit package script/);
-    expect(() => buildContainerRunArgs("/tmp/project", image, "../test", "forge-test"))
-      .toThrow(/explicit package script/);
+    expect(() => buildContainerRunArgs("/tmp/project", image, "pretest", "forge-test")).toThrow(
+      /explicit package script/
+    );
+    expect(() => buildContainerRunArgs("/tmp/project", image, "../test", "forge-test")).toThrow(
+      /explicit package script/
+    );
   });
 
   it("rejects comma-containing mount paths to avoid mount option injection", () => {
-    expect(() => buildContainerRunArgs("/tmp/proj,ect", image, "test", "forge-test"))
-      .toThrow(/cannot contain commas/);
+    expect(() => buildContainerRunArgs("/tmp/proj,ect", image, "test", "forge-test")).toThrow(/cannot contain commas/);
   });
 });
 
 describe("custom sandbox policy runtime enforcement", () => {
   const policy = {
-    version: 1 as const, profile: "balanced" as const, network: "none" as const,
-    readOnlyRoot: true as const, dropAllCapabilities: true as const,
-    noNewPrivileges: true as const, maxMemory: "512m", maxCpus: 1,
-    maxProcesses: 64, requireRootless: false, requireImageDigest: true as const,
+    version: 1 as const,
+    profile: "balanced" as const,
+    network: "none" as const,
+    readOnlyRoot: true as const,
+    dropAllCapabilities: true as const,
+    noNewPrivileges: true as const,
+    maxMemory: "512m",
+    maxCpus: 1,
+    maxProcesses: 64,
+    requireRootless: false,
+    requireImageDigest: true as const,
   };
 
   it("maps validated policy resource limits into actual container arguments", () => {
-    const args = buildContainerRunArgs("/tmp/project", image, "test", "forge-policy", getSandboxSecurityProfile("balanced"), policy);
+    const args = buildContainerRunArgs(
+      "/tmp/project",
+      image,
+      "test",
+      "forge-policy",
+      getSandboxSecurityProfile("balanced"),
+      policy
+    );
     expect(args).toContain("--memory=512m");
     expect(args).toContain("--memory-swap=512m");
     expect(args).toContain("--cpus=1");
@@ -94,27 +126,41 @@ describe("mocked container runtime policy execution", () => {
       const project = path.join(root, "project");
       const runtime = path.join(root, "mock-runtime.cjs");
       const argsPath = path.join(root, "runtime-args.json");
-      await import("node:fs/promises").then(fs => fs.mkdir(project));
-      await writeFile(path.join(project, "package.json"), JSON.stringify({ scripts: { test: "node -e \"process.exit(0)\"" } }), "utf8");
+      await import("node:fs/promises").then((fs) => fs.mkdir(project));
+      await writeFile(
+        path.join(project, "package.json"),
+        JSON.stringify({ scripts: { test: 'node -e "process.exit(0)"' } }),
+        "utf8"
+      );
       const runtimeSource = [
         "#!/usr/bin/env node",
         "const fs = require('node:fs');",
         "const args = process.argv.slice(2);",
         "if (args[0] === 'image' && args[1] === 'inspect') process.exit(0);",
         "if (args[0] === 'info') { process.stdout.write('[\\\"name=rootless\\\"]'); process.exit(0); }",
-        "if (args[0] === 'run') { fs.writeFileSync(" + JSON.stringify(argsPath) + ", JSON.stringify(args)); process.exit(0); }",
+        "if (args[0] === 'run') { fs.writeFileSync(" +
+          JSON.stringify(argsPath) +
+          ", JSON.stringify(args)); process.exit(0); }",
         "process.exit(2);",
       ].join("\n");
       await writeFile(runtime, runtimeSource, "utf8");
       await chmod(runtime, 0o755);
       const policy = {
-        version: 1 as const, profile: "balanced" as const, network: "none" as const,
-        readOnlyRoot: true as const, dropAllCapabilities: true as const,
-        noNewPrivileges: true as const, maxMemory: "512m", maxCpus: 1,
-        maxProcesses: 64, requireRootless: false, requireImageDigest: true as const,
+        version: 1 as const,
+        profile: "balanced" as const,
+        network: "none" as const,
+        readOnlyRoot: true as const,
+        dropAllCapabilities: true as const,
+        noNewPrivileges: true as const,
+        maxMemory: "512m",
+        maxCpus: 1,
+        maxProcesses: 64,
+        requireRootless: false,
+        requireImageDigest: true as const,
       };
       const result = await runContainerVerification(project, "test", image, {
-        runtimePath: runtime, sandboxPolicy: policy,
+        runtimePath: runtime,
+        sandboxPolicy: policy,
       });
       const args = JSON.parse(await readFile(argsPath, "utf8")) as string[];
       expect(args).toContain("--memory=512m");
@@ -138,7 +184,7 @@ describe("container timeout cleanup", () => {
       const stoppedPath = path.join(root, "container-stopped.txt");
       const startedPath = path.join(root, "container-started.txt");
       const removedPath = path.join(root, "container-removed.txt");
-      await import("node:fs/promises").then(fs => fs.mkdir(project));
+      await import("node:fs/promises").then((fs) => fs.mkdir(project));
       await writeFile(path.join(project, "package.json"), JSON.stringify({ scripts: { test: "sleep" } }), "utf8");
       const source = [
         "#!/usr/bin/env node",
@@ -146,15 +192,22 @@ describe("container timeout cleanup", () => {
         "const args = process.argv.slice(2);",
         "if (args[0] === 'image' && args[1] === 'inspect') process.exit(0);",
         "if (args[0] === 'info') { process.stdout.write('[\\\"name=rootless\\\"]'); process.exit(0); }",
-        "if (args[0] === 'stop') { fs.writeFileSync(" + JSON.stringify(stoppedPath) + ", JSON.stringify(args.slice(1))); process.exit(1); }",
-        "if (args[0] === 'rm') { fs.writeFileSync(" + JSON.stringify(removedPath) + ", JSON.stringify(args.slice(1))); process.exit(0); }",
-        "if (args[0] === 'run') { const i = args.indexOf('--name'); fs.writeFileSync(" + JSON.stringify(startedPath) + ", args[i + 1]); setInterval(() => {}, 1000); }",
+        "if (args[0] === 'stop') { fs.writeFileSync(" +
+          JSON.stringify(stoppedPath) +
+          ", JSON.stringify(args.slice(1))); process.exit(1); }",
+        "if (args[0] === 'rm') { fs.writeFileSync(" +
+          JSON.stringify(removedPath) +
+          ", JSON.stringify(args.slice(1))); process.exit(0); }",
+        "if (args[0] === 'run') { const i = args.indexOf('--name'); fs.writeFileSync(" +
+          JSON.stringify(startedPath) +
+          ", args[i + 1]); setInterval(() => {}, 1000); }",
         "if (args[0] !== 'run') process.exit(2);",
       ].join("\n");
       await writeFile(runtime, source, "utf8");
       await chmod(runtime, 0o755);
       const result = await runContainerVerification(project, "test", image, {
-        runtimePath: runtime, timeoutMs: 1000,
+        runtimePath: runtime,
+        timeoutMs: 1000,
       });
       expect(result.status).toBe("timed_out");
       const startedName = await readFile(startedPath, "utf8");
@@ -175,7 +228,7 @@ describe("container timeout cleanup", () => {
       const project = path.join(root, "project");
       const runtime = path.join(root, "mock-runtime-cleanup-failure.cjs");
       const callsPath = path.join(root, "cleanup-calls.jsonl");
-      await import("node:fs/promises").then(fs => fs.mkdir(project));
+      await import("node:fs/promises").then((fs) => fs.mkdir(project));
       await writeFile(path.join(project, "package.json"), JSON.stringify({ scripts: { test: "sleep" } }), "utf8");
       const source = [
         "#!/usr/bin/env node",
@@ -183,16 +236,22 @@ describe("container timeout cleanup", () => {
         "const args = process.argv.slice(2);",
         "if (args[0] === 'image' && args[1] === 'inspect') process.exit(0);",
         "if (args[0] === 'info') { process.stdout.write('[\\\"name=rootless\\\"]'); process.exit(0); }",
-        "if (args[0] === 'stop' || args[0] === 'rm') { fs.appendFileSync(" + JSON.stringify(callsPath) + ", JSON.stringify(args) + '\\n'); process.exit(1); }",
+        "if (args[0] === 'stop' || args[0] === 'rm') { fs.appendFileSync(" +
+          JSON.stringify(callsPath) +
+          ", JSON.stringify(args) + '\\n'); process.exit(1); }",
         "if (args[0] === 'run') { setInterval(() => {}, 1000); }",
         "if (args[0] !== 'run') process.exit(2);",
       ].join("\n");
       await writeFile(runtime, source, "utf8");
       await chmod(runtime, 0o755);
       const result = await runContainerVerification(project, "test", image, {
-        runtimePath: runtime, timeoutMs: 1000,
+        runtimePath: runtime,
+        timeoutMs: 1000,
       });
-      const calls = (await readFile(callsPath, "utf8")).trim().split("\n").map(line => JSON.parse(line) as string[]);
+      const calls = (await readFile(callsPath, "utf8"))
+        .trim()
+        .split("\n")
+        .map((line) => JSON.parse(line) as string[]);
       expect(result.status).toBe("timed_out");
       expect(calls).toHaveLength(2);
       expect(calls[0][0]).toBe("stop");
@@ -229,8 +288,12 @@ describe("container runtime fail-closed behavior", () => {
 
   async function makeProject(root: string): Promise<string> {
     const project = path.join(root, "project");
-    await import("node:fs/promises").then(fs => fs.mkdir(project));
-    await writeFile(path.join(project, "package.json"), JSON.stringify({ scripts: { test: "node -e \"process.exit(0)\"" } }), "utf8");
+    await import("node:fs/promises").then((fs) => fs.mkdir(project));
+    await writeFile(
+      path.join(project, "package.json"),
+      JSON.stringify({ scripts: { test: 'node -e "process.exit(0)"' } }),
+      "utf8"
+    );
     return project;
   }
 
@@ -240,13 +303,21 @@ describe("container runtime fail-closed behavior", () => {
       const project = await makeProject(root);
       const runtime = await makeRuntime(root, "rootful");
       const policy = {
-        version: 1 as const, profile: "rootless-required" as const, network: "none" as const,
-        readOnlyRoot: true as const, dropAllCapabilities: true as const,
-        noNewPrivileges: true as const, maxMemory: "512m", maxCpus: 1,
-        maxProcesses: 64, requireRootless: true, requireImageDigest: true as const,
+        version: 1 as const,
+        profile: "rootless-required" as const,
+        network: "none" as const,
+        readOnlyRoot: true as const,
+        dropAllCapabilities: true as const,
+        noNewPrivileges: true as const,
+        maxMemory: "512m",
+        maxCpus: 1,
+        maxProcesses: 64,
+        requireRootless: true,
+        requireImageDigest: true as const,
       };
-      await expect(runContainerVerification(project, "test", image, { runtimePath: runtime, sandboxPolicy: policy }))
-        .rejects.toThrow(/Rootless container runtime is required/);
+      await expect(
+        runContainerVerification(project, "test", image, { runtimePath: runtime, sandboxPolicy: policy })
+      ).rejects.toThrow(/Rootless container runtime is required/);
     } finally {
       await rm(root, { recursive: true, force: true });
     }
@@ -258,14 +329,25 @@ describe("container runtime fail-closed behavior", () => {
       const project = await makeProject(root);
       const runtime = await makeRuntime(root, "rootful");
       const policy = {
-        version: 1 as const, profile: "balanced" as const, network: "none" as const,
-        readOnlyRoot: true as const, dropAllCapabilities: true as const,
-        noNewPrivileges: true as const, maxMemory: "512m", maxCpus: 1,
-        maxProcesses: 64, requireRootless: false, requireImageDigest: true as const,
+        version: 1 as const,
+        profile: "balanced" as const,
+        network: "none" as const,
+        readOnlyRoot: true as const,
+        dropAllCapabilities: true as const,
+        noNewPrivileges: true as const,
+        maxMemory: "512m",
+        maxCpus: 1,
+        maxProcesses: 64,
+        requireRootless: false,
+        requireImageDigest: true as const,
       };
-      await expect(runContainerVerification(project, "test", image, {
-        runtimePath: runtime, securityProfile: "hardened", sandboxPolicy: policy,
-      })).rejects.toThrow(/must match the profile declared in the sandbox policy/);
+      await expect(
+        runContainerVerification(project, "test", image, {
+          runtimePath: runtime,
+          securityProfile: "hardened",
+          sandboxPolicy: policy,
+        })
+      ).rejects.toThrow(/must match the profile declared in the sandbox policy/);
     } finally {
       await rm(root, { recursive: true, force: true });
     }
@@ -276,8 +358,9 @@ describe("container runtime fail-closed behavior", () => {
     try {
       const project = await makeProject(root);
       const runtime = await makeRuntime(root, "missing-image");
-      await expect(runContainerVerification(project, "test", image, { runtimePath: runtime }))
-        .rejects.toThrow(/not available locally/);
+      await expect(runContainerVerification(project, "test", image, { runtimePath: runtime })).rejects.toThrow(
+        /not available locally/
+      );
     } finally {
       await rm(root, { recursive: true, force: true });
     }
@@ -312,7 +395,8 @@ describe("container runtime security detection", () => {
 
 describe("staged verification CLI security flags", () => {
   it("documents rootless mode as a container-only option", () => {
-    const usage = "forge patch-verify PATCH_STAGE_ID SCRIPT [--install-dependencies] [--sandbox-image IMAGE@sha256:DIGEST] [--require-rootless] [--path PROJECT]";
+    const usage =
+      "forge patch-verify PATCH_STAGE_ID SCRIPT [--install-dependencies] [--sandbox-image IMAGE@sha256:DIGEST] [--require-rootless] [--path PROJECT]";
     expect(usage).toContain("--require-rootless");
     expect(usage).toContain("--sandbox-image");
   });
@@ -320,9 +404,17 @@ describe("staged verification CLI security flags", () => {
 
 describe("staged verification policy integration", () => {
   const policy = {
-    version: 1, profile: "balanced", network: "none", readOnlyRoot: true,
-    dropAllCapabilities: true, noNewPrivileges: true, maxMemory: "512m",
-    maxCpus: 1, maxProcesses: 64, requireRootless: false, requireImageDigest: true,
+    version: 1,
+    profile: "balanced",
+    network: "none",
+    readOnlyRoot: true,
+    dropAllCapabilities: true,
+    noNewPrivileges: true,
+    maxMemory: "512m",
+    maxCpus: 1,
+    maxProcesses: 64,
+    requireRootless: false,
+    requireImageDigest: true,
   };
 
   it("requires container execution when a policy file is supplied", async () => {
@@ -330,9 +422,11 @@ describe("staged verification policy integration", () => {
     try {
       const policyPath = path.join(root, "policy.json");
       await writeFile(policyPath, JSON.stringify(policy), "utf8");
-      await expect(verifyStagedPatch(root, "patch-stage-12345678901234567890", "test", {
-        sandboxPolicyPath: policyPath,
-      })).rejects.toThrow(/requires --sandbox-image/);
+      await expect(
+        verifyStagedPatch(root, "patch-stage-12345678901234567890", "test", {
+          sandboxPolicyPath: policyPath,
+        })
+      ).rejects.toThrow(/requires --sandbox-image/);
     } finally {
       await rm(root, { recursive: true, force: true });
     }
@@ -343,9 +437,13 @@ describe("staged verification policy integration", () => {
     try {
       const policyPath = path.join(root, "policy.json");
       await writeFile(policyPath, JSON.stringify(policy), "utf8");
-      await expect(verifyStagedPatch(root, "patch-stage-12345678901234567890", "test", {
-        sandboxImage: image, sandboxPolicyPath: policyPath, securityProfile: "hardened",
-      })).rejects.toThrow(/must match the profile declared in --policy/);
+      await expect(
+        verifyStagedPatch(root, "patch-stage-12345678901234567890", "test", {
+          sandboxImage: image,
+          sandboxPolicyPath: policyPath,
+          securityProfile: "hardened",
+        })
+      ).rejects.toThrow(/must match the profile declared in --policy/);
     } finally {
       await rm(root, { recursive: true, force: true });
     }
@@ -356,17 +454,41 @@ describe("patch-verify CLI policy argument validation", () => {
   const stageId = "patch-stage-12345678901234567890";
 
   it("rejects a missing --policy value", () => {
-    const result = spawnSync(process.execPath, ["--import", "tsx", "src/cli.ts", "patch-verify", stageId, "test", "--sandbox-image", image, "--policy"], {
-      cwd: process.cwd(), encoding: "utf8", timeout: 20_000,
-    });
+    const result = spawnSync(
+      process.execPath,
+      ["--import", "tsx", "src/cli.ts", "patch-verify", stageId, "test", "--sandbox-image", image, "--policy"],
+      {
+        cwd: process.cwd(),
+        encoding: "utf8",
+        timeout: 20_000,
+      }
+    );
     expect(result.status).toBe(1);
     expect(result.stderr).toContain("--policy requires a policy file path");
   });
 
   it("rejects another flag where the policy path should be", () => {
-    const result = spawnSync(process.execPath, ["--import", "tsx", "src/cli.ts", "patch-verify", stageId, "test", "--sandbox-image", image, "--policy", "--path", process.cwd()], {
-      cwd: process.cwd(), encoding: "utf8", timeout: 20_000,
-    });
+    const result = spawnSync(
+      process.execPath,
+      [
+        "--import",
+        "tsx",
+        "src/cli.ts",
+        "patch-verify",
+        stageId,
+        "test",
+        "--sandbox-image",
+        image,
+        "--policy",
+        "--path",
+        process.cwd(),
+      ],
+      {
+        cwd: process.cwd(),
+        encoding: "utf8",
+        timeout: 20_000,
+      }
+    );
     expect(result.status).toBe(1);
     expect(result.stderr).toContain("--policy requires a policy file path");
   });
@@ -393,12 +515,14 @@ describe("sandbox lifecycle cleanup selection", () => {
     ]);
   });
   it("selects only stopped managed containers", () => {
-    const items = parseManagedContainers([
-      "abcdef123456\tExited (0) 2 hours ago\tforge-verify-old",
-      "abcdef123457\tUp 5 minutes\tforge-verify-active",
-      "abcdef123458\tCreated\tforge-verify-created",
-    ].join("\n"));
-    expect(selectStoppedManagedContainers(items).map(item => item.id)).toEqual(["abcdef123456", "abcdef123458"]);
+    const items = parseManagedContainers(
+      [
+        "abcdef123456\tExited (0) 2 hours ago\tforge-verify-old",
+        "abcdef123457\tUp 5 minutes\tforge-verify-active",
+        "abcdef123458\tCreated\tforge-verify-created",
+      ].join("\n")
+    );
+    expect(selectStoppedManagedContainers(items).map((item) => item.id)).toEqual(["abcdef123456", "abcdef123458"]);
   });
   it("rejects malformed container output", () => {
     expect(() => parseManagedContainers("not-an-id\tExited\tunknown")).toThrow(/invalid managed-container/);
@@ -435,7 +559,7 @@ describe("sandbox cleanup audit history", () => {
 describe("sandbox security profiles", () => {
   it("exposes immutable baseline controls for every built-in profile", () => {
     const profiles = listSandboxSecurityProfiles();
-    expect(profiles.map(profile => profile.name)).toEqual(["balanced", "hardened", "rootless-required"]);
+    expect(profiles.map((profile) => profile.name)).toEqual(["balanced", "hardened", "rootless-required"]);
     for (const profile of profiles) expect(validateSandboxSecurityProfile(profile)).toBe(true);
   });
   it("requires rootless mode for hardened profiles", () => {
@@ -460,33 +584,47 @@ describe("container verification profile policy", () => {
 describe("sandbox compliance reporting", () => {
   it("reports all configured controls and observed runtime facts", () => {
     const report = createSandboxComplianceReport(getSandboxSecurityProfile("balanced"), {
-      available: true, rootless: true, imageDigestPinned: true,
+      available: true,
+      rootless: true,
+      imageDigestPinned: true,
     });
     expect(report.status).toBe("compliant");
-    expect(report.checks.every(check => check.status === "pass")).toBe(true);
+    expect(report.checks.every((check) => check.status === "pass")).toBe(true);
     expect(formatSandboxComplianceReport(report)).toContain("Immutable image reference");
   });
   it("marks unavailable runtime as non-compliant", () => {
     const report = createSandboxComplianceReport(getSandboxSecurityProfile("balanced"), {
-      available: false, rootless: null, imageDigestPinned: false,
+      available: false,
+      rootless: null,
+      imageDigestPinned: false,
     });
     expect(report.status).toBe("non-compliant");
-    expect(report.checks.some(check => check.id === "runtime" && check.status === "fail")).toBe(true);
+    expect(report.checks.some((check) => check.id === "runtime" && check.status === "fail")).toBe(true);
   });
   it("fails hardened compliance when rootless mode is unknown", () => {
     const report = createSandboxComplianceReport(getSandboxSecurityProfile("hardened"), {
-      available: true, rootless: null, imageDigestPinned: true,
+      available: true,
+      rootless: null,
+      imageDigestPinned: true,
     });
     expect(report.status).toBe("non-compliant");
-    expect(report.checks.some(check => check.id === "rootless" && check.status === "fail")).toBe(true);
+    expect(report.checks.some((check) => check.id === "rootless" && check.status === "fail")).toBe(true);
   });
 });
 
 describe("fail-closed sandbox policy validation", () => {
   const validPolicy = {
-    version: 1, profile: "balanced", network: "none", readOnlyRoot: true,
-    dropAllCapabilities: true, noNewPrivileges: true, maxMemory: "512m",
-    maxCpus: 1, maxProcesses: 64, requireRootless: false, requireImageDigest: true,
+    version: 1,
+    profile: "balanced",
+    network: "none",
+    readOnlyRoot: true,
+    dropAllCapabilities: true,
+    noNewPrivileges: true,
+    maxMemory: "512m",
+    maxCpus: 1,
+    maxProcesses: 64,
+    requireRootless: false,
+    requireImageDigest: true,
   };
   it("accepts a valid restrictive policy", () => {
     expect(validateSandboxPolicy(validPolicy).valid).toBe(true);
@@ -516,7 +654,13 @@ describe("fail-closed sandbox policy validation", () => {
         expect(linked.valid).toBe(false);
         if (!linked.valid) expect(linked.errors.join(" ")).toMatch(/non-symlink file/);
       } catch (error: unknown) {
-        if (error && typeof error === "object" && "code" in error && error.code === "EPERM" && process.platform === "win32") {
+        if (
+          error &&
+          typeof error === "object" &&
+          "code" in error &&
+          error.code === "EPERM" &&
+          process.platform === "win32"
+        ) {
           return;
         }
         throw error;

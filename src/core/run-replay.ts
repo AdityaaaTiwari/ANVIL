@@ -6,16 +6,21 @@ import { createRun, type RunRecord } from "./orchestrator.js";
  * silently reset. The caller must explicitly resume the returned run.
  */
 export function createReplayRun(source: RunRecord): RunRecord {
-  const rejected = source.tasks.find(record => record.approval?.decision === "rejected");
+  const rejected = source.tasks.find((record) => record.approval?.decision === "rejected");
   if (rejected) throw new Error(`Cannot replay run: task "${rejected.task.id}" was explicitly rejected.`);
-  const retryable = source.tasks.filter(record =>
-    record.status === "failed" ||
-    (record.status === "blocked" && !record.error?.startsWith("Blocked by policy hook:")),
+  const retryable = source.tasks.filter(
+    (record) =>
+      record.status === "failed" ||
+      (record.status === "blocked" && !record.error?.startsWith("Blocked by policy hook:"))
   );
   if (retryable.length === 0) throw new Error("This run has no retryable failed or dependency-blocked tasks.");
-  const replay = createRun(source.goal, source.tasks.map(record => record.task));
-  replay.tasks = source.tasks.map(record => {
-    const shouldReset = record.status === "failed" ||
+  const replay = createRun(
+    source.goal,
+    source.tasks.map((record) => record.task)
+  );
+  replay.tasks = source.tasks.map((record) => {
+    const shouldReset =
+      record.status === "failed" ||
       (record.status === "blocked" && !record.error?.startsWith("Blocked by policy hook:"));
     return shouldReset
       ? { task: { ...record.task, dependsOn: [...(record.task.dependsOn ?? [])] }, status: "pending" as const }
@@ -32,7 +37,7 @@ export function createReplayRun(source: RunRecord): RunRecord {
 
 /** Creates a focused retry run for one failed task and its blocked dependants. */
 export function createTaskRetryRun(source: RunRecord, taskId: string): RunRecord {
-  const target = source.tasks.find(record => record.task.id === taskId);
+  const target = source.tasks.find((record) => record.task.id === taskId);
   if (!target || target.status !== "failed") {
     throw new Error("Only a failed task can be retried directly; retry its failed prerequisite instead.");
   }
@@ -44,19 +49,29 @@ export function createTaskRetryRun(source: RunRecord, taskId: string): RunRecord
   while (changed) {
     changed = false;
     for (const record of source.tasks) {
-      if (!reset.has(record.task.id) && record.status === "blocked" &&
-          (record.task.dependsOn ?? []).some(dependency => reset.has(dependency)) &&
-          !record.error?.startsWith("Blocked by policy hook:")) {
-        reset.add(record.task.id); changed = true;
+      if (
+        !reset.has(record.task.id) &&
+        record.status === "blocked" &&
+        (record.task.dependsOn ?? []).some((dependency) => reset.has(dependency)) &&
+        !record.error?.startsWith("Blocked by policy hook:")
+      ) {
+        reset.add(record.task.id);
+        changed = true;
       }
     }
   }
-  const retry = createRun(source.goal, source.tasks.map(record => record.task));
-  retry.tasks = source.tasks.map(record => reset.has(record.task.id)
-    ? { task: { ...record.task, dependsOn: [...(record.task.dependsOn ?? [])] }, status: "pending" as const }
-    : { ...record, task: { ...record.task, dependsOn: [...(record.task.dependsOn ?? [])] } });
+  const retry = createRun(
+    source.goal,
+    source.tasks.map((record) => record.task)
+  );
+  retry.tasks = source.tasks.map((record) =>
+    reset.has(record.task.id)
+      ? { task: { ...record.task, dependsOn: [...(record.task.dependsOn ?? [])] }, status: "pending" as const }
+      : { ...record, task: { ...record.task, dependsOn: [...(record.task.dependsOn ?? [])] } }
+  );
   retry.events.push({
-    at: new Date().toISOString(), taskId,
+    at: new Date().toISOString(),
+    taskId,
     type: "started",
     message: `Focused retry created from run ${source.id}; reset ${[...reset].join(", ")}.`,
   });

@@ -5,22 +5,56 @@ import { isExcludedScanDirectory } from "./workspace-scan-policy.js";
 const IGNORED_DIRECTORIES = { has: isExcludedScanDirectory };
 
 const LANGUAGE_BY_EXTENSION: Record<string, string> = {
-  ".ts": "TypeScript", ".tsx": "TypeScript", ".js": "JavaScript",
-  ".jsx": "JavaScript", ".mjs": "JavaScript", ".cjs": "JavaScript",
-  ".py": "Python", ".go": "Go", ".rs": "Rust", ".java": "Java",
-  ".kt": "Kotlin", ".swift": "Swift", ".c": "C", ".h": "C/C++",
-  ".cpp": "C++", ".hpp": "C++", ".cs": "C#", ".php": "PHP",
-  ".rb": "Ruby", ".vue": "Vue", ".svelte": "Svelte", ".html": "HTML",
-  ".css": "CSS", ".scss": "SCSS", ".json": "JSON", ".md": "Markdown",
-  ".yml": "YAML", ".yaml": "YAML", ".toml": "TOML", ".sh": "Shell",
-  ".sql": "SQL", ".xml": "XML", ".dart": "Dart"
+  ".ts": "TypeScript",
+  ".tsx": "TypeScript",
+  ".js": "JavaScript",
+  ".jsx": "JavaScript",
+  ".mjs": "JavaScript",
+  ".cjs": "JavaScript",
+  ".py": "Python",
+  ".go": "Go",
+  ".rs": "Rust",
+  ".java": "Java",
+  ".kt": "Kotlin",
+  ".swift": "Swift",
+  ".c": "C",
+  ".h": "C/C++",
+  ".cpp": "C++",
+  ".hpp": "C++",
+  ".cs": "C#",
+  ".php": "PHP",
+  ".rb": "Ruby",
+  ".vue": "Vue",
+  ".svelte": "Svelte",
+  ".html": "HTML",
+  ".css": "CSS",
+  ".scss": "SCSS",
+  ".json": "JSON",
+  ".md": "Markdown",
+  ".yml": "YAML",
+  ".yaml": "YAML",
+  ".toml": "TOML",
+  ".sh": "Shell",
+  ".sql": "SQL",
+  ".xml": "XML",
+  ".dart": "Dart",
 };
 
 const IMPORTANT_FILES = [
-  "README.md", "package.json", "tsconfig.json", "pyproject.toml",
-  "requirements.txt", "Cargo.toml", "go.mod", "pom.xml",
-  "build.gradle", "Dockerfile", "docker-compose.yml",
-  "compose.yml", ".env.example", ".github/workflows"
+  "README.md",
+  "package.json",
+  "tsconfig.json",
+  "pyproject.toml",
+  "requirements.txt",
+  "Cargo.toml",
+  "go.mod",
+  "pom.xml",
+  "build.gradle",
+  "Dockerfile",
+  "docker-compose.yml",
+  "compose.yml",
+  ".env.example",
+  ".github/workflows",
 ];
 
 export interface ProjectReport {
@@ -46,9 +80,15 @@ interface WalkResult {
   truncated: boolean;
 }
 
-async function walk(root: string, relative = "", result: WalkResult = {
-  files: [], directories: [], truncated: false
-}): Promise<WalkResult> {
+async function walk(
+  root: string,
+  relative = "",
+  result: WalkResult = {
+    files: [],
+    directories: [],
+    truncated: false,
+  }
+): Promise<WalkResult> {
   if (result.files.length >= 5000) {
     result.truncated = true;
     return result;
@@ -83,19 +123,29 @@ function detectFrameworks(pkg: Record<string, unknown> | null): string[] {
   if (!pkg) return [];
   const deps = {
     ...((pkg.dependencies as Record<string, string> | undefined) ?? {}),
-    ...((pkg.devDependencies as Record<string, string> | undefined) ?? {})
+    ...((pkg.devDependencies as Record<string, string> | undefined) ?? {}),
   };
   const known: Record<string, string> = {
-    next: "Next.js", react: "React", vue: "Vue", svelte: "Svelte",
-    "@angular/core": "Angular", express: "Express", fastify: "Fastify",
-    nestjs: "NestJS", "@nestjs/core": "NestJS", vite: "Vite",
-    astro: "Astro", electron: "Electron", "react-native": "React Native",
-    expo: "Expo", tailwindcss: "Tailwind CSS", prisma: "Prisma",
-    "@prisma/client": "Prisma", "drizzle-orm": "Drizzle ORM"
+    next: "Next.js",
+    react: "React",
+    vue: "Vue",
+    svelte: "Svelte",
+    "@angular/core": "Angular",
+    express: "Express",
+    fastify: "Fastify",
+    nestjs: "NestJS",
+    "@nestjs/core": "NestJS",
+    vite: "Vite",
+    astro: "Astro",
+    electron: "Electron",
+    "react-native": "React Native",
+    expo: "Expo",
+    tailwindcss: "Tailwind CSS",
+    prisma: "Prisma",
+    "@prisma/client": "Prisma",
+    "drizzle-orm": "Drizzle ORM",
   };
-  return [...new Set(Object.keys(known).flatMap(key =>
-    deps[key] && known[key] ? [known[key]] : []
-  ))].sort();
+  return [...new Set(Object.keys(known).flatMap((key) => (deps[key] && known[key] ? [known[key]] : [])))].sort();
 }
 
 export async function inspectProject(inputPath: string): Promise<ProjectReport> {
@@ -123,9 +173,10 @@ export async function inspectProject(inputPath: string): Promise<ProjectReport> 
   const development = (pkg?.devDependencies as Record<string, unknown> | undefined) ?? {};
   const fileSet = new Set(walkResult.files);
   const directorySet = new Set(walkResult.directories);
-  const importantFiles = IMPORTANT_FILES.filter(item =>
-    item.endsWith("/") ? directorySet.has(item.replace(/\/$/, "")) :
-      fileSet.has(item) || (item === ".github/workflows" && directorySet.has(".github/workflows"))
+  const importantFiles = IMPORTANT_FILES.filter((item) =>
+    item.endsWith("/")
+      ? directorySet.has(item.replace(/\/$/, ""))
+      : fileSet.has(item) || (item === ".github/workflows" && directorySet.has(".github/workflows"))
   );
 
   const packageManagers: string[] = [];
@@ -152,15 +203,15 @@ export async function inspectProject(inputPath: string): Promise<ProjectReport> 
       directoriesScanned: walkResult.directories.length,
       languages: [...extensionCounts.entries()]
         .map(([name, files]) => ({ name, files }))
-        .sort((a, b) => b.files - a.files || a.name.localeCompare(b.name))
+        .sort((a, b) => b.files - a.files || a.name.localeCompare(b.name)),
     },
     packageManagers,
     frameworks: detectFrameworks(pkg),
     scripts: Object.fromEntries(Object.entries(scripts).sort(([a], [b]) => a.localeCompare(b))),
     dependencies: { production: Object.keys(production).length, development: Object.keys(development).length },
     importantFiles,
-    topLevel: [...new Set(walkResult.files.map(file => file.split("/")[0] ?? file))].sort(),
-    warnings
+    topLevel: [...new Set(walkResult.files.map((file) => file.split("/")[0] ?? file))].sort(),
+    warnings,
   };
 }
 
@@ -174,7 +225,7 @@ export function formatProjectReport(report: ProjectReport): string {
     "",
     "## Language composition",
     ...(report.summary.languages.length
-      ? report.summary.languages.map(item => `- ${item.name}: ${item.files} files`)
+      ? report.summary.languages.map((item) => `- ${item.name}: ${item.files} files`)
       : ["- No recognized source files found."]),
     "",
     "## Ecosystem",
@@ -188,15 +239,15 @@ export function formatProjectReport(report: ProjectReport): string {
       : ["- No package scripts detected."]),
     "",
     "## Important project files",
-    ...(report.importantFiles.length ? report.importantFiles.map(file => `- \`${file}\``) : ["- None detected."]),
+    ...(report.importantFiles.length ? report.importantFiles.map((file) => `- \`${file}\``) : ["- None detected."]),
     "",
     "## Top-level entries",
-    ...(report.topLevel.length ? report.topLevel.map(item => `- \`${item}\``) : ["- No files detected."]),
+    ...(report.topLevel.length ? report.topLevel.map((item) => `- \`${item}\``) : ["- No files detected."]),
     "",
     "## Notes",
-    ...(report.warnings.length ? report.warnings.map(warning => `- ${warning}`) : ["- No scan warnings."]),
+    ...(report.warnings.length ? report.warnings.map((warning) => `- ${warning}`) : ["- No scan warnings."]),
     "",
-    `_Generated by ANVIL at ${report.generatedAt}. This report describes detected files; it is not a security audit._`
+    `_Generated by ANVIL at ${report.generatedAt}. This report describes detected files; it is not a security audit._`,
   ];
   return lines.join("\n");
 }

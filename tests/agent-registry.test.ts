@@ -16,18 +16,27 @@ describe("agent registry", () => {
   it("provides built-in agents when no workspace exists", async () => {
     temporaryDirectory = await mkdtemp(path.join(os.tmpdir(), "forge-agents-"));
     const agents = await loadAgentRegistry(temporaryDirectory);
-    expect(agents.map(agent => agent.id)).toContain("planner");
-    expect(agents.every(agent => agent.source === "builtin")).toBe(true);
+    expect(agents.map((agent) => agent.id)).toContain("planner");
+    expect(agents.every((agent) => agent.source === "builtin")).toBe(true);
   });
 
   it("registers the expanded specialist team", async () => {
     temporaryDirectory = await mkdtemp(path.join(os.tmpdir(), "forge-agents-"));
     const agents = await loadAgentRegistry(temporaryDirectory);
-    const ids = new Set(agents.map(agent => agent.id));
+    const ids = new Set(agents.map((agent) => agent.id));
     for (const id of [
-      "planner", "architect", "code-reviewer", "test-engineer", "security-reviewer",
-      "debugger", "performance-engineer", "documentation-writer", "devops-engineer",
-      "database-reviewer", "accessibility-reviewer", "release-manager",
+      "planner",
+      "architect",
+      "code-reviewer",
+      "test-engineer",
+      "security-reviewer",
+      "debugger",
+      "performance-engineer",
+      "documentation-writer",
+      "devops-engineer",
+      "database-reviewer",
+      "accessibility-reviewer",
+      "release-manager",
     ]) {
       expect(ids.has(id), `expected built-in agent ${id}`).toBe(true);
     }
@@ -41,7 +50,7 @@ describe("agent registry", () => {
     await writeFile(path.join(directory, "../ignored.txt"), "ignored");
 
     const agents = await loadAgentRegistry(temporaryDirectory);
-    const planner = agents.find(agent => agent.id === "planner");
+    const planner = agents.find((agent) => agent.id === "planner");
     expect(planner?.name).toBe("Custom Planner");
     expect(planner?.source).toBe("workspace");
     expect(planner?.instructions).toContain("workspace-specific");
@@ -53,7 +62,7 @@ describe("agent registry", () => {
     try {
       await writeFile(path.join(outside, "planner.md"), "# Leaked Planner\\n\\nOutside instructions.\\n");
       await mkdir(path.join(temporaryDirectory, ".forge"), { recursive: true });
-      if (!await trySymlink(outside, path.join(temporaryDirectory, ".forge", "agents"), "dir")) return;
+      if (!(await trySymlink(outside, path.join(temporaryDirectory, ".forge", "agents"), "dir"))) return;
       await expect(loadAgentRegistry(temporaryDirectory)).rejects.toThrow(/real directory inside the project/);
     } finally {
       await rm(outside, { recursive: true, force: true });
@@ -67,9 +76,9 @@ describe("agent registry", () => {
       await writeFile(path.join(outside, "external.md"), "# External Agent\\n\\nOutside instructions.\\n");
       const directory = path.join(temporaryDirectory, ".forge", "agents");
       await mkdir(directory, { recursive: true });
-      if (!await trySymlink(path.join(outside, "external.md"), path.join(directory, "planner.md"), "file")) return;
+      if (!(await trySymlink(path.join(outside, "external.md"), path.join(directory, "planner.md"), "file"))) return;
       const agents = await loadAgentRegistry(temporaryDirectory);
-      expect(agents.find(agent => agent.id === "planner")?.source).toBe("builtin");
+      expect(agents.find((agent) => agent.id === "planner")?.source).toBe("builtin");
     } finally {
       await rm(outside, { recursive: true, force: true });
     }
@@ -84,6 +93,6 @@ describe("agent registry", () => {
     await writeFile(path.join(directory, "notes.txt"), "# Notes");
 
     const agents = await loadAgentRegistry(temporaryDirectory);
-    expect(agents.some(agent => agent.id.includes("bad"))).toBe(false);
+    expect(agents.some((agent) => agent.id.includes("bad"))).toBe(false);
   });
 });

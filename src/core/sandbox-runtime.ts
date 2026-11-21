@@ -10,15 +10,22 @@ export interface SandboxRuntimeReport {
 export function parseSandboxRuntimeReport(
   runtime: string,
   versionOutput: string,
-  securityOptionsOutput: string,
+  securityOptionsOutput: string
 ): SandboxRuntimeReport {
   let options: unknown;
   const warnings: string[] = [];
-  try { options = JSON.parse(securityOptionsOutput); } catch { options = null; }
-  const securityOptions = Array.isArray(options) && options.every(value => typeof value === "string")
-    ? options as string[] : [];
-  const rootless = securityOptions.some(value => /(?:^|[, ])name=rootless(?:$|[, ])/i.test(value))
-    ? true : securityOptions.length ? false : null;
+  try {
+    options = JSON.parse(securityOptionsOutput);
+  } catch {
+    options = null;
+  }
+  const securityOptions =
+    Array.isArray(options) && options.every((value) => typeof value === "string") ? (options as string[]) : [];
+  const rootless = securityOptions.some((value) => /(?:^|[, ])name=rootless(?:$|[, ])/i.test(value))
+    ? true
+    : securityOptions.length
+      ? false
+      : null;
   if (rootless === false) warnings.push("Docker daemon does not advertise rootless mode.");
   if (rootless === null) warnings.push("Rootless status could not be determined.");
   if (!versionOutput.trim()) warnings.push("Runtime version output was empty.");
@@ -42,7 +49,9 @@ export function formatSandboxRuntimeReport(report: SandboxRuntimeReport): string
     "- Rootless: " + (report.rootless === true ? "yes" : report.rootless === false ? "no" : "unknown"),
     "- Security options: " + (report.securityOptions.join(", ") || "unavailable"),
     "",
-    ...(report.warnings.length ? ["## Warnings", ...report.warnings.map(value => "- " + value)] : ["No runtime warnings reported."]),
+    ...(report.warnings.length
+      ? ["## Warnings", ...report.warnings.map((value) => "- " + value)]
+      : ["No runtime warnings reported."]),
     "",
     "This is a capability/status probe, not a security certification.",
   ].join("\n");

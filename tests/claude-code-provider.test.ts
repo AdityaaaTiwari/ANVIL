@@ -25,16 +25,21 @@ describe("Claude Code harness adapter", () => {
   });
 
   it("parses successful JSON output", () => {
-    expect(parseClaudeCodeOutput(JSON.stringify({
-      result: "Review complete",
-      session_id: "session-123",
-    }))).toEqual({ text: "Review complete", sessionId: "session-123" });
+    expect(
+      parseClaudeCodeOutput(
+        JSON.stringify({
+          result: "Review complete",
+          session_id: "session-123",
+        })
+      )
+    ).toEqual({ text: "Review complete", sessionId: "session-123" });
   });
 
   it("rejects malformed or unsuccessful output", () => {
     expect(() => parseClaudeCodeOutput("not json")).toThrow("invalid JSON");
-    expect(() => parseClaudeCodeOutput(JSON.stringify({ is_error: true, result: "Authentication failed" })))
-      .toThrow("Authentication failed");
+    expect(() => parseClaudeCodeOutput(JSON.stringify({ is_error: true, result: "Authentication failed" }))).toThrow(
+      "Authentication failed"
+    );
   });
 
   it("registers the Claude Code provider through the shared factory", () => {

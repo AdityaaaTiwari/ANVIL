@@ -3,10 +3,17 @@ import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { trySymlink } from "./test-helpers.js";
-import { assertWorkspacePathAllowed, listWorkspaceDirectory, readWorkspaceFile } from "../src/core/workspace-browser.js";
+import {
+  assertWorkspacePathAllowed,
+  listWorkspaceDirectory,
+  readWorkspaceFile,
+} from "../src/core/workspace-browser.js";
 
 let root = "";
-afterEach(async () => { if (root) await rm(root, { recursive: true, force: true }); root = ""; });
+afterEach(async () => {
+  if (root) await rm(root, { recursive: true, force: true });
+  root = "";
+});
 
 describe("workspace browser", () => {
   it("lists safe directories and previews supported source files", async () => {
@@ -16,9 +23,9 @@ describe("workspace browser", () => {
     await writeFile(path.join(root, ".env"), "TOKEN=do-not-show");
     await mkdir(path.join(root, "node_modules"));
     const listing = await listWorkspaceDirectory(root);
-    expect(listing.entries.map(item => item.name)).toContain("src");
-    expect(listing.entries.map(item => item.name)).not.toContain(".env");
-    expect(listing.entries.map(item => item.name)).not.toContain("node_modules");
+    expect(listing.entries.map((item) => item.name)).toContain("src");
+    expect(listing.entries.map((item) => item.name)).not.toContain(".env");
+    expect(listing.entries.map((item) => item.name)).not.toContain("node_modules");
     const preview = await readWorkspaceFile(root, "src/index.ts");
     expect(preview.content).toContain("answer = 42");
   });
@@ -42,11 +49,11 @@ describe("workspace browser", () => {
     await writeFile(path.join(root, "large.ts"), "x".repeat(129 * 1024));
     const listing = await listWorkspaceDirectory(root);
     if (symlinkedFile) {
-      expect(listing.entries.map(item => item.name)).not.toContain("linked.ts");
+      expect(listing.entries.map((item) => item.name)).not.toContain("linked.ts");
       await expect(readWorkspaceFile(root, "linked.ts")).rejects.toThrow();
     }
     if (symlinkedDir) {
-      expect(listing.entries.map(item => item.name)).not.toContain("linked-dir");
+      expect(listing.entries.map((item) => item.name)).not.toContain("linked-dir");
       await expect(listWorkspaceDirectory(root, "linked-dir")).rejects.toThrow();
     }
     await expect(readWorkspaceFile(root, "large.ts")).rejects.toThrow("128 KiB");
@@ -77,5 +84,4 @@ describe("workspace browser", () => {
     await expect(listWorkspaceDirectory(root, "credentials")).rejects.toThrow(/Sensitive workspace paths/);
     await expect(readWorkspaceFile(root, "credentials/notes.txt")).rejects.toThrow(/Sensitive workspace paths/);
   });
-
 });

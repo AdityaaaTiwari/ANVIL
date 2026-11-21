@@ -34,7 +34,7 @@ describe("run replay", () => {
     source.tasks[1]!.status = "failed";
     source.tasks[2]!.status = "blocked";
     const retry = createTaskRetryRun(source, "failed");
-    expect(retry.tasks.map(task => task.status)).toEqual(["completed", "pending", "pending"]);
+    expect(retry.tasks.map((task) => task.status)).toEqual(["completed", "pending", "pending"]);
     expect(retry.tasks[0]!.result?.content).toBe("preserve me");
   });
   it("does not replay tasks explicitly rejected by a reviewer", () => {

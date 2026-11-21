@@ -18,13 +18,13 @@ export function parseManagedContainers(output: string): ManagedContainer[] {
 }
 
 export function selectStoppedManagedContainers(containers: ManagedContainer[]): ManagedContainer[] {
-  return containers.filter(container => /^(exited|created|dead)(?:\s|$)/i.test(container.status));
+  return containers.filter((container) => /^(exited|created|dead)(?:\s|$)/i.test(container.status));
 }
 
 export function formatSandboxCleanupReport(
   candidates: ManagedContainer[],
   removed: string[] = [],
-  apply = false,
+  apply = false
 ): string {
   const lines = [
     "# ANVIL Sandbox Cleanup",
@@ -37,8 +37,14 @@ export function formatSandboxCleanupReport(
   if (!candidates.length) lines.push("No stopped ANVIL-managed containers found.");
   else {
     lines.push("## Candidates");
-    for (const item of candidates) lines.push("- " + item.id + " — " + item.name + " (" + item.status + ")" + (removed.includes(item.id) ? " — removed" : ""));
+    for (const item of candidates)
+      lines.push(
+        "- " + item.id + " — " + item.name + " (" + item.status + ")" + (removed.includes(item.id) ? " — removed" : "")
+      );
   }
-  lines.push("", "Only containers returned by the ANVIL management label filter and in a stopped state are eligible. Active containers are never selected.");
+  lines.push(
+    "",
+    "Only containers returned by the ANVIL management label filter and in a stopped state are eligible. Active containers are never selected."
+  );
   return lines.join("\n");
 }

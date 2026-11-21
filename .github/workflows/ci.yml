@@ -42,12 +42,21 @@ jobs:
           path: npm-audit.json
           if-no-files-found: warn
           retention-days: 14
+      - name: Check code formatting
+        run: npm run format:check
       - name: Typecheck
         run: npm run typecheck
-      - name: Run tests
-        run: npm test
+      - name: Run tests with coverage
+        run: npm run test:coverage
       - name: Build
         run: npm run build
+      - name: Test ANVIL GitHub Action
+        uses: ./
+        with:
+          version: ${{ github.sha }}
+          operation: gate
+          project-path: .
+          sarif-file: test-action-gate.sarif
       - name: Pack and install CLI in a clean directory
         run: |
           RUNNER_TEMP_POSIX="${RUNNER_TEMP//\\//}"

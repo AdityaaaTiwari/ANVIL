@@ -18,13 +18,13 @@ export function createSkillExperimentMatrix(input: SkillExperimentStudioInput): 
     repeats: input.repeats,
     candidates: [
       { id: input.baselineCandidateId, provider: input.provider, model: input.model, skillIds: [] },
-      { id: input.treatmentCandidateId, provider: input.provider, model: input.model, skillIds: [...input.skillIds] }
+      { id: input.treatmentCandidateId, provider: input.provider, model: input.model, skillIds: [...input.skillIds] },
     ],
     skillExperiment: {
       baselineCandidateId: input.baselineCandidateId,
       treatmentCandidateId: input.treatmentCandidateId,
-      skillIds: [...input.skillIds]
-    }
+      skillIds: [...input.skillIds],
+    },
   };
   return validateBenchmarkMatrix(matrix);
 }
@@ -41,9 +41,9 @@ export function formatSkillExperimentMatrix(matrix: BenchmarkMatrixConfig): stri
     "Treatment: " + experiment.treatmentCandidateId,
     "  Skills: " + experiment.skillIds.join(", "),
     "",
-    "Next: forge benchmark-matrix <CONFIG_FILE> --suite <SUITE_ID> --goal \"<task>\"",
+    'Next: forge benchmark-matrix <CONFIG_FILE> --suite <SUITE_ID> --goal "<task>"',
     "",
-    "This scaffold isolates the selected skill set. Agent configuration snapshots are not hydrated by this scaffold; use the active workspace agent files consistently across both candidates."
+    "This scaffold isolates the selected skill set. Agent configuration snapshots are not hydrated by this scaffold; use the active workspace agent files consistently across both candidates.",
   ].join("\n");
 }
 
@@ -64,12 +64,12 @@ export function createModelComparisonMatrix(input: ModelComparisonStudioInput): 
     id: input.id,
     name: input.name,
     repeats: input.repeats,
-    candidates: input.candidates.map(candidate => ({
+    candidates: input.candidates.map((candidate) => ({
       id: candidate.id,
       provider: candidate.provider,
       model: candidate.model,
-      ...(candidate.configVersionId ? { configVersionId: candidate.configVersionId } : {})
-    }))
+      ...(candidate.configVersionId ? { configVersionId: candidate.configVersionId } : {}),
+    })),
   });
 }
 export function formatModelComparisonMatrix(matrix: BenchmarkMatrixConfig): string {
@@ -79,11 +79,22 @@ export function formatModelComparisonMatrix(matrix: BenchmarkMatrixConfig): stri
     "Candidates: " + matrix.candidates.length,
     "Repeats per candidate: " + matrix.repeats,
     "",
-    ...matrix.candidates.map((candidate, index) => (index + 1) + ". " + candidate.id + " — " + candidate.provider + "/" + candidate.model + (candidate.configVersionId ? " · config " + candidate.configVersionId : " · active workspace configuration")),
+    ...matrix.candidates.map(
+      (candidate, index) =>
+        index +
+        1 +
+        ". " +
+        candidate.id +
+        " — " +
+        candidate.provider +
+        "/" +
+        candidate.model +
+        (candidate.configVersionId ? " · config " + candidate.configVersionId : " · active workspace configuration")
+    ),
     "",
     "Total planned trials: " + matrix.candidates.length * matrix.repeats,
-    "Next: forge benchmark-matrix <CONFIG_FILE> --suite <SUITE_ID> --goal \"<task>\"",
+    'Next: forge benchmark-matrix <CONFIG_FILE> --suite <SUITE_ID> --goal "<task>"',
     "",
-    "Candidates run sequentially against the same suite and goal. For a fair comparison, keep the evaluation suite, workspace, permissions and environment unchanged."
+    "Candidates run sequentially against the same suite and goal. For a fair comparison, keep the evaluation suite, workspace, permissions and environment unchanged.",
   ].join("\n");
 }

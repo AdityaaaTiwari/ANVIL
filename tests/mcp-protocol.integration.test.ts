@@ -29,24 +29,31 @@ describe("FORGE MCP stdio protocol integration", () => {
     await writeFile(path.join(workspace, "package.json"), JSON.stringify({ name: "mcp-fixture", scripts: {} }));
     await writeFile(path.join(workspace, "src", "index.ts"), "export const answer = 42;\n");
     await mkdir(path.join(workspace, ".forge"));
-    await writeFile(path.join(workspace, ".forge", "permissions.json"), JSON.stringify({
-      version: 1,
-      mode: "restricted",
-      allowedTools: ["list-files", "read-file", "search-code"]
-    }));
+    await writeFile(
+      path.join(workspace, ".forge", "permissions.json"),
+      JSON.stringify({
+        version: 1,
+        mode: "restricted",
+        allowedTools: ["list-files", "read-file", "search-code"],
+      })
+    );
     await writeFile(path.join(workspace, ".env"), "MCP_SENTINEL=must-not-be-listed\n");
 
     child = spawn(process.execPath, ["--import", "tsx", "src/mcp/server.ts"], {
       cwd: process.cwd(),
       env: { ...process.env, FORGE_WORKSPACE: workspace },
-      stdio: ["pipe", "pipe", "pipe"]
+      stdio: ["pipe", "pipe", "pipe"],
     });
 
     const pending = new Map<number, (message: any) => void>();
     const lines = createInterface({ input: child.stdout });
-    lines.on("line", line => {
+    lines.on("line", (line) => {
       let message: any;
-      try { message = JSON.parse(line); } catch { return; }
+      try {
+        message = JSON.parse(line);
+      } catch {
+        return;
+      }
       if (typeof message.id === "number") {
         const resolve = pending.get(message.id);
         if (resolve) {
@@ -64,7 +71,10 @@ describe("FORGE MCP stdio protocol integration", () => {
           pending.delete(id);
           reject(new Error(`Timed out waiting for MCP response to ${method}`));
         }, 10_000);
-        pending.set(id, message => { clearTimeout(timeout); resolve(message); });
+        pending.set(id, (message) => {
+          clearTimeout(timeout);
+          resolve(message);
+        });
         child!.stdin.write(JSON.stringify({ jsonrpc: "2.0", id, method, params }) + "\n");
       });
     };
@@ -75,7 +85,7 @@ describe("FORGE MCP stdio protocol integration", () => {
     const initialized = await request("initialize", {
       protocolVersion: "2025-06-18",
       capabilities: {},
-      clientInfo: { name: "forge-mcp-integration-test", version: "1.0.0" }
+      clientInfo: { name: "forge-mcp-integration-test", version: "1.0.0" },
     });
     expect(initialized.error).toBeUndefined();
     expect(initialized.result?.serverInfo?.name).toMatch(/^(?:anvil|forge)-engineering-workbench$/);
@@ -101,7 +111,7 @@ describe("FORGE MCP stdio protocol integration", () => {
 
     const agentIntel = await request("tools/call", {
       name: "forge_agent_intelligence",
-      arguments: {}
+      arguments: {},
     });
     expect(agentIntel.error).toBeUndefined();
     expect(agentIntel.result?.isError).not.toBe(true);
@@ -110,7 +120,7 @@ describe("FORGE MCP stdio protocol integration", () => {
 
     const listing = await request("tools/call", {
       name: "forge_list_files",
-      arguments: {}
+      arguments: {},
     });
     expect(listing.error).toBeUndefined();
     expect(listing.result?.isError).not.toBe(true);
@@ -121,15 +131,16 @@ describe("FORGE MCP stdio protocol integration", () => {
 
     const sourceListing = await request("tools/call", {
       name: "forge_list_files",
-      arguments: { relativePath: "src" }
+      arguments: { relativePath: "src" },
     });
     expect(sourceListing.result?.isError).not.toBe(true);
-    const sourceListingText = sourceListing.result.content.find((part: { type: string }) => part.type === "text")?.text ?? "";
+    const sourceListingText =
+      sourceListing.result.content.find((part: { type: string }) => part.type === "text")?.text ?? "";
     expect(sourceListingText).toContain("src/index.ts");
 
     const read = await request("tools/call", {
       name: "forge_read_file",
-      arguments: { relativePath: "src/index.ts" }
+      arguments: { relativePath: "src/index.ts" },
     });
     expect(read.result?.isError).not.toBe(true);
     const readText = read.result.content.find((part: { type: string }) => part.type === "text")?.text ?? "";
@@ -137,7 +148,7 @@ describe("FORGE MCP stdio protocol integration", () => {
 
     const search = await request("tools/call", {
       name: "forge_search_code",
-      arguments: { query: "answer" }
+      arguments: { query: "answer" },
     });
     expect(search.result?.isError).not.toBe(true);
     const searchText = search.result.content.find((part: { type: string }) => part.type === "text")?.text ?? "";
@@ -146,7 +157,7 @@ describe("FORGE MCP stdio protocol integration", () => {
 
     const denied = await request("tools/call", {
       name: "forge_list_files",
-      arguments: { projectPath: "../outside" }
+      arguments: { projectPath: "../outside" },
     });
     expect(denied.error).toBeUndefined();
     expect(denied.result?.isError).toBe(true);

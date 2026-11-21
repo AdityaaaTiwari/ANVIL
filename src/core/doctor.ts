@@ -176,7 +176,8 @@ export async function runDoctorChecks(projectPath?: string): Promise<DoctorRepor
           checks.push({
             name: "FORGE configuration",
             status: "warn",
-            detail: "No .anvil / .forge directory found. Run 'anvil init' or 'anvil doctor --fix' to configure this project.",
+            detail:
+              "No .anvil / .forge directory found. Run 'anvil init' or 'anvil doctor --fix' to configure this project.",
           });
         }
 
@@ -227,9 +228,9 @@ export async function runDoctorChecks(projectPath?: string): Promise<DoctorRepor
   }
 
   const summary = {
-    ok: checks.filter(c => c.status === "ok").length,
-    warn: checks.filter(c => c.status === "warn").length,
-    fail: checks.filter(c => c.status === "fail").length,
+    ok: checks.filter((c) => c.status === "ok").length,
+    warn: checks.filter((c) => c.status === "warn").length,
+    fail: checks.filter((c) => c.status === "fail").length,
   };
 
   let overallStatus: DoctorReport["overallStatus"] = "healthy";
@@ -257,15 +258,21 @@ export async function fixDoctorIssues(projectPath?: string): Promise<DoctorFixRe
   const forgeDir = path.join(root, ".forge");
   try {
     let hasAnvil = false;
-    try { hasAnvil = (await lstat(anvilDir)).isDirectory(); } catch {}
+    try {
+      hasAnvil = (await lstat(anvilDir)).isDirectory();
+    } catch {}
     let hasForge = false;
-    try { hasForge = (await lstat(forgeDir)).isDirectory(); } catch {}
+    try {
+      hasForge = (await lstat(forgeDir)).isDirectory();
+    } catch {}
 
     if (!hasAnvil && !hasForge) {
       await mkdir(path.join(anvilDir, "agents"), { recursive: true });
       await mkdir(path.join(anvilDir, "skills"), { recursive: true });
       await mkdir(path.join(anvilDir, "workflows"), { recursive: true });
-      repaired.push("Scaffolded .anvil/ workspace configuration directories (.anvil/agents, .anvil/skills, .anvil/workflows).");
+      repaired.push(
+        "Scaffolded .anvil/ workspace configuration directories (.anvil/agents, .anvil/skills, .anvil/workflows)."
+      );
     }
   } catch (err: any) {
     warnings.push(`Could not initialize .anvil directory: ${err?.message || String(err)}`);
@@ -275,7 +282,9 @@ export async function fixDoctorIssues(projectPath?: string): Promise<DoctorFixRe
   const gitignorePath = path.join(root, ".gitignore");
   try {
     let gitignoreExists = false;
-    try { gitignoreExists = (await lstat(gitignorePath)).isFile(); } catch {}
+    try {
+      gitignoreExists = (await lstat(gitignorePath)).isFile();
+    } catch {}
     if (!gitignoreExists) {
       const standardGitignore = `# OS Clutter
 .DS_Store
@@ -327,7 +336,9 @@ target/
   const envExamplePath = path.join(root, ".env.example");
   try {
     let envExampleExists = false;
-    try { envExampleExists = (await lstat(envExamplePath)).isFile(); } catch {}
+    try {
+      envExampleExists = (await lstat(envExamplePath)).isFile();
+    } catch {}
     if (!envExampleExists) {
       const template = `# ANVIL AI Provider Credentials (Example template)
 # Copy to .env and configure your local keys
@@ -347,7 +358,9 @@ GEMINI_API_KEY=your_gemini_api_key_here
   const gitDir = path.join(root, ".git");
   try {
     let isGitRepo = false;
-    try { isGitRepo = (await lstat(gitDir)).isDirectory(); } catch {}
+    try {
+      isGitRepo = (await lstat(gitDir)).isDirectory();
+    } catch {}
     if (!isGitRepo) {
       try {
         await execFileAsync("git", ["init"], { cwd: root, timeout: 5000 });
@@ -363,9 +376,13 @@ GEMINI_API_KEY=your_gemini_api_key_here
     const pkgPath = path.join(root, "package.json");
     const distPath = path.join(root, "dist");
     let hasPkg = false;
-    try { hasPkg = (await lstat(pkgPath)).isFile(); } catch {}
+    try {
+      hasPkg = (await lstat(pkgPath)).isFile();
+    } catch {}
     let hasDist = false;
-    try { hasDist = (await lstat(distPath)).isDirectory(); } catch {}
+    try {
+      hasDist = (await lstat(distPath)).isDirectory();
+    } catch {}
 
     if (hasPkg && !hasDist) {
       try {
@@ -393,7 +410,9 @@ export function formatDoctorReport(report: DoctorReport): string {
 
   lines.push("------------------------------------");
   const overall = report.overallStatus.toUpperCase();
-  lines.push(`Overall Status: ${overall} (${report.summary.ok} OK, ${report.summary.warn} WARN, ${report.summary.fail} FAIL)`);
+  lines.push(
+    `Overall Status: ${overall} (${report.summary.ok} OK, ${report.summary.warn} WARN, ${report.summary.fail} FAIL)`
+  );
 
   return lines.join("\n");
 }

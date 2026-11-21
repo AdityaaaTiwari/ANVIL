@@ -11,11 +11,7 @@ const warnedDeprecatedKeys = new Set<string>();
  * Reads an environment variable with priority given to ANVIL_*, falling back to FORGE_*.
  * Logs a deprecation warning if only the FORGE_* variable is present.
  */
-export function getAnvilEnv(
-  anvilKey: string,
-  forgeKey?: string,
-  defaultValue?: string
-): string | undefined {
+export function getAnvilEnv(anvilKey: string, forgeKey?: string, defaultValue?: string): string | undefined {
   const anvilVal = process.env[anvilKey];
   if (anvilVal !== undefined && anvilVal !== "") {
     return anvilVal;

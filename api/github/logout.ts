@@ -4,7 +4,10 @@ import { redisCommand } from "../_lib/github-app.js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Cache-Control", "no-store");
-  if (req.method !== "POST") { res.setHeader("Allow", "POST"); return res.status(405).json({ error: "Method not allowed" }); }
+  if (req.method !== "POST") {
+    res.setHeader("Allow", "POST");
+    return res.status(405).json({ error: "Method not allowed" });
+  }
   try {
     const id = getCookie(req, "forge_github_session");
     if (id && /^[A-Za-z0-9_-]{40,60}$/.test(id)) await redisCommand(["DEL", sessionKey(id)]);

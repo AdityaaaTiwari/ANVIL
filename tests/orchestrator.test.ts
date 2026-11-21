@@ -20,11 +20,11 @@ describe("FORGE orchestration engine", () => {
     for (const response of invalidResponses) {
       const invalidProvider: AgentProvider = {
         name: "invalid-response-test",
-        async complete() { return response as never; },
+        async complete() {
+          return response as never;
+        },
       };
-      const run = createRun("Validate provider output", [
-        { id: "one", agent: "planner", title: "One", prompt: "One" },
-      ]);
+      const run = createRun("Validate provider output", [{ id: "one", agent: "planner", title: "One", prompt: "One" }]);
       const result = await advanceRun(run, invalidProvider);
       expect(result.status).toBe("failed");
       expect(result.tasks[0]?.error).toContain("invalid or empty agent proposal");
@@ -32,30 +32,32 @@ describe("FORGE orchestration engine", () => {
   });
 
   it("rejects invalid concurrency limits instead of stalling", async () => {
-    const run = createRun("Invalid concurrency", [
-      { id: "one", agent: "planner", title: "One", prompt: "One" },
-    ]);
+    const run = createRun("Invalid concurrency", [{ id: "one", agent: "planner", title: "One", prompt: "One" }]);
     for (const maxConcurrency of [0, -1, 1.5, 17, Number.NaN, Number.POSITIVE_INFINITY]) {
-      await expect(advanceRun(run, provider, new Set(), { maxConcurrency }))
-        .rejects.toThrow("Maximum agent concurrency must be an integer between 1 and 16.");
+      await expect(advanceRun(run, provider, new Set(), { maxConcurrency })).rejects.toThrow(
+        "Maximum agent concurrency must be an integer between 1 and 16."
+      );
     }
   });
 
-
   it("validates duplicate, missing, and cyclic dependencies", () => {
-    expect(() => createRun("goal", [
-      { id: "a", agent: "planner", title: "A", prompt: "Do A" },
-      { id: "a", agent: "planner", title: "Duplicate", prompt: "Do it" },
-    ])).toThrow(PlanValidationError);
+    expect(() =>
+      createRun("goal", [
+        { id: "a", agent: "planner", title: "A", prompt: "Do A" },
+        { id: "a", agent: "planner", title: "Duplicate", prompt: "Do it" },
+      ])
+    ).toThrow(PlanValidationError);
 
-    expect(() => createRun("goal", [
-      { id: "a", agent: "planner", title: "A", prompt: "Do A", dependsOn: ["missing"] },
-    ])).toThrow(/unknown task/);
+    expect(() =>
+      createRun("goal", [{ id: "a", agent: "planner", title: "A", prompt: "Do A", dependsOn: ["missing"] }])
+    ).toThrow(/unknown task/);
 
-    expect(() => createRun("goal", [
-      { id: "a", agent: "planner", title: "A", prompt: "Do A", dependsOn: ["b"] },
-      { id: "b", agent: "planner", title: "B", prompt: "Do B", dependsOn: ["a"] },
-    ])).toThrow(/cycle/);
+    expect(() =>
+      createRun("goal", [
+        { id: "a", agent: "planner", title: "A", prompt: "Do A", dependsOn: ["b"] },
+        { id: "b", agent: "planner", title: "B", prompt: "Do B", dependsOn: ["a"] },
+      ])
+    ).toThrow(/cycle/);
   });
 
   it("publishes running and completed progress snapshots", async () => {
@@ -64,12 +66,13 @@ describe("FORGE orchestration engine", () => {
       { id: "inspect", agent: "architect", title: "Inspect", prompt: "Inspect" },
     ]);
     const result = await advanceRun(run, provider, new Set(), {
-      onUpdate: snapshot => snapshots.push({
-        status: snapshot.status,
-        taskStatus: snapshot.tasks[0]?.status ?? "missing",
-      }),
+      onUpdate: (snapshot) =>
+        snapshots.push({
+          status: snapshot.status,
+          taskStatus: snapshot.tasks[0]?.status ?? "missing",
+        }),
     });
-    expect(snapshots.some(item => item.status === "running" && item.taskStatus === "running")).toBe(true);
+    expect(snapshots.some((item) => item.status === "running" && item.taskStatus === "running")).toBe(true);
     expect(snapshots.at(-1)).toEqual({ status: "completed", taskStatus: "completed" });
     expect(result.status).toBe("completed");
   });
@@ -78,7 +81,10 @@ describe("FORGE orchestration engine", () => {
     let calls = 0;
     const cancelProvider: AgentProvider = {
       name: "cancel-test",
-      async complete() { calls += 1; return { provider: "cancel-test", content: "done" }; },
+      async complete() {
+        calls += 1;
+        return { provider: "cancel-test", content: "done" };
+      },
     };
     const run = createRun("Cancel between batches", [
       { id: "first", agent: "planner", title: "First", prompt: "First" },
@@ -112,7 +118,7 @@ describe("FORGE orchestration engine", () => {
       async complete() {
         active += 1;
         peak = Math.max(peak, active);
-        await new Promise(resolve => setTimeout(resolve, 15));
+        await new Promise((resolve) => setTimeout(resolve, 15));
         active -= 1;
         return { provider: "concurrency-test", content: "done" };
       },
@@ -127,7 +133,7 @@ describe("FORGE orchestration engine", () => {
     const result = await advanceRun(run, concurrentProvider, new Set(), { maxConcurrency: 2 });
     expect(result.status).toBe("completed");
     expect(peak).toBe(2);
-    expect(result.tasks.every(task => task.status === "completed")).toBe(true);
+    expect(result.tasks.every((task) => task.status === "completed")).toBe(true);
   });
 
   it("stops scheduling pending tasks when a provider reports budget exhaustion", async () => {
@@ -149,7 +155,7 @@ describe("FORGE orchestration engine", () => {
     expect(started).toEqual(["first"]);
     expect(result.status).toBe("failed");
     expect(result.tasks[1]?.status).toBe("blocked");
-    expect(result.events.some(event => event.type === "budget_exceeded")).toBe(true);
+    expect(result.events.some((event) => event.type === "budget_exceeded")).toBe(true);
   });
 
   it("does not start dependent tasks before their prerequisites finish", async () => {
@@ -180,9 +186,7 @@ describe("FORGE orchestration engine", () => {
         return { provider: "context-test", content: "done" };
       },
     };
-    const run = createRun("Use project memory", [
-      { id: "one", agent: "planner", title: "One", prompt: "Use context" },
-    ]);
+    const run = createRun("Use project memory", [{ id: "one", agent: "planner", title: "One", prompt: "Use context" }]);
     await advanceRun(run, contextProvider, new Set(), { projectContext: "Relevant local project decision." });
     expect(receivedContext).toContain("Relevant local project decision.");
   });
@@ -202,7 +206,7 @@ describe("FORGE orchestration engine", () => {
     ]);
     await advanceRun(run, contextProvider, new Set(), {
       projectContext: "Shared project memory",
-      projectContextForTask: async task => "Skill for " + task.agent,
+      projectContextForTask: async (task) => "Skill for " + task.agent,
     });
     expect(received.get("security-reviewer")).toContain("Skill for security-reviewer");
     expect(received.get("documentation-writer")).toContain("Skill for documentation-writer");
@@ -220,7 +224,13 @@ describe("FORGE orchestration engine", () => {
     };
     const run = createRun("Agent handoff", [
       { id: "architect", agent: "architect", title: "Map architecture", prompt: "Map it" },
-      { id: "reviewer", agent: "code-reviewer", title: "Review architecture", prompt: "Review findings", dependsOn: ["architect"] },
+      {
+        id: "reviewer",
+        agent: "code-reviewer",
+        title: "Review architecture",
+        prompt: "Review findings",
+        dependsOn: ["architect"],
+      },
     ]);
     await advanceRun(run, handoffProvider);
     expect(received[0]).toMatchObject({ id: "architect", fromAgent: "architect", taskTitle: "Map architecture" });
@@ -241,7 +251,9 @@ describe("FORGE orchestration engine", () => {
   it("records provider failures and blocks dependent tasks", async () => {
     const failing: AgentProvider = {
       name: "failing-test-provider",
-      async complete() { throw new Error("provider unavailable"); },
+      async complete() {
+        throw new Error("provider unavailable");
+      },
     };
     const run = createRun("Test failure handling", [
       { id: "first", agent: "planner", title: "First", prompt: "Fail" },
@@ -261,14 +273,15 @@ describe("FORGE orchestration engine", () => {
     ]);
     const result = await advanceRun(run, provider, new Set(), {
       maxConcurrency: 2,
-      onTaskSettled: snapshot => settled.push({
-        taskId: snapshot.events.filter(event => event.type === "completed").at(-1)?.taskId ?? "",
-        completed: snapshot.tasks.filter(task => task.status === "completed").map(task => task.task.id),
-      }),
+      onTaskSettled: (snapshot) =>
+        settled.push({
+          taskId: snapshot.events.filter((event) => event.type === "completed").at(-1)?.taskId ?? "",
+          completed: snapshot.tasks.filter((task) => task.status === "completed").map((task) => task.task.id),
+        }),
     });
     expect(result.status).toBe("completed");
     expect(settled).toHaveLength(2);
-    expect(settled.every(item => item.completed.includes(item.taskId))).toBe(true);
-    expect(new Set(settled.map(item => item.taskId))).toEqual(new Set(["first", "second"]));
+    expect(settled.every((item) => item.completed.includes(item.taskId))).toBe(true);
+    expect(new Set(settled.map((item) => item.taskId))).toEqual(new Set(["first", "second"]));
   });
 });
