@@ -275,20 +275,24 @@ export async function scanProjectSecurity(
                 }
               }
 
-              for (const pattern of DANGEROUS_SCRIPT_PATTERNS) {
-                const match = line.match(pattern.regex);
-                if (match) {
-                  findings.push({
-                    id: `sec-script-${relativePath}-${lineIndex + 1}`,
-                    severity: pattern.severity,
-                    category: "script",
-                    file: relativePath,
-                    line: lineIndex + 1,
-                    rule: pattern.rule,
-                    description: pattern.description,
-                    snippet: match[0].trim().slice(0, 60),
-                    remediation: pattern.remediation
-                  });
+              // Only scan executable code, scripts and manifests for dangerous execution patterns (skip documentation files)
+              const isDocFile = /\.(md|mdx|txt|rst|adoc)$/i.test(relativePath);
+              if (!isDocFile) {
+                for (const pattern of DANGEROUS_SCRIPT_PATTERNS) {
+                  const match = line.match(pattern.regex);
+                  if (match) {
+                    findings.push({
+                      id: `sec-script-${relativePath}-${lineIndex + 1}`,
+                      severity: pattern.severity,
+                      category: "script",
+                      file: relativePath,
+                      line: lineIndex + 1,
+                      rule: pattern.rule,
+                      description: pattern.description,
+                      snippet: match[0].trim().slice(0, 60),
+                      remediation: pattern.remediation
+                    });
+                  }
                 }
               }
             }
