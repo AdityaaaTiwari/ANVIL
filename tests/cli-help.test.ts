@@ -249,4 +249,20 @@ describe("clean and fix CLI commands", () => {
     expect(setupOutput).toContain("Model Context Protocol Harness Setup");
     expect(setupOutput).toContain("claude mcp add");
   });
+
+  it("prints adr usage and documents subcommands", () => {
+    const output = runCli("adr", "--help");
+    expect(output).toContain("Usage: anvil adr <subcommand>");
+    expect(output).toContain("init");
+    expect(output).toContain("new");
+    expect(output).toContain("list");
+    expect(output).toContain("sync");
+  });
+
+  it("prints security usage and documents flags", () => {
+    const output = runCli("security", "--help");
+    expect(output).toContain("Usage: anvil security [path]");
+    expect(output).toContain("--fix");
+    expect(output).toContain("--json");
+  });
 });

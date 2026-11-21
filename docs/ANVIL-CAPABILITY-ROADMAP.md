@@ -44,6 +44,9 @@ Build an original, local-first agent engineering harness with ANVIL-owned interf
 - Keep execution permissions narrower than descriptive agent instructions.
 
 ### Phase 4 — Integrations and operator UX
+- Architecture Decision Records (ADR Engine): Markdown MADR 3.0 standard (`docs/adr/`), CLI `anvil adr (init/new/list/sync)`, automated memory sync, and interactive visual ADR viewer/creator in dashboard (Shipped in v1.0.7).
+- Deep Security & Secret Scanner: Automated scanning for API keys (OpenAI, Anthropic, GitHub, AWS, Google, Slack), private keys, curl-pipe-bash vulnerabilities, unignored credentials, and one-click `--fix` auto-remediation (Shipped in v1.0.7).
+- Interactive Live DAG Workflow Runner: Real-time visual canvas with live SSE execution stream, task state animations, and simulated multi-agent step settlement via DemoAgentProvider (Shipped in v1.0.7).
 - Add supported harness adapters behind stable interfaces (Claude Code, Cursor, Windsurf via Model Context Protocol) (Shipped in v1.0.6 via anvil mcp setup).
 - Project Memory & Architectural Decisions Hub: Dual-path retention (.anvil/memory.json), token-budgeted context ranking, and dashboard memory hub (Shipped in v1.0.6).
 - Doctor & Project Health wizard: `anvil doctor` system diagnostics and `anvil doctor --fix` automated environment scaffolding (Shipped in v1.0.3).

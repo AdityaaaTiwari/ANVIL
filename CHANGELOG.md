@@ -1,5 +1,27 @@
 # ANVIL Changelog
 
+## 1.0.7 — Architecture Decision Records (ADR), Deep Security Scanner & Live Workflow DAG Runner
+
+ANVIL 1.0.7 introduces an integrated Architecture Decision Records (ADR) engine following the MADR standard, a comprehensive repository security and secret scanner with automated `.gitignore` auto-fix, and a real-time interactive multi-agent workflow DAG runner in the web dashboard.
+
+### Features & Capabilities
+- **Architecture Decision Records Engine (`anvil adr` & Web Dashboard):**
+  - MADR (Markdown Architectural Decision Records) 3.0 standard directory structure initialized via `anvil adr init` under `docs/adr/`.
+  - Create structured decision records with status (`proposed`, `accepted`, `rejected`, `superseded`, `deprecated`), context, consequences, and alternatives via `anvil adr new "Title"`.
+  - Automated project memory synchronization via `anvil adr sync` (`POST /api/adrs/sync`), converting ephemeral decisions in `.anvil/memory.json` into permanent, version-controlled markdown ADRs.
+  - Interactive visual ADR viewer and creator in the web dashboard under Architecture & Graph.
+- **Deep Security & Secret Scanner (`anvil security` & Web Dashboard):**
+  - High-entropy regex and format scanning for exposed API keys: OpenAI (`sk-...`), Anthropic (`sk-ant-...`), GitHub (`ghp_...`, `gho_...`, `github_pat_...`), AWS access keys (`AKIA...`), Google API keys (`AIza...`), Slack tokens (`xoxb-...`), and private keys (`BEGIN RSA/OPENSSH PRIVATE KEY`).
+  - Detection of dangerous shell practices (unvetted `curl ... | bash` in scripts) and unencrypted HTTP package dependencies.
+  - Detection of exposed, unignored sensitive files (`.env`, `.pem`, `.key`, `.pfx`, `.p12`).
+  - Automated one-click remediation with `--fix` (`POST /api/security/fix`), updating `.gitignore` to safely quarantine exposed files and credentials.
+  - Interactive Security Audit card in the dashboard's Self-Healing & Security tab with real-time status and "Auto-Fix via .gitignore" action.
+- **Interactive Live DAG Workflow Runner:**
+  - One-click live execution (`POST /api/workflows/:id/execute`) directly from the dashboard visual canvas and saved workflow cards.
+  - Real-time Server-Sent Events (SSE) telemetry broadcast: `workflow_started`, `workflow_task_settled`, and `workflow_completed`.
+  - Realistic multi-agent task execution simulation powered by `advanceRun` and `DemoAgentProvider`.
+- **Interactive Landing Page Enhancements:** Added terminal tabs (`09 adr`, `10 security`) and updated live npm badges to v1.0.7.
+
 ## 1.0.6 — AI Harness MCP Wizard & Dashboard Project Memory Hub
 
 ANVIL 1.0.6 introduces automated AI harness integration for modern editors (Cursor, Claude Code, Windsurf, VS Code), a dedicated Project Memory & Architectural Decisions hub, and native dual-path memory retention.

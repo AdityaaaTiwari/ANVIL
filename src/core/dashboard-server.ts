@@ -360,7 +360,7 @@ body{
     <div class="mark">A.</div>
     <div>
       <strong>ANVIL</strong>
-      <small>THE AI ENGINEERING WORKBENCH · v1.0.6</small>
+      <small>THE AI ENGINEERING WORKBENCH · v1.0.7</small>
     </div>
   </div>
   <div class="header-actions">
@@ -376,7 +376,7 @@ body{
 
 <nav class="tab-nav">
   <button class="tab-btn active" data-tab="tab-overview">📊 Overview & Health</button>
-  <button class="tab-btn" data-tab="tab-cleaner">⚡ Self-Healing & Cleaner (v1.0.6)</button>
+  <button class="tab-btn" data-tab="tab-cleaner">⚡ Self-Healing & Security (v1.0.7)</button>
   <button class="tab-btn" data-tab="tab-agents">🤖 Agents & Workflow Studio</button>
   <button class="tab-btn" data-tab="tab-architecture">🗺️ Architecture & Graph</button>
   <button class="tab-btn" data-tab="tab-benchmarks">🔬 Benchmarks & Evaluation</button>
@@ -478,10 +478,10 @@ body{
   </section>
 </div>
 
-<!-- ==================== TAB 2: SELF-HEALING & CLEANER (v1.0.6) ==================== -->
+<!-- ==================== TAB 2: SELF-HEALING, CLEANER & SECURITY (v1.0.7) ==================== -->
 <div id="tab-cleaner" class="tab-pane">
   <section class="hero">
-    <div class="eyebrow">ANVIL v1.0.6 SELF-HEALING ENGINE</div>
+    <div class="eyebrow">ANVIL v1.0.7 SELF-HEALING & SECURITY ENGINE</div>
     <h1>Zero-Fear Workspace Cleaner & Rollback</h1>
     <p>Automatically eliminates junk clutter and fixes unused imports across TypeScript, JavaScript and Python with deterministic self-healing rollback verification.</p>
   </section>
@@ -1024,7 +1024,7 @@ body{
 </div>
 
 <footer class="footer">
-  <span>ANVIL v1.0.6 · THE AI ENGINEERING WORKBENCH</span>
+  <span>ANVIL v1.0.7 · THE AI ENGINEERING WORKBENCH</span>
   <span>Read-only local dashboard · Telemetry stays on your machine</span>
 </footer>
 

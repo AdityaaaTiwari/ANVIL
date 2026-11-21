@@ -62,7 +62,7 @@
 ---
 
 > [!NOTE]
-> **ANVIL v1.0.6 — AI harness foundation.** The local CLI, local dashboard, agent orchestration, MCP server, provider adapters, GitHub Action, automated self-healing cleaner, byte-accurate rollback (`anvil undo`), pre-commit hooks (`anvil hook install`), AI harness wizard (`anvil mcp setup`), and GitHub App installation/authentication foundation are available. See [Current capabilities and boundaries](#current-capabilities-and-boundaries).
+> **ANVIL v1.0.7 — AI harness foundation.** The local CLI, local dashboard, agent orchestration, MCP server, provider adapters, GitHub Action, automated self-healing cleaner, byte-accurate rollback (`anvil undo`), pre-commit hooks (`anvil hook install`), AI harness wizard (`anvil mcp setup`), Architecture Decision Records (`anvil adr`), Security & Secret Scanner (`anvil security --fix`), and live interactive workflow DAG runner are available. See [Current capabilities and boundaries](#current-capabilities-and-boundaries).
 
 ## What is ANVIL?
 
@@ -117,7 +117,7 @@ npm install --global anvil-engineering-workbench
 Or install directly from the GitHub repository:
 
 ```bash
-npm install --global git+https://github.com/anvil-workbench/ANVIL.git#v1.0.6
+npm install --global git+https://github.com/anvil-workbench/ANVIL.git#v1.0.7
 ```
 
 Verify the installation:
@@ -158,7 +158,7 @@ npm --version
 git --version
 
 # Install ANVIL
-npm install --global git+https://github.com/anvil-workbench/ANVIL.git#v1.0.6
+npm install --global git+https://github.com/anvil-workbench/ANVIL.git#v1.0.7
 
 # Move into your project
 cd C:\Users\YourName\Projects\my-project
@@ -349,6 +349,11 @@ Run `anvil --help` for the complete command list and `anvil <command> --help` fo
 | `anvil git [path]` | Analyze changed files, impact and suggested tests |
 | `anvil risk [path]` | Rank engineering hotspots |
 | `anvil change-risk [path]` | Analyze changed-file risk and downstream impact |
+| `anvil adr init [path]` | Initialize Architecture Decision Records directory (`docs/adr/`) with MADR template |
+| `anvil adr new "Title" [path]` | Create a new MADR architectural decision record with status and context |
+| `anvil adr list [path]` | List all architectural decision records and their current lifecycle statuses |
+| `anvil adr sync [path]` | Sync project memory architectural decisions into versioned markdown ADRs |
+| `anvil security [path]` | Deep scan for leaked credentials (OpenAI, Anthropic, GitHub, AWS, Google, Slack), dangerous scripts, exposed keys; add `--fix` to auto-exclude in `.gitignore` |
 | `anvil snapshot [path]` | Capture an intelligence snapshot |
 | `anvil timeline [path]` | Compare the latest intelligence snapshots |
 
@@ -538,9 +543,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: anvil-workbench/ANVIL@v1.0.6
+      - uses: anvil-workbench/ANVIL@v1.0.7
         with:
-          version: v1.0.6
+          version: v1.0.7
           project-path: .
           operation: inspect
 ```
@@ -744,7 +749,9 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request.
 
 ## Project history
 
-ANVIL's v1.0.6 release introduces an automated AI harness MCP setup wizard (`anvil mcp setup --client cursor|claude|windsurf|all`), a durable Project Memory & Architectural Decisions hub (`anvil memory` and live dashboard panel), dual-path memory retention (`.anvil/memory.json` / `.forge/memory.json`), seamless single-page dashboard execution, rich pre-populated showcase telemetry, automatic port fallback (`4173..4183`), single-command byte-accurate rollback (`anvil undo`), automated test verification gate (`--verify`), Git pre-commit hook automation (`anvil hook install`), framework-aware entrypoint resolution, full multi-language architecture mapping, automated farzi-file scrubbing, code auto-repair, one-command doctor self-healing, the local CLI, engineering intelligence, agent workflows, MCP integration, GitHub Action and GitHub App installation foundation into one versioned product.
+ANVIL's v1.0.7 release introduces an integrated Architecture Decision Records (ADR) Engine (`anvil adr init/new/list/sync` with MADR standard and project memory sync), a comprehensive Security & Secret Scanner (`anvil security [--fix] [--json]` detecting exposed OpenAI, Anthropic, GitHub, AWS, Google, and Slack tokens, private keys, and risky scripts with automated `.gitignore` remediation), and a real-time Interactive Live DAG Workflow Runner in the local dashboard with Server-Sent Events (SSE) streaming and live task state visual animations.
+
+ANVIL's v1.0.6 release introduced an automated AI harness MCP setup wizard (`anvil mcp setup --client cursor|claude|windsurf|all`), a durable Project Memory & Architectural Decisions hub (`anvil memory` and live dashboard panel), dual-path memory retention (`.anvil/memory.json` / `.forge/memory.json`), seamless single-page dashboard execution, rich pre-populated showcase telemetry, automatic port fallback (`4173..4183`), single-command byte-accurate rollback (`anvil undo`), automated test verification gate (`--verify`), Git pre-commit hook automation (`anvil hook install`), framework-aware entrypoint resolution, full multi-language architecture mapping, automated farzi-file scrubbing, code auto-repair, one-command doctor self-healing, the local CLI, engineering intelligence, agent workflows, MCP integration, GitHub Action and GitHub App installation foundation into one versioned product.
 
 The project is maintained as an original ANVIL codebase. ECC is a capability and documentation reference; ANVIL maintains its own identity, implementation, data models and roadmap.
 

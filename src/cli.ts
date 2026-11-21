@@ -124,7 +124,7 @@ function readAgentDurationBudgets(): Record<string, number> | undefined {
   return budgets;
 }
 
-const VERSION = "1.0.6";
+const VERSION = "1.0.7";
 
 const HELP = `
 ANVIL — The AI Engineering Workbench
@@ -885,6 +885,19 @@ async function main(args: string[]): Promise<void> {
       return;
     }
     case "adr": {
+      if (rest.includes("--help") || rest.includes("-h") || rest[0] === "help") {
+        process.stdout.write(`Usage: anvil adr <subcommand> [options]
+
+Manage Architecture Decision Records (ADR) using the MADR 3.0 standard.
+
+Subcommands:
+  init [path]                           Initialize docs/adr/ directory with template
+  new "Title" [path] [--status STATUS]  Create a new ADR record
+  list [path]                           List all recorded ADRs
+  sync [path]                           Sync decisions from project memory to docs/adr/
+`);
+        return;
+      }
       const [action = "list", ...adrArgs] = rest;
       const option = (name: string) => { const index = adrArgs.indexOf(name); return index >= 0 ? adrArgs[index + 1] : undefined; };
       const skipValues = new Set<number>();
@@ -933,6 +946,18 @@ async function main(args: string[]): Promise<void> {
       return;
     }
     case "security": {
+      if (rest.includes("--help") || rest.includes("-h") || rest[0] === "help") {
+        process.stdout.write(`Usage: anvil security [path] [options]
+
+Deep scan repository for hardcoded secrets, exposed tokens, sensitive files, and dangerous script patterns.
+
+Options:
+  --fix        Auto-remediate exposed credentials by updating .gitignore
+  --json       Output report in machine-readable JSON format
+  --help       Show this help message
+`);
+        return;
+      }
       const isJson = rest.includes("--json");
       const shouldFix = rest.includes("--fix");
       const positional = rest.filter(arg => !arg.startsWith("--"));
