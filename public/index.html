@@ -1,1789 +1,2087 @@
 <!doctype html>
 <html lang="en">
+
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#07080d">
-<link rel="icon" type="image/svg+xml" href="anvil-mark.svg">
-<meta property="og:title" content="ANVIL — The AI Engineering Workbench">
-<meta property="og:description" content="Local-first codebase intelligence, architecture mapping, change-risk analysis, and deterministic verification.">
-<meta name="description" content="ANVIL is an open-source AI engineering workbench for codebase intelligence, architecture mapping, change-risk analysis, review history, and deterministic verification.">
-<title>ANVIL — The AI Engineering Workbench</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-<style>
-:root {
-  --bg: #07080d;
-  --bg-surface: #0e121a;
-  --bg-surface-elevated: #141b26;
-  --border: rgba(255, 255, 255, 0.08);
-  --border-hover: rgba(249, 115, 22, 0.4);
-  --border-active: rgba(56, 189, 248, 0.5);
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --text-subtle: #64748b;
-  --amber: #f97316;
-  --amber-light: #fb923c;
-  --amber-glow: rgba(249, 115, 22, 0.18);
-  --cyan: #38bdf8;
-  --cyan-glow: rgba(56, 189, 248, 0.16);
-  --emerald: #34d399;
-  --emerald-glow: rgba(52, 211, 153, 0.16);
-  --purple: #a855f7;
-  --max-w: 1240px;
-}
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#07080d">
+  <link rel="icon" type="image/svg+xml" href="anvil-mark.svg">
+  <meta property="og:title" content="ANVIL — The AI Engineering Workbench">
+  <meta property="og:description"
+    content="Local-first codebase intelligence, architecture mapping, change-risk analysis, and deterministic verification.">
+  <meta name="description"
+    content="ANVIL is an open-source AI engineering workbench for codebase intelligence, architecture mapping, change-risk analysis, review history, and deterministic verification.">
+  <title>ANVIL — The AI Engineering Workbench</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #07080d;
+      --bg-surface: #0e121a;
+      --bg-surface-elevated: #141b26;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-hover: rgba(249, 115, 22, 0.4);
+      --border-active: rgba(56, 189, 248, 0.5);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-subtle: #64748b;
+      --amber: #f97316;
+      --amber-light: #fb923c;
+      --amber-glow: rgba(249, 115, 22, 0.18);
+      --cyan: #38bdf8;
+      --cyan-glow: rgba(56, 189, 248, 0.16);
+      --emerald: #34d399;
+      --emerald-glow: rgba(52, 211, 153, 0.16);
+      --purple: #a855f7;
+      --max-w: 1240px;
+    }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; scroll-padding-top: 88px; }
-body {
-  background-color: var(--bg);
-  color: var(--text-main);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  line-height: 1.6;
-  overflow-x: hidden;
-  background-image: 
-    radial-gradient(circle at 50% 0%, rgba(249, 115, 22, 0.09) 0%, transparent 45%),
-    radial-gradient(circle at 85% 15%, rgba(56, 189, 248, 0.07) 0%, transparent 40%),
-    radial-gradient(circle at 15% 55%, rgba(168, 85, 247, 0.05) 0%, transparent 35%);
-  background-attachment: fixed;
-}
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-a { color: inherit; text-decoration: none; }
-button { font-family: inherit; cursor: pointer; border: none; background: none; }
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 88px;
+    }
 
-.wrap {
-  width: min(var(--max-w), calc(100% - 40px));
-  margin: 0 auto;
-}
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.6;
+      overflow-x: hidden;
+      background-image:
+        radial-gradient(circle at 50% 0%, rgba(249, 115, 22, 0.09) 0%, transparent 45%),
+        radial-gradient(circle at 85% 15%, rgba(56, 189, 248, 0.07) 0%, transparent 40%),
+        radial-gradient(circle at 15% 55%, rgba(168, 85, 247, 0.05) 0%, transparent 35%);
+      background-attachment: fixed;
+    }
 
-/* Header */
-header {
-  position: sticky;
-  top: 14px;
-  z-index: 50;
-  width: min(var(--max-w), calc(100% - 32px));
-  margin: 14px auto 0;
-  background: rgba(10, 13, 20, 0.78);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
-  transition: border-color 0.25s, box-shadow 0.25s;
-}
-header:hover {
-  border-color: rgba(255, 255, 255, 0.14);
-}
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
 
-.nav {
-  height: 64px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 20px;
-}
+    button {
+      font-family: inherit;
+      cursor: pointer;
+      border: none;
+      background: none;
+    }
 
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-weight: 800;
-  font-size: 17px;
-  letter-spacing: 0.14em;
-  color: #fff;
-}
-.brand-mark {
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 10px;
-  background: linear-gradient(135deg, rgba(249, 115, 22, 0.2), rgba(56, 189, 248, 0.15));
-  border: 1px solid rgba(249, 115, 22, 0.35);
-  box-shadow: 0 4px 16px var(--amber-glow);
-}
-.brand-mark img,
-.brand-mark svg {
-  width: 24px;
-  height: 24px;
-  display: block;
-}
-.version-badge {
-  font-size: 10px;
-  font-weight: 700;
-  padding: 2px 7px;
-  border-radius: 20px;
-  background: rgba(249, 115, 22, 0.15);
-  color: var(--amber-light);
-  border: 1px solid rgba(249, 115, 22, 0.3);
-  letter-spacing: 0.05em;
-}
+    .wrap {
+      width: min(var(--max-w), calc(100% - 40px));
+      margin: 0 auto;
+    }
 
-.nav-links {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text-muted);
-}
-.nav-links a {
-  transition: color 0.2s;
-}
-.nav-links a:hover {
-  color: #fff;
-}
+    /* Header */
+    header {
+      position: sticky;
+      top: 14px;
+      z-index: 50;
+      width: min(var(--max-w), calc(100% - 32px));
+      margin: 14px auto 0;
+      background: rgba(10, 13, 20, 0.78);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+      transition: border-color 0.25s, box-shadow 0.25s;
+    }
 
-.nav-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
+    header:hover {
+      border-color: rgba(255, 255, 255, 0.14);
+    }
 
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 9px 15px;
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 600;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  white-space: nowrap;
-}
-.btn-ghost {
-  color: var(--text-muted);
-  border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.03);
-}
-.btn-ghost:hover {
-  color: #fff;
-  border-color: rgba(255, 255, 255, 0.22);
-  background: rgba(255, 255, 255, 0.06);
-  transform: translateY(-1px);
-}
-.btn-primary {
-  color: #07080d;
-  background: linear-gradient(135deg, #f97316, #fb923c);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 4px 18px var(--amber-glow);
-}
-.btn-primary:hover {
-  background: linear-gradient(135deg, #fb923c, #fdba74);
-  box-shadow: 0 6px 24px rgba(249, 115, 22, 0.35);
-  transform: translateY(-1px);
-}
+    .nav {
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+    }
 
-/* Hero Section */
-.hero {
-  padding: 85px 0 60px;
-  display: grid;
-  grid-template-columns: 1.1fr 0.9fr;
-  gap: 48px;
-  align-items: center;
-  min-height: 640px;
-}
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      font-size: 17px;
+      letter-spacing: 0.14em;
+      color: #fff;
+    }
 
-.pill-announcement {
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  padding: 6px 14px;
-  border-radius: 99px;
-  background: rgba(249, 115, 22, 0.1);
-  border: 1px solid rgba(249, 115, 22, 0.28);
-  color: var(--amber-light);
-  font-size: 12px;
-  font-weight: 600;
-  margin-bottom: 24px;
-  letter-spacing: 0.02em;
-}
-.pill-announcement i {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--amber);
-  box-shadow: 0 0 10px var(--amber);
-  animation: pulse 2s infinite ease-in-out;
-}
+    .brand-mark {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      background: linear-gradient(135deg, rgba(249, 115, 22, 0.2), rgba(56, 189, 248, 0.15));
+      border: 1px solid rgba(249, 115, 22, 0.35);
+      box-shadow: 0 4px 16px var(--amber-glow);
+    }
 
-h1 {
-  font-size: clamp(40px, 5.2vw, 68px);
-  font-weight: 900;
-  line-height: 1.05;
-  letter-spacing: -0.04em;
-  margin-bottom: 22px;
-  color: #fff;
-}
-.gradient-text {
-  background: linear-gradient(120deg, #fdba74 0%, #f97316 45%, #38bdf8 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
+    .brand-mark img,
+    .brand-mark svg {
+      width: 24px;
+      height: 24px;
+      display: block;
+    }
 
-.hero-lead {
-  font-size: 16px;
-  line-height: 1.7;
-  color: var(--text-muted);
-  max-width: 580px;
-  margin-bottom: 32px;
-}
+    .version-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 20px;
+      background: rgba(249, 115, 22, 0.15);
+      color: var(--amber-light);
+      border: 1px solid rgba(249, 115, 22, 0.3);
+      letter-spacing: 0.05em;
+    }
 
-.hero-cta {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  flex-wrap: wrap;
-  margin-bottom: 26px;
-}
-.btn-large {
-  padding: 13px 24px;
-  font-size: 14px;
-  border-radius: 12px;
-}
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
 
-.micro-spec {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-subtle);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-.micro-spec span {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-.micro-spec span::before {
-  content: "•";
-  color: var(--amber);
-}
+    .nav-links a {
+      transition: color 0.2s;
+    }
 
-/* Interactive Hero Terminal */
-.terminal-card {
-  background: rgba(13, 17, 24, 0.88);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 20px;
-  overflow: hidden;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(20px);
-  position: relative;
-}
-.terminal-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 13px 18px;
-  background: rgba(255, 255, 255, 0.02);
-  border-bottom: 1px solid var(--border);
-}
-.window-dots {
-  display: flex;
-  gap: 7px;
-}
-.window-dots span {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-}
-.dot-red { background: #f43f5e; }
-.dot-yellow { background: #facc15; }
-.dot-green { background: #10b981; }
+    .nav-links a:hover {
+      color: #fff;
+    }
 
-.terminal-title {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  color: var(--text-subtle);
-  letter-spacing: 0.04em;
-}
-.terminal-tag {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  padding: 3px 8px;
-  border-radius: 6px;
-  background: rgba(56, 189, 248, 0.12);
-  color: var(--cyan);
-  border: 1px solid rgba(56, 189, 248, 0.25);
-}
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
 
-.terminal-tabs {
-  display: flex;
-  background: rgba(0, 0, 0, 0.25);
-  border-bottom: 1px solid var(--border);
-  overflow-x: auto;
-}
-.term-tab {
-  flex: 1;
-  text-align: center;
-  padding: 10px 12px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  color: var(--text-subtle);
-  border-bottom: 2px solid transparent;
-  transition: all 0.2s;
-  white-space: nowrap;
-}
-.term-tab:hover {
-  color: var(--text-muted);
-  background: rgba(255, 255, 255, 0.02);
-}
-.term-tab.active {
-  color: var(--amber-light);
-  border-bottom-color: var(--amber);
-  background: rgba(249, 115, 22, 0.06);
-  font-weight: 600;
-}
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 9px 15px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      white-space: nowrap;
+    }
 
-.terminal-body {
-  padding: 22px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 12px;
-  line-height: 1.8;
-  color: #e2e8f0;
-  min-height: 310px;
-}
-.cmd-prompt { color: var(--amber); margin-right: 8px; font-weight: 700; }
-.cmd-command { color: #f8fafc; font-weight: 600; }
-.cmd-output { margin-top: 14px; display: grid; gap: 8px; }
-.cmd-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 12px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.025);
-  border: 1px solid rgba(255, 255, 255, 0.04);
-}
-.cmd-status-ok { color: var(--emerald); font-weight: 600; }
-.cmd-status-warn { color: #fbbf24; font-weight: 600; }
-.cmd-status-cyan { color: var(--cyan); font-weight: 600; }
+    .btn-ghost {
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.03);
+    }
 
-/* Interactive Quick Start Strip */
-.quickstart-strip {
-  margin: 20px auto 60px;
-  background: linear-gradient(135deg, rgba(20, 27, 38, 0.85), rgba(12, 16, 23, 0.85));
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 28px 32px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
-}
-.quickstart-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 16px;
-  margin-bottom: 20px;
-}
-.quickstart-copy h2 {
-  font-size: 20px;
-  font-weight: 700;
-  color: #fff;
-  letter-spacing: -0.02em;
-}
-.quickstart-copy p {
-  font-size: 13px;
-  color: var(--text-muted);
-  margin-top: 3px;
-}
+    .btn-ghost:hover {
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.22);
+      background: rgba(255, 255, 255, 0.06);
+      transform: translateY(-1px);
+    }
 
-.pkg-tabs {
-  display: inline-flex;
-  background: rgba(0, 0, 0, 0.35);
-  padding: 4px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-}
-.pkg-tab {
-  padding: 6px 14px;
-  font-size: 12px;
-  font-family: 'JetBrains Mono', monospace;
-  font-weight: 600;
-  color: var(--text-muted);
-  border-radius: 7px;
-  transition: all 0.2s;
-}
-.pkg-tab:hover {
-  color: #fff;
-}
-.pkg-tab.active {
-  background: var(--amber);
-  color: #07080d;
-}
+    .btn-primary {
+      color: #07080d;
+      background: linear-gradient(135deg, #f97316, #fb923c);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      box-shadow: 0 4px 18px var(--amber-glow);
+    }
 
-.install-box {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 20px;
-  border-radius: 12px;
-  background: #080a0f;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 13px;
-  color: #e2e8f0;
-  gap: 16px;
-}
-.install-box code {
-  flex: 1;
-  overflow-x: auto;
-  white-space: nowrap;
-}
-.copy-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 8px 16px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
-  font-size: 12px;
-  font-weight: 600;
-  transition: all 0.2s;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-}
-.copy-btn:hover {
-  background: var(--amber);
-  color: #07080d;
-  border-color: var(--amber);
-}
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #fb923c, #fdba74);
+      box-shadow: 0 6px 24px rgba(249, 115, 22, 0.35);
+      transform: translateY(-1px);
+    }
 
-.integration-tags {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-top: 20px;
-  padding-top: 18px;
-  border-top: 1px solid var(--border);
-  font-size: 11px;
-  color: var(--text-subtle);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-.integration-tags span {
-  padding: 4px 10px;
-  border-radius: 7px;
-  background: rgba(255, 255, 255, 0.035);
-  border: 1px solid var(--border);
-  color: var(--text-muted);
-  font-weight: 600;
-}
-.integration-tags b {
-  color: var(--amber-light);
-  margin-left: 4px;
-}
+    /* Hero Section */
+    .hero {
+      padding: 85px 0 60px;
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 48px;
+      align-items: center;
+      min-height: 640px;
+    }
 
-/* Metric Strip */
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-  margin-bottom: 90px;
-}
-.stat-card {
-  padding: 24px;
-  border-radius: 16px;
-  background: rgba(14, 18, 26, 0.65);
-  border: 1px solid var(--border);
-  backdrop-filter: blur(12px);
-  transition: transform 0.2s, border-color 0.2s;
-}
-.stat-card:hover {
-  transform: translateY(-3px);
-  border-color: rgba(249, 115, 22, 0.35);
-}
-.stat-number {
-  font-size: 38px;
-  font-weight: 900;
-  line-height: 1;
-  letter-spacing: -0.04em;
-  background: linear-gradient(135deg, #fff 40%, var(--amber-light));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  margin-bottom: 8px;
-}
-.stat-label {
-  font-size: 13px;
-  font-weight: 600;
-  color: #fff;
-  margin-bottom: 4px;
-}
-.stat-desc {
-  font-size: 11px;
-  color: var(--text-muted);
-  line-height: 1.5;
-}
+    .pill-announcement {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      padding: 6px 14px;
+      border-radius: 99px;
+      background: rgba(249, 115, 22, 0.1);
+      border: 1px solid rgba(249, 115, 22, 0.28);
+      color: var(--amber-light);
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 24px;
+      letter-spacing: 0.02em;
+    }
 
-/* Section Header */
-.section {
-  padding: 80px 0;
-  border-top: 1px solid var(--border);
-  position: relative;
-}
-.section-head {
-  max-width: 680px;
-  margin-bottom: 48px;
-}
-.eyebrow {
-  display: inline-block;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--amber-light);
-  text-transform: uppercase;
-  letter-spacing: 0.16em;
-  margin-bottom: 12px;
-}
-.section h2 {
-  font-size: clamp(30px, 3.8vw, 46px);
-  font-weight: 850;
-  line-height: 1.12;
-  letter-spacing: -0.035em;
-  color: #fff;
-  margin-bottom: 16px;
-}
-.section-head p {
-  font-size: 15px;
-  color: var(--text-muted);
-  line-height: 1.7;
-}
+    .pill-announcement i {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--amber);
+      box-shadow: 0 0 10px var(--amber);
+      animation: pulse 2s infinite ease-in-out;
+    }
 
-/* Interactive Workbench Stage */
-.stage-container {
-  display: grid;
-  grid-template-columns: 0.8fr 1.2fr;
-  gap: 24px;
-  align-items: stretch;
-  margin-bottom: 40px;
-}
-.stage-selector {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-.stage-btn {
-  text-align: left;
-  padding: 20px;
-  border-radius: 14px;
-  background: rgba(14, 18, 26, 0.6);
-  border: 1px solid var(--border);
-  color: var(--text-muted);
-  transition: all 0.25s;
-}
-.stage-btn:hover {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(255, 255, 255, 0.18);
-  transform: translateX(4px);
-}
-.stage-btn.active {
-  background: linear-gradient(135deg, rgba(249, 115, 22, 0.12), rgba(56, 189, 248, 0.06));
-  border-color: var(--amber);
-  color: #fff;
-  box-shadow: 0 8px 24px rgba(249, 115, 22, 0.1);
-}
-.stage-btn-num {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  color: var(--amber-light);
-  letter-spacing: 0.1em;
-  margin-bottom: 6px;
-  display: block;
-}
-.stage-btn-title {
-  font-size: 15px;
-  font-weight: 700;
-  margin-bottom: 4px;
-  display: block;
-}
-.stage-btn-desc {
-  font-size: 12px;
-  line-height: 1.5;
-  color: var(--text-subtle);
-  display: block;
-}
-.stage-btn.active .stage-btn-desc {
-  color: var(--text-muted);
-}
+    h1 {
+      font-size: clamp(40px, 5.2vw, 68px);
+      font-weight: 900;
+      line-height: 1.05;
+      letter-spacing: -0.04em;
+      margin-bottom: 22px;
+      color: #fff;
+    }
 
-.stage-display {
-  background: rgba(13, 17, 24, 0.85);
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
-}
-.stage-display-head {
-  padding: 16px 22px;
-  background: rgba(255, 255, 255, 0.02);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-}
-.stage-display-body {
-  padding: 26px;
-  flex: 1;
-}
-.stage-canvas {
-  height: 100%;
-  min-height: 280px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
+    .gradient-text {
+      background: linear-gradient(120deg, #fdba74 0%, #f97316 45%, #38bdf8 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
 
-/* Feature Grid */
-.feature-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 18px;
-}
-.feature-card {
-  padding: 26px;
-  border-radius: 16px;
-  background: rgba(14, 18, 26, 0.65);
-  border: 1px solid var(--border);
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  position: relative;
-  overflow: hidden;
-}
-.feature-card:hover {
-  transform: translateY(-4px);
-  border-color: rgba(249, 115, 22, 0.35);
-  background: linear-gradient(145deg, rgba(22, 28, 40, 0.8), rgba(14, 18, 26, 0.8));
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.35), 0 0 24px var(--amber-glow);
-}
-.feature-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 18px;
-}
-.feature-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, rgba(249, 115, 22, 0.15), rgba(56, 189, 248, 0.1));
-  border: 1px solid rgba(249, 115, 22, 0.25);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-  color: var(--amber-light);
-}
-.feature-num {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  color: var(--text-subtle);
-}
-.feature-card h3 {
-  font-size: 16px;
-  font-weight: 700;
-  color: #fff;
-  margin-bottom: 8px;
-}
-.feature-card p {
-  font-size: 13px;
-  color: var(--text-muted);
-  line-height: 1.65;
-  margin-bottom: 16px;
-}
-.feature-tag {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  color: var(--amber-light);
-  padding: 4px 8px;
-  border-radius: 6px;
-  background: rgba(249, 115, 22, 0.08);
-  border: 1px solid rgba(249, 115, 22, 0.2);
-  display: inline-block;
-  align-self: flex-start;
-}
+    .hero-lead {
+      font-size: 16px;
+      line-height: 1.7;
+      color: var(--text-muted);
+      max-width: 580px;
+      margin-bottom: 32px;
+    }
 
-/* Architecture Interactive Visual */
-.arch-visual-box {
-  background: #080a0f;
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  padding: 30px;
-  position: relative;
-  overflow: hidden;
-  box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.8);
-}
-.arch-svg-container {
-  width: 100%;
-  max-width: 960px;
-  margin: 0 auto;
-  display: block;
-}
+    .hero-cta {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 26px;
+    }
 
-/* Dashboard Banner */
-.dash-banner {
-  background: linear-gradient(135deg, rgba(20, 27, 40, 0.95), rgba(10, 14, 22, 0.95));
-  border: 1px solid rgba(249, 115, 22, 0.3);
-  border-radius: 22px;
-  padding: 44px;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
-  display: grid;
-  grid-template-columns: 1.2fr 0.8fr;
-  gap: 36px;
-  align-items: center;
-}
-.dash-banner h3 {
-  font-size: 28px;
-  font-weight: 800;
-  color: #fff;
-  margin-bottom: 12px;
-  letter-spacing: -0.02em;
-}
-.dash-banner p {
-  font-size: 14px;
-  color: var(--text-muted);
-  line-height: 1.7;
-  margin-bottom: 24px;
-}
-.dash-cmd-block {
-  background: #06070a;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 16px 20px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 12px;
-  line-height: 1.8;
-  color: #cbd5e1;
-}
+    .btn-large {
+      padding: 13px 24px;
+      font-size: 14px;
+      border-radius: 12px;
+    }
 
-/* Ecosystem Grid */
-.ecosystem-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-}
-.eco-card {
-  padding: 22px;
-  border-radius: 14px;
-  background: rgba(14, 18, 26, 0.6);
-  border: 1px solid var(--border);
-  transition: all 0.2s;
-}
-.eco-card:hover {
-  border-color: rgba(56, 189, 248, 0.4);
-  transform: translateY(-2px);
-}
-.eco-badge {
-  display: inline-block;
-  font-size: 9px;
-  font-weight: 700;
-  font-family: 'JetBrains Mono', monospace;
-  padding: 3px 7px;
-  border-radius: 5px;
-  background: rgba(56, 189, 248, 0.12);
-  color: var(--cyan);
-  margin-bottom: 12px;
-}
-.eco-card h4 {
-  font-size: 15px;
-  font-weight: 700;
-  color: #fff;
-  margin-bottom: 6px;
-}
-.eco-card p {
-  font-size: 12px;
-  color: var(--text-muted);
-  line-height: 1.6;
-}
+    .micro-spec {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-subtle);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
 
-/* 4-Step Engineering Loop */
-.loop-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-}
-.loop-card {
-  padding: 24px;
-  border-radius: 16px;
-  background: rgba(14, 18, 26, 0.65);
-  border: 1px solid var(--border);
-  position: relative;
-}
-.loop-card::before {
-  content: "";
-  display: block;
-  height: 2px;
-  background: linear-gradient(90deg, var(--amber), transparent);
-  margin-bottom: 18px;
-}
-.loop-num {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--amber-light);
-}
-.loop-card h3 {
-  font-size: 17px;
-  font-weight: 700;
-  margin: 10px 0 6px;
-  color: #fff;
-}
-.loop-card p {
-  font-size: 12px;
-  color: var(--text-muted);
-  line-height: 1.6;
-}
+    .micro-spec span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
 
-/* FAQ Accordion */
-.faq-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-}
-.faq-item {
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  background: rgba(14, 18, 26, 0.6);
-  padding: 18px 22px;
-  transition: border-color 0.2s;
-}
-.faq-item:hover {
-  border-color: rgba(255, 255, 255, 0.15);
-}
-.faq-item summary {
-  font-size: 14px;
-  font-weight: 700;
-  color: #fff;
-  cursor: pointer;
-  outline: none;
-  list-style: none;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.faq-item summary::-webkit-details-marker { display: none; }
-.faq-item summary::after {
-  content: "+";
-  font-size: 18px;
-  color: var(--amber);
-  transition: transform 0.2s;
-}
-.faq-item[open] summary::after {
-  transform: rotate(45deg);
-}
-.faq-item p {
-  font-size: 13px;
-  color: var(--text-muted);
-  line-height: 1.7;
-  margin-top: 12px;
-}
+    .micro-spec span::before {
+      content: "•";
+      color: var(--amber);
+    }
 
-/* Call to Action */
-.cta-box {
-  padding: 56px 48px;
-  border-radius: 24px;
-  background: radial-gradient(circle at 85% 20%, rgba(249, 115, 22, 0.18), transparent 50%),
-              linear-gradient(135deg, rgba(20, 27, 38, 0.95), rgba(10, 13, 20, 0.95));
-  border: 1px solid rgba(249, 115, 22, 0.35);
-  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 32px;
-  flex-wrap: wrap;
-}
-.cta-copy h2 {
-  font-size: clamp(28px, 3.6vw, 44px);
-  font-weight: 850;
-  letter-spacing: -0.035em;
-  color: #fff;
-  margin-bottom: 8px;
-}
-.cta-copy p {
-  font-size: 15px;
-  color: var(--text-muted);
-  max-width: 520px;
-}
+    /* Interactive Hero Terminal */
+    .terminal-card {
+      background: rgba(13, 17, 24, 0.88);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(20px);
+      position: relative;
+    }
 
-/* Footer */
-footer {
-  padding: 70px 0 35px;
-  border-top: 1px solid var(--border);
-  background: #050609;
-}
-.footer-grid {
-  display: grid;
-  grid-template-columns: 1.5fr repeat(3, 1fr);
-  gap: 40px;
-  margin-bottom: 48px;
-}
-.footer-brand {
-  max-width: 320px;
-}
-.footer-brand p {
-  font-size: 13px;
-  color: var(--text-muted);
-  margin-top: 14px;
-  line-height: 1.7;
-}
-.footer-col b {
-  display: block;
-  font-size: 13px;
-  font-weight: 700;
-  color: #fff;
-  margin-bottom: 16px;
-  letter-spacing: 0.04em;
-}
-.footer-col a {
-  display: block;
-  font-size: 13px;
-  color: var(--text-muted);
-  margin-bottom: 10px;
-  transition: color 0.2s;
-}
-.footer-col a:hover {
-  color: var(--amber-light);
-}
+    .terminal-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 13px 18px;
+      background: rgba(255, 255, 255, 0.02);
+      border-bottom: 1px solid var(--border);
+    }
 
-.footer-bottom {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-top: 24px;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
-  font-size: 12px;
-  color: var(--text-subtle);
-  flex-wrap: wrap;
-  gap: 12px;
-}
+    .window-dots {
+      display: flex;
+      gap: 7px;
+    }
 
-@keyframes pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.4; transform: scale(0.9); }
-}
+    .window-dots span {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
 
-/* Responsive */
-@media (max-width: 960px) {
-  .hero { grid-template-columns: 1fr; padding-top: 60px; }
-  .stats-grid { grid-template-columns: repeat(2, 1fr); }
-  .stage-container { grid-template-columns: 1fr; }
-  .feature-grid { grid-template-columns: repeat(2, 1fr); }
-  .dash-banner { grid-template-columns: 1fr; padding: 30px; }
-  .ecosystem-grid { grid-template-columns: repeat(2, 1fr); }
-  .loop-grid { grid-template-columns: repeat(2, 1fr); }
-  .footer-grid { grid-template-columns: 1fr 1fr; }
-}
-@media (max-width: 640px) {
-  .nav-links { display: none; }
-  .hero { min-height: auto; }
-  .feature-grid { grid-template-columns: 1fr; }
-  .stats-grid { grid-template-columns: 1fr; }
-  .faq-grid { grid-template-columns: 1fr; }
-  .ecosystem-grid { grid-template-columns: 1fr; }
-  .loop-grid { grid-template-columns: 1fr; }
-  .footer-grid { grid-template-columns: 1fr; }
-  .cta-box { padding: 32px 24px; }
-}
-</style>
+    .dot-red {
+      background: #f43f5e;
+    }
+
+    .dot-yellow {
+      background: #facc15;
+    }
+
+    .dot-green {
+      background: #10b981;
+    }
+
+    .terminal-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-subtle);
+      letter-spacing: 0.04em;
+    }
+
+    .terminal-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgba(56, 189, 248, 0.12);
+      color: var(--cyan);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+    }
+
+    .terminal-tabs {
+      display: flex;
+      background: rgba(0, 0, 0, 0.25);
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+    }
+
+    .term-tab {
+      flex: 1;
+      text-align: center;
+      padding: 10px 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-subtle);
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .term-tab:hover {
+      color: var(--text-muted);
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .term-tab.active {
+      color: var(--amber-light);
+      border-bottom-color: var(--amber);
+      background: rgba(249, 115, 22, 0.06);
+      font-weight: 600;
+    }
+
+    .terminal-body {
+      padding: 22px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      line-height: 1.8;
+      color: #e2e8f0;
+      min-height: 310px;
+    }
+
+    .cmd-prompt {
+      color: var(--amber);
+      margin-right: 8px;
+      font-weight: 700;
+    }
+
+    .cmd-command {
+      color: #f8fafc;
+      font-weight: 600;
+    }
+
+    .cmd-output {
+      margin-top: 14px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .cmd-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.025);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .cmd-status-ok {
+      color: var(--emerald);
+      font-weight: 600;
+    }
+
+    .cmd-status-warn {
+      color: #fbbf24;
+      font-weight: 600;
+    }
+
+    .cmd-status-cyan {
+      color: var(--cyan);
+      font-weight: 600;
+    }
+
+    /* Interactive Quick Start Strip */
+    .quickstart-strip {
+      margin: 20px auto 60px;
+      background: linear-gradient(135deg, rgba(20, 27, 38, 0.85), rgba(12, 16, 23, 0.85));
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px 32px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+    }
+
+    .quickstart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .quickstart-copy h2 {
+      font-size: 20px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -0.02em;
+    }
+
+    .quickstart-copy p {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+
+    .pkg-tabs {
+      display: inline-flex;
+      background: rgba(0, 0, 0, 0.35);
+      padding: 4px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+
+    .pkg-tab {
+      padding: 6px 14px;
+      font-size: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-radius: 7px;
+      transition: all 0.2s;
+    }
+
+    .pkg-tab:hover {
+      color: #fff;
+    }
+
+    .pkg-tab.active {
+      background: var(--amber);
+      color: #07080d;
+    }
+
+    .install-box {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-radius: 12px;
+      background: #080a0f;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: #e2e8f0;
+      gap: 16px;
+    }
+
+    .install-box code {
+      flex: 1;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+
+    .copy-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 16px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      transition: all 0.2s;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .copy-btn:hover {
+      background: var(--amber);
+      color: #07080d;
+      border-color: var(--amber);
+    }
+
+    .integration-tags {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+      padding-top: 18px;
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--text-subtle);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .integration-tags span {
+      padding: 4px 10px;
+      border-radius: 7px;
+      background: rgba(255, 255, 255, 0.035);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .integration-tags b {
+      color: var(--amber-light);
+      margin-left: 4px;
+    }
+
+    /* Metric Strip */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 90px;
+    }
+
+    .stat-card {
+      padding: 24px;
+      border-radius: 16px;
+      background: rgba(14, 18, 26, 0.65);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+      transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(249, 115, 22, 0.35);
+    }
+
+    .stat-number {
+      font-size: 38px;
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: -0.04em;
+      background: linear-gradient(135deg, #fff 40%, var(--amber-light));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 8px;
+    }
+
+    .stat-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .stat-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* Section Header */
+    .section {
+      padding: 80px 0;
+      border-top: 1px solid var(--border);
+      position: relative;
+    }
+
+    .section-head {
+      max-width: 680px;
+      margin-bottom: 48px;
+    }
+
+    .eyebrow {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--amber-light);
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      margin-bottom: 12px;
+    }
+
+    .section h2 {
+      font-size: clamp(30px, 3.8vw, 46px);
+      font-weight: 850;
+      line-height: 1.12;
+      letter-spacing: -0.035em;
+      color: #fff;
+      margin-bottom: 16px;
+    }
+
+    .section-head p {
+      font-size: 15px;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+
+    /* Interactive Workbench Stage */
+    .stage-container {
+      display: grid;
+      grid-template-columns: 0.8fr 1.2fr;
+      gap: 24px;
+      align-items: stretch;
+      margin-bottom: 40px;
+    }
+
+    .stage-selector {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .stage-btn {
+      text-align: left;
+      padding: 20px;
+      border-radius: 14px;
+      background: rgba(14, 18, 26, 0.6);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      transition: all 0.25s;
+    }
+
+    .stage-btn:hover {
+      background: rgba(255, 255, 255, 0.04);
+      border-color: rgba(255, 255, 255, 0.18);
+      transform: translateX(4px);
+    }
+
+    .stage-btn.active {
+      background: linear-gradient(135deg, rgba(249, 115, 22, 0.12), rgba(56, 189, 248, 0.06));
+      border-color: var(--amber);
+      color: #fff;
+      box-shadow: 0 8px 24px rgba(249, 115, 22, 0.1);
+    }
+
+    .stage-btn-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--amber-light);
+      letter-spacing: 0.1em;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .stage-btn-title {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 4px;
+      display: block;
+    }
+
+    .stage-btn-desc {
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--text-subtle);
+      display: block;
+    }
+
+    .stage-btn.active .stage-btn-desc {
+      color: var(--text-muted);
+    }
+
+    .stage-display {
+      background: rgba(13, 17, 24, 0.85);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+    }
+
+    .stage-display-head {
+      padding: 16px 22px;
+      background: rgba(255, 255, 255, 0.02);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+    }
+
+    .stage-display-body {
+      padding: 26px;
+      flex: 1;
+    }
+
+    .stage-canvas {
+      height: 100%;
+      min-height: 280px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    /* Feature Grid */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+
+    .feature-card {
+      padding: 26px;
+      border-radius: 16px;
+      background: rgba(14, 18, 26, 0.65);
+      border: 1px solid var(--border);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(249, 115, 22, 0.35);
+      background: linear-gradient(145deg, rgba(22, 28, 40, 0.8), rgba(14, 18, 26, 0.8));
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.35), 0 0 24px var(--amber-glow);
+    }
+
+    .feature-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 18px;
+    }
+
+    .feature-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(249, 115, 22, 0.15), rgba(56, 189, 248, 0.1));
+      border: 1px solid rgba(249, 115, 22, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      color: var(--amber-light);
+    }
+
+    .feature-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--text-subtle);
+    }
+
+    .feature-card h3 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+
+    .feature-card p {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.65;
+      margin-bottom: 16px;
+    }
+
+    .feature-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--amber-light);
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: rgba(249, 115, 22, 0.08);
+      border: 1px solid rgba(249, 115, 22, 0.2);
+      display: inline-block;
+      align-self: flex-start;
+    }
+
+    /* Architecture Interactive Visual */
+    .arch-visual-box {
+      background: #080a0f;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 30px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.8);
+    }
+
+    .arch-svg-container {
+      width: 100%;
+      max-width: 960px;
+      margin: 0 auto;
+      display: block;
+    }
+
+    /* Dashboard Banner */
+    .dash-banner {
+      background: linear-gradient(135deg, rgba(20, 27, 40, 0.95), rgba(10, 14, 22, 0.95));
+      border: 1px solid rgba(249, 115, 22, 0.3);
+      border-radius: 22px;
+      padding: 44px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 36px;
+      align-items: center;
+    }
+
+    .dash-banner h3 {
+      font-size: 28px;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 12px;
+      letter-spacing: -0.02em;
+    }
+
+    .dash-banner p {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.7;
+      margin-bottom: 24px;
+    }
+
+    .dash-cmd-block {
+      background: #06070a;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      line-height: 1.8;
+      color: #cbd5e1;
+    }
+
+    /* Ecosystem Grid */
+    .ecosystem-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    .eco-card {
+      padding: 22px;
+      border-radius: 14px;
+      background: rgba(14, 18, 26, 0.6);
+      border: 1px solid var(--border);
+      transition: all 0.2s;
+    }
+
+    .eco-card:hover {
+      border-color: rgba(56, 189, 248, 0.4);
+      transform: translateY(-2px);
+    }
+
+    .eco-badge {
+      display: inline-block;
+      font-size: 9px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      padding: 3px 7px;
+      border-radius: 5px;
+      background: rgba(56, 189, 248, 0.12);
+      color: var(--cyan);
+      margin-bottom: 12px;
+    }
+
+    .eco-card h4 {
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+
+    .eco-card p {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* 4-Step Engineering Loop */
+    .loop-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    .loop-card {
+      padding: 24px;
+      border-radius: 16px;
+      background: rgba(14, 18, 26, 0.65);
+      border: 1px solid var(--border);
+      position: relative;
+    }
+
+    .loop-card::before {
+      content: "";
+      display: block;
+      height: 2px;
+      background: linear-gradient(90deg, var(--amber), transparent);
+      margin-bottom: 18px;
+    }
+
+    .loop-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--amber-light);
+    }
+
+    .loop-card h3 {
+      font-size: 17px;
+      font-weight: 700;
+      margin: 10px 0 6px;
+      color: #fff;
+    }
+
+    .loop-card p {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* FAQ Accordion */
+    .faq-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .faq-item {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(14, 18, 26, 0.6);
+      padding: 18px 22px;
+      transition: border-color 0.2s;
+    }
+
+    .faq-item:hover {
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .faq-item summary {
+      font-size: 14px;
+      font-weight: 700;
+      color: #fff;
+      cursor: pointer;
+      outline: none;
+      list-style: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .faq-item summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .faq-item summary::after {
+      content: "+";
+      font-size: 18px;
+      color: var(--amber);
+      transition: transform 0.2s;
+    }
+
+    .faq-item[open] summary::after {
+      transform: rotate(45deg);
+    }
+
+    .faq-item p {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.7;
+      margin-top: 12px;
+    }
+
+    /* Call to Action */
+    .cta-box {
+      padding: 56px 48px;
+      border-radius: 24px;
+      background: radial-gradient(circle at 85% 20%, rgba(249, 115, 22, 0.18), transparent 50%),
+        linear-gradient(135deg, rgba(20, 27, 38, 0.95), rgba(10, 13, 20, 0.95));
+      border: 1px solid rgba(249, 115, 22, 0.35);
+      box-shadow: 0 28px 70px rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 32px;
+      flex-wrap: wrap;
+    }
+
+    .cta-copy h2 {
+      font-size: clamp(28px, 3.6vw, 44px);
+      font-weight: 850;
+      letter-spacing: -0.035em;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+
+    .cta-copy p {
+      font-size: 15px;
+      color: var(--text-muted);
+      max-width: 520px;
+    }
+
+    /* Footer */
+    footer {
+      padding: 70px 0 35px;
+      border-top: 1px solid var(--border);
+      background: #050609;
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 1.5fr repeat(3, 1fr);
+      gap: 40px;
+      margin-bottom: 48px;
+    }
+
+    .footer-brand {
+      max-width: 320px;
+    }
+
+    .footer-brand p {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 14px;
+      line-height: 1.7;
+    }
+
+    .footer-col b {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 16px;
+      letter-spacing: 0.04em;
+    }
+
+    .footer-col a {
+      display: block;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+      transition: color 0.2s;
+    }
+
+    .footer-col a:hover {
+      color: var(--amber-light);
+    }
+
+    .footer-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 24px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      font-size: 12px;
+      color: var(--text-subtle);
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      50% {
+        opacity: 0.4;
+        transform: scale(0.9);
+      }
+    }
+
+    /* Responsive */
+    @media (max-width: 960px) {
+      .hero {
+        grid-template-columns: 1fr;
+        padding-top: 60px;
+      }
+
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .stage-container {
+        grid-template-columns: 1fr;
+      }
+
+      .feature-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .dash-banner {
+        grid-template-columns: 1fr;
+        padding: 30px;
+      }
+
+      .ecosystem-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .loop-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .footer-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .nav-links {
+        display: none;
+      }
+
+      .hero {
+        min-height: auto;
+      }
+
+      .feature-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .faq-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .ecosystem-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .loop-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .footer-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .cta-box {
+        padding: 32px 24px;
+      }
+    }
+  </style>
 </head>
+
 <body>
 
-<!-- Header Navigation -->
-<header>
-  <div class="wrap nav">
-    <a class="brand" href="#">
-      <span class="brand-mark" aria-label="ANVIL Mark">
-        <svg viewBox="0 0 512 512" width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="brand-neon" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#38bdf8"/>
-              <stop offset="50%" stop-color="#f97316"/>
-              <stop offset="100%" stop-color="#fb923c"/>
-            </linearGradient>
-            <linearGradient id="brand-metal" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stop-color="#1e293b"/>
-              <stop offset="100%" stop-color="#0f172a"/>
-            </linearGradient>
-          </defs>
-          <path d="M120 404 L392 404 L368 360 L144 360 Z" fill="url(#brand-metal)" stroke="#38bdf8" stroke-width="12" stroke-linejoin="round"/>
-          <path d="M144 360 L368 360 L336 312 L176 312 Z" fill="url(#brand-metal)" stroke="url(#brand-neon)" stroke-width="12" stroke-linejoin="round"/>
-          <path d="M176 312 L220 186 L256 186 L224 312 Z" fill="url(#brand-metal)" stroke="url(#brand-neon)" stroke-width="10"/>
-          <path d="M336 312 L292 186 L256 186 L288 312 Z" fill="url(#brand-metal)" stroke="url(#brand-neon)" stroke-width="10"/>
-          <path d="M188 266 L256 232 L324 266 L256 280 Z" fill="url(#brand-neon)"/>
-          <path d="M68 186 C104 184 156 180 188 162 L200 136 L416 136 C432 136 444 148 440 164 L424 186 L374 186 L344 212 L168 212 L136 186 Z" fill="url(#brand-metal)" stroke="url(#brand-neon)" stroke-width="14" stroke-linejoin="round"/>
-          <line x1="202" y1="140" x2="414" y2="140" stroke="#ffffff" stroke-width="10" stroke-linecap="round"/>
-          <line x1="202" y1="140" x2="414" y2="140" stroke="#f97316" stroke-width="14" opacity="0.6" stroke-linecap="round"/>
-          <polygon points="256,112 264,136 288,144 264,152 256,176 248,152 224,144 248,136" fill="#38bdf8"/>
-        </svg>
-      </span>
-      <span>ANVIL</span>
-      <span class="version-badge">v1.0.7</span>
-    </a>
-    <nav class="nav-links">
-      <a href="#capabilities">Capabilities</a>
-      <a href="#workbench">Workbench</a>
-      <a href="#architecture">Architecture</a>
-      <a href="#integrations">Integrations</a>
-      <a href="#quickstart">Quick Start</a>
-      <a href="#faq">FAQ</a>
-    </nav>
-    <div class="nav-actions">
-      <a class="btn btn-ghost" href="https://www.npmjs.com/package/anvil-engineering-workbench" target="_blank" rel="noopener">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M0 0v24h24V0H0zm19.467 19.467h-4.32V8.853h-3.04v10.614H4.533V4.533h14.934v14.934z"/></svg>
-        <span>npm 1.0.7</span>
-      </a>
-      <a class="btn btn-primary" href="https://github.com/anvil-workbench/ANVIL" target="_blank" rel="noopener">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-        <span>GitHub ↗</span>
-      </a>
-    </div>
-  </div>
-</header>
-
-<main>
-  <!-- Hero Section -->
-  <section class="wrap hero">
-    <div>
-      <div class="pill-announcement">
-        <i></i>
-        <span>ANVIL v1.0.7 is live on npm registry</span>
-      </div>
-      <h1>Make every code change <span class="gradient-text">predictable and verified.</span></h1>
-      <p class="hero-lead">The local-first AI engineering workbench that maps codebase architecture across major languages (TS/JS, Python, Go, Rust, Java, C/C++), prunes junk and auto-fixes code with instant rollback, audits change risk, and self-heals via test verification — with zero telemetry leakage and full developer control.</p>
-      <div class="hero-cta">
-        <a class="btn btn-primary btn-large" href="#quickstart">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 13l5 5 5-5M12 4v14"/></svg>
-          <span>Get Started on npm</span>
-        </a>
-        <a class="btn btn-ghost btn-large" href="https://github.com/anvil-workbench/ANVIL" target="_blank" rel="noopener">
-          <span>View Source on GitHub ↗</span>
-        </a>
-      </div>
-      <div class="micro-spec">
-        <span>100% Local-First</span>
-        <span>Multi-Language Map & TS/JS AST</span>
-        <span>Self-Healing Clean & Fix</span>
-        <span>Instant Snapshot Undo</span>
-      </div>
-    </div>
-
-    <!-- Live Terminal Simulation -->
-    <div class="terminal-card">
-      <div class="terminal-top">
-        <div class="window-dots">
-          <span class="dot-red"></span>
-          <span class="dot-yellow"></span>
-          <span class="dot-green"></span>
-        </div>
-        <div class="terminal-title">anvil — local engineering session</div>
-        <div class="terminal-tag">LIVE v1.0.7</div>
-      </div>
-      <div class="terminal-tabs">
-        <button class="term-tab active" data-tab="inspect">01 inspect</button>
-        <button class="term-tab" data-tab="map">02 map</button>
-        <button class="term-tab" data-tab="clean">03 clean & fix</button>
-        <button class="term-tab" data-tab="doctor">04 doctor</button>
-        <button class="term-tab" data-tab="mcp">05 mcp-setup</button>
-        <button class="term-tab" data-tab="memory">06 memory</button>
-        <button class="term-tab" data-tab="git">07 git-risk</button>
-        <button class="term-tab" data-tab="verify">08 verify</button>
-        <button class="term-tab" data-tab="adr">09 adr</button>
-        <button class="term-tab" data-tab="security">10 security</button>
-      </div>
-      <div class="terminal-body" id="termScreen">
-        <!-- Rendered by JS -->
-      </div>
-    </div>
-  </section>
-
-  <!-- Interactive Quick Start Strip -->
-  <section class="wrap quickstart-strip" id="quickstart">
-    <div class="quickstart-header">
-      <div class="quickstart-copy">
-        <span class="eyebrow">QUICK START INSTALLATION</span>
-        <h2>Bring ANVIL into your development environment</h2>
-        <p>Run instantly with npx or install globally via your preferred package manager. Requires Node.js 22+.</p>
-      </div>
-      <div class="pkg-tabs" role="tablist">
-        <button class="pkg-tab active" data-pkg="npm">npm</button>
-        <button class="pkg-tab" data-pkg="npx">npx</button>
-        <button class="pkg-tab" data-pkg="pnpm">pnpm</button>
-        <button class="pkg-tab" data-pkg="yarn">yarn</button>
-      </div>
-    </div>
-    <div class="install-box">
-      <span class="cmd-prompt">$</span>
-      <code id="pkgCommand">npm install -g anvil-engineering-workbench</code>
-      <button class="copy-btn" id="copyPkgBtn" type="button">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-        <span id="copyText">Copy</span>
-      </button>
-    </div>
-    <div class="integration-tags">
-      <span>Supported Adapters</span>
-      <span>Claude Code <b>MCP STDIO</b></span>
-      <span>Cursor IDE <b>MCP CLIENT</b></span>
-      <span>Local Models <b>OLLAMA</b></span>
-      <span>Cloud APIs <b>OPENAI · ANTHROPIC · GEMINI</b></span>
-      <span>Platform <b>NODE 22+ · TS 5.8+</b></span>
-    </div>
-  </section>
-
-  <!-- Metric Strip -->
-  <section class="wrap stats-grid">
-    <div class="stat-card">
-      <div class="stat-number">100%</div>
-      <div class="stat-label">Local-First Privacy</div>
-      <div class="stat-desc">Your code, AST symbols, and git history never leave your local workspace without explicit configuration.</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-number">16+</div>
-      <div class="stat-label">Deep Tooling Engines</div>
-      <div class="stat-desc">From TypeScript AST analysis and circular import graphs to heuristic git change-risk and regression tracking.</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-number">0 KB</div>
-      <div class="stat-label">Cloud Telemetry Leakage</div>
-      <div class="stat-desc">Zero tracking scripts, zero background phoning home. Saved state lives safely in your local <code>.anvil/</code> folder.</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-number">MIT</div>
-      <div class="stat-label">Open-Source License</div>
-      <div class="stat-desc">Fully auditable source code, forkable, and ready for community expansion on GitHub.</div>
-    </div>
-  </section>
-
-  <!-- Inside The Workbench (Interactive Stage) -->
-  <section class="section" id="workbench">
-    <div class="wrap">
-      <div class="section-head">
-        <span class="eyebrow">INSIDE THE WORKBENCH</span>
-        <h2>Engineering evidence, <span class="gradient-text">not mystery automation.</span></h2>
-        <p>Explore the four core facets of ANVIL. Each engine gathers concrete evidence to guide your decisions rather than modifying your files silently.</p>
-      </div>
-
-      <div class="stage-container">
-        <div class="stage-selector">
-          <button class="stage-btn active" data-stage="0">
-            <span class="stage-btn-num">01 / INTELLIGENCE</span>
-            <span class="stage-btn-title">Codebase & Project Profiler</span>
-            <span class="stage-btn-desc">Parse frameworks, package manifests, build scripts, and configuration boundaries.</span>
-          </button>
-          <button class="stage-btn" data-stage="1">
-            <span class="stage-btn-num">02 / ARCHITECTURE</span>
-            <span class="stage-btn-title">AST & Module Dependency Graph</span>
-            <span class="stage-btn-desc">Trace static imports, package edges, circular imports, and candidate entry points.</span>
-          </button>
-          <button class="stage-btn" data-stage="2">
-            <span class="stage-btn-num">03 / RISK SIGNALS</span>
-            <span class="stage-btn-title">Git Change-Risk & Hotspot Analysis</span>
-            <span class="stage-btn-desc">Connect uncommitted diffs to downstream files, structural hotspots, and test targets.</span>
-          </button>
-          <button class="stage-btn" data-stage="3">
-            <span class="stage-btn-num">04 / VERIFICATION</span>
-            <span class="stage-btn-title">Deterministic Verification & Regressions</span>
-            <span class="stage-btn-desc">Execute named scripts, record outcomes, and track historical regressions across runs.</span>
-          </button>
-          <button class="stage-btn" data-stage="4">
-            <span class="stage-btn-num">05 / AUTO-CLEAN & FIX</span>
-            <span class="stage-btn-title">Workspace Clutter Scrubber & Code Repair</span>
-            <span class="stage-btn-desc">Clean OS clutter, incomplete downloads, temp logs, and auto-prune unused imports safely.</span>
-          </button>
-          <button class="stage-btn" data-stage="5">
-            <span class="stage-btn-num">06 / HEALING WIZARD</span>
-            <span class="stage-btn-title">Doctor Self-Healing Setup</span>
-            <span class="stage-btn-desc">One-command auto-scaffolding of .anvil configs, multi-language .gitignore, and Git environments.</span>
-          </button>
-          <button class="stage-btn" data-stage="6">
-            <span class="stage-btn-num">07 / HARNESS & MEMORY</span>
-            <span class="stage-btn-title">AI Harness MCP & Project Memory Hub</span>
-            <span class="stage-btn-desc">One-click MCP adapter setup for Cursor, Claude Code, and Windsurf, plus durable decision logs.</span>
-          </button>
-        </div>
-
-        <div class="stage-display">
-          <div class="stage-display-head">
-            <span id="stageHeadTitle">ANVIL / PROJECT PROFILE STAGE</span>
-            <span style="color:var(--emerald);">● LOCAL WORKSPACE SIMULATION</span>
-          </div>
-          <div class="stage-display-body" id="stageContent">
-            <!-- Dynamic Content -->
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Capabilities Feature Grid -->
-  <section class="section" id="capabilities">
-    <div class="wrap">
-      <div class="section-head">
-        <span class="eyebrow">COMPLETE TOOLKIT</span>
-        <h2>Built for every step of <span class="gradient-text">the software lifecycle.</span></h2>
-        <p>From initial codebase discovery to post-merge verification, ANVIL provides purpose-built tools that give you structural clarity.</p>
-      </div>
-
-      <div class="feature-grid">
-        <div class="feature-card">
-          <div class="feature-header">
-            <div class="feature-icon">⌘</div>
-            <span class="feature-num">01</span>
-          </div>
-          <h3>Project Discovery</h3>
-          <p>Scan languages, manifests, frameworks, scripts, and dependency counts before touching a single line of code.</p>
-          <span class="feature-tag">anvil inspect</span>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-header">
-            <div class="feature-icon">⌗</div>
-            <span class="feature-num">02</span>
-          </div>
-          <h3>Architecture Mapping</h3>
-          <p>Map internal module relationships, external package imports, entry points, and circular dependency rings.</p>
-          <span class="feature-tag">anvil map · deep</span>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-header">
-            <div class="feature-icon">⚡</div>
-            <span class="feature-num">03</span>
-          </div>
-          <h3>AST Symbol Analysis</h3>
-          <p>Parse TypeScript syntax trees to extract functions, classes, interfaces, and transitive blast-radius paths.</p>
-          <span class="feature-tag">TypeScript AST</span>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-header">
-            <div class="feature-icon">⌁</div>
-            <span class="feature-num">04</span>
-          </div>
-          <h3>Change-Risk Assessment</h3>
-          <p>Correlate working-tree git changes with downstream architectural hotspots and recommended test suites.</p>
-          <span class="feature-tag">anvil git</span>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-header">
-            <div class="feature-icon">⌕</div>
-            <span class="feature-num">05</span>
-          </div>
-          <h3>Review History</h3>
-          <p>Save code review snapshots, inspect individual findings, and compare reviews across commits over time.</p>
-          <span class="feature-tag">anvil review-history</span>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-header">
-            <div class="feature-icon">⟐</div>
-            <span class="feature-num">06</span>
-          </div>
-          <h3>Dry-Run Patch Validation</h3>
-          <p>Validate proposed unified diffs for target file paths, hunk syntax, and source context without applying them.</p>
-          <span class="feature-tag">anvil patch-check</span>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-header">
-            <div class="feature-icon">✓</div>
-            <span class="feature-num">07</span>
-          </div>
-          <h3>Verification Engine</h3>
-          <p>Run named project test or build scripts deliberately, capturing standard outputs, exit codes, and timestamps.</p>
-          <span class="feature-tag">anvil verify</span>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-header">
-            <div class="feature-icon">↗</div>
-            <span class="feature-num">08</span>
-          </div>
-          <h3>Regression Intelligence</h3>
-          <p>Compare saved verification outcomes to identify regressions, recoveries, persistent failures, and stable runs.</p>
-          <span class="feature-tag">anvil regression</span>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-header">
-            <div class="feature-icon">◉</div>
-            <span class="feature-num">09</span>
-          </div>
-          <h3>Engineering Health Score</h3>
-          <p>Synthesize quality, verification, and dependency evidence into an honest, weighted engineering health metric.</p>
-          <span class="feature-tag">anvil health</span>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-header">
-            <div class="feature-icon">⛓</div>
-            <span class="feature-num">10</span>
-          </div>
-          <h3>Dependency Intelligence</h3>
-          <p>Inspect npm package manifests, lockfiles, and audit reports for vulnerability flags, outdated ranges, and licenses.</p>
-          <span class="feature-tag">anvil deps</span>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-header">
-            <div class="feature-icon">✳</div>
-            <span class="feature-num">11</span>
-          </div>
-          <h3>Remediation Planner</h3>
-          <p>Prioritize critical dependency findings and generate reviewable upgrade strategies without silent package installs.</p>
-          <span class="feature-tag">anvil remediate</span>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-header">
-            <div class="feature-icon">▦</div>
-            <span class="feature-num">12</span>
-          </div>
-          <h3>Local Web Dashboard</h3>
-          <p>Launch an interactive local control center with live SSE broadcasts, interactive graphs, and run inspectors.</p>
-          <span class="feature-tag">anvil dashboard</span>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-header">
-            <div class="feature-icon">🧹</div>
-            <span class="feature-num">13</span>
-          </div>
-          <h3>Automated Junk Cleaner & Fix</h3>
-          <p>Scrub OS residue, partial downloads, error logs, and multi-language caches, with safe unused-import auto-repair.</p>
-          <span class="feature-tag">anvil clean · fix</span>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-header">
-            <div class="feature-icon">🩺</div>
-            <span class="feature-num">14</span>
-          </div>
-          <h3>Self-Healing Doctor Wizard</h3>
-          <p>Automate environment health diagnostics with one-command scaffolding of .anvil directories, .gitignore, and .env.</p>
-          <span class="feature-tag">anvil doctor --fix</span>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Visual Architecture Showcase -->
-  <section class="section" id="architecture">
-    <div class="wrap">
-      <div class="section-head">
-        <span class="eyebrow">SYSTEM ARCHITECTURE</span>
-        <h2>How ANVIL works <span class="gradient-text">under the hood.</span></h2>
-        <p>A decoupled, local-first pipeline designed to process real project trees without sending your proprietary source code to third-party endpoints.</p>
-      </div>
-
-      <div class="arch-visual-box">
-        <svg class="arch-svg-container" viewBox="0 0 900 320" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <!-- Background Grid lines -->
-          <line x1="0" y1="80" x2="900" y2="80" stroke="#161e2e" stroke-dasharray="4 4" />
-          <line x1="0" y1="160" x2="900" y2="160" stroke="#161e2e" stroke-dasharray="4 4" />
-          <line x1="0" y1="240" x2="900" y2="240" stroke="#161e2e" stroke-dasharray="4 4" />
-
-          <!-- Connection Lines with Glow -->
-          <path d="M140 160 L280 160" stroke="#f97316" stroke-width="2" opacity="0.8" />
-          <path d="M420 160 L540 100" stroke="#38bdf8" stroke-width="2" opacity="0.8" />
-          <path d="M420 160 L540 220" stroke="#34d399" stroke-width="2" opacity="0.8" />
-          <path d="M680 100 L760 140" stroke="#38bdf8" stroke-width="2" opacity="0.8" />
-          <path d="M680 220 L760 180" stroke="#34d399" stroke-width="2" opacity="0.8" />
-
-          <!-- Node 1: Local Workspace -->
-          <rect x="20" y="120" width="120" height="80" rx="12" fill="#0f1520" stroke="#f97316" stroke-width="1.5" />
-          <text x="80" y="152" fill="#fff" font-size="12" font-weight="700" text-anchor="middle" font-family="'JetBrains Mono', monospace">WORKSPACE</text>
-          <text x="80" y="172" fill="#94a3b8" font-size="10" text-anchor="middle">Local Filesystem</text>
-
-          <!-- Node 2: ANVIL Core Parser -->
-          <rect x="280" y="120" width="140" height="80" rx="12" fill="#0f1520" stroke="#f97316" stroke-width="1.5" />
-          <text x="350" y="152" fill="#fff" font-size="12" font-weight="700" text-anchor="middle" font-family="'JetBrains Mono', monospace">ANVIL CORE</text>
-          <text x="350" y="172" fill="#94a3b8" font-size="10" text-anchor="middle">AST & Graph Engine</text>
-
-          <!-- Node 3: Intelligence & MCP -->
-          <rect x="540" y="60" width="140" height="80" rx="12" fill="#0f1520" stroke="#38bdf8" stroke-width="1.5" />
-          <text x="610" y="92" fill="#fff" font-size="12" font-weight="700" text-anchor="middle" font-family="'JetBrains Mono', monospace">MCP SERVER</text>
-          <text x="610" y="112" fill="#94a3b8" font-size="10" text-anchor="middle">Claude / Cursor</text>
-
-          <!-- Node 4: Verification & Dashboard -->
-          <rect x="540" y="180" width="140" height="80" rx="12" fill="#0f1520" stroke="#34d399" stroke-width="1.5" />
-          <text x="610" y="212" fill="#fff" font-size="12" font-weight="700" text-anchor="middle" font-family="'JetBrains Mono', monospace">LOCAL STORE</text>
-          <text x="610" y="232" fill="#94a3b8" font-size="10" text-anchor="middle">.anvil/ State</text>
-
-          <!-- Node 5: Output UI & CLI -->
-          <rect x="760" y="120" width="120" height="80" rx="12" fill="#0f1520" stroke="#fff" stroke-width="1.5" />
-          <text x="820" y="152" fill="#fff" font-size="12" font-weight="700" text-anchor="middle" font-family="'JetBrains Mono', monospace">DASHBOARD</text>
-          <text x="820" y="172" fill="#94a3b8" font-size="10" text-anchor="middle">Localhost UI</text>
-        </svg>
-      </div>
-    </div>
-  </section>
-
-  <!-- Local Dashboard Spotlight Banner -->
-  <section class="section">
-    <div class="wrap">
-      <div class="dash-banner">
-        <div>
-          <span class="eyebrow">STANDALONE WEB INTERFACE</span>
-          <h3>Launch your local engineering control center</h3>
-          <p>Run the dashboard directly on your machine. Inspect architecture, visualize real-time dependency graphs, review audit trails, and approve agent actions through a sleek localhost interface.</p>
-          <div class="hero-cta" style="margin:0">
-            <a class="btn btn-primary" href="https://github.com/anvil-workbench/ANVIL#quick-start" target="_blank" rel="noopener">
-              <span>View Dashboard Guide ↗</span>
-            </a>
-          </div>
-        </div>
-        <div>
-          <div class="dash-cmd-block">
-            <span style="color:var(--text-subtle)"># Launch dashboard for any repository</span><br>
-            <span style="color:var(--amber)">$</span> anvil dashboard ./your-project<br><br>
-            <span style="color:var(--emerald)">✓</span> Dashboard running at: <span style="color:var(--cyan)">http://127.0.0.1:4173</span><br>
-            <span style="color:var(--emerald)">✓</span> Realtime SSE event stream active<br>
-            <span style="color:var(--emerald)">✓</span> Safe sandbox & local file preview ready
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Ecosystem Integrations -->
-  <section class="section" id="integrations">
-    <div class="wrap">
-      <div class="section-head">
-        <span class="eyebrow">EXTENSIBILITY</span>
-        <h2>Integrates directly with <span class="gradient-text">your AI engineering stack.</span></h2>
-        <p>Connect ANVIL's local read-only MCP server to your AI editor or invoke specialized CLI workflows from automated pipelines.</p>
-      </div>
-
-      <div class="ecosystem-grid">
-        <div class="eco-card">
-          <span class="eco-badge">MCP SERVER</span>
-          <h4>Claude Code</h4>
-          <p>Register ANVIL as a local stdio MCP tool server so Claude can map architecture, search symbols, and audit codebase risk.</p>
-        </div>
-        <div class="eco-card">
-          <span class="eco-badge">MCP CLIENT</span>
-          <h4>Cursor IDE</h4>
-          <p>Add ANVIL to your project's <code>.cursor/mcp.json</code> for instant repository context inside Composer and Chat.</p>
-        </div>
-        <div class="eco-card">
-          <span class="eco-badge">LOCAL LLM</span>
-          <h4>Ollama</h4>
-          <p>Point ANVIL to your local Ollama endpoint for zero-cloud, 100% private review suggestions and diff generation.</p>
-        </div>
-        <div class="eco-card">
-          <span class="eco-badge">API PROVIDERS</span>
-          <h4>OpenAI · Anthropic · Gemini</h4>
-          <p>Configure your own API keys for optional high-reasoning patch proposals and security analysis.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- 4-Step Engineering Loop -->
-  <section class="section">
-    <div class="wrap">
-      <div class="section-head">
-        <span class="eyebrow">THE ENGINEERING LIFECYCLE</span>
-        <h2>A repeatable, disciplined loop</h2>
-        <p>From unfamiliar legacy repositories to safely verified pull requests.</p>
-      </div>
-
-      <div class="loop-grid">
-        <div class="loop-card">
-          <span class="loop-num">PHASE 01</span>
-          <h3>Understand</h3>
-          <p>Inspect frameworks, package manifests, scripts, and build setup before modifying any source code.</p>
-        </div>
-        <div class="loop-card">
-          <span class="loop-num">PHASE 02</span>
-          <h3>Map</h3>
-          <p>Trace module dependencies, AST symbols, entry points, and structural hotspots across files.</p>
-        </div>
-        <div class="loop-card">
-          <span class="loop-num">PHASE 03</span>
-          <h3>Review</h3>
-          <p>Analyze Git uncommitted diffs, assess downstream blast radius, and validate proposed unified patches.</p>
-        </div>
-        <div class="loop-card">
-          <span class="loop-num">PHASE 04</span>
-          <h3>Verify</h3>
-          <p>Execute named test scripts, save deterministic outcome logs, and catch regressions before merging.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- FAQ Accordion -->
-  <section class="section" id="faq">
-    <div class="wrap">
-      <div class="section-head">
-        <span class="eyebrow">FREQUENTLY ASKED QUESTIONS</span>
-        <h2>Everything you need to know.</h2>
-      </div>
-
-      <div class="faq-grid">
-        <details class="faq-item">
-          <summary>Does ANVIL automatically apply changes to my code?</summary>
-          <p>No. By design, ANVIL enforces human approval for consequential actions. Patch validation is a dry run that inspects diff structure, and remediation generation produces a plan rather than silently modifying dependencies.</p>
-        </details>
-        <details class="faq-item">
-          <summary>Is ANVIL's local dashboard a hosted web app?</summary>
-          <p>No. The dashboard runs 100% locally on your machine via Node.js and binds to localhost. Your repository source code, AST index, and git history never get uploaded to any external server.</p>
-        </details>
-        <details class="faq-item">
-          <summary>Which languages are supported for deep AST analysis?</summary>
-          <p>TypeScript and JavaScript have native, deep AST and symbol-level analysis. For other languages (Python, Go, Rust, Java), ANVIL provides manifest parsing, configuration audits, script runners, and git change-risk heuristics.</p>
-        </details>
-        <details class="faq-item">
-          <summary>How do I connect ANVIL with Claude Code or Cursor?</summary>
-          <p>ANVIL provides a built-in MCP server (`anvil mcp` or through the CLI). Simply add it to your Claude Code or Cursor configuration file to grant AI assistants read-only access to ANVIL's repository intelligence tools.</p>
-        </details>
-        <details class="faq-item">
-          <summary>What is required to run ANVIL?</summary>
-          <p>ANVIL requires Node.js version 22 or higher. It works seamlessly across macOS, Linux, and Windows PowerShell.</p>
-        </details>
-        <details class="faq-item">
-          <summary>Is ANVIL completely free and open source?</summary>
-          <p>Yes. ANVIL is licensed under the permissive MIT License. You have complete freedom to inspect, fork, contribute, and use it in commercial or open-source projects.</p>
-        </details>
-      </div>
-    </div>
-  </section>
-
-  <!-- High-Impact CTA Box -->
-  <section class="wrap" style="padding: 40px 0 90px;">
-    <div class="cta-box">
-      <div class="cta-copy">
-        <span class="eyebrow">START ENGINEERING TODAY</span>
-        <h2>Ready to bring clarity to your codebase?</h2>
-        <p>Install ANVIL in seconds or explore the complete open-source repository on GitHub.</p>
-      </div>
-      <div class="hero-cta" style="margin:0">
-        <a class="btn btn-primary btn-large" href="#quickstart">
-          <span>Get Started on npm</span>
-        </a>
-        <a class="btn btn-ghost btn-large" href="https://github.com/anvil-workbench/ANVIL" target="_blank" rel="noopener">
-          <span>Explore on GitHub ↗</span>
-        </a>
-      </div>
-    </div>
-  </section>
-</main>
-
-<!-- Footer -->
-<footer>
-  <div class="wrap footer-grid">
-    <div class="footer-brand">
+  <!-- Header Navigation -->
+  <header>
+    <div class="wrap nav">
       <a class="brand" href="#">
-        <span class="brand-mark">
+        <span class="brand-mark" aria-label="ANVIL Mark">
           <svg viewBox="0 0 512 512" width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <linearGradient id="brand-neon-foot" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#38bdf8"/>
-                <stop offset="50%" stop-color="#f97316"/>
-                <stop offset="100%" stop-color="#fb923c"/>
+              <linearGradient id="brand-neon" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#38bdf8" />
+                <stop offset="50%" stop-color="#f97316" />
+                <stop offset="100%" stop-color="#fb923c" />
               </linearGradient>
-              <linearGradient id="brand-metal-foot" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stop-color="#1e293b"/>
-                <stop offset="100%" stop-color="#0f172a"/>
+              <linearGradient id="brand-metal" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stop-color="#1e293b" />
+                <stop offset="100%" stop-color="#0f172a" />
               </linearGradient>
             </defs>
-            <path d="M120 404 L392 404 L368 360 L144 360 Z" fill="url(#brand-metal-foot)" stroke="#38bdf8" stroke-width="12" stroke-linejoin="round"/>
-            <path d="M144 360 L368 360 L336 312 L176 312 Z" fill="url(#brand-metal-foot)" stroke="url(#brand-neon-foot)" stroke-width="12" stroke-linejoin="round"/>
-            <path d="M176 312 L220 186 L256 186 L224 312 Z" fill="url(#brand-metal-foot)" stroke="url(#brand-neon-foot)" stroke-width="10"/>
-            <path d="M336 312 L292 186 L256 186 L288 312 Z" fill="url(#brand-metal-foot)" stroke="url(#brand-neon-foot)" stroke-width="10"/>
-            <path d="M188 266 L256 232 L324 266 L256 280 Z" fill="url(#brand-neon-foot)"/>
-            <path d="M68 186 C104 184 156 180 188 162 L200 136 L416 136 C432 136 444 148 440 164 L424 186 L374 186 L344 212 L168 212 L136 186 Z" fill="url(#brand-metal-foot)" stroke="url(#brand-neon-foot)" stroke-width="14" stroke-linejoin="round"/>
-            <line x1="202" y1="140" x2="414" y2="140" stroke="#ffffff" stroke-width="10" stroke-linecap="round"/>
-            <line x1="202" y1="140" x2="414" y2="140" stroke="#f97316" stroke-width="14" opacity="0.6" stroke-linecap="round"/>
-            <polygon points="256,112 264,136 288,144 264,152 256,176 248,152 224,144 248,136" fill="#38bdf8"/>
+            <path d="M120 404 L392 404 L368 360 L144 360 Z" fill="url(#brand-metal)" stroke="#38bdf8" stroke-width="12"
+              stroke-linejoin="round" />
+            <path d="M144 360 L368 360 L336 312 L176 312 Z" fill="url(#brand-metal)" stroke="url(#brand-neon)"
+              stroke-width="12" stroke-linejoin="round" />
+            <path d="M176 312 L220 186 L256 186 L224 312 Z" fill="url(#brand-metal)" stroke="url(#brand-neon)"
+              stroke-width="10" />
+            <path d="M336 312 L292 186 L256 186 L288 312 Z" fill="url(#brand-metal)" stroke="url(#brand-neon)"
+              stroke-width="10" />
+            <path d="M188 266 L256 232 L324 266 L256 280 Z" fill="url(#brand-neon)" />
+            <path
+              d="M68 186 C104 184 156 180 188 162 L200 136 L416 136 C432 136 444 148 440 164 L424 186 L374 186 L344 212 L168 212 L136 186 Z"
+              fill="url(#brand-metal)" stroke="url(#brand-neon)" stroke-width="14" stroke-linejoin="round" />
+            <line x1="202" y1="140" x2="414" y2="140" stroke="#ffffff" stroke-width="10" stroke-linecap="round" />
+            <line x1="202" y1="140" x2="414" y2="140" stroke="#f97316" stroke-width="14" opacity="0.6"
+              stroke-linecap="round" />
+            <polygon points="256,112 264,136 288,144 264,152 256,176 248,152 224,144 248,136" fill="#38bdf8" />
           </svg>
         </span>
         <span>ANVIL</span>
+        <span class="version-badge">v1.0.7</span>
       </a>
-      <p>The AI Engineering Workbench. Built for codebase intelligence, architecture mapping, change-risk analysis, and deterministic verification.</p>
+      <nav class="nav-links">
+        <a href="#capabilities">Capabilities</a>
+        <a href="#workbench">Workbench</a>
+        <a href="#architecture">Architecture</a>
+        <a href="#integrations">Integrations</a>
+        <a href="#quickstart">Quick Start</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+      <div class="nav-actions">
+        <a class="btn btn-ghost" href="https://www.npmjs.com/package/anvil-engineering-workbench" target="_blank"
+          rel="noopener">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M0 0v24h24V0H0zm19.467 19.467h-4.32V8.853h-3.04v10.614H4.533V4.533h14.934v14.934z" />
+          </svg>
+          <span>npm 1.0.7</span>
+        </a>
+        <a class="btn btn-primary" href="https://github.com/anvil-workbench/ANVIL" target="_blank" rel="noopener">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+          </svg>
+          <span>GitHub ↗</span>
+        </a>
+      </div>
     </div>
-    <div class="footer-col">
-      <b>Capabilities</b>
-      <a href="#capabilities">Project Discovery</a>
-      <a href="#capabilities">Architecture Mapping</a>
-      <a href="#capabilities">Change-Risk Engine</a>
-      <a href="#capabilities">Verification Lab</a>
-      <a href="#capabilities">Health Scorecards</a>
+  </header>
+
+  <main>
+    <!-- Hero Section -->
+    <section class="wrap hero">
+      <div>
+        <div class="pill-announcement">
+          <i></i>
+          <span>ANVIL v1.0.7 is live on npm registry</span>
+        </div>
+        <h1>Make every code change <span class="gradient-text">predictable and verified.</span></h1>
+        <p class="hero-lead">The local-first AI engineering workbench that maps codebase architecture across major
+          languages (TS/JS, Python, Go, Rust, Java, C/C++), prunes junk and auto-fixes code with instant rollback,
+          audits change risk, and self-heals via test verification — with zero telemetry leakage and full developer
+          control.</p>
+        <div class="hero-cta">
+          <a class="btn btn-primary btn-large" href="#quickstart">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M7 13l5 5 5-5M12 4v14" />
+            </svg>
+            <span>Get Started on npm</span>
+          </a>
+          <a class="btn btn-ghost btn-large" href="https://github.com/anvil-workbench/ANVIL" target="_blank"
+            rel="noopener">
+            <span>View Source on GitHub ↗</span>
+          </a>
+        </div>
+        <div class="micro-spec">
+          <span>100% Local-First</span>
+          <span>Multi-Language Map & TS/JS AST</span>
+          <span>Self-Healing Clean & Fix</span>
+          <span>Instant Snapshot Undo</span>
+        </div>
+      </div>
+
+      <!-- Live Terminal Simulation -->
+      <div class="terminal-card">
+        <div class="terminal-top">
+          <div class="window-dots">
+            <span class="dot-red"></span>
+            <span class="dot-yellow"></span>
+            <span class="dot-green"></span>
+          </div>
+          <div class="terminal-title">anvil — local engineering session</div>
+          <div class="terminal-tag">LIVE v1.0.7</div>
+        </div>
+        <div class="terminal-tabs">
+          <button class="term-tab active" data-tab="inspect">01 inspect</button>
+          <button class="term-tab" data-tab="map">02 map</button>
+          <button class="term-tab" data-tab="clean">03 clean & fix</button>
+          <button class="term-tab" data-tab="doctor">04 doctor</button>
+          <button class="term-tab" data-tab="mcp">05 mcp-setup</button>
+          <button class="term-tab" data-tab="memory">06 memory</button>
+          <button class="term-tab" data-tab="git">07 git-risk</button>
+          <button class="term-tab" data-tab="verify">08 verify</button>
+          <button class="term-tab" data-tab="adr">09 adr</button>
+          <button class="term-tab" data-tab="security">10 security</button>
+        </div>
+        <div class="terminal-body" id="termScreen">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Interactive Quick Start Strip -->
+    <section class="wrap quickstart-strip" id="quickstart">
+      <div class="quickstart-header">
+        <div class="quickstart-copy">
+          <span class="eyebrow">QUICK START INSTALLATION</span>
+          <h2>Bring ANVIL into your development environment</h2>
+          <p>Run instantly with npx or install globally via your preferred package manager. Requires Node.js 22+.</p>
+        </div>
+        <div class="pkg-tabs" role="tablist">
+          <button class="pkg-tab active" data-pkg="npm">npm</button>
+          <button class="pkg-tab" data-pkg="npx">npx</button>
+          <button class="pkg-tab" data-pkg="pnpm">pnpm</button>
+          <button class="pkg-tab" data-pkg="yarn">yarn</button>
+        </div>
+      </div>
+      <div class="install-box">
+        <span class="cmd-prompt">$</span>
+        <code id="pkgCommand">npm install -g anvil-engineering-workbench</code>
+        <button class="copy-btn" id="copyPkgBtn" type="button">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+          </svg>
+          <span id="copyText">Copy</span>
+        </button>
+      </div>
+      <div class="integration-tags">
+        <span>Supported Adapters</span>
+        <span>Claude Code <b>MCP STDIO</b></span>
+        <span>Cursor IDE <b>MCP CLIENT</b></span>
+        <span>Local Models <b>OLLAMA</b></span>
+        <span>Cloud APIs <b>OPENAI · ANTHROPIC · GEMINI</b></span>
+        <span>Platform <b>NODE 22+ · TS 5.8+</b></span>
+      </div>
+    </section>
+
+    <!-- Metric Strip -->
+    <section class="wrap stats-grid">
+      <div class="stat-card">
+        <div class="stat-number">100%</div>
+        <div class="stat-label">Local-First Privacy</div>
+        <div class="stat-desc">Your code, AST symbols, and git history never leave your local workspace without explicit
+          configuration.</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">16+</div>
+        <div class="stat-label">Deep Tooling Engines</div>
+        <div class="stat-desc">From TypeScript AST analysis and circular import graphs to heuristic git change-risk and
+          regression tracking.</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">0 KB</div>
+        <div class="stat-label">Cloud Telemetry Leakage</div>
+        <div class="stat-desc">Zero tracking scripts, zero background phoning home. Saved state lives safely in your
+          local <code>.anvil/</code> folder.</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">MIT</div>
+        <div class="stat-label">Open-Source License</div>
+        <div class="stat-desc">Fully auditable source code, forkable, and ready for community expansion on GitHub.</div>
+      </div>
+    </section>
+
+    <!-- Inside The Workbench (Interactive Stage) -->
+    <section class="section" id="workbench">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">INSIDE THE WORKBENCH</span>
+          <h2>Engineering evidence, <span class="gradient-text">not mystery automation.</span></h2>
+          <p>Explore the four core facets of ANVIL. Each engine gathers concrete evidence to guide your decisions rather
+            than modifying your files silently.</p>
+        </div>
+
+        <div class="stage-container">
+          <div class="stage-selector">
+            <button class="stage-btn active" data-stage="0">
+              <span class="stage-btn-num">01 / INTELLIGENCE</span>
+              <span class="stage-btn-title">Codebase & Project Profiler</span>
+              <span class="stage-btn-desc">Parse frameworks, package manifests, build scripts, and configuration
+                boundaries.</span>
+            </button>
+            <button class="stage-btn" data-stage="1">
+              <span class="stage-btn-num">02 / ARCHITECTURE</span>
+              <span class="stage-btn-title">AST & Module Dependency Graph</span>
+              <span class="stage-btn-desc">Trace static imports, package edges, circular imports, and candidate entry
+                points.</span>
+            </button>
+            <button class="stage-btn" data-stage="2">
+              <span class="stage-btn-num">03 / RISK SIGNALS</span>
+              <span class="stage-btn-title">Git Change-Risk & Hotspot Analysis</span>
+              <span class="stage-btn-desc">Connect uncommitted diffs to downstream files, structural hotspots, and test
+                targets.</span>
+            </button>
+            <button class="stage-btn" data-stage="3">
+              <span class="stage-btn-num">04 / VERIFICATION</span>
+              <span class="stage-btn-title">Deterministic Verification & Regressions</span>
+              <span class="stage-btn-desc">Execute named scripts, record outcomes, and track historical regressions
+                across runs.</span>
+            </button>
+            <button class="stage-btn" data-stage="4">
+              <span class="stage-btn-num">05 / AUTO-CLEAN & FIX</span>
+              <span class="stage-btn-title">Workspace Clutter Scrubber & Code Repair</span>
+              <span class="stage-btn-desc">Clean OS clutter, incomplete downloads, temp logs, and auto-prune unused
+                imports safely.</span>
+            </button>
+            <button class="stage-btn" data-stage="5">
+              <span class="stage-btn-num">06 / HEALING WIZARD</span>
+              <span class="stage-btn-title">Doctor Self-Healing Setup</span>
+              <span class="stage-btn-desc">One-command auto-scaffolding of .anvil configs, multi-language .gitignore,
+                and Git environments.</span>
+            </button>
+            <button class="stage-btn" data-stage="6">
+              <span class="stage-btn-num">07 / HARNESS & MEMORY</span>
+              <span class="stage-btn-title">AI Harness MCP & Project Memory Hub</span>
+              <span class="stage-btn-desc">One-click MCP adapter setup for Cursor, Claude Code, and Windsurf, plus
+                durable decision logs.</span>
+            </button>
+          </div>
+
+          <div class="stage-display">
+            <div class="stage-display-head">
+              <span id="stageHeadTitle">ANVIL / PROJECT PROFILE STAGE</span>
+              <span style="color:var(--emerald);">● LOCAL WORKSPACE SIMULATION</span>
+            </div>
+            <div class="stage-display-body" id="stageContent">
+              <!-- Dynamic Content -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Capabilities Feature Grid -->
+    <section class="section" id="capabilities">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">COMPLETE TOOLKIT</span>
+          <h2>Built for every step of <span class="gradient-text">the software lifecycle.</span></h2>
+          <p>From initial codebase discovery to post-merge verification, ANVIL provides purpose-built tools that give
+            you structural clarity.</p>
+        </div>
+
+        <div class="feature-grid">
+          <div class="feature-card">
+            <div class="feature-header">
+              <div class="feature-icon">⌘</div>
+              <span class="feature-num">01</span>
+            </div>
+            <h3>Project Discovery</h3>
+            <p>Scan languages, manifests, frameworks, scripts, and dependency counts before touching a single line of
+              code.</p>
+            <span class="feature-tag">anvil inspect</span>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-header">
+              <div class="feature-icon">⌗</div>
+              <span class="feature-num">02</span>
+            </div>
+            <h3>Architecture Mapping</h3>
+            <p>Map internal module relationships, external package imports, entry points, and circular dependency rings.
+            </p>
+            <span class="feature-tag">anvil map · deep</span>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-header">
+              <div class="feature-icon">⚡</div>
+              <span class="feature-num">03</span>
+            </div>
+            <h3>AST Symbol Analysis</h3>
+            <p>Parse TypeScript syntax trees to extract functions, classes, interfaces, and transitive blast-radius
+              paths.</p>
+            <span class="feature-tag">TypeScript AST</span>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-header">
+              <div class="feature-icon">⌁</div>
+              <span class="feature-num">04</span>
+            </div>
+            <h3>Change-Risk Assessment</h3>
+            <p>Correlate working-tree git changes with downstream architectural hotspots and recommended test suites.
+            </p>
+            <span class="feature-tag">anvil git</span>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-header">
+              <div class="feature-icon">⌕</div>
+              <span class="feature-num">05</span>
+            </div>
+            <h3>Review History</h3>
+            <p>Save code review snapshots, inspect individual findings, and compare reviews across commits over time.
+            </p>
+            <span class="feature-tag">anvil review-history</span>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-header">
+              <div class="feature-icon">⟐</div>
+              <span class="feature-num">06</span>
+            </div>
+            <h3>Dry-Run Patch Validation</h3>
+            <p>Validate proposed unified diffs for target file paths, hunk syntax, and source context without applying
+              them.</p>
+            <span class="feature-tag">anvil patch-check</span>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-header">
+              <div class="feature-icon">✓</div>
+              <span class="feature-num">07</span>
+            </div>
+            <h3>Verification Engine</h3>
+            <p>Run named project test or build scripts deliberately, capturing standard outputs, exit codes, and
+              timestamps.</p>
+            <span class="feature-tag">anvil verify</span>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-header">
+              <div class="feature-icon">↗</div>
+              <span class="feature-num">08</span>
+            </div>
+            <h3>Regression Intelligence</h3>
+            <p>Compare saved verification outcomes to identify regressions, recoveries, persistent failures, and stable
+              runs.</p>
+            <span class="feature-tag">anvil regression</span>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-header">
+              <div class="feature-icon">◉</div>
+              <span class="feature-num">09</span>
+            </div>
+            <h3>Engineering Health Score</h3>
+            <p>Synthesize quality, verification, and dependency evidence into an honest, weighted engineering health
+              metric.</p>
+            <span class="feature-tag">anvil health</span>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-header">
+              <div class="feature-icon">⛓</div>
+              <span class="feature-num">10</span>
+            </div>
+            <h3>Dependency Intelligence</h3>
+            <p>Inspect npm package manifests, lockfiles, and audit reports for vulnerability flags, outdated ranges, and
+              licenses.</p>
+            <span class="feature-tag">anvil deps</span>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-header">
+              <div class="feature-icon">✳</div>
+              <span class="feature-num">11</span>
+            </div>
+            <h3>Remediation Planner</h3>
+            <p>Prioritize critical dependency findings and generate reviewable upgrade strategies without silent package
+              installs.</p>
+            <span class="feature-tag">anvil remediate</span>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-header">
+              <div class="feature-icon">▦</div>
+              <span class="feature-num">12</span>
+            </div>
+            <h3>Local Web Dashboard</h3>
+            <p>Launch an interactive local control center with live SSE broadcasts, interactive graphs, and run
+              inspectors.</p>
+            <span class="feature-tag">anvil dashboard</span>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-header">
+              <div class="feature-icon">🧹</div>
+              <span class="feature-num">13</span>
+            </div>
+            <h3>Automated Junk Cleaner & Fix</h3>
+            <p>Scrub OS residue, partial downloads, error logs, and multi-language caches, with safe unused-import
+              auto-repair.</p>
+            <span class="feature-tag">anvil clean · fix</span>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-header">
+              <div class="feature-icon">🩺</div>
+              <span class="feature-num">14</span>
+            </div>
+            <h3>Self-Healing Doctor Wizard</h3>
+            <p>Automate environment health diagnostics with one-command scaffolding of .anvil directories, .gitignore,
+              and .env.</p>
+            <span class="feature-tag">anvil doctor --fix</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Visual Architecture Showcase -->
+    <section class="section" id="architecture">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">SYSTEM ARCHITECTURE</span>
+          <h2>How ANVIL works <span class="gradient-text">under the hood.</span></h2>
+          <p>A decoupled, local-first pipeline designed to process real project trees without sending your proprietary
+            source code to third-party endpoints.</p>
+        </div>
+
+        <div class="arch-visual-box">
+          <svg class="arch-svg-container" viewBox="0 0 900 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Background Grid lines -->
+            <line x1="0" y1="80" x2="900" y2="80" stroke="#161e2e" stroke-dasharray="4 4" />
+            <line x1="0" y1="160" x2="900" y2="160" stroke="#161e2e" stroke-dasharray="4 4" />
+            <line x1="0" y1="240" x2="900" y2="240" stroke="#161e2e" stroke-dasharray="4 4" />
+
+            <!-- Connection Lines with Glow -->
+            <path d="M140 160 L280 160" stroke="#f97316" stroke-width="2" opacity="0.8" />
+            <path d="M420 160 L540 100" stroke="#38bdf8" stroke-width="2" opacity="0.8" />
+            <path d="M420 160 L540 220" stroke="#34d399" stroke-width="2" opacity="0.8" />
+            <path d="M680 100 L760 140" stroke="#38bdf8" stroke-width="2" opacity="0.8" />
+            <path d="M680 220 L760 180" stroke="#34d399" stroke-width="2" opacity="0.8" />
+
+            <!-- Node 1: Local Workspace -->
+            <rect x="20" y="120" width="120" height="80" rx="12" fill="#0f1520" stroke="#f97316" stroke-width="1.5" />
+            <text x="80" y="152" fill="#fff" font-size="12" font-weight="700" text-anchor="middle"
+              font-family="'JetBrains Mono', monospace">WORKSPACE</text>
+            <text x="80" y="172" fill="#94a3b8" font-size="10" text-anchor="middle">Local Filesystem</text>
+
+            <!-- Node 2: ANVIL Core Parser -->
+            <rect x="280" y="120" width="140" height="80" rx="12" fill="#0f1520" stroke="#f97316" stroke-width="1.5" />
+            <text x="350" y="152" fill="#fff" font-size="12" font-weight="700" text-anchor="middle"
+              font-family="'JetBrains Mono', monospace">ANVIL CORE</text>
+            <text x="350" y="172" fill="#94a3b8" font-size="10" text-anchor="middle">AST & Graph Engine</text>
+
+            <!-- Node 3: Intelligence & MCP -->
+            <rect x="540" y="60" width="140" height="80" rx="12" fill="#0f1520" stroke="#38bdf8" stroke-width="1.5" />
+            <text x="610" y="92" fill="#fff" font-size="12" font-weight="700" text-anchor="middle"
+              font-family="'JetBrains Mono', monospace">MCP SERVER</text>
+            <text x="610" y="112" fill="#94a3b8" font-size="10" text-anchor="middle">Claude / Cursor</text>
+
+            <!-- Node 4: Verification & Dashboard -->
+            <rect x="540" y="180" width="140" height="80" rx="12" fill="#0f1520" stroke="#34d399" stroke-width="1.5" />
+            <text x="610" y="212" fill="#fff" font-size="12" font-weight="700" text-anchor="middle"
+              font-family="'JetBrains Mono', monospace">LOCAL STORE</text>
+            <text x="610" y="232" fill="#94a3b8" font-size="10" text-anchor="middle">.anvil/ State</text>
+
+            <!-- Node 5: Output UI & CLI -->
+            <rect x="760" y="120" width="120" height="80" rx="12" fill="#0f1520" stroke="#fff" stroke-width="1.5" />
+            <text x="820" y="152" fill="#fff" font-size="12" font-weight="700" text-anchor="middle"
+              font-family="'JetBrains Mono', monospace">DASHBOARD</text>
+            <text x="820" y="172" fill="#94a3b8" font-size="10" text-anchor="middle">Localhost UI</text>
+          </svg>
+        </div>
+      </div>
+    </section>
+
+    <!-- Local Dashboard Spotlight Banner -->
+    <section class="section">
+      <div class="wrap">
+        <div class="dash-banner">
+          <div>
+            <span class="eyebrow">STANDALONE WEB INTERFACE</span>
+            <h3>Launch your local engineering control center</h3>
+            <p>Run the dashboard directly on your machine. Inspect architecture, visualize real-time dependency graphs,
+              review audit trails, and approve agent actions through a sleek localhost interface.</p>
+            <div class="hero-cta" style="margin:0">
+              <a class="btn btn-primary" href="https://github.com/anvil-workbench/ANVIL#quick-start" target="_blank"
+                rel="noopener">
+                <span>View Dashboard Guide ↗</span>
+              </a>
+            </div>
+          </div>
+          <div>
+            <div class="dash-cmd-block">
+              <span style="color:var(--text-subtle)"># Launch dashboard for any repository</span><br>
+              <span style="color:var(--amber)">$</span> anvil dashboard ./your-project<br><br>
+              <span style="color:var(--emerald)">✓</span> Dashboard running at: <span
+                style="color:var(--cyan)">http://127.0.0.1:4173</span><br>
+              <span style="color:var(--emerald)">✓</span> Realtime SSE event stream active<br>
+              <span style="color:var(--emerald)">✓</span> Safe sandbox & local file preview ready
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Ecosystem Integrations -->
+    <section class="section" id="integrations">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">EXTENSIBILITY</span>
+          <h2>Integrates directly with <span class="gradient-text">your AI engineering stack.</span></h2>
+          <p>Connect ANVIL's local read-only MCP server to your AI editor or invoke specialized CLI workflows from
+            automated pipelines.</p>
+        </div>
+
+        <div class="ecosystem-grid">
+          <div class="eco-card">
+            <span class="eco-badge">MCP SERVER</span>
+            <h4>Claude Code</h4>
+            <p>Register ANVIL as a local stdio MCP tool server so Claude can map architecture, search symbols, and audit
+              codebase risk.</p>
+          </div>
+          <div class="eco-card">
+            <span class="eco-badge">MCP CLIENT</span>
+            <h4>Cursor IDE</h4>
+            <p>Add ANVIL to your project's <code>.cursor/mcp.json</code> for instant repository context inside Composer
+              and Chat.</p>
+          </div>
+          <div class="eco-card">
+            <span class="eco-badge">LOCAL LLM</span>
+            <h4>Ollama</h4>
+            <p>Point ANVIL to your local Ollama endpoint for zero-cloud, 100% private review suggestions and diff
+              generation.</p>
+          </div>
+          <div class="eco-card">
+            <span class="eco-badge">API PROVIDERS</span>
+            <h4>OpenAI · Anthropic · Gemini</h4>
+            <p>Configure your own API keys for optional high-reasoning patch proposals and security analysis.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4-Step Engineering Loop -->
+    <section class="section">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">THE ENGINEERING LIFECYCLE</span>
+          <h2>A repeatable, disciplined loop</h2>
+          <p>From unfamiliar legacy repositories to safely verified pull requests.</p>
+        </div>
+
+        <div class="loop-grid">
+          <div class="loop-card">
+            <span class="loop-num">PHASE 01</span>
+            <h3>Understand</h3>
+            <p>Inspect frameworks, package manifests, scripts, and build setup before modifying any source code.</p>
+          </div>
+          <div class="loop-card">
+            <span class="loop-num">PHASE 02</span>
+            <h3>Map</h3>
+            <p>Trace module dependencies, AST symbols, entry points, and structural hotspots across files.</p>
+          </div>
+          <div class="loop-card">
+            <span class="loop-num">PHASE 03</span>
+            <h3>Review</h3>
+            <p>Analyze Git uncommitted diffs, assess downstream blast radius, and validate proposed unified patches.</p>
+          </div>
+          <div class="loop-card">
+            <span class="loop-num">PHASE 04</span>
+            <h3>Verify</h3>
+            <p>Execute named test scripts, save deterministic outcome logs, and catch regressions before merging.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ Accordion -->
+    <section class="section" id="faq">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">FREQUENTLY ASKED QUESTIONS</span>
+          <h2>Everything you need to know.</h2>
+        </div>
+
+        <div class="faq-grid">
+          <details class="faq-item">
+            <summary>Does ANVIL automatically apply changes to my code?</summary>
+            <p>No. By design, ANVIL enforces human approval for consequential actions. Patch validation is a dry run
+              that inspects diff structure, and remediation generation produces a plan rather than silently modifying
+              dependencies.</p>
+          </details>
+          <details class="faq-item">
+            <summary>Is ANVIL's local dashboard a hosted web app?</summary>
+            <p>No. The dashboard runs 100% locally on your machine via Node.js and binds to localhost. Your repository
+              source code, AST index, and git history never get uploaded to any external server.</p>
+          </details>
+          <details class="faq-item">
+            <summary>Which languages are supported for deep AST analysis?</summary>
+            <p>TypeScript and JavaScript have native, deep AST and symbol-level analysis. For other languages (Python,
+              Go, Rust, Java), ANVIL provides manifest parsing, configuration audits, script runners, and git
+              change-risk heuristics.</p>
+          </details>
+          <details class="faq-item">
+            <summary>How do I connect ANVIL with Claude Code or Cursor?</summary>
+            <p>ANVIL provides a built-in MCP server (`anvil mcp` or through the CLI). Simply add it to your Claude Code
+              or Cursor configuration file to grant AI assistants read-only access to ANVIL's repository intelligence
+              tools.</p>
+          </details>
+          <details class="faq-item">
+            <summary>What is required to run ANVIL?</summary>
+            <p>ANVIL requires Node.js version 22 or higher. It works seamlessly across macOS, Linux, and Windows
+              PowerShell.</p>
+          </details>
+          <details class="faq-item">
+            <summary>Is ANVIL completely free and open source?</summary>
+            <p>Yes. ANVIL is licensed under the permissive MIT License. You have complete freedom to inspect, fork,
+              contribute, and use it in commercial or open-source projects.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- High-Impact CTA Box -->
+    <section class="wrap" style="padding: 40px 0 90px;">
+      <div class="cta-box">
+        <div class="cta-copy">
+          <span class="eyebrow">START ENGINEERING TODAY</span>
+          <h2>Ready to bring clarity to your codebase?</h2>
+          <p>Install ANVIL in seconds or explore the complete open-source repository on GitHub.</p>
+        </div>
+        <div class="hero-cta" style="margin:0">
+          <a class="btn btn-primary btn-large" href="#quickstart">
+            <span>Get Started on npm</span>
+          </a>
+          <a class="btn btn-ghost btn-large" href="https://github.com/anvil-workbench/ANVIL" target="_blank"
+            rel="noopener">
+            <span>Explore on GitHub ↗</span>
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="wrap footer-grid">
+      <div class="footer-brand">
+        <a class="brand" href="#">
+          <span class="brand-mark">
+            <svg viewBox="0 0 512 512" width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="brand-neon-foot" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#38bdf8" />
+                  <stop offset="50%" stop-color="#f97316" />
+                  <stop offset="100%" stop-color="#fb923c" />
+                </linearGradient>
+                <linearGradient id="brand-metal-foot" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stop-color="#1e293b" />
+                  <stop offset="100%" stop-color="#0f172a" />
+                </linearGradient>
+              </defs>
+              <path d="M120 404 L392 404 L368 360 L144 360 Z" fill="url(#brand-metal-foot)" stroke="#38bdf8"
+                stroke-width="12" stroke-linejoin="round" />
+              <path d="M144 360 L368 360 L336 312 L176 312 Z" fill="url(#brand-metal-foot)"
+                stroke="url(#brand-neon-foot)" stroke-width="12" stroke-linejoin="round" />
+              <path d="M176 312 L220 186 L256 186 L224 312 Z" fill="url(#brand-metal-foot)"
+                stroke="url(#brand-neon-foot)" stroke-width="10" />
+              <path d="M336 312 L292 186 L256 186 L288 312 Z" fill="url(#brand-metal-foot)"
+                stroke="url(#brand-neon-foot)" stroke-width="10" />
+              <path d="M188 266 L256 232 L324 266 L256 280 Z" fill="url(#brand-neon-foot)" />
+              <path
+                d="M68 186 C104 184 156 180 188 162 L200 136 L416 136 C432 136 444 148 440 164 L424 186 L374 186 L344 212 L168 212 L136 186 Z"
+                fill="url(#brand-metal-foot)" stroke="url(#brand-neon-foot)" stroke-width="14"
+                stroke-linejoin="round" />
+              <line x1="202" y1="140" x2="414" y2="140" stroke="#ffffff" stroke-width="10" stroke-linecap="round" />
+              <line x1="202" y1="140" x2="414" y2="140" stroke="#f97316" stroke-width="14" opacity="0.6"
+                stroke-linecap="round" />
+              <polygon points="256,112 264,136 288,144 264,152 256,176 248,152 224,144 248,136" fill="#38bdf8" />
+            </svg>
+          </span>
+          <span>ANVIL</span>
+        </a>
+        <p>The AI Engineering Workbench. Built for codebase intelligence, architecture mapping, change-risk analysis,
+          and deterministic verification.</p>
+      </div>
+      <div class="footer-col">
+        <b>Capabilities</b>
+        <a href="#capabilities">Project Discovery</a>
+        <a href="#capabilities">Architecture Mapping</a>
+        <a href="#capabilities">Change-Risk Engine</a>
+        <a href="#capabilities">Verification Lab</a>
+        <a href="#capabilities">Health Scorecards</a>
+      </div>
+      <div class="footer-col">
+        <b>Ecosystem</b>
+        <a href="#integrations">Claude Code MCP</a>
+        <a href="#integrations">Cursor Integration</a>
+        <a href="#integrations">Ollama Local LLM</a>
+        <a href="#workbench">Local Dashboard</a>
+        <a href="#architecture">Architecture Overview</a>
+      </div>
+      <div class="footer-col">
+        <b>Open Source</b>
+        <a href="https://github.com/anvil-workbench/ANVIL" target="_blank" rel="noopener">GitHub Repository</a>
+        <a href="https://www.npmjs.com/package/anvil-engineering-workbench" target="_blank" rel="noopener">npm
+          Registry</a>
+        <a href="https://github.com/anvil-workbench/ANVIL/releases" target="_blank" rel="noopener">Releases &
+          Changelog</a>
+        <a href="https://github.com/anvil-workbench/ANVIL/blob/main/CONTRIBUTING.md" target="_blank"
+          rel="noopener">Contributing Guide</a>
+        <a href="https://github.com/anvil-workbench/ANVIL/blob/main/LICENSE" target="_blank" rel="noopener">MIT
+          License</a>
+      </div>
     </div>
-    <div class="footer-col">
-      <b>Ecosystem</b>
-      <a href="#integrations">Claude Code MCP</a>
-      <a href="#integrations">Cursor Integration</a>
-      <a href="#integrations">Ollama Local LLM</a>
-      <a href="#workbench">Local Dashboard</a>
-      <a href="#architecture">Architecture Overview</a>
+    <div class="wrap footer-bottom">
+      <span>© 2026 ANVIL Organization · Maintained by <a href="https://github.com/AdityaaaTiwari" target="_blank"
+          rel="noopener" style="color:var(--amber-light);font-weight:600;">@AdityaaaTiwari</a></span>
+      <span>Local-First · Zero Cloud Telemetry · Independent Open Source</span>
     </div>
-    <div class="footer-col">
-      <b>Open Source</b>
-      <a href="https://github.com/anvil-workbench/ANVIL" target="_blank" rel="noopener">GitHub Repository</a>
-      <a href="https://www.npmjs.com/package/anvil-engineering-workbench" target="_blank" rel="noopener">npm Registry</a>
-      <a href="https://github.com/anvil-workbench/ANVIL/releases" target="_blank" rel="noopener">Releases & Changelog</a>
-      <a href="https://github.com/anvil-workbench/ANVIL/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">Contributing Guide</a>
-      <a href="https://github.com/anvil-workbench/ANVIL/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>
-    </div>
-  </div>
-  <div class="wrap footer-bottom">
-    <span>© 2026 ANVIL Organization · Maintained by <a href="https://github.com/AdityaaaTiwari" target="_blank" rel="noopener" style="color:var(--amber-light);font-weight:600;">@AdityaaaTiwari</a></span>
-    <span>Local-First · Zero Cloud Telemetry · Independent Open Source</span>
-  </div>
-</footer>
+  </footer>
 
-<script>
-// Interactive Package Manager Command Switcher
-const pkgCommands = {
-  npm: "npm install -g anvil-engineering-workbench",
-  npx: "npx anvil-engineering-workbench",
-  pnpm: "pnpm add -g anvil-engineering-workbench",
-  yarn: "yarn global add anvil-engineering-workbench"
-};
+  <script>
+    // Interactive Package Manager Command Switcher
+    const pkgCommands = {
+      npm: "npm install -g anvil-engineering-workbench",
+      npx: "npx anvil-engineering-workbench",
+      pnpm: "pnpm add -g anvil-engineering-workbench",
+      yarn: "yarn global add anvil-engineering-workbench"
+    };
 
-const pkgCode = document.getElementById("pkgCommand");
-const copyPkgBtn = document.getElementById("copyPkgBtn");
-const copyText = document.getElementById("copyText");
+    const pkgCode = document.getElementById("pkgCommand");
+    const copyPkgBtn = document.getElementById("copyPkgBtn");
+    const copyText = document.getElementById("copyText");
 
-document.querySelectorAll(".pkg-tab").forEach(tab => {
-  tab.addEventListener("click", () => {
-    document.querySelectorAll(".pkg-tab").forEach(t => t.classList.remove("active"));
-    tab.classList.add("active");
-    const pkg = tab.dataset.pkg;
-    pkgCode.textContent = pkgCommands[pkg];
-  });
-});
+    document.querySelectorAll(".pkg-tab").forEach(tab => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll(".pkg-tab").forEach(t => t.classList.remove("active"));
+        tab.classList.add("active");
+        const pkg = tab.dataset.pkg;
+        pkgCode.textContent = pkgCommands[pkg];
+      });
+    });
 
-copyPkgBtn.addEventListener("click", async () => {
-  try {
-    await navigator.clipboard.writeText(pkgCode.textContent.trim());
-    copyText.textContent = "Copied! ✓";
-    copyPkgBtn.style.background = "var(--amber)";
-    copyPkgBtn.style.color = "#07080d";
-    setTimeout(() => {
-      copyText.textContent = "Copy";
-      copyPkgBtn.style.background = "";
-      copyPkgBtn.style.color = "";
-    }, 1800);
-  } catch (err) {
-    copyText.textContent = "Select & copy";
-  }
-});
+    copyPkgBtn.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(pkgCode.textContent.trim());
+        copyText.textContent = "Copied! ✓";
+        copyPkgBtn.style.background = "var(--amber)";
+        copyPkgBtn.style.color = "#07080d";
+        setTimeout(() => {
+          copyText.textContent = "Copy";
+          copyPkgBtn.style.background = "";
+          copyPkgBtn.style.color = "";
+        }, 1800);
+      } catch (err) {
+        copyText.textContent = "Select & copy";
+      }
+    });
 
-// Interactive Hero Terminal Tabs
-const terminalDemos = {
-  inspect: {
-    command: "anvil inspect ./my-app",
-    rows: [
-      { label: "Language breakdown", val: "TypeScript 84.2%, CSS 11.5%, JSON 4.3%", status: "ok" },
-      { label: "Detected framework", val: "Next.js 15.1 + React 19", status: "ok" },
-      { label: "Manifest dependencies", val: "28 production · 14 development", status: "cyan" },
-      { label: "Engineering health", val: "88/100 · 0 critical alerts", status: "ok" }
-    ]
-  },
-  map: {
-    command: "anvil map --entry ./src/index.ts",
-    rows: [
-      { label: "Modules parsed", val: "142 files · 618 export symbols", status: "ok" },
-      { label: "AST syntax trees", val: "TypeScript compiler API valid", status: "ok" },
-      { label: "Circular dependencies", val: "0 circular import loops found", status: "ok" },
-      { label: "Entrypoint routes", val: "8 public API routes identified", status: "cyan" }
-    ]
-  },
-  git: {
-    command: "anvil git --compare HEAD~1",
-    rows: [
-      { label: "Modified source files", val: "3 files (+142, -28 lines)", status: "warn" },
-      { label: "Downstream impact", val: "7 dependent files affected", status: "warn" },
-      { label: "Structural hotspot", val: "src/core/auth.ts (Central Hub)", status: "warn" },
-      { label: "Target test suites", val: "auth.test.ts, session.test.ts", status: "cyan" }
-    ]
-  },
-  verify: {
-    command: "anvil verify --script test",
-    rows: [
-      { label: "Script execution", val: "npm test (Vitest runner)", status: "ok" },
-      { label: "Test suites result", val: "24 passed, 0 failed (3.42s)", status: "ok" },
-      { label: "Regression check", val: "0 regressions vs saved run #18", status: "ok" },
-      { label: "Result logged to", val: ".anvil/runs/run-9a84b.json", status: "cyan" }
-    ]
-  },
-  clean: {
-    command: "anvil clean . --apply --fix --verify",
-    rows: [
-      { label: "Workspace junk deleted", val: "18 items (4.2 MB) · logs, .tmp, .crdownload, caches", status: "ok" },
-      { label: "Unused imports pruned", val: "12 named imports removed safely across TS & Python", status: "ok" },
-      { label: "Self-healing test verification", val: "PASSED (npm test · 100% green)", status: "ok" },
-      { label: "Snapshot backup created", val: ".anvil/backups/ (run 'anvil undo' anytime)", status: "cyan" }
-    ]
-  },
-  doctor: {
-    command: "anvil doctor --fix",
-    rows: [
-      { label: "Environment status", val: "Node.js 22 LTS, Git 2.55 (Ready)", status: "ok" },
-      { label: "Workspace configuration", val: "Scaffolded .anvil/ (agents, skills, workflows)", status: "ok" },
-      { label: "Security & gitignore", val: "Multi-language .gitignore & .env.example created", status: "ok" },
-      { label: "Overall health check", val: "ALL GREEN · Ready for autonomous workflows", status: "cyan" }
-    ]
-  },
-  mcp: {
-    command: "anvil mcp setup --client all",
-    rows: [
-      { label: "Cursor IDE (.cursor/mcp.json)", val: "Configured (safe merge with existing tools)", status: "ok" },
-      { label: "Claude Code CLI adapter", val: "claude mcp add --transport stdio anvil ...", status: "ok" },
-      { label: "Windsurf & VS Code config", val: "Generated in .windsurf/ & .vscode/mcp.json", status: "ok" },
-      { label: "Exposed tool count", val: "18 read-only architectural & intelligence tools", status: "cyan" }
-    ]
-  },
-  memory: {
-    command: "anvil memory add --kind decision --content 'Always run test gate with --verify'",
-    rows: [
-      { label: "Memory ID generated", val: "mem-8f2a1b9c (persisted to .anvil/memory.json)", status: "ok" },
-      { label: "Context retrieval test", val: "Top ranked note retrieved under 1200 token budget", status: "ok" },
-      { label: "Secrets sanitizer check", val: "PASSED · 0 credential patterns leaked", status: "ok" },
-      { label: "Agent context injection", val: "Live in Dashboard and Cursor/Claude Code runs", status: "cyan" }
-    ]
-  },
-  adr: {
-    command: "anvil adr sync",
-    rows: [
-      { label: "ADR directory", val: "docs/adr/ initialized with MADR 3.0 template", status: "ok" },
-      { label: "Project memory synced", val: "3 memory decisions converted to versioned ADR markdown", status: "ok" },
-      { label: "Numbering scheme", val: "0001-record-architecture-decisions.md -> 0004-...", status: "ok" },
-      { label: "Dashboard ADR viewer", val: "Live in Architecture & Graph tab with sync trigger", status: "cyan" }
-    ]
-  },
-  security: {
-    command: "anvil security --fix",
-    rows: [
-      { label: "High-entropy secrets scan", val: "0 leaked API keys (OpenAI, Anthropic, GitHub, AWS, Google, Slack)", status: "ok" },
-      { label: "Sensitive files audit", val: "Exposed keys/certs auto-excluded via .gitignore", status: "ok" },
-      { label: "Dangerous shell check", val: "0 unvetted curl-pipe-bash patterns found in scripts", status: "ok" },
-      { label: "Security report", val: "PASS · Codebase secured with zero secret leakage", status: "cyan" }
-    ]
-  }
-};
+    // Interactive Hero Terminal Tabs
+    const terminalDemos = {
+      inspect: {
+        command: "anvil inspect ./my-app",
+        rows: [
+          { label: "Language breakdown", val: "TypeScript 84.2%, CSS 11.5%, JSON 4.3%", status: "ok" },
+          { label: "Detected framework", val: "Next.js 15.1 + React 19", status: "ok" },
+          { label: "Manifest dependencies", val: "28 production · 14 development", status: "cyan" },
+          { label: "Engineering health", val: "88/100 · 0 critical alerts", status: "ok" }
+        ]
+      },
+      map: {
+        command: "anvil map --entry ./src/index.ts",
+        rows: [
+          { label: "Modules parsed", val: "142 files · 618 export symbols", status: "ok" },
+          { label: "AST syntax trees", val: "TypeScript compiler API valid", status: "ok" },
+          { label: "Circular dependencies", val: "0 circular import loops found", status: "ok" },
+          { label: "Entrypoint routes", val: "8 public API routes identified", status: "cyan" }
+        ]
+      },
+      git: {
+        command: "anvil git --compare HEAD~1",
+        rows: [
+          { label: "Modified source files", val: "3 files (+142, -28 lines)", status: "warn" },
+          { label: "Downstream impact", val: "7 dependent files affected", status: "warn" },
+          { label: "Structural hotspot", val: "src/core/auth.ts (Central Hub)", status: "warn" },
+          { label: "Target test suites", val: "auth.test.ts, session.test.ts", status: "cyan" }
+        ]
+      },
+      verify: {
+        command: "anvil verify --script test",
+        rows: [
+          { label: "Script execution", val: "npm test (Vitest runner)", status: "ok" },
+          { label: "Test suites result", val: "24 passed, 0 failed (3.42s)", status: "ok" },
+          { label: "Regression check", val: "0 regressions vs saved run #18", status: "ok" },
+          { label: "Result logged to", val: ".anvil/runs/run-9a84b.json", status: "cyan" }
+        ]
+      },
+      clean: {
+        command: "anvil clean . --apply --fix --verify",
+        rows: [
+          { label: "Workspace junk deleted", val: "18 items (4.2 MB) · logs, .tmp, .crdownload, caches", status: "ok" },
+          { label: "Unused imports pruned", val: "12 named imports removed safely across TS & Python", status: "ok" },
+          { label: "Self-healing test verification", val: "PASSED (npm test · 100% green)", status: "ok" },
+          { label: "Snapshot backup created", val: ".anvil/backups/ (run 'anvil undo' anytime)", status: "cyan" }
+        ]
+      },
+      doctor: {
+        command: "anvil doctor --fix",
+        rows: [
+          { label: "Environment status", val: "Node.js 22 LTS, Git 2.55 (Ready)", status: "ok" },
+          { label: "Workspace configuration", val: "Scaffolded .anvil/ (agents, skills, workflows)", status: "ok" },
+          { label: "Security & gitignore", val: "Multi-language .gitignore & .env.example created", status: "ok" },
+          { label: "Overall health check", val: "ALL GREEN · Ready for autonomous workflows", status: "cyan" }
+        ]
+      },
+      mcp: {
+        command: "anvil mcp setup --client all",
+        rows: [
+          { label: "Cursor IDE (.cursor/mcp.json)", val: "Configured (safe merge with existing tools)", status: "ok" },
+          { label: "Claude Code CLI adapter", val: "claude mcp add --transport stdio anvil ...", status: "ok" },
+          { label: "Windsurf & VS Code config", val: "Generated in .windsurf/ & .vscode/mcp.json", status: "ok" },
+          { label: "Exposed tool count", val: "18 read-only architectural & intelligence tools", status: "cyan" }
+        ]
+      },
+      memory: {
+        command: "anvil memory add --kind decision --content 'Always run test gate with --verify'",
+        rows: [
+          { label: "Memory ID generated", val: "mem-8f2a1b9c (persisted to .anvil/memory.json)", status: "ok" },
+          { label: "Context retrieval test", val: "Top ranked note retrieved under 1200 token budget", status: "ok" },
+          { label: "Secrets sanitizer check", val: "PASSED · 0 credential patterns leaked", status: "ok" },
+          { label: "Agent context injection", val: "Live in Dashboard and Cursor/Claude Code runs", status: "cyan" }
+        ]
+      },
+      adr: {
+        command: "anvil adr sync",
+        rows: [
+          { label: "ADR directory", val: "docs/adr/ initialized with MADR 3.0 template", status: "ok" },
+          { label: "Project memory synced", val: "3 memory decisions converted to versioned ADR markdown", status: "ok" },
+          { label: "Numbering scheme", val: "0001-record-architecture-decisions.md -> 0004-...", status: "ok" },
+          { label: "Dashboard ADR viewer", val: "Live in Architecture & Graph tab with sync trigger", status: "cyan" }
+        ]
+      },
+      security: {
+        command: "anvil security --fix",
+        rows: [
+          { label: "High-entropy secrets scan", val: "0 leaked API keys (OpenAI, Anthropic, GitHub, AWS, Google, Slack)", status: "ok" },
+          { label: "Sensitive files audit", val: "Exposed keys/certs auto-excluded via .gitignore", status: "ok" },
+          { label: "Dangerous shell check", val: "0 unvetted curl-pipe-bash patterns found in scripts", status: "ok" },
+          { label: "Security report", val: "PASS · Codebase secured with zero secret leakage", status: "cyan" }
+        ]
+      }
+    };
 
-const termScreen = document.getElementById("termScreen");
-function renderTerminal(tabKey) {
-  const data = terminalDemos[tabKey];
-  termScreen.innerHTML = `
+    const termScreen = document.getElementById("termScreen");
+    function renderTerminal(tabKey) {
+      const data = terminalDemos[tabKey];
+      termScreen.innerHTML = `
     <div>
       <span class="cmd-prompt">$</span>
       <span class="cmd-command">${data.command}</span>
@@ -1801,22 +2099,22 @@ function renderTerminal(tabKey) {
       <span>READY FOR VERIFICATION</span>
     </div>
   `;
-}
-renderTerminal("inspect");
+    }
+    renderTerminal("inspect");
 
-document.querySelectorAll(".term-tab").forEach(tab => {
-  tab.addEventListener("click", () => {
-    document.querySelectorAll(".term-tab").forEach(t => t.classList.remove("active"));
-    tab.classList.add("active");
-    renderTerminal(tab.dataset.tab);
-  });
-});
+    document.querySelectorAll(".term-tab").forEach(tab => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll(".term-tab").forEach(t => t.classList.remove("active"));
+        tab.classList.add("active");
+        renderTerminal(tab.dataset.tab);
+      });
+    });
 
-// Interactive Workbench Stage Switcher
-const stageData = [
-  {
-    head: "ANVIL / CODEBASE DISCOVERY & AST PROFILING",
-    html: `
+    // Interactive Workbench Stage Switcher
+    const stageData = [
+      {
+        head: "ANVIL / CODEBASE DISCOVERY & AST PROFILING",
+        html: `
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
         <div style="background:#090d14;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:16px;">
           <div style="font-size:10px;font-family:'JetBrains Mono';color:var(--amber-light);margin-bottom:6px;">DISCOVERED STACK</div>
@@ -1840,10 +2138,10 @@ const stageData = [
         <span style="color:var(--emerald);">✓</span> Parsed 618 export signatures across 14 modules in 184ms
       </div>
     `
-  },
-  {
-    head: "ANVIL / ARCHITECTURE & DEPENDENCY MAPPING",
-    html: `
+      },
+      {
+        head: "ANVIL / ARCHITECTURE & DEPENDENCY MAPPING",
+        html: `
       <div style="background:#090d14;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:20px;">
         <div style="display:flex;justify-content:space-around;align-items:center;padding:20px 0;">
           <div style="text-align:center;">
@@ -1867,10 +2165,10 @@ const stageData = [
         </div>
       </div>
     `
-  },
-  {
-    head: "ANVIL / GIT CHANGE-RISK & IMPACT RADIUS",
-    html: `
+      },
+      {
+        head: "ANVIL / GIT CHANGE-RISK & IMPACT RADIUS",
+        html: `
       <div style="display:grid;gap:10px;">
         <div style="background:#090d14;border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:12px;display:flex;justify-content:space-between;align-items:center;">
           <div>
@@ -1891,10 +2189,10 @@ const stageData = [
         </div>
       </div>
     `
-  },
-  {
-    head: "ANVIL / DETERMINISTIC VERIFICATION LAB",
-    html: `
+      },
+      {
+        head: "ANVIL / DETERMINISTIC VERIFICATION LAB",
+        html: `
       <div style="background:#090d14;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:18px;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
           <div>
@@ -1911,10 +2209,10 @@ const stageData = [
         </div>
       </div>
     `
-  },
-  {
-    head: "ANVIL / AUTOMATED JUNK SCRUBBER & CODE REPAIR",
-    html: `
+      },
+      {
+        head: "ANVIL / AUTOMATED JUNK SCRUBBER & CODE REPAIR",
+        html: `
       <div style="background:#090d14;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:18px;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
           <div>
@@ -1932,10 +2230,10 @@ const stageData = [
         </div>
       </div>
     `
-  },
-  {
-    head: "ANVIL / SELF-HEALING DOCTOR & SETUP WIZARD",
-    html: `
+      },
+      {
+        head: "ANVIL / SELF-HEALING DOCTOR & SETUP WIZARD",
+        html: `
       <div style="background:#090d14;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:18px;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
           <div>
@@ -1952,10 +2250,10 @@ const stageData = [
         </div>
       </div>
     `
-  },
-  {
-    head: "ANVIL / AI HARNESS MCP ADAPTERS & PROJECT MEMORY HUB",
-    html: `
+      },
+      {
+        head: "ANVIL / AI HARNESS MCP ADAPTERS & PROJECT MEMORY HUB",
+        html: `
       <div style="background:#090d14;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:18px;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
           <div>
@@ -1973,24 +2271,25 @@ const stageData = [
         </div>
       </div>
     `
-  }
-];
+      }
+    ];
 
-const stageHeadTitle = document.getElementById("stageHeadTitle");
-const stageContent = document.getElementById("stageContent");
-function renderStage(idx) {
-  stageHeadTitle.textContent = stageData[idx].head;
-  stageContent.innerHTML = stageData[idx].html;
-}
-renderStage(0);
+    const stageHeadTitle = document.getElementById("stageHeadTitle");
+    const stageContent = document.getElementById("stageContent");
+    function renderStage(idx) {
+      stageHeadTitle.textContent = stageData[idx].head;
+      stageContent.innerHTML = stageData[idx].html;
+    }
+    renderStage(0);
 
-document.querySelectorAll(".stage-btn").forEach(btn => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll(".stage-btn").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-    renderStage(Number(btn.dataset.stage));
-  });
-});
-</script>
+    document.querySelectorAll(".stage-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".stage-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        renderStage(Number(btn.dataset.stage));
+      });
+    });
+  </script>
 </body>
+
 </html>
