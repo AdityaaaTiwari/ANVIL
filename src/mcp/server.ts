@@ -74,7 +74,7 @@ async function auditReadOnlyMcpTool<T>(tool: string, operation: () => Promise<T>
 
 const server = new McpServer({
   name: "anvil-engineering-workbench",
-  version: "1.0.7",
+  version: "1.1.1",
 });
 
 function registerToolWithAlias<T extends z.ZodRawShape>(
