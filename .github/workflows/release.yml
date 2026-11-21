@@ -9,7 +9,7 @@ on:
       release_tag:
         description: "Release tag to create (for example v1.0.6)"
         required: true
-        default: "v1.0.6"
+        default: "v1.0.9"
       target_ref:
         description: "Verified branch or commit to release"
         required: true
@@ -75,4 +75,12 @@ jobs:
         if: env.NPM_TOKEN != ''
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm publish --access public --provenance
+        run: |
+          set -euo pipefail
+          PACKAGE_NAME="$(node -p "require('./package.json').name")"
+          PACKAGE_VERSION="$(node -p "require('./package.json').version")"
+          if npm view "${PACKAGE_NAME}@${PACKAGE_VERSION}" version >/dev/null 2>&1; then
+            echo "Version ${PACKAGE_VERSION} is already published on npm registry. Skipping duplicate publish."
+          else
+            npm publish --access public --provenance
+          fi

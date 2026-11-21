@@ -1,5 +1,12 @@
 # ANVIL Changelog
 
+## 1.0.9 — Release Pipeline Resilience & Idempotent npm Publishing
+
+ANVIL 1.0.9 brings release pipeline resilience and fixes CI action resolution:
+- **Idempotent npm Publishing:** Added automated verification check in `.github/workflows/release.yml` preventing duplicate publish failures if an existing version is already present on the npm registry.
+- **Workflow Action Pinning Fix:** Resolved exact immutable commit SHAs for CodeQL Analysis and GitHub Pages deployment actions.
+- **Documentation & UI Polish:** Updated live documentation and landing page assets to reflect v1.0.9 release status.
+
 ## 1.0.8 — Adoption Readiness: CI Gate, OASIS SARIF v2.1.0, String-Safe Cleaner & FORGE Deprecation
 
 ANVIL 1.0.8 focuses on enterprise company-adoption readiness, addressing third-party audit findings across supply-chain security, automated CI/CD gating, string-safe code cleanup, and complete transition away from legacy FORGE prefixes.
