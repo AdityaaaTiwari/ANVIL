@@ -39,7 +39,7 @@ describe("SARIF v2.1.0 generation", () => {
           file: "src/app.ts",
           line: 42,
           title: "Dynamic code evaluation",
-          evidence: "eval(userInput)",
+          evidence: "eval(userInput)", // anvil-disable-line ANVIL-R001
           recommendation: "Avoid evaluating generated strings",
           confidence: "heuristic",
         },

@@ -129,8 +129,8 @@ const DANGEROUS_SCRIPT_PATTERNS: Array<{
     rule: "eval-code-execution",
     regex: /\beval\s*\(\s*(?:\$|process\.env|request|params|req\.)/i,
     severity: "high",
-    description: "Dynamic eval() execution on potentially untrusted input.",
-    remediation: "Avoid eval(); parse input using structured JSON or a safe expression parser.",
+    description: "Dynamic eval() execution on potentially untrusted input.", // anvil-disable-line ANVIL-R001
+    remediation: "Avoid eval(); parse input using structured JSON or a safe expression parser.", // anvil-disable-line ANVIL-R001
   },
   {
     rule: "unsafe-rm-wildcard",

@@ -18,6 +18,26 @@ describe("README and package version/tool synchronization", () => {
     expect(readme).toContain(`ANVIL.git#${expectedTag}`);
   });
 
+  it("synchronizes action.yml default version with package.json version", async () => {
+    const pkgRaw = await readFile(path.resolve("package.json"), "utf8");
+    const pkg = JSON.parse(pkgRaw);
+    const expectedTag = `v${pkg.version}`;
+
+    const actionRaw = await readFile(path.resolve("action.yml"), "utf8");
+    expect(actionRaw).toContain(`default: ${expectedTag}`);
+  });
+
+  it("synchronizes CHANGELOG.md and public/index.html with package.json version", async () => {
+    const pkgRaw = await readFile(path.resolve("package.json"), "utf8");
+    const pkg = JSON.parse(pkgRaw);
+
+    const changelog = await readFile(path.resolve("CHANGELOG.md"), "utf8");
+    expect(changelog).toContain(`## ${pkg.version}`);
+
+    const indexHtml = await readFile(path.resolve("public/index.html"), "utf8");
+    expect(indexHtml).toContain(`v${pkg.version}`);
+  });
+
   it("ensures MCP tools documented in README match lowercase anvil_ naming convention", async () => {
     const readme = await readFile(path.resolve("README.md"), "utf8");
 

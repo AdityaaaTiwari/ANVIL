@@ -49,7 +49,7 @@
 ---
 
 > [!NOTE]
-> **ANVIL v1.0.9 — AI harness foundation.** The local CLI, local dashboard, agent orchestration, MCP server, provider adapters, GitHub Action, automated self-healing cleaner, byte-accurate rollback (`anvil undo`), pre-commit hooks (`anvil hook install`), AI harness wizard (`anvil mcp setup`), Architecture Decision Records (`anvil adr`), Security & Secret Scanner (`anvil security --fix`), deterministic CI quality & security gate (`anvil gate` with SARIF v2.1.0 and policy-as-code), and live interactive workflow DAG runner are available. See [Current capabilities and boundaries](#current-capabilities-and-boundaries).
+> **ANVIL v1.1.0 — AI harness foundation.** The local CLI, local dashboard, agent orchestration, MCP server, provider adapters, GitHub Action, automated self-healing cleaner, byte-accurate rollback (`anvil undo`), pre-commit hooks (`anvil hook install`), AI harness wizard (`anvil mcp setup`), Architecture Decision Records (`anvil adr`), Security & Secret Scanner (`anvil security --fix`), deterministic CI quality & security gate (`anvil gate` with SARIF v2.1.0 and policy-as-code), and live interactive workflow DAG runner are available. See [Current capabilities and boundaries](#current-capabilities-and-boundaries).
 
 ## What is ANVIL?
 
@@ -104,7 +104,7 @@ npm install --global anvil-engineering-workbench
 Or install directly from the GitHub repository:
 
 ```bash
-npm install --global git+https://github.com/anvil-workbench/ANVIL.git#v1.0.9
+npm install --global git+https://github.com/anvil-workbench/ANVIL.git#v1.1.0
 ```
 
 Verify the installation:
@@ -150,7 +150,7 @@ npm --version
 git --version
 
 # Install ANVIL
-npm install --global git+https://github.com/anvil-workbench/ANVIL.git#v1.0.9
+npm install --global git+https://github.com/anvil-workbench/ANVIL.git#v1.1.0
 
 # Move into your project
 cd C:\Users\YourName\Projects\my-project
@@ -540,9 +540,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: anvil-workbench/ANVIL@v1.0.9
+      - uses: anvil-workbench/ANVIL@v1.1.0
         with:
-          version: v1.0.9
+          version: v1.1.0
           project-path: .
           operation: gate
 ```

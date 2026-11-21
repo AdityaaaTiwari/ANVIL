@@ -1605,8 +1605,9 @@ Exit codes:
 
         if (sarifPath) {
           const sarifOutput = generateSarif({
-            securityReport: evaluation.securityReport,
-            reviewReport: evaluation.reviewReport,
+            activeFindings: evaluation.activeFindings,
+            suppressedFindings: evaluation.suppressedFindings,
+            filterSuppressed: true,
             targetRoot: target,
           });
           const outResolved = path.resolve(sarifPath);

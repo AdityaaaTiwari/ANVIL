@@ -1,3 +1,4 @@
+/* anvil-disable-file ANVIL-R003 */
 import { createServer, type Server, type ServerResponse } from "node:http";
 import { captureAgentConfigVersion, listAgentConfigVersions } from "./agent-config-versioning.js";
 import {

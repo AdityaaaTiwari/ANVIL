@@ -1,23 +1,45 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
+import { createHash } from "node:crypto";
+import { z } from "zod";
 import { scanProjectSecurity, type SecurityAuditReport } from "./security-scanner.js";
 import { reviewProject, type CodeReviewReport } from "./code-review.js";
 
-export interface GatePolicy {
-  version: 1;
-  security: {
-    maxCritical: number;
-    maxHigh: number;
-    maxMedium: number;
-    failOnSecrets: boolean;
-  };
-  quality: {
-    maxReviewHigh?: number;
-    requireCleanGit?: boolean;
-  };
-}
+export const GatePolicySchema = z.object({
+  version: z.literal(1).default(1),
+  security: z
+    .object({
+      maxCritical: z.number().int().min(0).default(0),
+      maxHigh: z.number().int().min(0).default(0),
+      maxMedium: z.number().int().min(0).default(10),
+      failOnSecrets: z.boolean().default(true),
+    })
+    .default({
+      maxCritical: 0,
+      maxHigh: 0,
+      maxMedium: 10,
+      failOnSecrets: true,
+    }),
+  quality: z
+    .object({
+      maxReviewHigh: z.number().int().min(0).optional(),
+      requireCleanGit: z.boolean().default(false),
+    })
+    .default({
+      maxReviewHigh: 0,
+      requireCleanGit: false,
+    }),
+  sandbox: z
+    .object({
+      required: z.boolean().default(false),
+      disallowedTools: z.array(z.string()).default([]),
+    })
+    .optional(),
+});
 
-export const DEFAULT_GATE_POLICY: GatePolicy = {
+export type GatePolicy = z.infer<typeof GatePolicySchema>;
+
+export const DEFAULT_GATE_POLICY: GatePolicy = GatePolicySchema.parse({
   version: 1,
   security: {
     maxCritical: 0,
@@ -29,16 +51,20 @@ export const DEFAULT_GATE_POLICY: GatePolicy = {
     maxReviewHigh: 0,
     requireCleanGit: false,
   },
-};
+});
 
 export interface NormalizedFinding {
   id: string;
   source: "security" | "review";
+  category?: string | undefined;
   severity: "critical" | "high" | "medium" | "low";
   file: string;
   line: number;
   message: string;
+  snippet?: string | undefined;
+  snippetHash?: string | undefined;
   fingerprint: string;
+  legacyFingerprint: string;
 }
 
 export interface GateEvaluation {
@@ -46,7 +72,7 @@ export interface GateEvaluation {
   target: string;
   policy: GatePolicy;
   policySource: string;
-  baselineSource?: string;
+  baselineSource?: string | undefined;
   violations: string[];
   summary: {
     critical: number;
@@ -61,9 +87,46 @@ export interface GateEvaluation {
   reviewReport: CodeReviewReport;
 }
 
-export function computeFindingFingerprint(source: string, ruleId: string, filePath: string, line: number): string {
+/**
+ * Computes a deterministic finding fingerprint.
+ * If snippet content is provided, uses a SHA-256 content hash so line shifts don't invalidate baselines.
+ */
+export function computeFindingFingerprint(
+  source: string,
+  ruleId: string,
+  filePath: string,
+  line: number,
+  snippet?: string
+): string {
   const normFile = filePath.replace(/\\/g, "/");
-  return `${source}:${ruleId}:${normFile}:${line}`;
+  if (snippet && snippet.trim().length > 0) {
+    const hash = createHash("sha256").update(snippet.trim()).digest("hex").slice(0, 16);
+    return `${source}:${ruleId}:${normFile}:${hash}`;
+  }
+  return `${source}:${ruleId}:${normFile}:L${line}`;
+}
+
+/**
+ * Validates raw policy objects using the Zod schema.
+ * Throws a descriptive error on syntax or schema errors (fail-closed).
+ */
+export function validateGatePolicy(rawContent: string, sourcePath: string): GatePolicy {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(rawContent);
+  } catch (err) {
+    throw new Error(
+      `Failed to parse policy JSON at ${sourcePath}: ${err instanceof Error ? err.message : String(err)}`
+    );
+  }
+
+  const result = GatePolicySchema.safeParse(parsed);
+  if (!result.success) {
+    const issueList = result.error.issues.map((i) => `${i.path.join(".") || "root"}: ${i.message}`).join("; ");
+    throw new Error(`Policy schema validation failed at ${sourcePath}: ${issueList}`);
+  }
+
+  return result.data;
 }
 
 export async function loadGatePolicy(
@@ -74,20 +137,7 @@ export async function loadGatePolicy(
     const fullPath = path.resolve(explicitPolicyPath);
     try {
       const raw = await readFile(fullPath, "utf-8");
-      const parsed = JSON.parse(raw);
-      const policy: GatePolicy = {
-        version: 1,
-        security: {
-          maxCritical: typeof parsed.security?.maxCritical === "number" ? parsed.security.maxCritical : 0,
-          maxHigh: typeof parsed.security?.maxHigh === "number" ? parsed.security.maxHigh : 0,
-          maxMedium: typeof parsed.security?.maxMedium === "number" ? parsed.security.maxMedium : 10,
-          failOnSecrets: typeof parsed.security?.failOnSecrets === "boolean" ? parsed.security.failOnSecrets : true,
-        },
-        quality: {
-          ...(typeof parsed.quality?.maxReviewHigh === "number" ? { maxReviewHigh: parsed.quality.maxReviewHigh } : {}),
-          requireCleanGit: Boolean(parsed.quality?.requireCleanGit),
-        },
-      };
+      const policy = validateGatePolicy(raw, fullPath);
       return { policy, source: fullPath };
     } catch (err) {
       throw new Error(
@@ -97,26 +147,22 @@ export async function loadGatePolicy(
   }
 
   const defaultPolicyPath = path.join(targetPath, ".anvil", "policy.json");
+  let raw: string | undefined;
   try {
-    const raw = await readFile(defaultPolicyPath, "utf-8");
-    const parsed = JSON.parse(raw);
-    const policy: GatePolicy = {
-      version: 1,
-      security: {
-        maxCritical: typeof parsed.security?.maxCritical === "number" ? parsed.security.maxCritical : 0,
-        maxHigh: typeof parsed.security?.maxHigh === "number" ? parsed.security.maxHigh : 0,
-        maxMedium: typeof parsed.security?.maxMedium === "number" ? parsed.security.maxMedium : 10,
-        failOnSecrets: typeof parsed.security?.failOnSecrets === "boolean" ? parsed.security.failOnSecrets : true,
-      },
-      quality: {
-        ...(typeof parsed.quality?.maxReviewHigh === "number" ? { maxReviewHigh: parsed.quality.maxReviewHigh } : {}),
-        requireCleanGit: Boolean(parsed.quality?.requireCleanGit),
-      },
-    };
-    return { policy, source: defaultPolicyPath };
-  } catch {
-    return { policy: DEFAULT_GATE_POLICY, source: "default" };
+    raw = await readFile(defaultPolicyPath, "utf-8");
+  } catch (err: unknown) {
+    // If file does not exist, use default policy
+    const code = (err as { code?: string })?.code;
+    if (code === "ENOENT") {
+      return { policy: DEFAULT_GATE_POLICY, source: "default" };
+    }
+    // Fail-closed if there is a permission error or read failure
+    throw new Error(`Cannot read policy file at ${defaultPolicyPath}: ${(err as Error).message}`);
   }
+
+  // If .anvil/policy.json exists, validate it strictly (fail-closed on invalid JSON or bad schema)
+  const policy = validateGatePolicy(raw, defaultPolicyPath);
+  return { policy, source: defaultPolicyPath };
 }
 
 export async function loadBaseline(baselinePath?: string): Promise<Set<string>> {
@@ -132,10 +178,18 @@ export async function loadBaseline(baselinePath?: string): Promise<Set<string>> 
         baseline.add(item);
       } else if (item && typeof item.fingerprint === "string") {
         baseline.add(item.fingerprint);
+        if (item.snippetHash && item.file && (item.rule || item.ruleId)) {
+          const rule = item.rule ?? item.ruleId;
+          const normFile = item.file.replace(/\\/g, "/");
+          baseline.add(`${item.source ?? "security"}:${rule}:${normFile}:${item.snippetHash}`);
+        }
       } else if (item && item.file && (item.rule || item.ruleId)) {
-        baseline.add(
-          computeFindingFingerprint(item.source ?? "security", item.rule ?? item.ruleId, item.file, item.line ?? 0)
-        );
+        const normFile = item.file.replace(/\\/g, "/");
+        const rule = item.rule ?? item.ruleId;
+        const source = item.source ?? "security";
+        baseline.add(computeFindingFingerprint(source, rule, normFile, item.line ?? 0, item.snippet));
+        baseline.add(`${source}:${rule}:${normFile}:${item.line ?? 0}`);
+        baseline.add(`${source}:${rule}:${normFile}:L${item.line ?? 0}`);
       }
     }
     return baseline;
@@ -158,6 +212,7 @@ export function generateBaselineJson(findings: NormalizedFinding[]): string {
         ruleId: f.id,
         file: f.file,
         line: f.line,
+        snippetHash: f.snippetHash,
         severity: f.severity,
         message: f.message,
       })),
@@ -185,38 +240,73 @@ export async function evaluateGate(targetPath: string, options: EvaluateGateOpti
     },
   };
 
-  const [securityReport, reviewReport] = await Promise.all([
-    scanProjectSecurity(targetPath),
-    reviewProject(targetPath, { all: true }).catch(() => ({
+  const violations: string[] = [];
+
+  // Fail-closed scanner execution: if either engine throws, fail the gate
+  let securityReport: SecurityAuditReport;
+  let reviewReport: CodeReviewReport;
+
+  try {
+    securityReport = await scanProjectSecurity(targetPath);
+  } catch (err) {
+    violations.push(`Security scanner execution failed: ${err instanceof Error ? err.message : String(err)}`);
+    securityReport = {
+      scannedFiles: 0,
+      durationMs: 0,
+      passed: false,
+      findings: [],
+      summary: { critical: 0, high: 0, medium: 0, low: 0, total: 0 },
+    };
+  }
+
+  try {
+    reviewReport = await reviewProject(targetPath, { all: true });
+  } catch (err) {
+    violations.push(`Code review engine execution failed: ${err instanceof Error ? err.message : String(err)}`);
+    reviewReport = {
       root: targetPath,
       generatedAt: new Date().toISOString(),
-      scope: "source-files" as const,
+      scope: "source-files",
       base: "HEAD",
       filesReviewed: [],
       warnings: [],
       summary: { high: 0, medium: 0, low: 0 },
       findings: [],
-    })),
-  ]);
+    };
+  }
 
   const allFindings: NormalizedFinding[] = [];
 
   for (const s of securityReport.findings) {
     const line = s.line ?? 1;
-    const fp = computeFindingFingerprint("security", s.rule, s.file, line);
+    const normFile = s.file.replace(/\\/g, "/");
+    const snippet = s.snippet;
+    const snippetHash = snippet ? createHash("sha256").update(snippet.trim()).digest("hex").slice(0, 16) : undefined;
+    const fp = computeFindingFingerprint("security", s.rule, normFile, line, snippet);
+    const legacyFp = `security:${s.rule}:${normFile}:${line}`;
+
     allFindings.push({
       id: s.rule,
       source: "security",
+      category: s.category,
       severity: s.severity,
       file: s.file,
       line,
       message: s.description,
+      snippet,
+      snippetHash,
       fingerprint: fp,
+      legacyFingerprint: legacyFp,
     });
   }
 
   for (const r of reviewReport.findings) {
-    const fp = computeFindingFingerprint("review", r.ruleId, r.file, r.line);
+    const normFile = r.file.replace(/\\/g, "/");
+    const snippet = r.evidence;
+    const snippetHash = snippet ? createHash("sha256").update(snippet.trim()).digest("hex").slice(0, 16) : undefined;
+    const fp = computeFindingFingerprint("review", r.ruleId, normFile, r.line, snippet);
+    const legacyFp = `review:${r.ruleId}:${normFile}:${r.line}`;
+
     allFindings.push({
       id: r.ruleId,
       source: "review",
@@ -224,7 +314,10 @@ export async function evaluateGate(targetPath: string, options: EvaluateGateOpti
       file: r.file,
       line: r.line,
       message: r.recommendation,
+      snippet,
+      snippetHash,
       fingerprint: fp,
+      legacyFingerprint: legacyFp,
     });
   }
 
@@ -232,7 +325,15 @@ export async function evaluateGate(targetPath: string, options: EvaluateGateOpti
   const suppressedFindings: NormalizedFinding[] = [];
 
   for (const f of allFindings) {
-    if (baseline.has(f.fingerprint)) {
+    const normFile = f.file.replace(/\\/g, "/");
+    const altLineFp = `${f.source}:${f.id}:${normFile}:L${f.line}`;
+    const isSuppressed =
+      baseline.has(f.fingerprint) ||
+      baseline.has(f.legacyFingerprint) ||
+      baseline.has(altLineFp) ||
+      (f.snippetHash && baseline.has(`${f.source}:${f.id}:${normFile}:${f.snippetHash}`));
+
+    if (isSuppressed) {
       suppressedFindings.push(f);
     } else {
       activeFindings.push(f);
@@ -244,8 +345,7 @@ export async function evaluateGate(targetPath: string, options: EvaluateGateOpti
   const mediumFindings = activeFindings.filter((f) => f.severity === "medium");
   const lowFindings = activeFindings.filter((f) => f.severity === "low");
 
-  const violations: string[] = [];
-
+  // Enforce threshold limits
   if (criticalFindings.length > effectivePolicy.security.maxCritical) {
     violations.push(
       `Critical findings exceeded limit: found ${criticalFindings.length}, max allowed ${effectivePolicy.security.maxCritical}`
@@ -264,14 +364,72 @@ export async function evaluateGate(targetPath: string, options: EvaluateGateOpti
     );
   }
 
-  if (effectivePolicy.quality.maxReviewHigh !== undefined) {
+  // Enforce failOnSecrets
+  if (effectivePolicy.security.failOnSecrets) {
+    const secretFindings = activeFindings.filter(
+      (f) =>
+        f.source === "security" &&
+        (f.category === "secret" ||
+          f.id.toLowerCase().includes("secret") ||
+          f.id.toLowerCase().includes("pat") ||
+          f.id.toLowerCase().includes("credential") ||
+          f.id.toLowerCase().includes("key") ||
+          f.id.toLowerCase().includes("token") ||
+          f.message.toLowerCase().includes("secret") ||
+          f.message.toLowerCase().includes("credential") ||
+          f.message.toLowerCase().includes("token") ||
+          f.message.toLowerCase().includes("key"))
+    );
+    if (secretFindings.length > 0 && !violations.some((v) => v.includes("Critical findings"))) {
+      violations.push(
+        `Policy forbids hardcoded secrets (failOnSecrets=true): found ${secretFindings.length} unsuppressed secret finding(s)`
+      );
+    }
+  }
+
+  // Enforce maxReviewHigh
+  if (effectivePolicy.quality?.maxReviewHigh !== undefined) {
     const reviewHigh = highFindings.filter((f) => f.source === "review");
     if (
       reviewHigh.length > effectivePolicy.quality.maxReviewHigh &&
-      !violations.some((v) => v.includes("High-severity"))
+      !violations.some((v) => v.includes("High-severity findings"))
     ) {
       violations.push(
         `High-severity code review findings exceeded limit: found ${reviewHigh.length}, max allowed ${effectivePolicy.quality.maxReviewHigh}`
+      );
+    }
+  }
+
+  // Enforce requireCleanGit
+  if (effectivePolicy.quality?.requireCleanGit) {
+    try {
+      const { execFileSync } = await import("node:child_process");
+      const gitStatus = execFileSync("git", ["status", "--porcelain"], {
+        cwd: targetPath,
+        encoding: "utf-8",
+        stdio: ["ignore", "pipe", "ignore"],
+      }).trim();
+      if (gitStatus.length > 0) {
+        violations.push(
+          "Policy requires clean git state (requireCleanGit=true): uncommitted changes detected in working copy"
+        );
+      }
+    } catch (err) {
+      violations.push(`Failed to verify clean git status: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  }
+
+  // Enforce sandbox requirements if configured
+  if (effectivePolicy.sandbox?.required) {
+    const isSandboxed = Boolean(
+      process.env.FORGE_DOCKER_IMAGE ||
+      process.env.CONTAINER ||
+      process.env.DOCKER_CONTAINER ||
+      process.env.KUBERNETES_SERVICE_HOST
+    );
+    if (!isSandboxed) {
+      violations.push(
+        "Policy requires containerized sandbox execution (sandbox.required=true), but no active container environment was detected"
       );
     }
   }

@@ -45,6 +45,16 @@ async function walk(dir: string, root: string, out: string[], depth = 0): Promis
 function inspectLines(file: string, source: string): ReviewFinding[] {
   const findings: ReviewFinding[] = [];
   const lines = source.split(/\r?\n/);
+
+  // Check for file-level suppression
+  const fileDisabled = new Set<string>();
+  const fileDisableMatch = source.match(/(?:\/\/|\/\*)\s*anvil-disable-file\s+([A-Za-z0-9_,\- ]+)/i);
+  if (fileDisableMatch && fileDisableMatch[1]) {
+    for (const r of fileDisableMatch[1].split(/[,\s]+/)) {
+      if (r.trim()) fileDisabled.add(r.trim().toUpperCase());
+    }
+  }
+
   const rules: Array<{ id: string; severity: ReviewSeverity; title: string; pattern: RegExp; recommendation: string }> =
     [
       {
@@ -91,11 +101,40 @@ function inspectLines(file: string, source: string): ReviewFinding[] {
         recommendation: "Ensure content is trusted or sanitized immediately before rendering.",
       },
     ];
+
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i] ?? "";
     if (/^\s*(?:\/\/|\*|\*)/.test(line)) continue;
-    for (const rule of rules)
-      if (rule.pattern.test(line))
+
+    // Check line-level suppression comments
+    const prevLine = i > 0 ? (lines[i - 1] ?? "") : "";
+    const nextLineMatch = prevLine.match(/(?:\/\/|\/\*)\s*anvil-disable-next-line\s+([A-Za-z0-9_,\- ]+)/i);
+    const sameLineMatch = line.match(/(?:\/\/|\/\*)\s*anvil-disable-line\s+([A-Za-z0-9_,\- ]+)/i);
+
+    const lineDisabled = new Set<string>();
+    if (nextLineMatch && nextLineMatch[1]) {
+      for (const r of nextLineMatch[1].split(/[,\s]+/)) {
+        if (r.trim()) lineDisabled.add(r.trim().toUpperCase());
+      }
+    }
+    if (sameLineMatch && sameLineMatch[1]) {
+      for (const r of sameLineMatch[1].split(/[,\s]+/)) {
+        if (r.trim()) lineDisabled.add(r.trim().toUpperCase());
+      }
+    }
+
+    for (const rule of rules) {
+      const ruleUpper = rule.id.toUpperCase();
+      if (
+        fileDisabled.has("ALL") ||
+        fileDisabled.has(ruleUpper) ||
+        lineDisabled.has("ALL") ||
+        lineDisabled.has(ruleUpper)
+      ) {
+        continue;
+      }
+
+      if (rule.pattern.test(line)) {
         findings.push({
           ruleId: rule.id,
           severity: rule.severity,
@@ -106,6 +145,8 @@ function inspectLines(file: string, source: string): ReviewFinding[] {
           recommendation: rule.recommendation,
           confidence: "heuristic",
         });
+      }
+    }
   }
   return findings;
 }

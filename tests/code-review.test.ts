@@ -32,7 +32,7 @@ describe("code review", () => {
   it("supports reviewing all source files without a Git diff", async () => {
     root = await mkdtemp(path.join(os.tmpdir(), "forge-review-all-"));
     await mkdir(path.join(root, "src"));
-    await writeFile(path.join(root, "src", "x.js"), "new Function('return 1');");
+    await writeFile(path.join(root, "src", "x.js"), "new Function('return 1');"); // anvil-disable-line ANVIL-R001
     const report = await reviewProject(root, { all: true });
     expect(report.scope).toBe("source-files");
     expect(report.findings[0]?.ruleId).toBe("ANVIL-R001");

@@ -151,4 +151,77 @@ describe("ANVIL Policy-as-Code & Gate Baseline Engine", () => {
       await rm(root, { recursive: true, force: true });
     }
   });
+
+  it("strictly fails-closed when .anvil/policy.json contains malformed JSON or invalid schema", async () => {
+    const root = await createTempWorkspace();
+    try {
+      await mkdir(path.join(root, ".anvil"), { recursive: true });
+      // Malformed JSON
+      await writeFile(path.join(root, ".anvil", "policy.json"), "{ invalid: json, broken: [");
+
+      await expect(loadGatePolicy(root)).rejects.toThrow(/Failed to parse policy JSON/);
+      await expect(evaluateGate(root)).rejects.toThrow(/Failed to parse policy JSON/);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("enforces failOnSecrets by failing gate when a secret is detected", async () => {
+    const root = await createTempWorkspace();
+    try {
+      await writeFile(path.join(root, "package.json"), JSON.stringify({ name: "secret-check" }));
+      await writeFile(path.join(root, "app.ts"), 'const token = "ghp_123456789012345678901234567890123456";\n');
+
+      const customPolicyPath = path.join(root, "policy.json");
+      await writeFile(
+        customPolicyPath,
+        JSON.stringify({
+          version: 1,
+          security: {
+            maxCritical: 5,
+            maxHigh: 5,
+            maxMedium: 10,
+            failOnSecrets: true,
+          },
+        })
+      );
+
+      const evaluation = await evaluateGate(root, { policyPath: customPolicyPath });
+      expect(evaluation.passed).toBe(false);
+      expect(evaluation.violations.some((v) => v.includes("Policy forbids hardcoded secrets"))).toBe(true);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("preserves baseline suppression even when line numbers shift above the finding", async () => {
+    const root = await createTempWorkspace();
+    try {
+      await writeFile(path.join(root, "package.json"), JSON.stringify({ name: "shift-test" }));
+      await writeFile(
+        path.join(root, "code.ts"),
+        'export function test() {\n  // line 2\n  const key = "sk-12345678901234567890123456789012";\n}\n'
+      );
+
+      // 1. Initial run and generate baseline
+      const initial = await evaluateGate(root);
+      const baselineJson = generateBaselineJson(initial.activeFindings);
+      const baselinePath = path.join(root, "baseline.json");
+      await writeFile(baselinePath, baselineJson, "utf8");
+
+      // 2. Insert 10 new lines at top of code.ts so the finding shifts from line 3 down to line 13
+      const shiftedCode =
+        "// shift 1\n// shift 2\n// shift 3\n// shift 4\n// shift 5\n// shift 6\n// shift 7\n// shift 8\n// shift 9\n// shift 10\n" +
+        'export function test() {\n  // line 2\n  const key = "sk-12345678901234567890123456789012";\n}\n';
+      await writeFile(path.join(root, "code.ts"), shiftedCode);
+
+      // 3. Gate with content-hash baseline still PASSES!
+      const afterShift = await evaluateGate(root, { baselinePath });
+      expect(afterShift.passed).toBe(true);
+      expect(afterShift.summary.suppressedByBaseline).toBe(1);
+      expect(afterShift.summary.critical).toBe(0);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
 });

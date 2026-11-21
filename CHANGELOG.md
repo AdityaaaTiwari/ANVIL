@@ -1,6 +1,36 @@
 # ANVIL Changelog
 
-## 1.0.9 — Release Pipeline Resilience & Idempotent npm Publishing
+## 1.1.0 — Enterprise Adoption Readiness: Policy-as-Code, Fail-Closed CI Gate & Content-Hashed Baseline Engine
+
+ANVIL 1.1.0 delivers enterprise-grade CI/CD adoption readiness, policy-as-code enforcement, deterministic baseline suppression, and verified supply-chain hygiene:
+
+### Features & Improvements
+- **Zod-Powered Policy-as-Code Engine (`.anvil/policy.json` & `--policy`):**
+  - Fully implemented schema validation using Zod (`GatePolicySchema`) enforcing strict types for security thresholds (`maxCritical`, `maxHigh`, `maxMedium`, `failOnSecrets`), code quality (`maxReviewHigh`, `requireCleanGit`), and runtime sandbox requirements (`sandbox.required`).
+  - Strict **fail-closed** policy loading: malformed JSON or invalid schema in `.anvil/policy.json` fails the gate with explicit diagnostic messages instead of silently falling back to defaults.
+  - Active enforcement of `failOnSecrets` (prohibiting unsuppressed credentials) and `requireCleanGit` (requiring pristine git status).
+- **Content-Hashed Stable Baseline Engine (`--baseline` & `--generate-baseline`):**
+  - Finding fingerprints now compute a SHA-256 content hash of the matching code snippet (`${source}:${rule}:${file}:${hash}`) rather than relying strictly on volatile line numbers.
+  - Moving code lines or editing adjacent blocks preserves baseline suppression without spurious regressions.
+  - Backward compatible with legacy line-based fingerprints (`${source}:${rule}:${file}:${line}`).
+- **Strict Fail-Closed CI Gate (`anvil gate`):**
+  - Code review and security scanner failures immediately fail the gate instead of falling back to empty reports.
+  - If any analysis engine encounters an execution error, the gate exits with code 1 and records the failure in `evaluation.violations`.
+- **OASIS SARIF v2.1.0 Baseline Filtering:**
+  - `generateSarif` now filters out baselined findings or marks them with standard SARIF `suppressions` metadata (`kind: "external"`, `status: "accepted"`).
+  - Eliminates false-positive code scanning alerts on GitHub pull requests when findings have been explicitly baselined.
+  - Dynamically resolves package version from `package.json` for SARIF driver metadata.
+- **Inline Suppression Comments (`code-review.ts`):**
+  - Support for `// anvil-disable-line <RULE>`, `// anvil-disable-next-line <RULE>`, and `/* anvil-disable-file <RULE> */` across all code review checks.
+- **GitHub Action Hardening (`action.yml`):**
+  - Updated default version to `v1.1.0`.
+  - Added support for `version: local` (`npm link`) for CI testing of workspace builds.
+  - Automatic fallback detection for `.anvil/baseline.json` and `.anvil/policy.json` in target repository.
+  - Robust multi-platform binary lookup across Windows, macOS, and Linux runners.
+- **Coverage & Supply Chain Polish:**
+  - Configured `@vitest/coverage-v8` with enforcement thresholds (60% lines/statements/functions, 50% branches).
+  - Added `.git-blame-ignore-revs` ignoring repository-wide formatting commits.
+  - Linked `lint` script to run both typechecking and Prettier verification.
 
 ANVIL 1.0.9 brings release pipeline resilience and fixes CI action resolution:
 - **Idempotent npm Publishing:** Added automated verification check in `.github/workflows/release.yml` preventing duplicate publish failures if an existing version is already present on the npm registry.
