@@ -13,6 +13,13 @@ export interface ReviewFinding {
   recommendation: string;
   confidence: "heuristic";
 }
+export interface InlineSuppressionRecord {
+  file: string;
+  line: number;
+  ruleId: string;
+  type: "file" | "line" | "next-line";
+}
+
 export interface CodeReviewReport {
   root: string;
   generatedAt: string;
@@ -20,6 +27,7 @@ export interface CodeReviewReport {
   base: string;
   filesReviewed: string[];
   findings: ReviewFinding[];
+  inlineSuppressions?: InlineSuppressionRecord[];
   summary: { high: number; medium: number; low: number };
   warnings: string[];
 }
@@ -42,8 +50,12 @@ async function walk(dir: string, root: string, out: string[], depth = 0): Promis
     else if (entry.isFile() && SOURCE.test(entry.name)) out.push(path.relative(root, full).split(path.sep).join("/"));
   }
 }
-function inspectLines(file: string, source: string): ReviewFinding[] {
+function inspectLines(
+  file: string,
+  source: string
+): { findings: ReviewFinding[]; suppressions: InlineSuppressionRecord[] } {
   const findings: ReviewFinding[] = [];
+  const suppressions: InlineSuppressionRecord[] = [];
   const lines = source.split(/\r?\n/);
 
   // Check for file-level suppression
@@ -112,12 +124,15 @@ function inspectLines(file: string, source: string): ReviewFinding[] {
     const sameLineMatch = line.match(/(?:\/\/|\/\*)\s*anvil-disable-line\s+([A-Za-z0-9_,\- ]+)/i);
 
     const lineDisabled = new Set<string>();
+    let suppressionType: "line" | "next-line" | undefined;
     if (nextLineMatch && nextLineMatch[1]) {
+      suppressionType = "next-line";
       for (const r of nextLineMatch[1].split(/[,\s]+/)) {
         if (r.trim()) lineDisabled.add(r.trim().toUpperCase());
       }
     }
     if (sameLineMatch && sameLineMatch[1]) {
+      suppressionType = "line";
       for (const r of sameLineMatch[1].split(/[,\s]+/)) {
         if (r.trim()) lineDisabled.add(r.trim().toUpperCase());
       }
@@ -125,16 +140,27 @@ function inspectLines(file: string, source: string): ReviewFinding[] {
 
     for (const rule of rules) {
       const ruleUpper = rule.id.toUpperCase();
-      if (
-        fileDisabled.has("ALL") ||
-        fileDisabled.has(ruleUpper) ||
-        lineDisabled.has("ALL") ||
-        lineDisabled.has(ruleUpper)
-      ) {
-        continue;
-      }
-
       if (rule.pattern.test(line)) {
+        if (fileDisabled.has("ALL") || fileDisabled.has(ruleUpper)) {
+          suppressions.push({
+            file,
+            line: i + 1,
+            ruleId: rule.id,
+            type: "file",
+          });
+          continue;
+        }
+
+        if (lineDisabled.has("ALL") || lineDisabled.has(ruleUpper)) {
+          suppressions.push({
+            file,
+            line: i + 1,
+            ruleId: rule.id,
+            type: suppressionType ?? "line",
+          });
+          continue;
+        }
+
         findings.push({
           ruleId: rule.id,
           severity: rule.severity,
@@ -148,7 +174,7 @@ function inspectLines(file: string, source: string): ReviewFinding[] {
       }
     }
   }
-  return findings;
+  return { findings, suppressions };
 }
 export async function reviewProject(
   inputPath: string,
@@ -171,12 +197,15 @@ export async function reviewProject(
   }
   files = [...new Set(files)].sort();
   const findings: ReviewFinding[] = [];
+  const suppressions: InlineSuppressionRecord[] = [];
   for (const file of files) {
     try {
       const full = path.resolve(root, file);
       if (!full.startsWith(root + path.sep)) continue;
       const source = await readFile(full, "utf8");
-      findings.push(...inspectLines(file, source));
+      const inspected = inspectLines(file, source);
+      findings.push(...inspected.findings);
+      suppressions.push(...inspected.suppressions);
     } catch {
       warnings.push("Could not read " + file + ".");
     }
@@ -193,6 +222,7 @@ export async function reviewProject(
     base,
     filesReviewed: files,
     findings,
+    inlineSuppressions: suppressions,
     summary,
     warnings,
   };

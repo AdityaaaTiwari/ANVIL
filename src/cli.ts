@@ -1630,6 +1630,7 @@ Exit codes:
                 summary: evaluation.summary,
                 activeFindings: evaluation.activeFindings,
                 suppressedFindings: evaluation.suppressedFindings,
+                inlineSuppressions: evaluation.inlineSuppressions,
               },
               null,
               2
@@ -1657,6 +1658,9 @@ Exit codes:
           );
           if (evaluation.summary.suppressedByBaseline > 0) {
             lines.push(`  Suppressed by baseline: ${evaluation.summary.suppressedByBaseline}`);
+          }
+          if (evaluation.summary.inlineSuppressions > 0) {
+            lines.push(`  Inline suppressions:   ${evaluation.summary.inlineSuppressions}`);
           }
           lines.push(``);
           if (evaluation.violations.length > 0) {

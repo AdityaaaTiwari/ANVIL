@@ -224,4 +224,61 @@ describe("ANVIL Policy-as-Code & Gate Baseline Engine", () => {
       await rm(root, { recursive: true, force: true });
     }
   });
+
+  it("rejects unrecognized keys or typos in policy file due to strict schema validation", async () => {
+    const root = await createTempWorkspace();
+    try {
+      await writeFile(path.join(root, "package.json"), JSON.stringify({ name: "typo-app" }));
+      const typoPolicyPath = path.join(root, "typo-policy.json");
+      await writeFile(
+        typoPolicyPath,
+        JSON.stringify({
+          version: 1,
+          security: {
+            maxCritcal: 5, // Typo! Should be maxCritical
+          },
+        })
+      );
+
+      await expect(evaluateGate(root, { policyPath: typoPolicyPath })).rejects.toThrow(
+        /Policy schema validation failed.*maxCritcal/
+      );
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("enforces allowInlineSuppressions: false when code contains inline suppressions", async () => {
+    const root = await createTempWorkspace();
+    try {
+      await writeFile(path.join(root, "package.json"), JSON.stringify({ name: "suppression-app" }));
+      await writeFile(
+        path.join(root, "view.ts"),
+        "export function render(el: any) {\n  el.innerHTML = 'test'; // anvil-disable-line ANVIL-R003\n}\n"
+      );
+
+      // 1. Under default policy, inline suppression is allowed
+      const defaultEval = await evaluateGate(root);
+      expect(defaultEval.passed).toBe(true);
+      expect(defaultEval.summary.inlineSuppressions).toBe(1);
+
+      // 2. Under strict policy with allowInlineSuppressions: false, gate FAILS!
+      const strictPolicyPath = path.join(root, "strict-policy.json");
+      await writeFile(
+        strictPolicyPath,
+        JSON.stringify({
+          version: 1,
+          quality: {
+            allowInlineSuppressions: false,
+          },
+        })
+      );
+
+      const strictEval = await evaluateGate(root, { policyPath: strictPolicyPath });
+      expect(strictEval.passed).toBe(false);
+      expect(strictEval.violations.some((v) => v.includes("Policy forbids inline suppressions"))).toBe(true);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
 });

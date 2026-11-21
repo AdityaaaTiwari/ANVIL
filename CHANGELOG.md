@@ -32,6 +32,8 @@ ANVIL 1.1.0 delivers enterprise-grade CI/CD adoption readiness, policy-as-code e
   - Added `.git-blame-ignore-revs` ignoring repository-wide formatting commits.
   - Linked `lint` script to run both typechecking and Prettier verification.
 
+## 1.0.9 — Release Pipeline Resilience & Idempotent npm Publishing
+
 ANVIL 1.0.9 brings release pipeline resilience and fixes CI action resolution:
 - **Idempotent npm Publishing:** Added automated verification check in `.github/workflows/release.yml` preventing duplicate publish failures if an existing version is already present on the npm registry.
 - **Workflow Action Pinning Fix:** Resolved exact immutable commit SHAs for CodeQL Analysis and GitHub Pages deployment actions.
