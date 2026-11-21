@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import path from "node:path";
+import { readFileSync } from "node:fs";
 import { spawn } from "node:child_process";
 import os from "node:os";
 import { mkdtemp, rm, mkdir, writeFile } from "node:fs/promises";
@@ -208,7 +209,17 @@ function readAgentDurationBudgets(): Record<string, number> | undefined {
   return budgets;
 }
 
-const VERSION = "1.0.7";
+function resolveVersion(): string {
+  try {
+    const pkgUrl = new URL("../package.json", import.meta.url);
+    const raw = readFileSync(pkgUrl, "utf-8");
+    const parsed = JSON.parse(raw);
+    if (typeof parsed.version === "string") return parsed.version;
+  } catch {}
+  return "1.1.1";
+}
+
+const VERSION = resolveVersion();
 
 const HELP = `
 ANVIL — The AI Engineering Workbench

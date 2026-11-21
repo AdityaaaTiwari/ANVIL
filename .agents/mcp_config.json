@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "anvil": {
+      "command": "node",
+      "args": ["d:/ANVIL/dist/mcp/server.js"],
+      "env": {
+        "ANVIL_WORKSPACE": "d:/ANVIL"
+      }
+    }
+  }
+}
