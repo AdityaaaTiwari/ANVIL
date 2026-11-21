@@ -23,6 +23,8 @@ jobs:
   verify-and-release:
     name: Verify package and publish GitHub release
     runs-on: ubuntu-latest
+    env:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
       - name: Checkout release source
         uses: actions/checkout@v4
@@ -70,8 +72,7 @@ jobs:
           files: release-assets/*.tgz
           generate_release_notes: true
       - name: Publish package to npm
-        if: ${{ secrets.NPM_TOKEN != '' }}
+        if: env.NPM_TOKEN != ''
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npm publish --access public --provenance

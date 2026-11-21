@@ -31,14 +31,16 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Security audit
-        run: npm audit --audit-level=high
+        run: |
+          npm audit --audit-level=high --json > npm-audit.json || true
+          npm audit --audit-level=high
       - name: Upload dependency audit report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: npm-dependency-audit
+          name: npm-dependency-audit-${{ matrix.os }}-node${{ matrix.node-version }}
           path: npm-audit.json
-          if-no-files-found: error
+          if-no-files-found: warn
           retention-days: 14
       - name: Typecheck
         run: npm run typecheck
