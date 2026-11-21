@@ -5,12 +5,15 @@ coverage/
 .env.*
 !.env.example
 *.log
+*.sarif
 .DS_Store
 .vscode/
 .idea/
 
-# Local ANVIL / FORGE state (never commit project memory or run history)
-.anvil/
+# Local ANVIL runtime state (never commit memory, runs, or backups)
+.anvil/*
+!.anvil/policy.json
+!.anvil/baseline.json
 .forge/memory.json
 .forge/runs/
 .forge/intelligence/

@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "security": {
+    "maxCritical": 0,
+    "maxHigh": 0,
+    "maxMedium": 10,
+    "failOnSecrets": true
+  },
+  "quality": {
+    "maxReviewHigh": 0,
+    "requireCleanGit": false
+  }
+}

@@ -1,0 +1,1492 @@
+{
+  "version": 1,
+  "generatedAt": "2026-11-21T17:49:08.841Z",
+  "count": 165,
+  "findings": [
+    {
+      "fingerprint": "review:ANVIL-R002:src/cli.ts:155",
+      "source": "review",
+      "ruleId": "ANVIL-R002",
+      "file": "src/cli.ts",
+      "line": 155,
+      "severity": "medium",
+      "message": "Review argument handling, executable allow-lists, and whether shell mode is enabled. Prefer argument arrays and avoid shell interpolation."
+    },
+    {
+      "fingerprint": "review:ANVIL-R004:src/core/code-review.ts:76",
+      "source": "review",
+      "ruleId": "ANVIL-R004",
+      "file": "src/core/code-review.ts",
+      "line": 76,
+      "severity": "low",
+      "message": "Prefer @ts-expect-error with an explanation, or correct the underlying type mismatch."
+    },
+    {
+      "fingerprint": "review:ANVIL-R006:src/core/code-review.ts:90",
+      "source": "review",
+      "ruleId": "ANVIL-R006",
+      "file": "src/core/code-review.ts",
+      "line": 90,
+      "severity": "medium",
+      "message": "Ensure content is trusted or sanitized immediately before rendering."
+    },
+    {
+      "fingerprint": "review:ANVIL-R005:src/core/code-search.ts:59",
+      "source": "review",
+      "ruleId": "ANVIL-R005",
+      "file": "src/core/code-search.ts",
+      "line": 59,
+      "severity": "low",
+      "message": "Handle, report, or deliberately document the error instead of silently discarding it."
+    },
+    {
+      "fingerprint": "review:ANVIL-R002:src/core/container-sandbox.ts:57",
+      "source": "review",
+      "ruleId": "ANVIL-R002",
+      "file": "src/core/container-sandbox.ts",
+      "line": 57,
+      "severity": "medium",
+      "message": "Review argument handling, executable allow-lists, and whether shell mode is enabled. Prefer argument arrays and avoid shell interpolation."
+    },
+    {
+      "fingerprint": "review:ANVIL-R002:src/core/container-sandbox.ts:159",
+      "source": "review",
+      "ruleId": "ANVIL-R002",
+      "file": "src/core/container-sandbox.ts",
+      "line": 159,
+      "severity": "medium",
+      "message": "Review argument handling, executable allow-lists, and whether shell mode is enabled. Prefer argument arrays and avoid shell interpolation."
+    },
+    {
+      "fingerprint": "review:ANVIL-R005:src/core/dashboard-server.ts:1085",
+      "source": "review",
+      "ruleId": "ANVIL-R005",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1085,
+      "severity": "low",
+      "message": "Handle, report, or deliberately document the error instead of silently discarding it."
+    },
+    {
+      "fingerprint": "review:ANVIL-R005:src/core/dashboard-server.ts:1086",
+      "source": "review",
+      "ruleId": "ANVIL-R005",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1086,
+      "severity": "low",
+      "message": "Handle, report, or deliberately document the error instead of silently discarding it."
+    },
+    {
+      "fingerprint": "review:ANVIL-R005:src/core/dashboard-server.ts:1087",
+      "source": "review",
+      "ruleId": "ANVIL-R005",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1087,
+      "severity": "low",
+      "message": "Handle, report, or deliberately document the error instead of silently discarding it."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1181",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1181,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1182",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1182,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1193",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1193,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1194",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1194,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1202",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1202,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1207",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1207,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1208",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1208,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1223",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1223,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1224",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1224,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1247",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1247,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1251",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1251,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1266",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1266,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1274",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1274,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1279",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1279,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1281",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1281,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1289",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1289,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1293",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1293,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1294",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1294,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1302",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1302,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1307",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1307,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1310",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1310,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1311",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1311,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1338",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1338,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1339",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1339,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1343",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1343,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1345",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1345,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1353",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1353,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1355",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1355,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1357",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1357,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1359",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1359,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1360",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1360,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1366",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1366,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1367",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1367,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1402",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1402,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1423",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1423,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1432",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1432,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1441",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1441,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1450",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1450,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1451",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1451,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1455",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1455,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1456",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1456,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1457",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1457,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1476",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1476,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1477",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1477,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1489",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1489,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1490",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1490,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1502",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1502,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1503",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1503,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1511",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1511,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1512",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1512,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1526",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1526,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1527",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1527,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1528",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1528,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1544",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1544,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1545",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1545,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1551",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1551,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1563",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1563,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1564",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1564,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1578",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1578,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1582",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1582,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1605",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1605,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1611",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1611,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1655",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1655,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1657",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1657,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1663",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1663,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1695",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1695,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1700",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1700,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1701",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1701,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1708",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1708,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1709",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1709,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1711",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1711,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1719",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1719,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1720",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1720,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1724",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1724,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1725",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1725,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1726",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1726,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1732",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1732,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1733",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1733,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1734",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1734,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1740",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1740,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1741",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1741,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1743",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1743,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1759",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1759,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1760",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1760,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1766",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1766,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1768",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1768,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1778",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1778,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1783",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1783,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1791",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1791,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1792",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1792,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1802",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1802,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1804",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1804,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1810",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1810,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1811",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1811,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1816",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1816,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1820",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1820,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1822",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1822,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1852",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1852,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1856",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1856,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1897",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1897,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1901",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1901,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1906",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1906,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1919",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1919,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1920",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1920,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1927",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1927,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1928",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1928,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1934",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1934,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1935",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1935,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1940",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1940,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1941",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1941,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1946",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1946,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:src/core/dashboard-server.ts:1947",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "src/core/dashboard-server.ts",
+      "line": 1947,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R005:src/core/dashboard-server.ts:3117",
+      "source": "review",
+      "ruleId": "ANVIL-R005",
+      "file": "src/core/dashboard-server.ts",
+      "line": 3117,
+      "severity": "low",
+      "message": "Handle, report, or deliberately document the error instead of silently discarding it."
+    },
+    {
+      "fingerprint": "review:ANVIL-R005:src/core/doctor.ts:163",
+      "source": "review",
+      "ruleId": "ANVIL-R005",
+      "file": "src/core/doctor.ts",
+      "line": 163,
+      "severity": "low",
+      "message": "Handle, report, or deliberately document the error instead of silently discarding it."
+    },
+    {
+      "fingerprint": "review:ANVIL-R005:src/core/doctor.ts:167",
+      "source": "review",
+      "ruleId": "ANVIL-R005",
+      "file": "src/core/doctor.ts",
+      "line": 167,
+      "severity": "low",
+      "message": "Handle, report, or deliberately document the error instead of silently discarding it."
+    },
+    {
+      "fingerprint": "review:ANVIL-R005:src/core/doctor.ts:263",
+      "source": "review",
+      "ruleId": "ANVIL-R005",
+      "file": "src/core/doctor.ts",
+      "line": 263,
+      "severity": "low",
+      "message": "Handle, report, or deliberately document the error instead of silently discarding it."
+    },
+    {
+      "fingerprint": "review:ANVIL-R005:src/core/doctor.ts:267",
+      "source": "review",
+      "ruleId": "ANVIL-R005",
+      "file": "src/core/doctor.ts",
+      "line": 267,
+      "severity": "low",
+      "message": "Handle, report, or deliberately document the error instead of silently discarding it."
+    },
+    {
+      "fingerprint": "review:ANVIL-R005:src/core/doctor.ts:287",
+      "source": "review",
+      "ruleId": "ANVIL-R005",
+      "file": "src/core/doctor.ts",
+      "line": 287,
+      "severity": "low",
+      "message": "Handle, report, or deliberately document the error instead of silently discarding it."
+    },
+    {
+      "fingerprint": "review:ANVIL-R005:src/core/doctor.ts:341",
+      "source": "review",
+      "ruleId": "ANVIL-R005",
+      "file": "src/core/doctor.ts",
+      "line": 341,
+      "severity": "low",
+      "message": "Handle, report, or deliberately document the error instead of silently discarding it."
+    },
+    {
+      "fingerprint": "review:ANVIL-R005:src/core/doctor.ts:363",
+      "source": "review",
+      "ruleId": "ANVIL-R005",
+      "file": "src/core/doctor.ts",
+      "line": 363,
+      "severity": "low",
+      "message": "Handle, report, or deliberately document the error instead of silently discarding it."
+    },
+    {
+      "fingerprint": "review:ANVIL-R005:src/core/doctor.ts:372",
+      "source": "review",
+      "ruleId": "ANVIL-R005",
+      "file": "src/core/doctor.ts",
+      "line": 372,
+      "severity": "low",
+      "message": "Handle, report, or deliberately document the error instead of silently discarding it."
+    },
+    {
+      "fingerprint": "review:ANVIL-R005:src/core/doctor.ts:381",
+      "source": "review",
+      "ruleId": "ANVIL-R005",
+      "file": "src/core/doctor.ts",
+      "line": 381,
+      "severity": "low",
+      "message": "Handle, report, or deliberately document the error instead of silently discarding it."
+    },
+    {
+      "fingerprint": "review:ANVIL-R005:src/core/doctor.ts:385",
+      "source": "review",
+      "ruleId": "ANVIL-R005",
+      "file": "src/core/doctor.ts",
+      "line": 385,
+      "severity": "low",
+      "message": "Handle, report, or deliberately document the error instead of silently discarding it."
+    },
+    {
+      "fingerprint": "review:ANVIL-R005:src/core/doctor.ts:396",
+      "source": "review",
+      "ruleId": "ANVIL-R005",
+      "file": "src/core/doctor.ts",
+      "line": 396,
+      "severity": "low",
+      "message": "Handle, report, or deliberately document the error instead of silently discarding it."
+    },
+    {
+      "fingerprint": "review:ANVIL-R002:src/core/intelligence-timeline.ts:66",
+      "source": "review",
+      "ruleId": "ANVIL-R002",
+      "file": "src/core/intelligence-timeline.ts",
+      "line": 66,
+      "severity": "medium",
+      "message": "Review argument handling, executable allow-lists, and whether shell mode is enabled. Prefer argument arrays and avoid shell interpolation."
+    },
+    {
+      "fingerprint": "review:ANVIL-R002:src/core/patch-application.ts:130",
+      "source": "review",
+      "ruleId": "ANVIL-R002",
+      "file": "src/core/patch-application.ts",
+      "line": 130,
+      "severity": "medium",
+      "message": "Review argument handling, executable allow-lists, and whether shell mode is enabled. Prefer argument arrays and avoid shell interpolation."
+    },
+    {
+      "fingerprint": "review:ANVIL-R002:src/core/patch-validation.ts:33",
+      "source": "review",
+      "ruleId": "ANVIL-R002",
+      "file": "src/core/patch-validation.ts",
+      "line": 33,
+      "severity": "medium",
+      "message": "Review argument handling, executable allow-lists, and whether shell mode is enabled. Prefer argument arrays and avoid shell interpolation."
+    },
+    {
+      "fingerprint": "review:ANVIL-R002:src/core/project-cleaner.ts:547",
+      "source": "review",
+      "ruleId": "ANVIL-R002",
+      "file": "src/core/project-cleaner.ts",
+      "line": 547,
+      "severity": "medium",
+      "message": "Review argument handling, executable allow-lists, and whether shell mode is enabled. Prefer argument arrays and avoid shell interpolation."
+    },
+    {
+      "fingerprint": "review:ANVIL-R002:src/core/project-cleaner.ts:633",
+      "source": "review",
+      "ruleId": "ANVIL-R002",
+      "file": "src/core/project-cleaner.ts",
+      "line": 633,
+      "severity": "medium",
+      "message": "Review argument handling, executable allow-lists, and whether shell mode is enabled. Prefer argument arrays and avoid shell interpolation."
+    },
+    {
+      "fingerprint": "review:ANVIL-R005:src/core/project-cleaner.ts:857",
+      "source": "review",
+      "ruleId": "ANVIL-R005",
+      "file": "src/core/project-cleaner.ts",
+      "line": 857,
+      "severity": "low",
+      "message": "Handle, report, or deliberately document the error instead of silently discarding it."
+    },
+    {
+      "fingerprint": "review:ANVIL-R005:src/core/project-cleaner.ts:877",
+      "source": "review",
+      "ruleId": "ANVIL-R005",
+      "file": "src/core/project-cleaner.ts",
+      "line": 877,
+      "severity": "low",
+      "message": "Handle, report, or deliberately document the error instead of silently discarding it."
+    },
+    {
+      "fingerprint": "review:ANVIL-R005:src/core/project-cleaner.ts:882",
+      "source": "review",
+      "ruleId": "ANVIL-R005",
+      "file": "src/core/project-cleaner.ts",
+      "line": 882,
+      "severity": "low",
+      "message": "Handle, report, or deliberately document the error instead of silently discarding it."
+    },
+    {
+      "fingerprint": "review:ANVIL-R005:src/core/project-cleaner.ts:887",
+      "source": "review",
+      "ruleId": "ANVIL-R005",
+      "file": "src/core/project-cleaner.ts",
+      "line": 887,
+      "severity": "low",
+      "message": "Handle, report, or deliberately document the error instead of silently discarding it."
+    },
+    {
+      "fingerprint": "review:ANVIL-R005:src/core/project-cleaner.ts:892",
+      "source": "review",
+      "ruleId": "ANVIL-R005",
+      "file": "src/core/project-cleaner.ts",
+      "line": 892,
+      "severity": "low",
+      "message": "Handle, report, or deliberately document the error instead of silently discarding it."
+    },
+    {
+      "fingerprint": "review:ANVIL-R001:src/core/security-scanner.ts:132",
+      "source": "review",
+      "ruleId": "ANVIL-R001",
+      "file": "src/core/security-scanner.ts",
+      "line": 132,
+      "severity": "high",
+      "message": "Avoid evaluating generated strings. Prefer explicit parsers or allow-listed operations."
+    },
+    {
+      "fingerprint": "review:ANVIL-R001:src/core/security-scanner.ts:133",
+      "source": "review",
+      "ruleId": "ANVIL-R001",
+      "file": "src/core/security-scanner.ts",
+      "line": 133,
+      "severity": "high",
+      "message": "Avoid evaluating generated strings. Prefer explicit parsers or allow-listed operations."
+    },
+    {
+      "fingerprint": "review:ANVIL-R005:src/core/security-scanner.ts:264",
+      "source": "review",
+      "ruleId": "ANVIL-R005",
+      "file": "src/core/security-scanner.ts",
+      "line": 264,
+      "severity": "low",
+      "message": "Handle, report, or deliberately document the error instead of silently discarding it."
+    },
+    {
+      "fingerprint": "review:ANVIL-R005:src/core/security-scanner.ts:316",
+      "source": "review",
+      "ruleId": "ANVIL-R005",
+      "file": "src/core/security-scanner.ts",
+      "line": 316,
+      "severity": "low",
+      "message": "Handle, report, or deliberately document the error instead of silently discarding it."
+    },
+    {
+      "fingerprint": "review:ANVIL-R002:src/core/verification.ts:100",
+      "source": "review",
+      "ruleId": "ANVIL-R002",
+      "file": "src/core/verification.ts",
+      "line": 100,
+      "severity": "medium",
+      "message": "Review argument handling, executable allow-lists, and whether shell mode is enabled. Prefer argument arrays and avoid shell interpolation."
+    },
+    {
+      "fingerprint": "review:ANVIL-R002:src/core/verification.ts:227",
+      "source": "review",
+      "ruleId": "ANVIL-R002",
+      "file": "src/core/verification.ts",
+      "line": 227,
+      "severity": "medium",
+      "message": "Review argument handling, executable allow-lists, and whether shell mode is enabled. Prefer argument arrays and avoid shell interpolation."
+    },
+    {
+      "fingerprint": "review:ANVIL-R002:tests/change-intelligence.test.ts:27",
+      "source": "review",
+      "ruleId": "ANVIL-R002",
+      "file": "tests/change-intelligence.test.ts",
+      "line": 27,
+      "severity": "medium",
+      "message": "Review argument handling, executable allow-lists, and whether shell mode is enabled. Prefer argument arrays and avoid shell interpolation."
+    },
+    {
+      "fingerprint": "review:ANVIL-R002:tests/change-intelligence.test.ts:28",
+      "source": "review",
+      "ruleId": "ANVIL-R002",
+      "file": "tests/change-intelligence.test.ts",
+      "line": 28,
+      "severity": "medium",
+      "message": "Review argument handling, executable allow-lists, and whether shell mode is enabled. Prefer argument arrays and avoid shell interpolation."
+    },
+    {
+      "fingerprint": "review:ANVIL-R002:tests/change-intelligence.test.ts:29",
+      "source": "review",
+      "ruleId": "ANVIL-R002",
+      "file": "tests/change-intelligence.test.ts",
+      "line": 29,
+      "severity": "medium",
+      "message": "Review argument handling, executable allow-lists, and whether shell mode is enabled. Prefer argument arrays and avoid shell interpolation."
+    },
+    {
+      "fingerprint": "review:ANVIL-R002:tests/change-intelligence.test.ts:30",
+      "source": "review",
+      "ruleId": "ANVIL-R002",
+      "file": "tests/change-intelligence.test.ts",
+      "line": 30,
+      "severity": "medium",
+      "message": "Review argument handling, executable allow-lists, and whether shell mode is enabled. Prefer argument arrays and avoid shell interpolation."
+    },
+    {
+      "fingerprint": "review:ANVIL-R002:tests/change-intelligence.test.ts:31",
+      "source": "review",
+      "ruleId": "ANVIL-R002",
+      "file": "tests/change-intelligence.test.ts",
+      "line": 31,
+      "severity": "medium",
+      "message": "Review argument handling, executable allow-lists, and whether shell mode is enabled. Prefer argument arrays and avoid shell interpolation."
+    },
+    {
+      "fingerprint": "review:ANVIL-R002:tests/cli-adr.test.ts:10",
+      "source": "review",
+      "ruleId": "ANVIL-R002",
+      "file": "tests/cli-adr.test.ts",
+      "line": 10,
+      "severity": "medium",
+      "message": "Review argument handling, executable allow-lists, and whether shell mode is enabled. Prefer argument arrays and avoid shell interpolation."
+    },
+    {
+      "fingerprint": "review:ANVIL-R002:tests/cli-help.test.ts:12",
+      "source": "review",
+      "ruleId": "ANVIL-R002",
+      "file": "tests/cli-help.test.ts",
+      "line": 12,
+      "severity": "medium",
+      "message": "Review argument handling, executable allow-lists, and whether shell mode is enabled. Prefer argument arrays and avoid shell interpolation."
+    },
+    {
+      "fingerprint": "review:ANVIL-R002:tests/cli-help.test.ts:23",
+      "source": "review",
+      "ruleId": "ANVIL-R002",
+      "file": "tests/cli-help.test.ts",
+      "line": 23,
+      "severity": "medium",
+      "message": "Review argument handling, executable allow-lists, and whether shell mode is enabled. Prefer argument arrays and avoid shell interpolation."
+    },
+    {
+      "fingerprint": "review:ANVIL-R002:tests/cli-security.test.ts:9",
+      "source": "review",
+      "ruleId": "ANVIL-R002",
+      "file": "tests/cli-security.test.ts",
+      "line": 9,
+      "severity": "medium",
+      "message": "Review argument handling, executable allow-lists, and whether shell mode is enabled. Prefer argument arrays and avoid shell interpolation."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:tests/code-review.test.ts:26",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "tests/code-review.test.ts",
+      "line": 26,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R001:tests/code-review.test.ts:35",
+      "source": "review",
+      "ruleId": "ANVIL-R001",
+      "file": "tests/code-review.test.ts",
+      "line": 35,
+      "severity": "high",
+      "message": "Avoid evaluating generated strings. Prefer explicit parsers or allow-listed operations."
+    },
+    {
+      "fingerprint": "review:ANVIL-R002:tests/container-sandbox.test.ts:457",
+      "source": "review",
+      "ruleId": "ANVIL-R002",
+      "file": "tests/container-sandbox.test.ts",
+      "line": 457,
+      "severity": "medium",
+      "message": "Review argument handling, executable allow-lists, and whether shell mode is enabled. Prefer argument arrays and avoid shell interpolation."
+    },
+    {
+      "fingerprint": "review:ANVIL-R002:tests/container-sandbox.test.ts:471",
+      "source": "review",
+      "ruleId": "ANVIL-R002",
+      "file": "tests/container-sandbox.test.ts",
+      "line": 471,
+      "severity": "medium",
+      "message": "Review argument handling, executable allow-lists, and whether shell mode is enabled. Prefer argument arrays and avoid shell interpolation."
+    },
+    {
+      "fingerprint": "review:ANVIL-R002:tests/mcp-protocol.integration.test.ts:42",
+      "source": "review",
+      "ruleId": "ANVIL-R002",
+      "file": "tests/mcp-protocol.integration.test.ts",
+      "line": 42,
+      "severity": "medium",
+      "message": "Review argument handling, executable allow-lists, and whether shell mode is enabled. Prefer argument arrays and avoid shell interpolation."
+    },
+    {
+      "fingerprint": "review:ANVIL-R003:tests/policy-enforcement.test.ts:138",
+      "source": "review",
+      "ruleId": "ANVIL-R003",
+      "file": "tests/policy-enforcement.test.ts",
+      "line": 138,
+      "severity": "medium",
+      "message": "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer."
+    },
+    {
+      "fingerprint": "review:ANVIL-R001:tests/sarif-formatter.test.ts:42",
+      "source": "review",
+      "ruleId": "ANVIL-R001",
+      "file": "tests/sarif-formatter.test.ts",
+      "line": 42,
+      "severity": "high",
+      "message": "Avoid evaluating generated strings. Prefer explicit parsers or allow-listed operations."
+    }
+  ]
+}

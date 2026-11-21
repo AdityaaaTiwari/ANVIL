@@ -8,7 +8,7 @@ branding:
 
 inputs:
   version:
-    description: ANVIL Git ref to install (tag, branch, or commit)
+    description: ANVIL Git ref to install (tag, branch, commit, or 'local')
     required: false
     default: v1.0.9
   project-path:
@@ -28,7 +28,7 @@ inputs:
     required: false
     default: ""
   baseline-file:
-    description: Baseline JSON file to suppress known existing findings
+    description: Baseline JSON file to suppress known existing findings (defaults to .anvil/baseline.json if present)
     required: false
     default: ""
   fail-on-warnings:
@@ -49,8 +49,34 @@ runs:
         ANVIL_VERSION: ${{ inputs.version }}
       run: |
         set -euo pipefail
-        npm install --global "git+https://github.com/anvil-workbench/ANVIL.git#${ANVIL_VERSION}"
-        anvil --version
+        NPM_PREFIX="$(npm config get prefix)"
+        echo "$NPM_PREFIX" >> "$GITHUB_PATH"
+        echo "$NPM_PREFIX/bin" >> "$GITHUB_PATH"
+        export PATH="$NPM_PREFIX/bin:$NPM_PREFIX:$PATH"
+
+        if [[ "$ANVIL_VERSION" == "local" || "$ANVIL_VERSION" == "workspace" || "$ANVIL_VERSION" == "." ]]; then
+          echo "Linking local repository build of ANVIL..."
+          npm link
+        elif command -v anvil >/dev/null 2>&1 && [[ -z "${ANVIL_VERSION:-}" || "$ANVIL_VERSION" == "existing" ]]; then
+          echo "Using existing ANVIL installation: $(anvil --version)"
+        else
+          echo "Installing ANVIL version ${ANVIL_VERSION}..."
+          npm install --global "git+https://github.com/anvil-workbench/ANVIL.git#${ANVIL_VERSION}"
+        fi
+
+        if command -v anvil >/dev/null 2>&1; then
+          ANVIL_BIN="anvil"
+        elif [[ -x "$NPM_PREFIX/bin/anvil" ]]; then
+          ANVIL_BIN="$NPM_PREFIX/bin/anvil"
+        elif [[ -x "$NPM_PREFIX/anvil" ]]; then
+          ANVIL_BIN="$NPM_PREFIX/anvil"
+        elif [[ -f "$NPM_PREFIX/anvil.cmd" ]]; then
+          ANVIL_BIN="$NPM_PREFIX/anvil.cmd"
+        else
+          ANVIL_BIN="anvil"
+        fi
+        echo "ANVIL_BIN=$ANVIL_BIN" >> "$GITHUB_ENV"
+        "$ANVIL_BIN" --version
     - name: Run ANVIL
       shell: bash
       env:
@@ -62,22 +88,39 @@ runs:
         ANVIL_FAIL_ON_WARNINGS: ${{ inputs.fail-on-warnings }}
       run: |
         set -euo pipefail
+        NPM_PREFIX="$(npm config get prefix)"
+        export PATH="$NPM_PREFIX/bin:$NPM_PREFIX:$PATH"
+        RUN_BIN="${ANVIL_BIN:-anvil}"
+
         case "$ANVIL_OPERATION" in
           gate)
             EXTRA_ARGS=""
             if [[ -n "$ANVIL_SARIF_FILE" ]]; then EXTRA_ARGS="$EXTRA_ARGS --sarif $ANVIL_SARIF_FILE"; fi
-            if [[ -n "$ANVIL_POLICY_FILE" ]]; then EXTRA_ARGS="$EXTRA_ARGS --policy $ANVIL_POLICY_FILE"; fi
-            if [[ -n "$ANVIL_BASELINE_FILE" ]]; then EXTRA_ARGS="$EXTRA_ARGS --baseline $ANVIL_BASELINE_FILE"; fi
+
+            # Resolve policy file
+            if [[ -n "$ANVIL_POLICY_FILE" ]]; then
+              EXTRA_ARGS="$EXTRA_ARGS --policy $ANVIL_POLICY_FILE"
+            elif [[ -f "$ANVIL_PROJECT_PATH/.anvil/policy.json" ]]; then
+              EXTRA_ARGS="$EXTRA_ARGS --policy $ANVIL_PROJECT_PATH/.anvil/policy.json"
+            fi
+
+            # Resolve baseline file
+            if [[ -n "$ANVIL_BASELINE_FILE" ]]; then
+              EXTRA_ARGS="$EXTRA_ARGS --baseline $ANVIL_BASELINE_FILE"
+            elif [[ -f "$ANVIL_PROJECT_PATH/.anvil/baseline.json" ]]; then
+              EXTRA_ARGS="$EXTRA_ARGS --baseline $ANVIL_PROJECT_PATH/.anvil/baseline.json"
+            fi
+
             if [[ "$ANVIL_FAIL_ON_WARNINGS" == "true" ]]; then EXTRA_ARGS="$EXTRA_ARGS --fail-on-warnings"; fi
-            anvil gate "$ANVIL_PROJECT_PATH" $EXTRA_ARGS
+            "$RUN_BIN" gate "$ANVIL_PROJECT_PATH" $EXTRA_ARGS
             ;;
-          inspect) anvil inspect "$ANVIL_PROJECT_PATH" ;;
-          security) anvil security "$ANVIL_PROJECT_PATH" ;;
-          quality) anvil quality "$ANVIL_PROJECT_PATH" ;;
-          health) anvil health "$ANVIL_PROJECT_PATH" ;;
-          review) anvil review "$ANVIL_PROJECT_PATH" ;;
-          doctor) anvil doctor "$ANVIL_PROJECT_PATH" ;;
-          clean) anvil clean "$ANVIL_PROJECT_PATH" ;;
-          undo) anvil undo "$ANVIL_PROJECT_PATH" ;;
+          inspect) "$RUN_BIN" inspect "$ANVIL_PROJECT_PATH" ;;
+          security) "$RUN_BIN" security "$ANVIL_PROJECT_PATH" ;;
+          quality) "$RUN_BIN" quality "$ANVIL_PROJECT_PATH" ;;
+          health) "$RUN_BIN" health "$ANVIL_PROJECT_PATH" ;;
+          review) "$RUN_BIN" review "$ANVIL_PROJECT_PATH" ;;
+          doctor) "$RUN_BIN" doctor "$ANVIL_PROJECT_PATH" ;;
+          clean) "$RUN_BIN" clean "$ANVIL_PROJECT_PATH" ;;
+          undo) "$RUN_BIN" undo "$ANVIL_PROJECT_PATH" ;;
           *) echo "Unsupported ANVIL operation: $ANVIL_OPERATION" >&2; exit 2 ;;
         esac
