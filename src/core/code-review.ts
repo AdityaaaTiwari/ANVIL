@@ -18,6 +18,7 @@ export interface InlineSuppressionRecord {
   line: number;
   ruleId: string;
   type: "file" | "line" | "next-line";
+  reason?: string | undefined;
 }
 
 export interface CodeReviewReport {
@@ -50,6 +51,56 @@ async function walk(dir: string, root: string, out: string[], depth = 0): Promis
     else if (entry.isFile() && SOURCE.test(entry.name)) out.push(path.relative(root, full).split(path.sep).join("/"));
   }
 }
+function parseSuppressionComment(raw: string): { rules: Set<string>; reason?: string | undefined } {
+  const trimmed = raw
+    .trim()
+    .replace(/\*\/.*$/, "")
+    .trim();
+
+  let rulesPart = trimmed;
+  let reason: string | undefined;
+
+  // Split rules from optional justification reason on `--` or `:`
+  const doubleHyphenIdx = trimmed.indexOf("--");
+  const colonIdx = trimmed.indexOf(":");
+
+  let splitIdx = -1;
+  let delimLen = 0;
+
+  if (doubleHyphenIdx !== -1 && colonIdx !== -1) {
+    if (doubleHyphenIdx < colonIdx) {
+      splitIdx = doubleHyphenIdx;
+      delimLen = 2;
+    } else {
+      splitIdx = colonIdx;
+      delimLen = 1;
+    }
+  } else if (doubleHyphenIdx !== -1) {
+    splitIdx = doubleHyphenIdx;
+    delimLen = 2;
+  } else if (colonIdx !== -1) {
+    splitIdx = colonIdx;
+    delimLen = 1;
+  }
+
+  if (splitIdx !== -1) {
+    rulesPart = trimmed.slice(0, splitIdx).trim();
+    const candidateReason = trimmed.slice(splitIdx + delimLen).trim();
+    if (candidateReason.length > 0) {
+      reason = candidateReason;
+    }
+  }
+
+  const rules = new Set<string>();
+  for (const r of rulesPart.split(/[,\s]+/)) {
+    const cleaned = r.trim().toUpperCase();
+    if (cleaned && /^[A-Z0-9_\-]+$/.test(cleaned)) {
+      rules.add(cleaned);
+    }
+  }
+  return { rules, ...(reason ? { reason } : {}) };
+}
+
 function inspectLines(
   file: string,
   source: string
@@ -59,12 +110,13 @@ function inspectLines(
   const lines = source.split(/\r?\n/);
 
   // Check for file-level suppression
-  const fileDisabled = new Set<string>();
-  const fileDisableMatch = source.match(/(?:\/\/|\/\*)\s*anvil-disable-file\s+([A-Za-z0-9_,\- ]+)/i);
+  let fileDisabled = new Set<string>();
+  let fileDisabledReason: string | undefined;
+  const fileDisableMatch = source.match(/(?:\/\/|\/\*)\s*anvil-disable-file\s+([^\r\n]+)/i);
   if (fileDisableMatch && fileDisableMatch[1]) {
-    for (const r of fileDisableMatch[1].split(/[,\s]+/)) {
-      if (r.trim()) fileDisabled.add(r.trim().toUpperCase());
-    }
+    const parsed = parseSuppressionComment(fileDisableMatch[1]);
+    fileDisabled = parsed.rules;
+    fileDisabledReason = parsed.reason;
   }
 
   const rules: Array<{ id: string; severity: ReviewSeverity; title: string; pattern: RegExp; recommendation: string }> =
@@ -120,22 +172,23 @@ function inspectLines(
 
     // Check line-level suppression comments
     const prevLine = i > 0 ? (lines[i - 1] ?? "") : "";
-    const nextLineMatch = prevLine.match(/(?:\/\/|\/\*)\s*anvil-disable-next-line\s+([A-Za-z0-9_,\- ]+)/i);
-    const sameLineMatch = line.match(/(?:\/\/|\/\*)\s*anvil-disable-line\s+([A-Za-z0-9_,\- ]+)/i);
+    const nextLineMatch = prevLine.match(/(?:\/\/|\/\*)\s*anvil-disable-next-line\s+([^\r\n]+)/i);
+    const sameLineMatch = line.match(/(?:\/\/|\/\*)\s*anvil-disable-line\s+([^\r\n]+)/i);
 
-    const lineDisabled = new Set<string>();
+    let lineDisabled = new Set<string>();
+    let lineDisabledReason: string | undefined;
     let suppressionType: "line" | "next-line" | undefined;
     if (nextLineMatch && nextLineMatch[1]) {
       suppressionType = "next-line";
-      for (const r of nextLineMatch[1].split(/[,\s]+/)) {
-        if (r.trim()) lineDisabled.add(r.trim().toUpperCase());
-      }
+      const parsed = parseSuppressionComment(nextLineMatch[1]);
+      lineDisabled = parsed.rules;
+      lineDisabledReason = parsed.reason;
     }
     if (sameLineMatch && sameLineMatch[1]) {
       suppressionType = "line";
-      for (const r of sameLineMatch[1].split(/[,\s]+/)) {
-        if (r.trim()) lineDisabled.add(r.trim().toUpperCase());
-      }
+      const parsed = parseSuppressionComment(sameLineMatch[1]);
+      lineDisabled = parsed.rules;
+      lineDisabledReason = parsed.reason;
     }
 
     for (const rule of rules) {
@@ -147,6 +200,7 @@ function inspectLines(
             line: i + 1,
             ruleId: rule.id,
             type: "file",
+            reason: fileDisabledReason,
           });
           continue;
         }
@@ -157,6 +211,7 @@ function inspectLines(
             line: i + 1,
             ruleId: rule.id,
             type: suppressionType ?? "line",
+            reason: lineDisabledReason,
           });
           continue;
         }

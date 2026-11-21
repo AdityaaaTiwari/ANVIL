@@ -29,12 +29,14 @@ export const GatePolicySchema = z
         maxReviewHigh: z.number().int().min(0).optional(),
         requireCleanGit: z.boolean().default(false),
         allowInlineSuppressions: z.boolean().default(true),
+        requireSuppressionReason: z.boolean().default(false),
       })
       .strict()
       .default({
         maxReviewHigh: 0,
         requireCleanGit: false,
         allowInlineSuppressions: true,
+        requireSuppressionReason: false,
       }),
     sandbox: z
       .object({
@@ -65,6 +67,7 @@ export const DEFAULT_GATE_POLICY: GatePolicy = GatePolicySchema.parse({
     maxReviewHigh: 0,
     requireCleanGit: false,
     allowInlineSuppressions: true,
+    requireSuppressionReason: false,
   },
 });
 
@@ -89,6 +92,7 @@ export interface GateEvaluation {
   policySource: string;
   baselineSource?: string | undefined;
   violations: string[];
+  warnings: string[];
   summary: {
     critical: number;
     high: number;
@@ -294,6 +298,17 @@ export async function evaluateGate(targetPath: string, options: EvaluateGateOpti
   };
 
   const violations: string[] = [];
+  const warnings: string[] = [];
+
+  // Warn on advisory sandbox configuration during static code review gate
+  if (effectivePolicy.sandbox) {
+    const s = effectivePolicy.sandbox;
+    if (s.profile || s.requireRootless || s.maxMemory || s.maxCpus || s.maxProcesses) {
+      warnings.push(
+        "Sandbox limits (profile, requireRootless, maxMemory, maxCpus, maxProcesses) are designated for containerized verification runs (anvil verify / staged-verification / container-sandbox). They are advisory and not evaluated during static code review gates."
+      );
+    }
+  }
 
   // Fail-closed scanner execution: if either engine throws, fail the gate
   let securityReport: SecurityAuditReport;
@@ -436,6 +451,16 @@ export async function evaluateGate(targetPath: string, options: EvaluateGateOpti
     );
   }
 
+  // Enforce requireSuppressionReason: every inline suppression must provide a justification
+  if (effectivePolicy.quality?.requireSuppressionReason && inlineSuppressions.length > 0) {
+    const missingReason = inlineSuppressions.filter((s) => !s.reason || s.reason.trim().length === 0);
+    if (missingReason.length > 0) {
+      violations.push(
+        `Policy requires suppression reasons (requireSuppressionReason=true): found ${missingReason.length} inline suppression(s) without a justification reason (use '-- reason')`
+      );
+    }
+  }
+
   // Enforce maxReviewHigh
   if (effectivePolicy.quality?.maxReviewHigh !== undefined) {
     const reviewHigh = highFindings.filter((f) => f.source === "review");
@@ -478,19 +503,45 @@ export async function evaluateGate(targetPath: string, options: EvaluateGateOpti
     }
   }
 
-  // Enforce disallowedTools if configured
+  // Enforce disallowedTools: exact command and script matching, never substring on messages
   if (effectivePolicy.sandbox?.disallowedTools && effectivePolicy.sandbox.disallowedTools.length > 0) {
-    const disallowedSet = new Set(effectivePolicy.sandbox.disallowedTools.map((t) => t.toLowerCase()));
-    const toolViolations = activeFindings.filter((f) => {
-      const lowerId = f.id.toLowerCase();
-      const lowerMsg = f.message.toLowerCase();
-      return Array.from(disallowedSet).some((tool) => lowerId.includes(tool) || lowerMsg.includes(tool));
-    });
+    const disallowedList = effectivePolicy.sandbox.disallowedTools.map((t) => t.trim().toLowerCase()).filter(Boolean);
 
-    if (toolViolations.length > 0) {
-      violations.push(
-        `Policy forbids execution of disallowed tools (${Array.from(disallowedSet).join(", ")}): detected ${toolViolations.length} matching finding(s)`
-      );
+    // 1. Inspect package.json scripts for disallowed executable invocations
+    try {
+      const pkgPath = path.join(targetPath, "package.json");
+      const pkgRaw = await readFile(pkgPath, "utf-8").catch(() => null);
+      if (pkgRaw) {
+        const pkgData = JSON.parse(pkgRaw);
+        if (pkgData && typeof pkgData.scripts === "object" && pkgData.scripts !== null) {
+          for (const [scriptName, scriptCmd] of Object.entries(pkgData.scripts)) {
+            if (typeof scriptCmd !== "string") continue;
+            for (const tool of disallowedList) {
+              const escapedTool = tool.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+              const cmdRegex = new RegExp(`(?:^|[;&|\\s])${escapedTool}(?:\\s|[;&|]|$)`, "i");
+              if (cmdRegex.test(scriptCmd)) {
+                violations.push(
+                  `Policy forbids execution of disallowed tool '${tool}' (sandbox.disallowedTools): package.json script '${scriptName}' invokes '${tool}'`
+                );
+              }
+            }
+          }
+        }
+      }
+    } catch {}
+
+    // 2. Inspect active findings code snippets using exact command boundaries
+    for (const f of activeFindings) {
+      if (!f.snippet) continue;
+      for (const tool of disallowedList) {
+        const escapedTool = tool.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const snippetRegex = new RegExp(`(?:["'\`\\s/\\\\]|^)${escapedTool}(?:["'\`\\s]|$)`, "i");
+        if (snippetRegex.test(f.snippet)) {
+          violations.push(
+            `Policy forbids execution of disallowed tool '${tool}' (sandbox.disallowedTools): detected tool execution in ${f.file}:${f.line}`
+          );
+        }
+      }
     }
   }
 
@@ -503,6 +554,7 @@ export async function evaluateGate(targetPath: string, options: EvaluateGateOpti
     policySource,
     ...(options.baselinePath ? { baselineSource: options.baselinePath } : {}),
     violations,
+    warnings,
     summary: {
       critical: criticalFindings.length,
       high: highFindings.length,

@@ -9,7 +9,7 @@ on:
       release_tag:
         description: "Release tag to create (for example v1.0.6)"
         required: true
-        default: "v1.1.0"
+        default: "v1.1.1"
       target_ref:
         description: "Verified branch or commit to release"
         required: true
@@ -48,6 +48,11 @@ jobs:
           EXPECTED_TAG="v$PACKAGE_VERSION"
           if [[ "$RELEASE_TAG" != "$EXPECTED_TAG" ]]; then
             echo "Release tag $RELEASE_TAG does not match package version $PACKAGE_VERSION (expected $EXPECTED_TAG)." >&2
+            exit 1
+          fi
+          ACTION_DEFAULT="$(grep -E '^\s*default:\s*v[0-9]' action.yml | awk '{print $2}')"
+          if [[ "$ACTION_DEFAULT" != "$EXPECTED_TAG" ]]; then
+            echo "action.yml default version ($ACTION_DEFAULT) does not match expected tag $EXPECTED_TAG" >&2
             exit 1
           fi
       - name: Install dependencies

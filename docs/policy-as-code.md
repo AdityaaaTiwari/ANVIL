@@ -32,9 +32,13 @@ The schema is defined in [docs/anvil-policy.schema.json](anvil-policy.schema.jso
   },
   "quality": {
     "maxReviewHigh": 0,
-    "requireCleanGit": false
+    "requireCleanGit": false,
+    "allowInlineSuppressions": true,
+    "requireSuppressionReason": false
   },
   "sandbox": {
+    "required": false,
+    "disallowedTools": ["curl", "wget", "rm"],
     "profile": "balanced",
     "requireRootless": false,
     "maxMemory": "512m",
@@ -52,7 +56,16 @@ The schema is defined in [docs/anvil-policy.schema.json](anvil-policy.schema.jso
 |---|---|---|---|---|
 | **security** | `maxCritical` | `number` | `0` | Maximum critical findings allowed before gate exits 1. |
 | **security** | `maxHigh` | `number` | `0` | Maximum high-severity findings allowed. |
-| **security** | `failOnSecrets` | `boolean` | `true` | If true, fails gate if any API key or secret token is found. |
+| **security** | `maxMedium` | `number` | `10` | Maximum medium-severity findings allowed. |
+| **security** | `failOnSecrets` | `boolean` | `true` | If true, fails gate if any API key or secret token is found (`category: "secret"`). |
 | **quality** | `maxReviewHigh` | `number` | `0` | Maximum high-risk static review findings (e.g., `eval`). |
-| **sandbox** | `profile` | `string` | `"balanced"` | Container sandbox profile (`balanced`, `hardened`, `rootless-required`). |
-| **sandbox** | `maxMemory` | `string` | `"512m"` | Memory ceiling for containerized verification scripts. |
+| **quality** | `requireCleanGit` | `boolean` | `false` | Require a clean working tree without uncommitted changes. |
+| **quality** | `allowInlineSuppressions` | `boolean` | `true` | If false, immediately fails gate if any inline suppression comments (`anvil-disable-*`) are detected. |
+| **quality** | `requireSuppressionReason` | `boolean` | `false` | If true, fails gate if any inline suppression lacks an explicit justification reason (e.g. `-- reason`). |
+| **sandbox** | `required` | `boolean` | `false` | Require container sandbox execution for agent runs. |
+| **sandbox** | `disallowedTools` | `string[]` | `[]` | Prohibited CLI utilities (e.g. `rm`, `curl`). Matched against `package.json` scripts and execution snippets using exact command boundaries. |
+| **sandbox** | `profile` | `string` | `"balanced"` | Container sandbox profile (`balanced`, `hardened`, `rootless-required`). *(Advisory in static code gate; enforced in dynamic container verification)* |
+| **sandbox** | `requireRootless` | `boolean` | `false` | Require rootless container daemon. *(Advisory in static code gate; enforced in dynamic container verification)* |
+| **sandbox** | `maxMemory` | `string` | `"512m"` | Memory ceiling for containerized verification scripts. *(Advisory in static code gate; enforced in dynamic container verification)* |
+| **sandbox** | `maxCpus` | `number` | `1.0` | CPU quota for container verification. *(Advisory in static code gate; enforced in dynamic container verification)* |
+| **sandbox** | `maxProcesses` | `number` | `128` | Process limit for container verification. *(Advisory in static code gate; enforced in dynamic container verification)* |

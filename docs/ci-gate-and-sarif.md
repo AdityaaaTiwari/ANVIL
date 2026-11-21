@@ -51,11 +51,10 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Run ANVIL Quality & Security Gate
-        uses: anvil-workbench/ANVIL@v1.0.7
+        uses: anvil-workbench/ANVIL@v1.1.1
         with:
           operation: gate
           sarif-file: anvil-results.sarif
-          ci-gate: true
 
       - name: Upload SARIF to GitHub Security Tab
         if: always()

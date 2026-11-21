@@ -1,5 +1,25 @@
 # ANVIL Changelog
 
+## 1.1.1 — Governance Hardening: Disallowed Tools Matcher, SARIF inSource Suppressions & Suppression Reason Enforcement
+
+ANVIL 1.1.1 introduces strict governance hardening, accurate disallowed tool evaluation, full SARIF in-source suppression metadata, and release consistency checks:
+
+### Features & Governance Hardening
+- **Exact Command & Script Matching for `sandbox.disallowedTools`:**
+  - Evaluates `package.json` scripts directly for prohibited command invocations (e.g. `rm`, `curl`, `wget`, `nc`) using exact command boundary patterns.
+  - Matches active finding code execution snippets using word boundary regexes instead of substring searches on human-readable diagnostic messages, eliminating false positives on words such as "format" or "information".
+- **SARIF v2.1.0 In-Source Suppressions (`suppressions: [{ kind: "inSource" }]`):**
+  - Exported SARIF reports now include all inline-suppressed findings (`// anvil-disable-line`, etc.) tagged with standard OASIS SARIF `inSource` suppression metadata, preserving visibility in GitHub Code Scanning instead of vanishing silently.
+  - Justification reasons documented via `-- reason` or `: reason` are captured and attached as `suppressions[].justification`.
+- **Mandatory Justification Reasons (`quality.requireSuppressionReason`):**
+  - New policy rule `quality.requireSuppressionReason: true` enforces that every inline suppression comment provides an explicit justification reason (e.g., `// anvil-disable-line ANVIL-R001 -- safe regex description`), failing the gate if justifications are omitted.
+- **Sandbox Limits Advisory Notices & Schema Clarification:**
+  - Dynamic container resource limits (`profile`, `requireRootless`, `maxMemory`, `maxCpus`, `maxProcesses`) generate clear advisory warnings in `anvil gate` output explaining that they govern containerized verification runs (`container-sandbox`) rather than static code review gates.
+- **Triage Documentation Precision:**
+  - Updated all reproduction commands in `docs/false-positive-analysis.md` to reference the canonical package name `npx anvil-engineering-workbench gate .`.
+- **Automated Action & Package Version Synchronization:**
+  - Added release workflow and CI assertions verifying `action.yml` default version remains in 100% sync with `package.json` and git tags.
+
 ## 1.1.0 — Enterprise Adoption Readiness: Policy-as-Code, Fail-Closed CI Gate & Content-Hashed Baseline Engine
 
 ANVIL 1.1.0 delivers enterprise-grade CI/CD adoption readiness, policy-as-code enforcement, deterministic baseline suppression, and verified supply-chain hygiene:

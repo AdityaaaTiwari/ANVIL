@@ -1607,6 +1607,7 @@ Exit codes:
           const sarifOutput = generateSarif({
             activeFindings: evaluation.activeFindings,
             suppressedFindings: evaluation.suppressedFindings,
+            inlineSuppressions: evaluation.inlineSuppressions,
             filterSuppressed: true,
             targetRoot: target,
           });
@@ -1627,6 +1628,7 @@ Exit codes:
                 policySource: evaluation.policySource,
                 baselineSource: evaluation.baselineSource,
                 violations: evaluation.violations,
+                warnings: evaluation.warnings,
                 summary: evaluation.summary,
                 activeFindings: evaluation.activeFindings,
                 suppressedFindings: evaluation.suppressedFindings,
@@ -1663,6 +1665,13 @@ Exit codes:
             lines.push(`  Inline suppressions:   ${evaluation.summary.inlineSuppressions}`);
           }
           lines.push(``);
+          if (evaluation.warnings && evaluation.warnings.length > 0) {
+            lines.push(`Advisory Notices:`);
+            for (const w of evaluation.warnings) {
+              lines.push(`  ⚠ ${w}`);
+            }
+            lines.push(``);
+          }
           if (evaluation.violations.length > 0) {
             lines.push(`Policy Violations:`);
             for (const v of evaluation.violations) {

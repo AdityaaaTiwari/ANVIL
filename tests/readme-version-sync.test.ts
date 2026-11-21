@@ -59,4 +59,10 @@ describe("README and package version/tool synchronization", () => {
     expect(readme).toContain("independent, original implementation");
     expect(readme).toContain("MIT license");
   });
+
+  it("ensures release.yml validates action.yml default version against package version", async () => {
+    const releaseRaw = await readFile(path.resolve(".github/workflows/release.yml"), "utf8");
+    expect(releaseRaw).toContain("ACTION_DEFAULT=");
+    expect(releaseRaw).toContain("action.yml default version");
+  });
 });

@@ -74,4 +74,33 @@ describe("SARIF v2.1.0 generation", () => {
     expect(revResult.locations[0].physicalLocation.artifactLocation.uri).toBe("src/app.ts");
     expect(revResult.locations[0].physicalLocation.region.startLine).toBe(42);
   });
+
+  it("exports inline suppressions with standard inSource SARIF metadata and justification", () => {
+    const sarifJson = generateSarif({
+      activeFindings: [],
+      inlineSuppressions: [
+        {
+          file: "src/renderer.ts",
+          line: 15,
+          ruleId: "ANVIL-R003",
+          type: "line",
+          reason: "Safe sanitized template rendering",
+        },
+      ],
+    });
+
+    const parsed = JSON.parse(sarifJson);
+    const results = parsed.runs[0].results;
+    expect(results.length).toBe(1);
+
+    const supResult = results[0];
+    expect(supResult.ruleId).toBe("ANVIL-R003");
+    expect(supResult.suppressions).toBeDefined();
+    expect(supResult.suppressions.length).toBe(1);
+    expect(supResult.suppressions[0].kind).toBe("inSource");
+    expect(supResult.suppressions[0].status).toBe("accepted");
+    expect(supResult.suppressions[0].justification).toBe("Safe sanitized template rendering");
+    expect(supResult.locations[0].physicalLocation.artifactLocation.uri).toBe("src/renderer.ts");
+    expect(supResult.locations[0].physicalLocation.region.startLine).toBe(15);
+  });
 });

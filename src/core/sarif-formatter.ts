@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import type { SecurityAuditReport } from "./security-scanner.js";
-import type { CodeReviewReport } from "./code-review.js";
+import type { CodeReviewReport, InlineSuppressionRecord } from "./code-review.js";
 import type { NormalizedFinding } from "./policy-engine.js";
 
 export interface SarifFormatOptions {
@@ -8,6 +8,7 @@ export interface SarifFormatOptions {
   reviewReport?: CodeReviewReport | undefined;
   activeFindings?: NormalizedFinding[] | undefined;
   suppressedFindings?: NormalizedFinding[] | undefined;
+  inlineSuppressions?: InlineSuppressionRecord[] | undefined;
   suppressedFingerprints?: Set<string> | undefined;
   filterSuppressed?: boolean | undefined;
   targetRoot?: string | undefined;
@@ -55,7 +56,7 @@ function resolvePackageVersion(): string {
     const parsed = JSON.parse(raw);
     if (typeof parsed.version === "string") return parsed.version;
   } catch {}
-  return "1.1.0";
+  return "1.1.1";
 }
 
 function mapSecuritySeverity(severity: string): "error" | "warning" | "note" {
@@ -155,6 +156,54 @@ export function generateSarif(options: SarifFormatOptions): string {
                 },
                 region: {
                   startLine: finding.line && finding.line > 0 ? finding.line : 1,
+                  startColumn: 1,
+                },
+              },
+            },
+          ],
+        });
+      }
+    }
+
+    // Include inline suppressions with standard SARIF inSource suppression metadata
+    if (options.inlineSuppressions) {
+      for (const s of options.inlineSuppressions) {
+        const level = mapReviewSeverity(
+          s.ruleId === "ANVIL-R001" ? "high" : s.ruleId === "ANVIL-R004" || s.ruleId === "ANVIL-R005" ? "low" : "medium"
+        );
+        if (!rulesMap.has(s.ruleId)) {
+          rulesMap.set(s.ruleId, {
+            id: s.ruleId,
+            name: `Review_${s.ruleId}`,
+            shortDescription: { text: `Rule ${s.ruleId} suppressed in source code` },
+            helpUri: "https://github.com/anvil-workbench/ANVIL/blob/main/docs/security-model.md",
+            defaultConfiguration: { level },
+          });
+        }
+        results.push({
+          ruleId: s.ruleId,
+          level,
+          message: {
+            text: s.reason
+              ? `Suppressed ${s.ruleId}: ${s.reason}`
+              : `Suppressed ${s.ruleId} via ${s.type} in-source comment`,
+          },
+          suppressions: [
+            {
+              kind: "inSource",
+              status: "accepted",
+              justification: s.reason || `Suppressed in source via anvil-disable-${s.type}`,
+            },
+          ],
+          locations: [
+            {
+              physicalLocation: {
+                artifactLocation: {
+                  uri: s.file.replace(/\\/g, "/"),
+                  uriBaseId: "%SRCROOT%",
+                },
+                region: {
+                  startLine: s.line && s.line > 0 ? s.line : 1,
                   startColumn: 1,
                 },
               },
@@ -275,6 +324,54 @@ export function generateSarif(options: SarifFormatOptions): string {
         }
 
         results.push(result);
+      }
+    }
+
+    const inlineList = options.inlineSuppressions ?? options.reviewReport?.inlineSuppressions;
+    if (inlineList) {
+      for (const s of inlineList) {
+        const level = mapReviewSeverity(
+          s.ruleId === "ANVIL-R001" ? "high" : s.ruleId === "ANVIL-R004" || s.ruleId === "ANVIL-R005" ? "low" : "medium"
+        );
+        if (!rulesMap.has(s.ruleId)) {
+          rulesMap.set(s.ruleId, {
+            id: s.ruleId,
+            name: `Review_${s.ruleId}`,
+            shortDescription: { text: `Rule ${s.ruleId} suppressed in source code` },
+            helpUri: "https://github.com/anvil-workbench/ANVIL/blob/main/docs/security-model.md",
+            defaultConfiguration: { level },
+          });
+        }
+        results.push({
+          ruleId: s.ruleId,
+          level,
+          message: {
+            text: s.reason
+              ? `Suppressed ${s.ruleId}: ${s.reason}`
+              : `Suppressed ${s.ruleId} via ${s.type} in-source comment`,
+          },
+          suppressions: [
+            {
+              kind: "inSource",
+              status: "accepted",
+              justification: s.reason || `Suppressed in source via anvil-disable-${s.type}`,
+            },
+          ],
+          locations: [
+            {
+              physicalLocation: {
+                artifactLocation: {
+                  uri: s.file.replace(/\\/g, "/"),
+                  uriBaseId: "%SRCROOT%",
+                },
+                region: {
+                  startLine: s.line && s.line > 0 ? s.line : 1,
+                  startColumn: 1,
+                },
+              },
+            },
+          ],
+        });
       }
     }
   }

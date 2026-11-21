@@ -5,7 +5,7 @@ This document provides a transparent, reproducible analysis of findings produced
 
 ---
 
-## 1. Finding Distribution & Triage (ANVIL v1.1.0 Codebase)
+## 1. Finding Distribution & Triage (ANVIL v1.1.1 Codebase)
 
 A full unscoped scan of the ANVIL codebase (~35,000 lines of code) identified **165 raw findings**. Engineering triage categorized them as follows:
 
@@ -29,25 +29,25 @@ ANVIL provides a three-tiered governance hierarchy to handle heuristic static an
 For files that legitimately construct DOM elements or define static rule documentation:
 ```typescript
 // Single line suppression:
-const desc = "Avoid eval() execution"; // anvil-disable-line ANVIL-R001
+const desc = "Avoid eval() execution"; // anvil-disable-line ANVIL-R001 -- description string
 
 // Next-line suppression:
-// anvil-disable-next-line ANVIL-R002
+// anvil-disable-next-line ANVIL-R002 -- verified git execution
 execFileSync("git", ["status"]);
 
 // File-level suppression:
-/* anvil-disable-file ANVIL-R003 */
+/* anvil-disable-file ANVIL-R003 -- embedded local dashboard templates */
 ```
-**Auditability:** Every inline suppression is tracked and reported in `evaluation.summary.inlineSuppressions`. Teams can strictly disallow inline suppressions in CI by configuring `"allowInlineSuppressions": false` in `.anvil/policy.json`.
+**Auditability & Justifications:** Every inline suppression is tracked and reported in `evaluation.summary.inlineSuppressions` and exported in SARIF reports with `suppressions: [{ kind: "inSource" }]`. Teams can strictly disallow inline suppressions in CI by configuring `"allowInlineSuppressions": false`, or mandate that every suppression contains an explicit justification reason via `"requireSuppressionReason": true` in `.anvil/policy.json`.
 
 ### Tier 2: Content-Hashed Baseline Engine
 Legacy projects can adopt the gate immediately without blocking CI by generating a baseline of existing findings:
 ```bash
 # Generate baseline snapshot
-anvil gate . --generate-baseline .anvil/baseline.json
+npx anvil-engineering-workbench gate . --generate-baseline .anvil/baseline.json
 
 # Enforce gate with baseline
-anvil gate . --baseline .anvil/baseline.json
+npx anvil-engineering-workbench gate . --baseline .anvil/baseline.json
 ```
 Fingerprints use SHA-256 hashes of the matching code snippet, ensuring line insertions or deletions above a finding do not invalidate the baseline.
 
@@ -65,7 +65,8 @@ Teams configure deterministic thresholds with strict schema validation:
   "quality": {
     "maxReviewHigh": 0,
     "requireCleanGit": true,
-    "allowInlineSuppressions": true
+    "allowInlineSuppressions": true,
+    "requireSuppressionReason": false
   }
 }
 ```
@@ -77,8 +78,8 @@ Teams configure deterministic thresholds with strict schema validation:
 To reproduce this analysis on the ANVIL codebase or any target project:
 ```bash
 # 1. Run raw gate check with JSON output
-npx anvil gate . --json
+npx anvil-engineering-workbench gate . --json
 
 # 2. View active findings and suppression summary
-npx anvil gate . --baseline .anvil/baseline.json
+npx anvil-engineering-workbench gate . --baseline .anvil/baseline.json
 ```

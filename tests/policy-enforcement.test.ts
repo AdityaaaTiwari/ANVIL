@@ -281,4 +281,126 @@ describe("ANVIL Policy-as-Code & Gate Baseline Engine", () => {
       await rm(root, { recursive: true, force: true });
     }
   });
+
+  it("evaluates disallowedTools using exact command word boundaries, ignoring substrings like format or information", async () => {
+    const root = await createTempWorkspace();
+    try {
+      // package.json with scripts containing "format" and "information", but NOT the tool "rm"
+      await writeFile(
+        path.join(root, "package.json"),
+        JSON.stringify({
+          name: "format-app",
+          scripts: {
+            "format:check": "prettier --check .",
+            info: "node -e 'console.log(\"information\")'",
+          },
+        })
+      );
+      await writeFile(path.join(root, "index.ts"), 'console.log("clean formatting");\n');
+
+      const disallowedPolicyPath = path.join(root, "disallowed-policy.json");
+      await writeFile(
+        disallowedPolicyPath,
+        JSON.stringify({
+          version: 1,
+          sandbox: {
+            disallowedTools: ["rm"],
+          },
+        })
+      );
+
+      // 1. "rm" should NOT match "format" or "information"!
+      const cleanEval = await evaluateGate(root, { policyPath: disallowedPolicyPath });
+      expect(cleanEval.passed).toBe(true);
+      expect(cleanEval.violations.length).toBe(0);
+
+      // 2. Now add a script that invokes "rm -rf dist"
+      await writeFile(
+        path.join(root, "package.json"),
+        JSON.stringify({
+          name: "format-app",
+          scripts: {
+            "format:check": "prettier --check .",
+            clean: "rm -rf dist",
+          },
+        })
+      );
+
+      const failedEval = await evaluateGate(root, { policyPath: disallowedPolicyPath });
+      expect(failedEval.passed).toBe(false);
+      expect(failedEval.violations.some((v) => v.includes("disallowed tool 'rm'"))).toBe(true);
+      expect(failedEval.violations.some((v) => v.includes("package.json script 'clean' invokes 'rm'"))).toBe(true);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("enforces requireSuppressionReason: true when inline suppressions lack justifications", async () => {
+    const root = await createTempWorkspace();
+    try {
+      await writeFile(path.join(root, "package.json"), JSON.stringify({ name: "reason-app" }));
+      // 1. Code with suppression lacking reason
+      await writeFile(
+        path.join(root, "view.ts"),
+        "export function render(el: any) {\n  el.innerHTML = 'test'; // anvil-disable-line ANVIL-R003\n}\n"
+      );
+
+      const requireReasonPolicyPath = path.join(root, "reason-policy.json");
+      await writeFile(
+        requireReasonPolicyPath,
+        JSON.stringify({
+          version: 1,
+          quality: {
+            requireSuppressionReason: true,
+          },
+        })
+      );
+
+      // Should fail because no justification reason was provided
+      const failedEval = await evaluateGate(root, { policyPath: requireReasonPolicyPath });
+      expect(failedEval.passed).toBe(false);
+      expect(failedEval.violations.some((v) => v.includes("Policy requires suppression reasons"))).toBe(true);
+
+      // 2. Now update suppression to provide explicit reason with '--'
+      await writeFile(
+        path.join(root, "view.ts"),
+        "export function render(el: any) {\n  el.innerHTML = 'test'; // anvil-disable-line ANVIL-R003 -- verified sanitized DOM\n}\n"
+      );
+
+      const passedEval = await evaluateGate(root, { policyPath: requireReasonPolicyPath });
+      expect(passedEval.passed).toBe(true);
+      expect(passedEval.violations.length).toBe(0);
+      expect(passedEval.inlineSuppressions[0]?.reason).toBe("verified sanitized DOM");
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("emits advisory notice in evaluation.warnings when sandbox resource limits are configured", async () => {
+    const root = await createTempWorkspace();
+    try {
+      await writeFile(path.join(root, "package.json"), JSON.stringify({ name: "sandbox-app" }));
+      await writeFile(path.join(root, "index.ts"), 'console.log("sandbox test");\n');
+
+      const sandboxPolicyPath = path.join(root, "sandbox-policy.json");
+      await writeFile(
+        sandboxPolicyPath,
+        JSON.stringify({
+          version: 1,
+          sandbox: {
+            maxMemory: "64m",
+            maxCpus: 1.5,
+          },
+        })
+      );
+
+      const evaluation = await evaluateGate(root, { policyPath: sandboxPolicyPath });
+      expect(evaluation.passed).toBe(true);
+      expect(evaluation.warnings.length).toBeGreaterThan(0);
+      expect(evaluation.warnings[0]).toContain("Sandbox limits");
+      expect(evaluation.warnings[0]).toContain("advisory");
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
 });

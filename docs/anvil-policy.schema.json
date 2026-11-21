@@ -56,6 +56,11 @@
           "type": "boolean",
           "default": true,
           "description": "Whether inline suppression comments (anvil-disable-line, etc.) are permitted."
+        },
+        "requireSuppressionReason": {
+          "type": "boolean",
+          "default": false,
+          "description": "Require inline suppression comments to provide an explicit justification reason (e.g., '// anvil-disable-line RULE -- justification')."
         }
       },
       "additionalProperties": false
@@ -72,28 +77,33 @@
           "type": "array",
           "items": { "type": "string" },
           "default": [],
-          "description": "Tools prohibited from execution in this repository."
+          "description": "CLI utilities or binaries prohibited from package.json scripts and shell execution patterns (e.g. ['curl', 'wget', 'nc', 'rm']). Matched against executable command names and script invocations using exact command word boundaries."
         },
         "profile": {
           "type": "string",
           "enum": ["balanced", "hardened", "rootless-required"],
-          "default": "balanced"
+          "default": "balanced",
+          "description": "Container security profile for dynamic verification runs (balanced, hardened, rootless-required). Advisory during static gate evaluation."
         },
         "requireRootless": {
           "type": "boolean",
-          "default": false
+          "default": false,
+          "description": "Require rootless Docker daemon for container verification runs. Advisory during static gate evaluation."
         },
         "maxMemory": {
           "type": "string",
-          "default": "512m"
+          "default": "512m",
+          "description": "Maximum memory ceiling for containerized verification runs (e.g. '512m'). Advisory during static gate evaluation."
         },
         "maxCpus": {
           "type": "number",
-          "default": 1.0
+          "default": 1.0,
+          "description": "Maximum CPU quota for containerized verification runs. Advisory during static gate evaluation."
         },
         "maxProcesses": {
           "type": "integer",
-          "default": 128
+          "default": 128,
+          "description": "Maximum process limit for containerized verification runs. Advisory during static gate evaluation."
         }
       },
       "additionalProperties": false
