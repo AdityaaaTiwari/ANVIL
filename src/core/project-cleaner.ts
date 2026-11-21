@@ -264,6 +264,178 @@ function parseNamedImports(namedBlock: string): ImportSpecifierInfo[] {
     });
 }
 
+/**
+ * Scans content to identify line indices that are inside multiline string literals or docstrings.
+ * In JS/TS: protects template literals (`...`) so runtime strings with intentional trailing spaces are preserved.
+ * In Python: protects triple-quoted strings ("""...""" and '''...''') so multiline docstrings are preserved.
+ * In Go: protects raw backtick string literals (`...`).
+ */
+export function getProtectedMultilineLines(content: string, ext: string): Set<number> {
+  const protectedLines = new Set<number>();
+  const isJsTs = [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"].includes(ext);
+  const isPython = [".py", ".pyi"].includes(ext);
+  const isGo = ext === ".go";
+
+  if (!isJsTs && !isPython && !isGo) {
+    return protectedLines;
+  }
+
+  const lines = content.split("\n");
+
+  if (isJsTs) {
+    let inBacktick = false;
+    let inBlockComment = false;
+    let templateBraceDepth = 0;
+
+    for (let lineIdx = 0; lineIdx < lines.length; lineIdx++) {
+      const line = lines[lineIdx] ?? "";
+      let i = 0;
+      const startedInTemplate = inBacktick;
+
+      while (i < line.length) {
+        if (inBlockComment) {
+          if (line.charAt(i) === "*" && line.charAt(i + 1) === "/") {
+            inBlockComment = false;
+            i += 2;
+          } else {
+            i++;
+          }
+          continue;
+        }
+
+        if (!inBacktick) {
+          if (line.charAt(i) === "/" && line.charAt(i + 1) === "/") {
+            break; // Single line comment
+          }
+          if (line.charAt(i) === "/" && line.charAt(i + 1) === "*") {
+            inBlockComment = true;
+            i += 2;
+            continue;
+          }
+          if (line.charAt(i) === '"' || line.charAt(i) === "'") {
+            const quote = line.charAt(i);
+            i++;
+            while (i < line.length && line.charAt(i) !== quote) {
+              if (line.charAt(i) === "\\") i++;
+              i++;
+            }
+            if (i < line.length) i++;
+            continue;
+          }
+          if (line.charAt(i) === "`") {
+            inBacktick = true;
+            i++;
+            continue;
+          }
+        } else {
+          // Inside template literal
+          if (line.charAt(i) === "\\") {
+            i += 2;
+            continue;
+          }
+          if (line.charAt(i) === "$" && line.charAt(i + 1) === "{") {
+            templateBraceDepth++;
+            i += 2;
+            continue;
+          }
+          if (templateBraceDepth > 0) {
+            if (line.charAt(i) === "{") templateBraceDepth++;
+            else if (line.charAt(i) === "}") templateBraceDepth--;
+            i++;
+            continue;
+          }
+          if (line.charAt(i) === "`") {
+            inBacktick = false;
+            i++;
+            continue;
+          }
+        }
+        i++;
+      }
+
+      if (startedInTemplate || inBacktick) {
+        protectedLines.add(lineIdx);
+      }
+    }
+  } else if (isPython) {
+    let inTripleDouble = false;
+    let inTripleSingle = false;
+
+    for (let lineIdx = 0; lineIdx < lines.length; lineIdx++) {
+      const line = lines[lineIdx] ?? "";
+      let i = 0;
+      const startedInTriple = inTripleDouble || inTripleSingle;
+
+      while (i < line.length) {
+        if (!inTripleDouble && !inTripleSingle) {
+          if (line.charAt(i) === "#") {
+            break;
+          }
+          if (line.slice(i, i + 3) === '"""') {
+            inTripleDouble = true;
+            i += 3;
+            continue;
+          }
+          if (line.slice(i, i + 3) === "'''") {
+            inTripleSingle = true;
+            i += 3;
+            continue;
+          }
+          if (line.charAt(i) === '"' || line.charAt(i) === "'") {
+            const quote = line.charAt(i);
+            i++;
+            while (i < line.length && line.charAt(i) !== quote) {
+              if (line.charAt(i) === "\\") i++;
+              i++;
+            }
+            if (i < line.length) i++;
+            continue;
+          }
+        } else if (inTripleDouble) {
+          if (line.charAt(i) === "\\") {
+            i += 2;
+            continue;
+          }
+          if (line.slice(i, i + 3) === '"""') {
+            inTripleDouble = false;
+            i += 3;
+            continue;
+          }
+        } else if (inTripleSingle) {
+          if (line.charAt(i) === "\\") {
+            i += 2;
+            continue;
+          }
+          if (line.slice(i, i + 3) === "'''") {
+            inTripleSingle = false;
+            i += 3;
+            continue;
+          }
+        }
+        i++;
+      }
+
+      if (startedInTriple || inTripleDouble || inTripleSingle) {
+        protectedLines.add(lineIdx);
+      }
+    }
+  } else if (isGo) {
+    let inBacktick = false;
+    for (let lineIdx = 0; lineIdx < lines.length; lineIdx++) {
+      const line = lines[lineIdx] ?? "";
+      const startedIn = inBacktick;
+      for (let i = 0; i < line.length; i++) {
+        if (line.charAt(i) === "`") inBacktick = !inBacktick;
+      }
+      if (startedIn || inBacktick) {
+        protectedLines.add(lineIdx);
+      }
+    }
+  }
+
+  return protectedLines;
+}
+
 export function autoFixCodeContent(content: string, filePath: string): { newContent: string; fixes: CodeFixItem[] } {
   const fixes: CodeFixItem[] = [];
   const ext = path.extname(filePath).toLowerCase();
@@ -276,10 +448,15 @@ export function autoFixCodeContent(content: string, filePath: string): { newCont
 
   let updated = content;
 
-  // 1. Whitespace normalization: remove trailing spaces
+  // 1. Whitespace normalization: remove trailing spaces ONLY outside protected string literals
+  const protectedLines = getProtectedMultilineLines(updated, ext);
   const lines = updated.split("\n");
   let trailingWhitespaceRemoved = false;
-  const cleanedLines = lines.map(line => {
+  const cleanedLines = lines.map((line, lineIdx) => {
+    // If line is inside a template literal or docstring, preserve trailing whitespace exactly!
+    if (protectedLines.has(lineIdx)) {
+      return line;
+    }
     const stripped = line.replace(/[ \t\r]+$/, "");
     if (stripped !== line.replace(/\r$/, "")) {
       trailingWhitespaceRemoved = true;
@@ -292,20 +469,56 @@ export function autoFixCodeContent(content: string, filePath: string): { newCont
     fixes.push({
       file: filePath,
       type: "whitespace",
-      detail: "Trimmed trailing whitespace from lines",
+      detail: "Trimmed trailing whitespace from lines (string literals preserved)",
       applied: true
     });
   }
 
-  // 2. Blank line normalization (collapse 3+ consecutive newlines to 2)
-  if (/\n{3,}/.test(updated)) {
-    updated = updated.replace(/\n{3,}/g, "\n\n");
-    fixes.push({
-      file: filePath,
-      type: "blank-lines",
-      detail: "Collapsed excessive consecutive blank lines",
-      applied: true
-    });
+  // 2. Blank line normalization: collapse 3+ consecutive newlines outside string literals
+  if (protectedLines.size === 0) {
+    if (/\n{3,}/.test(updated)) {
+      updated = updated.replace(/\n{3,}/g, "\n\n");
+      fixes.push({
+        file: filePath,
+        type: "blank-lines",
+        detail: "Collapsed excessive consecutive blank lines",
+        applied: true
+      });
+    }
+  } else {
+    const recheckedLines = updated.split("\n");
+    const freshProtected = getProtectedMultilineLines(updated, ext);
+    let consecutiveBlank = 0;
+    const finalLines: string[] = [];
+    let blankLinesCollapsed = false;
+
+    for (let i = 0; i < recheckedLines.length; i++) {
+      const line = recheckedLines[i] ?? "";
+      const isBlank = line.trim() === "";
+      const isProtected = freshProtected.has(i);
+
+      if (isBlank && !isProtected) {
+        consecutiveBlank++;
+        if (consecutiveBlank <= 2) {
+          finalLines.push(line);
+        } else {
+          blankLinesCollapsed = true;
+        }
+      } else {
+        consecutiveBlank = 0;
+        finalLines.push(line);
+      }
+    }
+
+    if (blankLinesCollapsed) {
+      updated = finalLines.join("\n");
+      fixes.push({
+        file: filePath,
+        type: "blank-lines",
+        detail: "Collapsed excessive consecutive blank lines outside string literals",
+        applied: true
+      });
+    }
   }
 
   // 3. Ensure single trailing newline

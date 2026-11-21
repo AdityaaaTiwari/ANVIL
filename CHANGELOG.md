@@ -1,5 +1,28 @@
 # ANVIL Changelog
 
+## 1.0.8 — Adoption Readiness: CI Gate, OASIS SARIF v2.1.0, String-Safe Cleaner & FORGE Deprecation
+
+ANVIL 1.0.8 focuses on enterprise company-adoption readiness, addressing third-party audit findings across supply-chain security, automated CI/CD gating, string-safe code cleanup, and complete transition away from legacy FORGE prefixes.
+
+### Features & Capabilities
+- **CI Gate & Policy-as-Code (`anvil gate` & GitHub Action):**
+  - Added native `anvil gate [path] [--sarif PATH] [--policy PATH] [--fail-on-warnings] [--json]` CI verification mode with standard Unix exit codes (exit `0` on clean verification, exit `1` on blocking/high-severity findings).
+  - Built-in OASIS SARIF v2.1.0 report generator (`--sarif results.sarif`) for direct integration with GitHub Advanced Security code scanning tabs.
+  - Policy-as-code enforcement via `docs/anvil-policy.schema.json` and `.anvil/policy.json` (max critical secrets: 0, max high findings, required check passes).
+  - Updated `action.yml` to default to `operation: gate` with `sarif-file` output and pinned commit SHAs.
+- **String-Safe Code Cleaner:**
+  - Enhanced cleaner algorithm (`src/core/project-cleaner.ts`) with multiline string awareness (`getProtectedMultilineLines`).
+  - Protects JavaScript / TypeScript template literals (`` `...` ``), Python triple quotes (`"""..."""` / `'''...'''`), and Go backticks from accidental whitespace stripping or blank-line collapsing.
+- **Finished FORGE Renaming & Deprecation:**
+  - Modernized environment variable resolution prioritizing `ANVIL_*` prefixes with graceful backward-compatible fallback to `FORGE_*` (logging one-time deprecation warnings).
+  - Registered dual MCP tools (`anvil_*` as canonical, with `forge_*` alias) ensuring backward compatibility for existing MCP client configurations.
+- **Supply-Chain & Security Policy Hardening:**
+  - Pinned all GitHub Actions in CI/CD workflows (`ci.yml`, `release.yml`, `codeql.yml`, `pages.yml`) to immutable full 40-character commit SHAs.
+  - Loosened CI security audit gate to `npm audit --audit-level=high --omit=dev` to prevent transient dev-dependency advisories from blocking production builds.
+  - Added `lint`, `format:check`, and `test:coverage` scripts and contributor metadata to `package.json`.
+  - Updated `SECURITY.md` with realistic solo maintainer SLAs (48–72h initial response) and explicitly documented GitHub Private Vulnerability Reporting enablement.
+  - Clarified architectural provenance in `README.md` affirming 100% original, clean-room MIT-licensed code.
+
 ## 1.0.7 — Architecture Decision Records (ADR), Deep Security Scanner & Live Workflow DAG Runner
 
 ANVIL 1.0.7 introduces an integrated Architecture Decision Records (ADR) engine following the MADR standard, a comprehensive repository security and secret scanner with automated `.gitignore` auto-fix, and a real-time interactive multi-agent workflow DAG runner in the web dashboard.

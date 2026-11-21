@@ -44,15 +44,15 @@ export async function diagnoseProvider(
   fetcher: typeof fetch = fetch,
 ): Promise<ProviderDiagnostic> {
   const started = Date.now();
-  const model = env.FORGE_AI_MODEL || env.FORGE_MODEL || (provider === "openai" ? "gpt-4.1-mini" : provider === "anthropic" ? "claude-sonnet-4-5" : provider === "google" ? "gemini-2.5-flash" : "llama3.2");
+  const model = env.ANVIL_AI_MODEL || env.FORGE_AI_MODEL || env.ANVIL_MODEL || env.FORGE_MODEL || (provider === "openai" ? "gpt-4.1-mini" : provider === "anthropic" ? "claude-sonnet-4-5" : provider === "google" ? "gemini-2.5-flash" : "llama3.2");
   const checkedAt = new Date().toISOString();
-  const key = provider === "openai" ? env.FORGE_API_KEY || env.OPENAI_API_KEY : provider === "anthropic" ? env.ANTHROPIC_API_KEY : provider === "google" ? env.GOOGLE_API_KEY : undefined;
+  const key = provider === "openai" ? env.ANVIL_API_KEY || env.FORGE_API_KEY || env.OPENAI_API_KEY : provider === "anthropic" ? env.ANTHROPIC_API_KEY : provider === "google" ? env.GOOGLE_API_KEY : undefined;
   const finish = (status: ProviderDiagnostic["status"], message: string, modelAvailable: boolean | null = null, modelCount: number | null = null): ProviderDiagnostic => ({
     provider, status, checkedAt, durationMs: Date.now() - started, model, modelAvailable, modelCount, message,
   });
   if (provider !== "ollama" && !key?.trim()) return finish("needs-credentials", "Required API credential is not configured.");
   try {
-    const configured = env.FORGE_BASE_URL || (provider === "ollama" ? env.OLLAMA_HOST : undefined) || defaults[provider];
+    const configured = env.ANVIL_BASE_URL || env.FORGE_BASE_URL || (provider === "ollama" ? env.OLLAMA_HOST : undefined) || defaults[provider];
     const base = endpointOrigin(configured, provider).toString().replace(/\/+$/, "");
     let url: string;
     const headers: Record<string, string> = {};

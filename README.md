@@ -745,6 +745,13 @@ ANVIL's v1.0.7 release introduces an integrated Architecture Decision Records (A
 
 ANVIL's v1.0.6 release introduced an automated AI harness MCP setup wizard (`anvil mcp setup --client cursor|claude|windsurf|all`), a durable Project Memory & Architectural Decisions hub (`anvil memory` and live dashboard panel), dual-path memory retention (`.anvil/memory.json` / `.forge/memory.json`), seamless single-page dashboard execution, rich pre-populated showcase telemetry, automatic port fallback (`4173..4183`), single-command byte-accurate rollback (`anvil undo`), automated test verification gate (`--verify`), Git pre-commit hook automation (`anvil hook install`), framework-aware entrypoint resolution, full multi-language architecture mapping, automated clutter scrubbing, code auto-repair, one-command doctor self-healing, the local CLI, engineering intelligence, agent workflows, MCP integration, GitHub Action and GitHub App installation foundation into one versioned product.
 
+### Provenance & Architectural Origin
+
+ANVIL is 100% original, clean-room software created and maintained by Aditya Tiwari under the permissive MIT license.
+- **Architectural Reference:** ANVIL draws inspiration from patterns in the Everything-Claude-Code (ECC) ecosystem and modern local-first developer harnesses.
+- **Independent Codebase:** Every line of TypeScript, AST parser, DAG workflow engine, SARIF generator, and MCP integration is independently authored and maintained with dedicated test suites.
+- **No Upstream License Baggage:** ANVIL contains zero proprietary dependencies or borrowed non-permissive code.
+
 The project is maintained as an original ANVIL codebase. ECC is a capability and documentation reference; ANVIL maintains its own identity, implementation, data models and roadmap.
 
 For release-by-release changes, see [CHANGELOG.md](CHANGELOG.md).

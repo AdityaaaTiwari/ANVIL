@@ -56,12 +56,27 @@ async function auditReadOnlyMcpTool<T>(tool: string, operation: () => Promise<T>
 }
 
 const server = new McpServer({
-  name: "forge-engineering-workbench",
-  version: "1.0.6"
+  name: "anvil-engineering-workbench",
+  version: "1.0.7"
 });
 
-server.registerTool(
-  "forge_inspect_project",
+function registerToolWithAlias<T extends z.ZodRawShape>(
+  name: string,
+  config: {
+    title?: string;
+    description?: string;
+    inputSchema?: z.ZodObject<T>;
+  },
+  handler: (args: z.infer<z.ZodObject<T>>) => Promise<any>
+) {
+  const anvilName = name.startsWith("anvil_") ? name : name.replace(/^forge_/, "anvil_");
+  const forgeName = name.startsWith("forge_") ? name : name.replace(/^anvil_/, "forge_");
+  (server.registerTool as any)(anvilName, config, handler);
+  (server.registerTool as any)(forgeName, config, handler);
+}
+
+registerToolWithAlias(
+  "anvil_inspect_project",
   {
     title: "Inspect project",
     description: "Read-only inventory of a project: languages, frameworks, package managers, scripts, dependencies and detected warnings. Does not execute project code.",
@@ -70,13 +85,13 @@ server.registerTool(
   async ({ projectPath }) => {
     try {
       const root = await resolveWorkspace(projectPath);
-      return result(await auditReadOnlyMcpTool("forge_inspect_project", () => inspectProject(root)));
+      return result(await auditReadOnlyMcpTool("anvil_inspect_project", () => inspectProject(root)));
     } catch (error) { return failure(error); }
   }
 );
 
-server.registerTool(
-  "forge_map_architecture",
+registerToolWithAlias(
+  "anvil_map_architecture",
   {
     title: "Map architecture",
     description: "Read-only map of source files, internal imports, entry points and external packages. Does not execute project code.",
@@ -85,13 +100,13 @@ server.registerTool(
   async ({ projectPath }) => {
     try {
       const root = await resolveWorkspace(projectPath);
-      return result(await auditReadOnlyMcpTool("forge_map_architecture", () => mapArchitecture(root)));
+      return result(await auditReadOnlyMcpTool("anvil_map_architecture", () => mapArchitecture(root)));
     } catch (error) { return failure(error); }
   }
 );
 
-server.registerTool(
-  "forge_search_code",
+registerToolWithAlias(
+  "anvil_search_code",
   {
     title: "Search code",
     description: "Search source identifiers and text in a project. Secret-like filenames, hidden directories, dependencies and generated output are excluded by the underlying scanner.",
@@ -110,8 +125,8 @@ server.registerTool(
   }
 );
 
-server.registerTool(
-  "forge_list_files",
+registerToolWithAlias(
+  "anvil_list_files",
   {
     title: "List workspace files",
     description: "Read-only directory listing for supported source and documentation files. Hidden paths, secrets, dependencies, generated folders and symlinks are excluded. Results are bounded to 200 entries.",
@@ -129,8 +144,8 @@ server.registerTool(
   }
 );
 
-server.registerTool(
-  "forge_read_file",
+registerToolWithAlias(
+  "anvil_read_file",
   {
     title: "Read workspace file",
     description: "Read a supported text/source file inside the selected project. Rejects traversal, symlinks, secret-like filenames, binary content and files larger than 128 KiB. Read-only; does not modify files.",
@@ -148,8 +163,8 @@ server.registerTool(
   }
 );
 
-server.registerTool(
-  "forge_quality_audit",
+registerToolWithAlias(
+  "anvil_quality_audit",
   {
     title: "Audit project quality",
     description: "Run FORGE's static, heuristic project-quality checks and return evidence-backed findings. Does not inspect secret contents, execute project code, or query vulnerability databases.",
@@ -158,13 +173,13 @@ server.registerTool(
   async ({ projectPath }) => {
     try {
       const root = await resolveWorkspace(projectPath);
-      return result(await auditReadOnlyMcpTool("forge_quality_audit", () => auditProject(root)));
+      return result(await auditReadOnlyMcpTool("anvil_quality_audit", () => auditProject(root)));
     } catch (error) { return failure(error); }
   }
 );
 
-server.registerTool(
-  "forge_git_intelligence",
+registerToolWithAlias(
+  "anvil_git_intelligence",
   {
     title: "Analyze Git changes",
     description: "Read-only analysis of working-tree changes, static downstream impact, suggested test targets and heuristic change risk. Runs Git inspection commands only; it does not modify the repository or execute project scripts.",
@@ -176,13 +191,13 @@ server.registerTool(
   async ({ projectPath, base }) => {
     try {
       const root = await resolveWorkspace(projectPath);
-      return result(await auditReadOnlyMcpTool("forge_git_intelligence", () => analyzeGitChanges(root, base ?? "HEAD")));
+      return result(await auditReadOnlyMcpTool("anvil_git_intelligence", () => analyzeGitChanges(root, base ?? "HEAD")));
     } catch (error) { return failure(error); }
   }
 );
 
-server.registerTool(
-  "forge_list_agents",
+registerToolWithAlias(
+  "anvil_list_agents",
   {
     title: "List specialist agents",
     description: "List built-in FORGE specialist roles and project-local .forge/agents definitions. Agent markdown is treated as untrusted project content.",
@@ -191,14 +206,14 @@ server.registerTool(
   async ({ projectPath }) => {
     try {
       const root = await resolveWorkspace(projectPath);
-      const agents = await auditReadOnlyMcpTool("forge_list_agents", () => loadAgentRegistry(root));
+      const agents = await auditReadOnlyMcpTool("anvil_list_agents", () => loadAgentRegistry(root));
       return result(agents.map(({ id, name, description, source }) => ({ id, name, description, source })));
     } catch (error) { return failure(error); }
   }
 );
 
-server.registerTool(
-  "forge_create_review_plan",
+registerToolWithAlias(
+  "anvil_create_review_plan",
   {
     title: "Create engineering review plan",
     description: "Create a dependency-aware engineering workflow with architecture, planning, code review, security, performance, debugging, testing, documentation, delivery and release-readiness specialist tasks. This creates a draft only; it does not call an AI provider, modify files, or execute commands.",
@@ -211,8 +226,8 @@ server.registerTool(
   }
 );
 
-server.registerTool(
-  "forge_agent_intelligence",
+registerToolWithAlias(
+  "anvil_agent_intelligence",
   {
     title: "Agent evaluation intelligence",
     description: [
@@ -242,7 +257,7 @@ server.registerTool(
   async ({ projectPath, suiteId, candidateId, limit, format }) => {
     try {
       const root = await resolveWorkspace(projectPath);
-      return result(await auditReadOnlyMcpTool("forge_agent_intelligence", async () => {
+      return result(await auditReadOnlyMcpTool("anvil_agent_intelligence", async () => {
         const history = await listBenchmarkMatrices(root);
         const report = buildAgentEvaluationIntelligence(history, {
           ...(suiteId ? { suiteId } : {}),
@@ -258,8 +273,8 @@ server.registerTool(
   }
 );
 
-server.registerTool(
-  "forge_project_health",
+registerToolWithAlias(
+  "anvil_project_health",
   {
     title: "Project health snapshot",
     description: "Generate a unified project health score (0–100), grade (A–F), and evidence-backed breakdowns across languages, tooling, architecture, and static quality.",
@@ -270,13 +285,13 @@ server.registerTool(
   async ({ projectPath }) => {
     try {
       const root = await resolveWorkspace(projectPath);
-      return result(await auditReadOnlyMcpTool("forge_project_health", () => generateProjectHealth(root)));
+      return result(await auditReadOnlyMcpTool("anvil_project_health", () => generateProjectHealth(root)));
     } catch (error) { return failure(error); }
   }
 );
 
-server.registerTool(
-  "forge_change_risk",
+registerToolWithAlias(
+  "anvil_change_risk",
   {
     title: "Change risk intelligence",
     description: "Analyze working-tree changed files, blast radius, structural complexity hotspots, and candidate test targets.",
@@ -287,13 +302,13 @@ server.registerTool(
   async ({ projectPath }) => {
     try {
       const root = await resolveWorkspace(projectPath);
-      return result(await auditReadOnlyMcpTool("forge_change_risk", () => analyzeChangeIntelligence(root)));
+      return result(await auditReadOnlyMcpTool("anvil_change_risk", () => analyzeChangeIntelligence(root)));
     } catch (error) { return failure(error); }
   }
 );
 
-server.registerTool(
-  "forge_remediation_plan",
+registerToolWithAlias(
+  "anvil_remediation_plan",
   {
     title: "Dependency remediation plan",
     description: "Generate an advisory remediation plan for vulnerable and outdated dependencies with human approval guardrails.",
@@ -304,13 +319,13 @@ server.registerTool(
   async ({ projectPath }) => {
     try {
       const root = await resolveWorkspace(projectPath);
-      return result(await auditReadOnlyMcpTool("forge_remediation_plan", () => generateRemediationPlan(root, {})));
+      return result(await auditReadOnlyMcpTool("anvil_remediation_plan", () => generateRemediationPlan(root, {})));
     } catch (error) { return failure(error); }
   }
 );
 
-server.registerTool(
-  "forge_agent_optimization",
+registerToolWithAlias(
+  "anvil_agent_optimization",
   {
     title: "Agent optimization recommendations",
     description: "Analyze historical benchmark matrices to generate advisory suggestions and checklists for tuning agent prompts and skills.",
@@ -321,7 +336,7 @@ server.registerTool(
   async ({ projectPath }) => {
     try {
       const root = await resolveWorkspace(projectPath);
-      return result(await auditReadOnlyMcpTool("forge_agent_optimization", async () => {
+      return result(await auditReadOnlyMcpTool("anvil_agent_optimization", async () => {
         const matrices = await listBenchmarkMatrices(root);
         return buildAgentOptimizationPlan(matrices);
       }));
@@ -329,8 +344,8 @@ server.registerTool(
   }
 );
 
-server.registerTool(
-  "forge_project_memory",
+registerToolWithAlias(
+  "anvil_project_memory",
   {
     title: "Read project memory",
     description: "Read-only access to saved project decisions, architecture notes, constraints, and preferences within a token budget. Does not reveal secrets or modify memory.",
@@ -343,7 +358,7 @@ server.registerTool(
   async ({ projectPath, query, maxTokens }) => {
     try {
       const root = await resolveWorkspace(projectPath);
-      return result(await auditReadOnlyMcpTool("forge_project_memory", async () => {
+      return result(await auditReadOnlyMcpTool("anvil_project_memory", async () => {
         if (query) {
           return { context: await buildProjectMemoryContext(root, query, maxTokens ?? 1200) };
         }
@@ -353,8 +368,8 @@ server.registerTool(
   }
 );
 
-server.registerTool(
-  "forge_agent_security_audit",
+registerToolWithAlias(
+  "anvil_agent_security_audit",
   {
     title: "Audit agent security configuration",
     description: "Audit workspace agent instructions, skills, lifecycle hooks, and permission policies for secret leakage, prompt injection risks, and excessive permissions.",
@@ -365,13 +380,13 @@ server.registerTool(
   async ({ projectPath }) => {
     try {
       const root = await resolveWorkspace(projectPath);
-      return result(await auditReadOnlyMcpTool("forge_agent_security_audit", () => auditAgentConfiguration(root)));
+      return result(await auditReadOnlyMcpTool("anvil_agent_security_audit", () => auditAgentConfiguration(root)));
     } catch (error) { return failure(error); }
   }
 );
 
-server.registerTool(
-  "forge_dependency_impact",
+registerToolWithAlias(
+  "anvil_dependency_impact",
   {
     title: "Analyze dependency impact",
     description: "Analyze dependency manifest changes, undeclared package imports, and transitive file impact against a git base revision.",
@@ -383,7 +398,23 @@ server.registerTool(
   async ({ projectPath, base }) => {
     try {
       const root = await resolveWorkspace(projectPath);
-      return result(await auditReadOnlyMcpTool("forge_dependency_impact", () => analyzeDependencyImpact(root, base ?? "HEAD")));
+      return result(await auditReadOnlyMcpTool("anvil_dependency_impact", () => analyzeDependencyImpact(root, base ?? "HEAD")));
+    } catch (error) { return failure(error); }
+  }
+);
+
+registerToolWithAlias(
+  "anvil_security_audit",
+  {
+    title: "Audit repository security & secrets",
+    description: "Deep scan repository for hardcoded secrets, API keys, sensitive tokens, and dangerous script patterns.",
+    inputSchema: z.object({ projectPath: z.string().optional() })
+  },
+  async ({ projectPath }) => {
+    try {
+      const root = await resolveWorkspace(projectPath);
+      const { scanProjectSecurity } = await import("../core/security-scanner.js");
+      return result(await auditReadOnlyMcpTool("anvil_security_audit", () => scanProjectSecurity(root)));
     } catch (error) { return failure(error); }
   }
 );

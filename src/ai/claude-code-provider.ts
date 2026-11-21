@@ -2,6 +2,7 @@ import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import type { AIProvider, AIRequest, AIResponse } from "./provider.js";
 import type { AgentRequest, AgentResponse } from "../core/orchestrator.js";
+import { getAnvilEnv } from "../core/env-compat.js";
 
 const execFileAsync = promisify(execFile);
 
@@ -52,9 +53,9 @@ export class ClaudeCodeProvider implements AIProvider {
   private readonly maxBufferBytes: number;
 
   constructor(options: ClaudeCodeOptions = {}) {
-    this.command = options.command ?? process.env.FORGE_CLAUDE_COMMAND ?? "claude";
-    this.cwd = options.cwd ?? process.env.FORGE_WORKSPACE ?? process.cwd();
-    this.model = options.model ?? process.env.FORGE_AI_MODEL;
+    this.command = options.command ?? getAnvilEnv("ANVIL_CLAUDE_COMMAND", "FORGE_CLAUDE_COMMAND", "claude")!;
+    this.cwd = options.cwd ?? getAnvilEnv("ANVIL_WORKSPACE", "FORGE_WORKSPACE", process.cwd())!;
+    this.model = options.model ?? getAnvilEnv("ANVIL_AI_MODEL", "FORGE_AI_MODEL");
     this.timeoutMs = options.timeoutMs ?? 120_000;
     this.maxBufferBytes = options.maxBufferBytes ?? 1_048_576;
   }

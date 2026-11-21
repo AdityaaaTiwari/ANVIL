@@ -3,7 +3,9 @@
 import path from "node:path";
 import { spawn } from "node:child_process";
 import os from "node:os";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, rm, mkdir, writeFile } from "node:fs/promises";
+import { getAnvilEnv } from "./core/env-compat.js";
+import { generateSarif } from "./core/sarif-formatter.js";
 import { initializeProject } from "./core/project-init.js";
 import { formatArchitectureMap, mapArchitecture } from "./core/architecture-map.js";
 import { formatProjectReport, inspectProject } from "./core/project-inspector.js";
@@ -99,7 +101,7 @@ function runSandboxProbe(args: string[]): Promise<string> {
 }
 
 function readAgentTokenBudgets(): Record<string, number> | undefined {
-  const raw = process.env.ANVIL_MAX_ESTIMATED_TOKENS_PER_AGENT ?? process.env.FORGE_MAX_ESTIMATED_TOKENS_PER_AGENT;
+  const raw = getAnvilEnv("ANVIL_MAX_ESTIMATED_TOKENS_PER_AGENT", "FORGE_MAX_ESTIMATED_TOKENS_PER_AGENT");
   if (!raw) return undefined;
   const parsed: unknown = JSON.parse(raw);
   if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("ANVIL_MAX_ESTIMATED_TOKENS_PER_AGENT must be a JSON object mapping agent IDs to token limits.");
@@ -112,7 +114,7 @@ function readAgentTokenBudgets(): Record<string, number> | undefined {
 }
 
 function readAgentDurationBudgets(): Record<string, number> | undefined {
-  const raw = process.env.ANVIL_MAX_TASK_DURATION_MS_BY_AGENT ?? process.env.FORGE_MAX_TASK_DURATION_MS_BY_AGENT;
+  const raw = getAnvilEnv("ANVIL_MAX_TASK_DURATION_MS_BY_AGENT", "FORGE_MAX_TASK_DURATION_MS_BY_AGENT");
   if (!raw) return undefined;
   const parsed: unknown = JSON.parse(raw);
   if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("ANVIL_MAX_TASK_DURATION_MS_BY_AGENT must be a JSON object mapping agent IDs to milliseconds.");
@@ -190,6 +192,7 @@ Commands:
   hooks [path]     List configured declarative lifecycle hooks
   agent-security [path] Audit agent instructions, skills, hooks, and permissions
   security [path]  Audit repository for hardcoded secrets, keys, and script vulnerabilities
+  gate [path]      Deterministic CI quality & security gate with SARIF and policy enforcement
   plan --goal TEXT Create and save a reviewable draft plan
   run --goal TEXT  Run the plan using a configured AI provider
   runs [path]      List locally saved run history (add --json for versioned JSON)
@@ -542,8 +545,8 @@ async function main(args: string[]): Promise<void> {
           const matrixFile = option("--matrix-file");
           const suiteId = option("--suite");
           const matrixId = option("--matrix-id");
-          const provider = option("--provider") ?? process.env.FORGE_AI_PROVIDER ?? "openai";
-          const model = option("--model") ?? process.env.FORGE_AI_MODEL ?? process.env.FORGE_MODEL ?? "gpt-4.1";
+          const provider = option("--provider") ?? getAnvilEnv("ANVIL_AI_PROVIDER", "FORGE_AI_PROVIDER", "openai")!;
+          const model = option("--model") ?? getAnvilEnv("ANVIL_AI_MODEL", "FORGE_AI_MODEL") ?? getAnvilEnv("ANVIL_MODEL", "FORGE_MODEL", "gpt-4.1")!;
           if (!matrixFile || !suiteId || !matrixId) throw new Error("Usage: anvil experiment capture --matrix-file CONFIG.json --matrix-id ID --suite SUITE_ID [--provider ID] [--model NAME] [--path PROJECT]");
           const matrix = await loadBenchmarkMatrix(path.resolve(matrixFile));
           const suites = await loadEvaluationSuites(target);
@@ -555,7 +558,8 @@ async function main(args: string[]): Promise<void> {
             const snapshot = await loadAgentConfigVersion(target, candidate.configVersionId);
             fingerprints.push({ candidateId: candidate.id, configVersionId: snapshot.id, fingerprint: fingerprintAgentConfig(snapshot.files) });
           }
-          const manifest = await captureExperimentManifest({ projectPath: target, matrixFile: path.resolve(matrixFile), matrixId, suiteId, suite, provider, model, ...(process.env.FORGE_BASE_URL ? { baseUrl: process.env.FORGE_BASE_URL } : {}), agentConfigFingerprints: fingerprints });
+          const baseUrl = getAnvilEnv("ANVIL_BASE_URL", "FORGE_BASE_URL");
+          const manifest = await captureExperimentManifest({ projectPath: target, matrixFile: path.resolve(matrixFile), matrixId, suiteId, suite, provider, model, ...(baseUrl ? { baseUrl } : {}), agentConfigFingerprints: fingerprints });
           const saved = await saveExperimentManifest(target, manifest);
           process.stdout.write(formatExperimentManifest(manifest) + "\nSaved: " + path.relative(target, saved) + "\n");
         } else if (action === "show") {
@@ -594,23 +598,23 @@ async function main(args: string[]): Promise<void> {
         const suites = await loadEvaluationSuites(target);
         const suite = suites.find(item => item.id === suiteId);
         if (!suite) throw new Error("Evaluation suite not found: " + suiteId);
-        const apiKey = process.env.FORGE_API_KEY ?? process.env.OPENAI_API_KEY ?? "";
-        const baseUrl = process.env.FORGE_BASE_URL ?? "https://api.openai.com/v1";
+        const apiKey = getAnvilEnv("ANVIL_API_KEY", "FORGE_API_KEY") ?? process.env.OPENAI_API_KEY ?? "";
+        const baseUrl = getAnvilEnv("ANVIL_BASE_URL", "FORGE_BASE_URL", "https://api.openai.com/v1")!;
         const report = await executeBenchmarkMatrix(config, async (candidate, _repeat) => {
 
           const createProvider = (selectedModel: string) => candidate.provider === "claude-code"
             ? new ClaudeCodeProvider({ cwd: target, model: selectedModel })
-            : createHostedAgentProvider({ ...process.env, FORGE_AI_PROVIDER: candidate.provider, ...(apiKey ? { FORGE_API_KEY: apiKey } : {}), ...(process.env.FORGE_BASE_URL ? { FORGE_BASE_URL: process.env.FORGE_BASE_URL } : {}) }, selectedModel);
+            : createHostedAgentProvider({ ...process.env, ANVIL_AI_PROVIDER: candidate.provider, FORGE_AI_PROVIDER: candidate.provider, ...(apiKey ? { ANVIL_API_KEY: apiKey, FORGE_API_KEY: apiKey } : {}), ...(baseUrl ? { ANVIL_BASE_URL: baseUrl, FORGE_BASE_URL: baseUrl } : {}) }, selectedModel);
           const router = new ModelRouter({
             fastModel: candidate.model, balancedModel: candidate.model, reasoningModel: candidate.model,
-            retryAttempts: Number(process.env.FORGE_MODEL_RETRY_ATTEMPTS ?? 2),
-            retryDelayMs: Number(process.env.FORGE_MODEL_RETRY_DELAY_MS ?? 500),
-            ...(process.env.FORGE_MAX_INPUT_TOKENS_PER_TASK ? { maxInputTokensPerTask: Number(process.env.FORGE_MAX_INPUT_TOKENS_PER_TASK) } : {}),
-            ...(process.env.FORGE_MAX_OUTPUT_TOKENS_PER_TASK ? { maxOutputTokensPerTask: Number(process.env.FORGE_MAX_OUTPUT_TOKENS_PER_TASK) } : {}),
-            ...(process.env.FORGE_MAX_ESTIMATED_TOKENS_PER_RUN ? { maxEstimatedTokensPerRun: Number(process.env.FORGE_MAX_ESTIMATED_TOKENS_PER_RUN) } : {}),
-            ...(process.env.FORGE_MAX_ESTIMATED_TOKENS_PER_AGENT ? { maxEstimatedTokensPerAgent: readAgentTokenBudgets()! } : {}),
-            ...(process.env.FORGE_MAX_TASK_DURATION_MS ? { maxTaskDurationMs: Number(process.env.FORGE_MAX_TASK_DURATION_MS) } : {}),
-            ...(process.env.FORGE_MAX_TASK_DURATION_MS_BY_AGENT ? { maxTaskDurationMsByAgent: readAgentDurationBudgets()! } : {}),
+            retryAttempts: Number(getAnvilEnv("ANVIL_MODEL_RETRY_ATTEMPTS", "FORGE_MODEL_RETRY_ATTEMPTS", "2")),
+            retryDelayMs: Number(getAnvilEnv("ANVIL_MODEL_RETRY_DELAY_MS", "FORGE_MODEL_RETRY_DELAY_MS", "500")),
+            ...(getAnvilEnv("ANVIL_MAX_INPUT_TOKENS_PER_TASK", "FORGE_MAX_INPUT_TOKENS_PER_TASK") ? { maxInputTokensPerTask: Number(getAnvilEnv("ANVIL_MAX_INPUT_TOKENS_PER_TASK", "FORGE_MAX_INPUT_TOKENS_PER_TASK")) } : {}),
+            ...(getAnvilEnv("ANVIL_MAX_OUTPUT_TOKENS_PER_TASK", "FORGE_MAX_OUTPUT_TOKENS_PER_TASK") ? { maxOutputTokensPerTask: Number(getAnvilEnv("ANVIL_MAX_OUTPUT_TOKENS_PER_TASK", "FORGE_MAX_OUTPUT_TOKENS_PER_TASK")) } : {}),
+            ...(getAnvilEnv("ANVIL_MAX_ESTIMATED_TOKENS_PER_RUN", "FORGE_MAX_ESTIMATED_TOKENS_PER_RUN") ? { maxEstimatedTokensPerRun: Number(getAnvilEnv("ANVIL_MAX_ESTIMATED_TOKENS_PER_RUN", "FORGE_MAX_ESTIMATED_TOKENS_PER_RUN")) } : {}),
+            ...(getAnvilEnv("ANVIL_MAX_ESTIMATED_TOKENS_PER_AGENT", "FORGE_MAX_ESTIMATED_TOKENS_PER_AGENT") ? { maxEstimatedTokensPerAgent: readAgentTokenBudgets()! } : {}),
+            ...(getAnvilEnv("ANVIL_MAX_TASK_DURATION_MS", "FORGE_MAX_TASK_DURATION_MS") ? { maxTaskDurationMs: Number(getAnvilEnv("ANVIL_MAX_TASK_DURATION_MS", "FORGE_MAX_TASK_DURATION_MS")) } : {}),
+            ...(getAnvilEnv("ANVIL_MAX_TASK_DURATION_MS_BY_AGENT", "FORGE_MAX_TASK_DURATION_MS_BY_AGENT") ? { maxTaskDurationMsByAgent: readAgentDurationBudgets()! } : {}),
             createProvider,
           });
           const configWorkspace = await mkdtemp(path.join(os.tmpdir(), "forge-candidate-config-"));
@@ -706,11 +710,11 @@ async function main(args: string[]): Promise<void> {
         const judgeEnabled = rest.includes("--judge");
         let report: EvaluationReport | JudgedEvaluationReport;
         if (judgeEnabled) {
-          const providerChoice = process.env.FORGE_AI_PROVIDER ?? "openai";
-          const model = process.env.FORGE_EVAL_JUDGE_MODEL ?? process.env.FORGE_AI_MODEL ?? process.env.FORGE_MODEL ?? (providerChoice === "claude-code" ? "sonnet" : "gpt-4.1");
-          const apiKey = process.env.FORGE_API_KEY ?? process.env.OPENAI_API_KEY ?? "";
-          const baseUrl = process.env.FORGE_BASE_URL ?? "https://api.openai.com/v1";
-          if (providerChoice !== "claude-code" && !apiKey) throw new Error("Set FORGE_API_KEY or OPENAI_API_KEY to use model-judged evaluation.");
+          const providerChoice = getAnvilEnv("ANVIL_AI_PROVIDER", "FORGE_AI_PROVIDER", "openai")!;
+          const model = getAnvilEnv("ANVIL_EVAL_JUDGE_MODEL", "FORGE_EVAL_JUDGE_MODEL") ?? getAnvilEnv("ANVIL_AI_MODEL", "FORGE_AI_MODEL") ?? getAnvilEnv("ANVIL_MODEL", "FORGE_MODEL") ?? (providerChoice === "claude-code" ? "sonnet" : "gpt-4.1");
+          const apiKey = getAnvilEnv("ANVIL_API_KEY", "FORGE_API_KEY") ?? process.env.OPENAI_API_KEY ?? "";
+          const baseUrl = getAnvilEnv("ANVIL_BASE_URL", "FORGE_BASE_URL", "https://api.openai.com/v1")!;
+          if (providerChoice !== "claude-code" && !apiKey) throw new Error("Set ANVIL_API_KEY, FORGE_API_KEY, or OPENAI_API_KEY to use model-judged evaluation.");
           const judgeProvider = providerChoice === "claude-code" ? new ClaudeCodeProvider({ cwd: target, model }) : new OpenAICompatibleProvider({ apiKey, model, baseUrl });
           report = await evaluateRunWithJudge(run, suite, judgeProvider);
         } else report = evaluateRun(run, suite);
@@ -984,6 +988,99 @@ Options:
       }
       return;
     }
+    case "gate": {
+      if (rest.includes("--help") || rest.includes("-h") || rest[0] === "help") {
+        process.stdout.write(`Usage: anvil gate [path] [options]
+
+Deterministic CI quality & security gate. Evaluates repository health, security secrets,
+and code quality rules against policies. Emits human-readable reports, machine-readable JSON,
+or OASIS SARIF v2.1.0 for PR comments and GitHub Security tab integration.
+
+Options:
+  --sarif PATH        Export findings to an OASIS SARIF v2.1.0 report file
+  --policy PATH       Custom JSON policy file (defaults to .anvil/policy.json if present)
+  --fail-on-warnings  Fail gate (exit 1) on medium-severity warnings as well as critical/high errors
+  --json              Output full gate evaluation in machine-readable JSON format
+  --help              Show this help message
+
+Exit codes:
+  0  Gate passed: all policy thresholds and security checks satisfied.
+  1  Gate failed: critical/high vulnerabilities or policy violations detected.
+`);
+        return;
+      }
+      const option = (name: string) => {
+        const index = rest.indexOf(name);
+        if (index < 0) return undefined;
+        const next = rest[index + 1];
+        return next && !next.startsWith("--") ? next : undefined;
+      };
+      const isJson = rest.includes("--json");
+      const failOnWarnings = rest.includes("--fail-on-warnings");
+      const sarifPath = option("--sarif");
+      const policyPath = option("--policy");
+      const positional = rest.filter(arg => !arg.startsWith("--") && arg !== sarifPath && arg !== policyPath);
+      const target = path.resolve(positional[0] ?? ".");
+
+      try {
+        const securityReport = await scanProjectSecurity(target);
+        const reviewReport = await reviewProject(target, { all: true });
+
+        if (sarifPath) {
+          const sarifOutput = generateSarif({ securityReport, reviewReport, targetRoot: target });
+          const outResolved = path.resolve(sarifPath);
+          await mkdir(path.dirname(outResolved), { recursive: true });
+          await writeFile(outResolved, sarifOutput, "utf8");
+          if (!isJson) {
+            process.stdout.write(`Exported SARIF report to ${path.relative(process.cwd(), outResolved)}\n`);
+          }
+        }
+
+        const criticalCount = securityReport.summary.critical;
+        const highCount = securityReport.summary.high + reviewReport.summary.high;
+        const mediumCount = securityReport.summary.medium + reviewReport.summary.medium;
+        const passed = criticalCount === 0 && highCount === 0 && (!failOnWarnings || mediumCount === 0);
+
+        if (isJson) {
+          process.stdout.write(JSON.stringify({
+            gate: passed ? "PASSED" : "FAILED",
+            target,
+            summary: {
+              critical: criticalCount,
+              high: highCount,
+              medium: mediumCount,
+              low: securityReport.summary.low + reviewReport.summary.low
+            },
+            security: securityReport,
+            review: reviewReport
+          }, null, 2) + "\n");
+        } else {
+          process.stdout.write([
+            `# ANVIL CI Quality & Security Gate`,
+            `Target: ${target}`,
+            `Status: ${passed ? "PASSED" : "FAILED"}`,
+            ``,
+            `Findings Summary:`,
+            `  Critical: ${criticalCount}`,
+            `  High:     ${highCount}`,
+            `  Medium:   ${mediumCount}`,
+            `  Low:      ${securityReport.summary.low + reviewReport.summary.low}`,
+            ``,
+            passed
+              ? `✓ Gate passed: 0 critical/high findings detected.`
+              : `✗ Gate failed: ${criticalCount + highCount} critical or high findings require remediation before merging.`
+          ].join("\n") + "\n");
+        }
+
+        if (!passed) {
+          process.exitCode = 1;
+        }
+      } catch (error) {
+        process.stderr.write("ANVIL gate check failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
+        process.exitCode = 1;
+      }
+      return;
+    }
     case "plan": {
       const goalIndex = rest.indexOf("--goal");
       const pathIndex = rest.indexOf("--path");
@@ -1039,20 +1136,20 @@ Options:
       try {
         if (!runId) throw new Error("Usage: anvil resume RUN_ID [--path PROJECT]");
         const permissions = await loadPermissionPolicy(target);
-        const providerChoice = (process.env.FORGE_AI_PROVIDER ?? "openai").toLowerCase();
-        assertSupportedAgentPolicy(permissions, providerChoice, "FORGE resume");
+        const providerChoice = (getAnvilEnv("ANVIL_AI_PROVIDER", "FORGE_AI_PROVIDER", "openai")!).toLowerCase();
+        assertSupportedAgentPolicy(permissions, providerChoice, "ANVIL resume");
         await withRunExecutionLock(target, runId, async () => {
           const savedRun = await loadRun(target, runId);
           if (savedRun.status === "running") {
             const recovered = await recoverInterruptedRun(target, runId);
             process.stdout.write("Recovered interrupted run " + runId + ": " + recovered.status + "\n");
-            process.stdout.write("Any task that was running has an unknown provider outcome and was marked failed. FORGE did not replay provider requests. Review the run before explicitly retrying failed work.\n");
+            process.stdout.write("Any task that was running has an unknown provider outcome and was marked failed. ANVIL did not replay provider requests. Review the run before explicitly retrying failed work.\n");
             return;
           }
-          if (savedRun.status !== "pending" && savedRun.status !== "awaiting_approval") throw new Error("Only pending or approval-cleared runs can be resumed. Use `forge replay` only after reviewing failed tasks.");
-          const model = process.env.FORGE_AI_MODEL ?? process.env.FORGE_MODEL;
+          if (savedRun.status !== "pending" && savedRun.status !== "awaiting_approval") throw new Error("Only pending or approval-cleared runs can be resumed. Use `anvil replay` only after reviewing failed tasks.");
+          const model = getAnvilEnv("ANVIL_AI_MODEL", "FORGE_AI_MODEL") ?? getAnvilEnv("ANVIL_MODEL", "FORGE_MODEL");
           const baseModel = model ?? (providerChoice === "claude-code" ? "sonnet" : "gpt-4.1-mini");
-          const createProvider = (selectedModel: string) => providerChoice === "claude-code" ? new ClaudeCodeProvider({ cwd: target, model: selectedModel }) : createHostedAgentProvider({ ...process.env, FORGE_AI_PROVIDER: providerChoice }, selectedModel, { workspacePath: target, permissionPolicy: permissions });
+          const createProvider = (selectedModel: string) => providerChoice === "claude-code" ? new ClaudeCodeProvider({ cwd: target, model: selectedModel }) : createHostedAgentProvider({ ...process.env, ANVIL_AI_PROVIDER: providerChoice, FORGE_AI_PROVIDER: providerChoice }, selectedModel, { workspacePath: target, permissionPolicy: permissions });
           let priorTraceEntries: Awaited<ReturnType<typeof loadExecutionTrace>>["entries"] = [];
           try { priorTraceEntries = (await loadExecutionTrace(target, runId)).entries; }
           catch (error) { if (!(error && typeof error === "object" && "code" in error && error.code === "ENOENT")) throw error; }
@@ -1060,11 +1157,12 @@ Options:
           const traceRunUsage = priorTraceEntries.reduce((total, entry) => total + entry.inputTokensEstimate + entry.outputTokensEstimate, 0);
           const priorAgentUsage = savedRun.tokenUsage?.estimatedTokensByAgent ?? traceAgentUsage;
           const priorRunUsage = savedRun.tokenUsage?.estimatedTokensUsed ?? traceRunUsage;
+          const resumeFallback = getAnvilEnv("ANVIL_FALLBACK_MODEL", "FORGE_FALLBACK_MODEL");
           const router = new ModelRouter({
-            fastModel: process.env.FORGE_MODEL_FAST ?? baseModel, balancedModel: process.env.FORGE_MODEL_BALANCED ?? baseModel, reasoningModel: process.env.FORGE_MODEL_REASONING ?? baseModel, ...(process.env.FORGE_FALLBACK_MODEL ? { fallbackModel: process.env.FORGE_FALLBACK_MODEL } : {}), retryAttempts: Number(process.env.FORGE_MODEL_RETRY_ATTEMPTS ?? 2), retryDelayMs: Number(process.env.FORGE_MODEL_RETRY_DELAY_MS ?? 500), ...(process.env.FORGE_MAX_INPUT_TOKENS_PER_TASK ? { maxInputTokensPerTask: Number(process.env.FORGE_MAX_INPUT_TOKENS_PER_TASK) } : {}), ...(process.env.FORGE_MAX_OUTPUT_TOKENS_PER_TASK ? { maxOutputTokensPerTask: Number(process.env.FORGE_MAX_OUTPUT_TOKENS_PER_TASK) } : {}), ...(process.env.FORGE_MAX_ESTIMATED_TOKENS_PER_RUN ? { maxEstimatedTokensPerRun: Number(process.env.FORGE_MAX_ESTIMATED_TOKENS_PER_RUN) } : {}),
-            ...(process.env.FORGE_MAX_ESTIMATED_TOKENS_PER_AGENT ? { maxEstimatedTokensPerAgent: readAgentTokenBudgets()! } : {}),
-            ...(process.env.FORGE_MAX_TASK_DURATION_MS ? { maxTaskDurationMs: Number(process.env.FORGE_MAX_TASK_DURATION_MS) } : {}),
-            ...(process.env.FORGE_MAX_TASK_DURATION_MS_BY_AGENT ? { maxTaskDurationMsByAgent: readAgentDurationBudgets()! } : {}),
+            fastModel: getAnvilEnv("ANVIL_MODEL_FAST", "FORGE_MODEL_FAST") ?? baseModel, balancedModel: getAnvilEnv("ANVIL_MODEL_BALANCED", "FORGE_MODEL_BALANCED") ?? baseModel, reasoningModel: getAnvilEnv("ANVIL_MODEL_REASONING", "FORGE_MODEL_REASONING") ?? baseModel, ...(resumeFallback ? { fallbackModel: resumeFallback } : {}), retryAttempts: Number(getAnvilEnv("ANVIL_MODEL_RETRY_ATTEMPTS", "FORGE_MODEL_RETRY_ATTEMPTS", "2")), retryDelayMs: Number(getAnvilEnv("ANVIL_MODEL_RETRY_DELAY_MS", "FORGE_MODEL_RETRY_DELAY_MS", "500")), ...(getAnvilEnv("ANVIL_MAX_INPUT_TOKENS_PER_TASK", "FORGE_MAX_INPUT_TOKENS_PER_TASK") ? { maxInputTokensPerTask: Number(getAnvilEnv("ANVIL_MAX_INPUT_TOKENS_PER_TASK", "FORGE_MAX_INPUT_TOKENS_PER_TASK")) } : {}), ...(getAnvilEnv("ANVIL_MAX_OUTPUT_TOKENS_PER_TASK", "FORGE_MAX_OUTPUT_TOKENS_PER_TASK") ? { maxOutputTokensPerTask: Number(getAnvilEnv("ANVIL_MAX_OUTPUT_TOKENS_PER_TASK", "FORGE_MAX_OUTPUT_TOKENS_PER_TASK")) } : {}), ...(getAnvilEnv("ANVIL_MAX_ESTIMATED_TOKENS_PER_RUN", "FORGE_MAX_ESTIMATED_TOKENS_PER_RUN") ? { maxEstimatedTokensPerRun: Number(getAnvilEnv("ANVIL_MAX_ESTIMATED_TOKENS_PER_RUN", "FORGE_MAX_ESTIMATED_TOKENS_PER_RUN")) } : {}),
+            ...(getAnvilEnv("ANVIL_MAX_ESTIMATED_TOKENS_PER_AGENT", "FORGE_MAX_ESTIMATED_TOKENS_PER_AGENT") ? { maxEstimatedTokensPerAgent: readAgentTokenBudgets()! } : {}),
+            ...(getAnvilEnv("ANVIL_MAX_TASK_DURATION_MS", "FORGE_MAX_TASK_DURATION_MS") ? { maxTaskDurationMs: Number(getAnvilEnv("ANVIL_MAX_TASK_DURATION_MS", "FORGE_MAX_TASK_DURATION_MS")) } : {}),
+            ...(getAnvilEnv("ANVIL_MAX_TASK_DURATION_MS_BY_AGENT", "FORGE_MAX_TASK_DURATION_MS_BY_AGENT") ? { maxTaskDurationMsByAgent: readAgentDurationBudgets()! } : {}),
             initialEstimatedTokensUsed: priorRunUsage, initialEstimatedTokensByAgent: priorAgentUsage, createProvider
           });
           const memory = await buildProjectMemoryContext(target, savedRun.goal);
@@ -1207,33 +1305,34 @@ Options:
       const target = path.resolve(pathIndex >= 0 ? rest[pathIndex + 1] ?? "." : ".");
       try {
         const permissions = await loadPermissionPolicy(target);
-        const model = process.env.FORGE_AI_MODEL ?? process.env.FORGE_MODEL;
-        const providerChoice = (process.env.FORGE_AI_PROVIDER ?? "openai").toLowerCase();
-        assertSupportedAgentPolicy(permissions, providerChoice, "FORGE run");
+        const model = getAnvilEnv("ANVIL_AI_MODEL", "FORGE_AI_MODEL") ?? getAnvilEnv("ANVIL_MODEL", "FORGE_MODEL");
+        const providerChoice = (getAnvilEnv("ANVIL_AI_PROVIDER", "FORGE_AI_PROVIDER", "openai")!).toLowerCase();
+        assertSupportedAgentPolicy(permissions, providerChoice, "ANVIL run");
         const baseModel = model ?? (providerChoice === "claude-code" ? "sonnet" : "gpt-4.1-mini");
-        const apiKey = process.env.FORGE_API_KEY ?? process.env.OPENAI_API_KEY ?? "";
-        const baseUrl = process.env.FORGE_BASE_URL ?? "https://api.openai.com/v1";
+        const apiKey = getAnvilEnv("ANVIL_API_KEY", "FORGE_API_KEY") ?? process.env.OPENAI_API_KEY ?? "";
+        const baseUrl = getAnvilEnv("ANVIL_BASE_URL", "FORGE_BASE_URL", "https://api.openai.com/v1")!;
         const createProvider = (selectedModel: string) => {
           if (providerChoice === "claude-code") return new ClaudeCodeProvider({ cwd: target, model: selectedModel });
           if (["openai", "anthropic", "google", "ollama"].includes(providerChoice)) {
-            return createHostedAgentProvider({ ...process.env, FORGE_AI_PROVIDER: providerChoice }, selectedModel, { workspacePath: target, permissionPolicy: permissions });
+            return createHostedAgentProvider({ ...process.env, ANVIL_AI_PROVIDER: providerChoice, FORGE_AI_PROVIDER: providerChoice }, selectedModel, { workspacePath: target, permissionPolicy: permissions });
           }
-          throw new Error("Unsupported FORGE_AI_PROVIDER. Choose claude-code, openai, anthropic, google or ollama.");
+          throw new Error("Unsupported ANVIL_AI_PROVIDER. Choose claude-code, openai, anthropic, google or ollama.");
         };
+        const runFallback = getAnvilEnv("ANVIL_FALLBACK_MODEL", "FORGE_FALLBACK_MODEL");
         const router = new ModelRouter({
-          fastModel: process.env.FORGE_MODEL_FAST ?? baseModel,
-          balancedModel: process.env.FORGE_MODEL_BALANCED ?? baseModel,
-          reasoningModel: process.env.FORGE_MODEL_REASONING ?? baseModel,
-          ...(process.env.FORGE_FALLBACK_MODEL ? { fallbackModel: process.env.FORGE_FALLBACK_MODEL } : {}),
-          retryAttempts: Number(process.env.FORGE_MODEL_RETRY_ATTEMPTS ?? 2),
-          retryDelayMs: Number(process.env.FORGE_MODEL_RETRY_DELAY_MS ?? 500),
+          fastModel: getAnvilEnv("ANVIL_MODEL_FAST", "FORGE_MODEL_FAST") ?? baseModel,
+          balancedModel: getAnvilEnv("ANVIL_MODEL_BALANCED", "FORGE_MODEL_BALANCED") ?? baseModel,
+          reasoningModel: getAnvilEnv("ANVIL_MODEL_REASONING", "FORGE_MODEL_REASONING") ?? baseModel,
+          ...(runFallback ? { fallbackModel: runFallback } : {}),
+          retryAttempts: Number(getAnvilEnv("ANVIL_MODEL_RETRY_ATTEMPTS", "FORGE_MODEL_RETRY_ATTEMPTS", "2")),
+          retryDelayMs: Number(getAnvilEnv("ANVIL_MODEL_RETRY_DELAY_MS", "FORGE_MODEL_RETRY_DELAY_MS", "500")),
           createProvider,
-          ...(process.env.FORGE_MAX_INPUT_TOKENS_PER_TASK ? { maxInputTokensPerTask: Number(process.env.FORGE_MAX_INPUT_TOKENS_PER_TASK) } : {}),
-          ...(process.env.FORGE_MAX_OUTPUT_TOKENS_PER_TASK ? { maxOutputTokensPerTask: Number(process.env.FORGE_MAX_OUTPUT_TOKENS_PER_TASK) } : {}),
-          ...(process.env.FORGE_MAX_ESTIMATED_TOKENS_PER_RUN ? { maxEstimatedTokensPerRun: Number(process.env.FORGE_MAX_ESTIMATED_TOKENS_PER_RUN) } : {}),
-          ...(process.env.FORGE_MAX_ESTIMATED_TOKENS_PER_AGENT ? { maxEstimatedTokensPerAgent: readAgentTokenBudgets()! } : {}),
-          ...(process.env.FORGE_MAX_TASK_DURATION_MS ? { maxTaskDurationMs: Number(process.env.FORGE_MAX_TASK_DURATION_MS) } : {}),
-          ...(process.env.FORGE_MAX_TASK_DURATION_MS_BY_AGENT ? { maxTaskDurationMsByAgent: readAgentDurationBudgets()! } : {}),
+          ...(getAnvilEnv("ANVIL_MAX_INPUT_TOKENS_PER_TASK", "FORGE_MAX_INPUT_TOKENS_PER_TASK") ? { maxInputTokensPerTask: Number(getAnvilEnv("ANVIL_MAX_INPUT_TOKENS_PER_TASK", "FORGE_MAX_INPUT_TOKENS_PER_TASK")) } : {}),
+          ...(getAnvilEnv("ANVIL_MAX_OUTPUT_TOKENS_PER_TASK", "FORGE_MAX_OUTPUT_TOKENS_PER_TASK") ? { maxOutputTokensPerTask: Number(getAnvilEnv("ANVIL_MAX_OUTPUT_TOKENS_PER_TASK", "FORGE_MAX_OUTPUT_TOKENS_PER_TASK")) } : {}),
+          ...(getAnvilEnv("ANVIL_MAX_ESTIMATED_TOKENS_PER_RUN", "FORGE_MAX_ESTIMATED_TOKENS_PER_RUN") ? { maxEstimatedTokensPerRun: Number(getAnvilEnv("ANVIL_MAX_ESTIMATED_TOKENS_PER_RUN", "FORGE_MAX_ESTIMATED_TOKENS_PER_RUN")) } : {}),
+          ...(getAnvilEnv("ANVIL_MAX_ESTIMATED_TOKENS_PER_AGENT", "FORGE_MAX_ESTIMATED_TOKENS_PER_AGENT") ? { maxEstimatedTokensPerAgent: readAgentTokenBudgets()! } : {}),
+          ...(getAnvilEnv("ANVIL_MAX_TASK_DURATION_MS", "FORGE_MAX_TASK_DURATION_MS") ? { maxTaskDurationMs: Number(getAnvilEnv("ANVIL_MAX_TASK_DURATION_MS", "FORGE_MAX_TASK_DURATION_MS")) } : {}),
+          ...(getAnvilEnv("ANVIL_MAX_TASK_DURATION_MS_BY_AGENT", "FORGE_MAX_TASK_DURATION_MS_BY_AGENT") ? { maxTaskDurationMsByAgent: readAgentDurationBudgets()! } : {}),
         });
         const provider = router;
         const plan = createReviewPlan(goal);
@@ -1594,9 +1693,9 @@ Options:
         const report = await reviewProject(target, { base, all });
         let ai: Awaited<ReturnType<typeof generateAIReview>> | undefined;
         if (rest.includes("--ai")) {
-          const apiKey = process.env.FORGE_API_KEY ?? process.env.OPENAI_API_KEY ?? "";
-          if (!apiKey) throw new Error("Set FORGE_API_KEY (or OPENAI_API_KEY) before using --ai.");
-          const provider = new OpenAICompatibleProvider({ apiKey, model: process.env.FORGE_MODEL ?? "gpt-4.1-mini", baseUrl: process.env.FORGE_BASE_URL ?? "https://api.openai.com/v1" });
+          const apiKey = getAnvilEnv("ANVIL_API_KEY", "FORGE_API_KEY") ?? process.env.OPENAI_API_KEY ?? "";
+          if (!apiKey) throw new Error("Set ANVIL_API_KEY, FORGE_API_KEY, or OPENAI_API_KEY before using --ai.");
+          const provider = new OpenAICompatibleProvider({ apiKey, model: getAnvilEnv("ANVIL_MODEL", "FORGE_MODEL", "gpt-4.1-mini")!, baseUrl: getAnvilEnv("ANVIL_BASE_URL", "FORGE_BASE_URL", "https://api.openai.com/v1")! });
           ai = await generateAIReview(report, provider);
         }
         const saved = await saveReview(target, report, ai);

@@ -1,0 +1,86 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ANVIL Policy as Code Schema",
+  "description": "Declarative policy specification for ANVIL CI quality gates, security thresholds, and sandbox limits.",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": "integer",
+      "enum": [1]
+    },
+    "security": {
+      "type": "object",
+      "properties": {
+        "maxCritical": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0,
+          "description": "Maximum allowed critical security findings before gate failure."
+        },
+        "maxHigh": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0,
+          "description": "Maximum allowed high-severity security findings before gate failure."
+        },
+        "maxMedium": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 10,
+          "description": "Maximum allowed medium-severity security findings before gate failure."
+        },
+        "failOnSecrets": {
+          "type": "boolean",
+          "default": true,
+          "description": "Immediately fail gate if any hardcoded secret is detected."
+        }
+      },
+      "additionalProperties": false
+    },
+    "quality": {
+      "type": "object",
+      "properties": {
+        "maxReviewHigh": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0,
+          "description": "Maximum allowed high-risk code review findings (e.g., eval or unvetted sinks)."
+        },
+        "requireCleanGit": {
+          "type": "boolean",
+          "default": false,
+          "description": "Require a clean working tree without uncommitted changes."
+        }
+      },
+      "additionalProperties": false
+    },
+    "sandbox": {
+      "type": "object",
+      "properties": {
+        "profile": {
+          "type": "string",
+          "enum": ["balanced", "hardened", "rootless-required"],
+          "default": "balanced"
+        },
+        "requireRootless": {
+          "type": "boolean",
+          "default": false
+        },
+        "maxMemory": {
+          "type": "string",
+          "default": "512m"
+        },
+        "maxCpus": {
+          "type": "number",
+          "default": 1.0
+        },
+        "maxProcesses": {
+          "type": "integer",
+          "default": 128
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

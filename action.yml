@@ -16,15 +16,23 @@ inputs:
     required: false
     default: .
   operation:
-    description: Safe built-in operation to run (inspect, quality, health, review, doctor, clean, undo)
+    description: Safe built-in operation to run (gate, inspect, security, quality, health, review, doctor, clean, undo)
     required: false
-    default: inspect
+    default: gate
+  sarif-file:
+    description: File path to write the OASIS SARIF v2.1.0 report (e.g. anvil-results.sarif)
+    required: false
+    default: anvil-results.sarif
+  fail-on-warnings:
+    description: Whether the gate should fail on medium-severity warnings (true/false)
+    required: false
+    default: "false"
 
 runs:
   using: composite
   steps:
     - name: Set up Node.js 22
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
       with:
         node-version: 22
     - name: Install ANVIL
@@ -40,10 +48,19 @@ runs:
       env:
         ANVIL_PROJECT_PATH: ${{ inputs.project-path }}
         ANVIL_OPERATION: ${{ inputs.operation }}
+        ANVIL_SARIF_FILE: ${{ inputs.sarif-file }}
+        ANVIL_FAIL_ON_WARNINGS: ${{ inputs.fail-on-warnings }}
       run: |
         set -euo pipefail
         case "$ANVIL_OPERATION" in
+          gate)
+            EXTRA_ARGS=""
+            if [[ -n "$ANVIL_SARIF_FILE" ]]; then EXTRA_ARGS="$EXTRA_ARGS --sarif $ANVIL_SARIF_FILE"; fi
+            if [[ "$ANVIL_FAIL_ON_WARNINGS" == "true" ]]; then EXTRA_ARGS="$EXTRA_ARGS --fail-on-warnings"; fi
+            anvil gate "$ANVIL_PROJECT_PATH" $EXTRA_ARGS
+            ;;
           inspect) anvil inspect "$ANVIL_PROJECT_PATH" ;;
+          security) anvil security "$ANVIL_PROJECT_PATH" ;;
           quality) anvil quality "$ANVIL_PROJECT_PATH" ;;
           health) anvil health "$ANVIL_PROJECT_PATH" ;;
           review) anvil review "$ANVIL_PROJECT_PATH" ;;

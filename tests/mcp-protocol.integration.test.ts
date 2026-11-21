@@ -78,7 +78,7 @@ describe("FORGE MCP stdio protocol integration", () => {
       clientInfo: { name: "forge-mcp-integration-test", version: "1.0.0" }
     });
     expect(initialized.error).toBeUndefined();
-    expect(initialized.result?.serverInfo?.name).toBe("forge-engineering-workbench");
+    expect(initialized.result?.serverInfo?.name).toMatch(/^(?:anvil|forge)-engineering-workbench$/);
     notify("notifications/initialized");
 
     const listed = await request("tools/list");

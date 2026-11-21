@@ -27,6 +27,28 @@ describe("autoFixCodeContent", () => {
     expect(fixes.some(f => f.type === "blank-lines")).toBe(true);
   });
 
+  it("preserves trailing whitespace and consecutive blank lines inside JS/TS template literals", () => {
+    const code = "const sql = `\n  SELECT *   \n\n\n\n  FROM users   \n`;\nconst a = 1;   \n";
+    const { newContent, fixes } = autoFixCodeContent(code, "query.ts");
+
+    // Trailing whitespace inside template literal MUST be preserved exactly
+    expect(newContent).toContain("  SELECT *   \n");
+    expect(newContent).toContain("  FROM users   \n");
+    // Trailing whitespace outside template literal should be cleaned
+    expect(newContent).toContain("const a = 1;\n");
+  });
+
+  it("preserves trailing whitespace and docstrings in Python files", () => {
+    const pyCode = `def fetch_data():\n    """\n    Query builder docstring with spaces   \n\n\n\n    Another line   \n    """\n    x = 42   \n    return x\n`;
+    const { newContent } = autoFixCodeContent(pyCode, "service.py");
+
+    // Whitespace inside triple-quoted docstring MUST NOT be altered
+    expect(newContent).toContain("Query builder docstring with spaces   \n");
+    expect(newContent).toContain("Another line   \n");
+    // Code line outside docstring should be cleaned
+    expect(newContent).toContain("    x = 42\n");
+  });
+
   it("removes unused named imports and keeps used ones", () => {
     const code = `import { usedFn, unusedFn } from "./helpers.js";\n\nconsole.log(usedFn());\n`;
     const { newContent, fixes } = autoFixCodeContent(code, "example.ts");

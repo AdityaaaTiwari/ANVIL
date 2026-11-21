@@ -33,11 +33,14 @@ Please include:
 
 ## Response Timeline & SLA
 
-We adhere to the following response timeline for security issues:
-- **Initial Acknowledgment:** Within **48 hours** of report receipt.
-- **Triage & Severity Assessment:** Within **5 business days**, with confirmation of reproducer and severity score (CVSS).
-- **Patch Development & Testing:** Within **14 days** for critical/high vulnerabilities; within **30 days** for medium/low issues.
+ANVIL is maintained as open-source software by a solo maintainer. We provide best-effort response and remediation targets:
+- **Initial Acknowledgment:** Best effort within **48–72 hours** of report receipt.
+- **Triage & Severity Assessment:** Within **5–7 business days**, with confirmation of reproducer and severity score (CVSS).
+- **Patch Development & Testing:** Targeted within **14–30 days** for critical/high vulnerabilities; within **60 days** for medium/low issues.
 - **Public Disclosure:** Coordinated release with a GitHub Security Advisory and release note once the patch is available on npm.
+
+> [!NOTE]
+> GitHub Private Vulnerability Reporting is enabled in repository settings (`Settings > Code security and analysis > Private vulnerability reporting`) to facilitate confidential security disclosures.
 
 ## Scope & Security Model
 

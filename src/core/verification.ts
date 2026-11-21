@@ -79,6 +79,7 @@ export async function runVerification(
     PATH: process.env.PATH ?? "",
     CI: "1",
     NODE_ENV: "test",
+    ANVIL_VERIFICATION: "1",
     FORGE_VERIFICATION: "1",
     ...(process.env.SystemRoot ? { SystemRoot: process.env.SystemRoot } : {}),
     ...(process.env.WINDIR ? { WINDIR: process.env.WINDIR } : {}),
@@ -177,7 +178,7 @@ export async function installVerificationDependencies(
     writeFile(globalConfig, "", { flag: "wx", mode: 0o600 }),
   ]);
   const env: NodeJS.ProcessEnv = {
-    PATH: process.env.PATH ?? "", CI: "1", NODE_ENV: "test", FORGE_VERIFICATION: "1",
+    PATH: process.env.PATH ?? "", CI: "1", NODE_ENV: "test", ANVIL_VERIFICATION: "1", FORGE_VERIFICATION: "1",
     HOME: root, USERPROFILE: root,
     ...(process.env.SystemRoot ? { SystemRoot: process.env.SystemRoot } : {}),
     ...(process.env.WINDIR ? { WINDIR: process.env.WINDIR } : {}),

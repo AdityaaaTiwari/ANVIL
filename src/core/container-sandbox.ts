@@ -58,7 +58,7 @@ export function buildContainerRunArgs(
     "--memory=" + (policy?.maxMemory ?? profile.maxMemory), "--memory-swap=" + (policy?.maxMemory ?? profile.maxMemory), "--cpus=" + String(policy?.maxCpus ?? profile.maxCpus), "--ulimit", "nofile=1024:1024",
     "--tmpfs", "/tmp:rw,nosuid,nodev,size=64m,mode=1777",
     "--tmpfs", "/workspace:rw,nosuid,nodev,size=1g,mode=1777",
-    "--env", "CI=1", "--env", "NODE_ENV=test", "--env", "FORGE_VERIFICATION=1", "--env", "HOME=/tmp", "--env", "TMPDIR=/tmp",
+    "--env", "CI=1", "--env", "NODE_ENV=test", "--env", "ANVIL_VERIFICATION=1", "--env", "FORGE_VERIFICATION=1", "--env", "HOME=/tmp", "--env", "TMPDIR=/tmp",
     "--user", typeof process.getuid === "function" && typeof process.getgid === "function" ? process.getuid() + ":" + process.getgid() : "1000:1000",
     "--mount", "type=bind,source=" + workspace + ",target=/snapshot,readonly",
     "--workdir", "/workspace", "--entrypoint", "node",
