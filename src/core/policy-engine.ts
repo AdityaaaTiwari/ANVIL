@@ -173,10 +173,7 @@ export interface EvaluateGateOptions {
   failOnWarnings?: boolean | undefined;
 }
 
-export async function evaluateGate(
-  targetPath: string,
-  options: EvaluateGateOptions = {}
-): Promise<GateEvaluation> {
+export async function evaluateGate(targetPath: string, options: EvaluateGateOptions = {}): Promise<GateEvaluation> {
   const { policy, source: policySource } = await loadGatePolicy(targetPath, options.policyPath);
   const baseline = await loadBaseline(options.baselinePath);
 
