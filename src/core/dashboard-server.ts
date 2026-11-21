@@ -31,9 +31,12 @@ import { buildExperimentHistory } from "./experiment-history.js";
 import { createReplayRun, createTaskRetryRun } from "./run-replay.js";
 import { diagnoseProvider, type DiagnosableProvider } from "./provider-diagnostics.js";
 import { createRunFromWorkflow, listWorkflows, loadWorkflow, saveWorkflow } from "./workflow-store.js";
+import { advanceRun, DemoAgentProvider } from "./orchestrator.js";
 import { cleanProject, undoLastClean } from "./project-cleaner.js";
 import { runDoctorChecks } from "./doctor.js";
 import { listProjectMemory, addProjectMemory, removeProjectMemory } from "./project-memory.js";
+import { listAdrs, createAdr, syncMemoryToAdrs, type AdrStatus } from "./adr-engine.js";
+import { scanProjectSecurity, applySecurityFixes } from "./security-scanner.js";
 
 // --- SSE broadcast state ---
 const sseClients = new Set<ServerResponse>();
@@ -454,6 +457,7 @@ body{
       <h2>Project Memory & Architectural Decisions</h2>
       <div class="actions">
         <span class="pill pill-cyan">CONTEXT STORE</span>
+        <button class="btn btn-cyan" id="syncMemoryToAdrBtn">⚡ Sync to ADRs</button>
         <button class="btn" id="refreshMemory">Refresh memory</button>
       </div>
     </div>
@@ -539,6 +543,20 @@ body{
       </div>
     </div>
   </section>
+
+  <section class="section card">
+    <div class="section-head">
+      <h2>Repository Security & Secret Scanner</h2>
+      <div class="actions">
+        <span class="pill pill-emerald" id="securityStatusPill">SECURE</span>
+        <button class="btn btn-primary" id="autoFixSecurityBtn">🛡️ Auto-Fix Exclusions</button>
+        <button class="btn" id="refreshSecurityBtn">Refresh Audit</button>
+      </div>
+    </div>
+    <p class="run-meta">Local-first deep scan for leaked secrets, API keys, risky shell scripts, unencrypted dependencies, and unignored .env files.</p>
+    <div id="securitySummary" class="grid" style="margin:12px 0"></div>
+    <div id="securityFindings" class="list"><div class="loading">Scanning repository for secrets…</div></div>
+  </section>
 </div>
 
 <!-- ==================== TAB 3: AGENTS & WORKFLOW STUDIO ==================== -->
@@ -619,7 +637,7 @@ body{
         <div class="section-head"><h3 style="margin:0">Pipeline canvas</h3><span class="pill" id="workflowTaskCount">0 TASKS</span></div>
         <div id="workflowCanvas" class="activity"><div class="empty">Add a specialist task to start composing your pipeline.</div></div>
         <div class="actions"><button class="btn" id="applyWorkflowLinks">Apply selected links</button></div>
-        <div class="actions"><button class="btn btn-primary" id="saveWorkflow">Save workflow</button><button class="btn btn-cyan" id="createWorkflowRun">Create draft run</button></div>
+        <div class="actions"><button class="btn btn-primary" id="saveWorkflow">Save workflow</button><button class="btn btn-cyan" id="createWorkflowRun">Create draft run</button><button class="btn btn-emerald" id="executeWorkflowRun">⚡ Execute Live Pipeline</button></div>
         <div id="workflowMessage" class="run-meta" aria-live="polite"></div>
         <div class="section-head" style="margin-top:18px"><h3 style="margin:0">Saved workflows</h3><button class="btn" id="refreshWorkflows">Refresh</button></div>
         <div id="savedWorkflows" class="activity"><div class="loading">Loading reusable workflows…</div></div>
@@ -773,6 +791,27 @@ body{
     <div id="timelineSummary" class="grid"><div class="loading">Loading saved engineering snapshots…</div></div>
     <div id="timelineHistory" class="activity"></div>
     <div id="timelineNotes" class="run-meta"></div>
+  </section>
+
+  <section class="section card">
+    <div class="section-head">
+      <h2>Architecture Decision Records (ADR Engine)</h2>
+      <div class="actions">
+        <span class="pill pill-cyan">DOCS/ADR</span>
+        <button class="btn btn-cyan" id="syncAdrBtn">⚡ Sync Memory to ADRs</button>
+        <button class="btn" id="refreshAdrBtn">Refresh ADRs</button>
+      </div>
+    </div>
+    <p class="run-meta">Version-controlled Architectural Decision Records stored locally in <code>docs/adr/</code>. Kept in sync with ANVIL project memory.</p>
+    <div style="display:flex;gap:8px;margin:12px 0;flex-wrap:wrap">
+      <input type="text" id="newAdrTitle" placeholder="e.g. Adopt Vitest for Unit and Integration Testing" style="flex:1;min-width:260px;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;padding:6px 12px;color:var(--text);font-family:inherit;font-size:13px">
+      <select id="newAdrStatus" class="btn" style="padding:6px 12px">
+        <option value="Accepted">Accepted</option>
+        <option value="Proposed">Proposed</option>
+      </select>
+      <button class="btn btn-primary" id="createAdrBtn">+ New ADR</button>
+    </div>
+    <div id="adrList" class="list"><div class="loading">Loading Architecture Decision Records…</div></div>
   </section>
 </div>
 
@@ -1539,6 +1578,90 @@ async function deleteMemoryEntry(id){
   }catch(e){alert("Failed to remove memory: "+e.message);}
 }
 
+async function loadAdrs(){
+  try{
+    const res = await api("/api/adrs");
+    let adrs = res.adrs || [];
+    if(!adrs.length && isShowcase){
+      adrs = [
+        { id: "0001", number: 1, title: "Record architecture decisions", status: "Accepted", date: new Date().toISOString().slice(0, 10), filename: "0001-record-architecture-decisions.md" },
+        { id: "0002", number: 2, title: "Local-first AST analysis for zero-telemetry polyglot code intelligence", status: "Accepted", date: new Date().toISOString().slice(0, 10), filename: "0002-local-first-ast-analysis.md" },
+        { id: "0003", number: 3, title: "Deterministic automated test gate with instant rollback on clean", status: "Accepted", date: new Date().toISOString().slice(0, 10), filename: "0003-deterministic-test-gate.md" }
+      ];
+    }
+    const container = el("adrList");
+    if(!container) return;
+    container.innerHTML = adrs.length ? adrs.map(item => {
+      const statusPill = item.status === "Accepted" ? "pill-emerald" : item.status === "Proposed" ? "pill-cyan" : "pill-accent";
+      return '<div class="rowitem"><div><div style="display:flex;gap:6px;align-items:center;margin-bottom:4px"><span class="pill ' + statusPill + '">' + esc(item.status.toUpperCase()) + '</span><span class="pill" style="font-size:10px">ADR-' + esc(item.id) + '</span><span class="run-meta">' + esc(item.date) + '</span></div><div style="font-size:13px;font-weight:600">' + esc(item.title) + '</div><div class="run-meta" style="font-size:11px">' + esc(item.filename) + '</div></div></div>';
+    }).join("") : '<div class="empty">No Architecture Decision Records found. Click "+ New ADR" or "Sync Memory to ADRs" to initialize docs/adr/</div>';
+  }catch(e){
+    const container = el("adrList");
+    if(container) container.innerHTML = '<div class="error">' + esc(e.message) + '</div>';
+  }
+}
+
+async function handleCreateAdr(){
+  const titleEl = el("newAdrTitle");
+  const statusEl = el("newAdrStatus");
+  const title = titleEl ? titleEl.value.trim() : "";
+  if(!title) return alert("Please enter an ADR title.");
+  const status = statusEl ? statusEl.value : "Accepted";
+  try{
+    await fetch("/api/adrs",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({title,status})});
+    if(titleEl) titleEl.value = "";
+    loadAdrs();
+  }catch(e){alert("Failed to create ADR: "+e.message);}
+}
+
+async function handleSyncAdrs(){
+  try{
+    const res = await fetch("/api/adrs/sync",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({})});
+    const data = await res.json();
+    alert(data.syncedCount > 0 ? "Synced " + data.syncedCount + " decisions to docs/adr/!" : "All project memory decisions already synced!");
+    loadAdrs();
+  }catch(e){alert("Failed to sync ADRs: "+e.message);}
+}
+
+async function loadSecurityAudit(){
+  try{
+    const res = await api("/api/security");
+    const summaryEl = el("securitySummary");
+    const findingsEl = el("securityFindings");
+    const pill = el("securityStatusPill");
+    if(!summaryEl || !findingsEl) return;
+
+    if(pill){
+      if(res.passed){
+        pill.className = "pill pill-emerald";
+        pill.textContent = "SECURE";
+      }else{
+        pill.className = "pill pill-accent";
+        pill.textContent = res.summary.critical > 0 ? "CRITICAL RISK" : "HIGH RISK";
+      }
+    }
+
+    summaryEl.innerHTML = '<div class="card card-highlight"><div class="metric-label">Security Status</div><div class="metric" style="color:' + (res.passed ? 'var(--emerald)' : 'var(--accent)') + '">' + (res.passed ? 'SECURE' : 'ACTION REQUIRED') + '</div><div class="metric-sub">' + res.findings.length + ' total findings</div></div><div class="card"><div class="metric-label">Critical Secrets</div><div class="metric" style="color:var(--accent)">' + res.summary.critical + '</div><div class="metric-sub">API keys, tokens, keys</div></div><div class="card"><div class="metric-label">High Severity</div><div class="metric" style="color:var(--amber,#f59e0b)">' + res.summary.high + '</div><div class="metric-sub">Scripts, unencrypted deps</div></div><div class="card"><div class="metric-label">Scanned Scope</div><div class="metric" style="color:var(--cyan)">' + res.scannedFiles + '</div><div class="metric-sub">Files in ' + res.durationMs + 'ms</div></div>';
+
+    findingsEl.innerHTML = res.findings.length ? res.findings.map(f => {
+      const sevClass = f.severity === "critical" ? "pill-accent" : f.severity === "high" ? "pill-amber" : "pill-cyan";
+      return '<div class="rowitem"><div><div style="display:flex;gap:6px;align-items:center;margin-bottom:4px"><span class="pill ' + sevClass + '">' + esc(f.severity.toUpperCase()) + '</span><span class="pill" style="font-size:10px">' + esc(f.category) + '</span><span class="run-meta">' + esc(f.file + (f.line ? ':' + f.line : '')) + '</span></div><div style="font-size:13px;font-weight:600">' + esc(f.description) + '</div>' + (f.snippet ? '<div class="run-meta" style="font-family:monospace;font-size:11px">Snippet: ' + esc(f.snippet) + '</div>' : '') + '<div class="run-meta" style="font-size:11px;color:var(--text-muted)">Remediation: ' + esc(f.remediation) + '</div></div></div>';
+    }).join("") : '<div class="empty" style="color:var(--emerald)">✓ Clean audit: No hardcoded secrets, dangerous scripts, or exposed credentials detected.</div>';
+  }catch(e){
+    const findingsEl = el("securityFindings");
+    if(findingsEl) findingsEl.innerHTML = '<div class="error">' + esc(e.message) + '</div>';
+  }
+}
+
+async function handleAutoFixSecurity(){
+  try{
+    const res = await fetch("/api/security/fix",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({})});
+    const data = await res.json();
+    alert(data.fixedCount > 0 ? "Applied " + data.fixedCount + " security fixes:\n" + data.details.join("\n") : "No pending auto-fixable exclusions.");
+    loadSecurityAudit();
+  }catch(e){alert("Failed to apply security fixes: "+e.message);}
+}
+
 on("runCleanDryRunBtn","click",runCleanerPreview);
 on("quickCleanBtn","click",()=>{
   document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
@@ -1758,10 +1881,31 @@ on("createWorkflowRun","click",async()=>{
   try{await fetch("/api/workflows/"+encodeURIComponent(id)+"/run",{method:"POST",headers:{"content-type":"application/json"},body:"{}"});el("workflowMessage").textContent="Created draft run from "+name;loadRuns();}catch(e){el("workflowMessage").textContent=e.message;}
 });
 
+async function executeWorkflowById(id){
+  const msgEl = el("workflowMessage");
+  if(msgEl) msgEl.innerHTML = '<span style="color:var(--cyan)">⚡ Executing multi-agent pipeline live...</span>';
+  try{
+    const res = await fetch("/api/workflows/"+encodeURIComponent(id)+"/execute",{method:"POST",headers:{"content-type":"application/json"},body:"{}"});
+    const run = await res.json();
+    if(msgEl) msgEl.innerHTML = '<span style="color:var(--emerald)">✓ Pipeline executed: ' + esc(run.id) + ' (' + esc(run.status) + ')</span>';
+    loadRuns();
+    loadActivity();
+    if(run.id) inspectRun(run.id);
+  }catch(e){
+    if(msgEl) msgEl.innerHTML = '<span style="color:var(--accent)">Execution failed: ' + esc(e.message) + '</span>';
+  }
+}
+
+on("executeWorkflowRun","click",async()=>{
+  const name=el("workflowName").value.trim();if(!name)return alert("Please enter or load a workflow first.");
+  const id=workflowSlug(name);
+  await executeWorkflowById(id);
+});
+
 async function refreshWorkflows(){
   try{
     const workflows=await api("/api/workflows");
-    el("savedWorkflows").innerHTML=workflows.length?workflows.map(w=>'<div class="run"><div class="run-title"><b>'+esc(w.name)+'</b><span class="pill">'+esc(w.tasks.length)+' TASKS</span></div><div class="run-meta">'+esc(w.id)+'</div></div>').join(""):'<div class="empty">No saved workflows yet.</div>';
+    el("savedWorkflows").innerHTML=workflows.length?workflows.map(w=>'<div class="run"><div class="run-title"><b>'+esc(w.name)+'</b><span class="pill">'+esc(w.tasks.length)+' TASKS</span></div><div class="run-meta" style="display:flex;justify-content:space-between;align-items:center"><span>'+esc(w.id)+'</span><button class="btn btn-emerald" style="padding:3px 8px;font-size:11px" onclick="executeWorkflowById(\''+esc(w.id)+'\')">⚡ Run Live</button></div></div>').join(""):'<div class="empty">No saved workflows yet.</div>';
   }catch(e){el("savedWorkflows").innerHTML='<div class="error">'+esc(e.message)+'</div>';}
 }
 
@@ -1844,12 +1988,19 @@ on("saveMemoryBtn","click",async()=>{
   }catch(e){alert("Failed to save decision: "+e.message);}
 });
 
+on("syncMemoryToAdrBtn","click",handleSyncAdrs);
+on("refreshAdrBtn","click",loadAdrs);
+on("syncAdrBtn","click",handleSyncAdrs);
+on("createAdrBtn","click",handleCreateAdr);
+on("autoFixSecurityBtn","click",handleAutoFixSecurity);
+on("refreshSecurityBtn","click",loadSecurityAudit);
+
 function reloadAllViews(){
   loadOverview();loadAgents();loadRuns();loadActivity();loadObservability();
   loadEvaluationHistory();loadBenchmarkHistory();loadBenchmarkRegression();loadAgentPerformance();
   loadSkillExperiments();loadExperimentHistory();loadAgentOptimization();loadAgentIntelligence();
   loadHealth();loadRegression();loadReviews();loadQuality();loadVerifications();
-  loadCleanerBackups();loadMemory();
+  loadCleanerBackups();loadMemory();loadAdrs();loadSecurityAudit();
 }
 
 reloadAllViews();
@@ -1896,7 +2047,7 @@ export async function startDashboard(options: DashboardOptions): Promise<Dashboa
         response.writeHead(405, { "content-type": "application/json" }).end(JSON.stringify({ error: "Method not allowed." }));
         return;
       }
-      if (request.method === "POST" && (requestUrl.pathname === "/api/memory" || requestUrl.pathname === "/api/memory/delete" || requestUrl.pathname === "/api/workflows" || requestUrl.pathname === "/api/clean/run" || requestUrl.pathname === "/api/clean/undo" || requestUrl.pathname === "/api/config-files" || requestUrl.pathname === "/api/config-snapshots" || /^\/api\/providers\/(?:openai|anthropic|google|ollama)\/diagnose$/.test(requestUrl.pathname) || requestUrl.pathname === "/api/config-releases" || /^\/api\/config-releases\/rel-[a-f0-9]{12}\/(?:approve|reject)$/.test(requestUrl.pathname) || requestUrl.pathname.endsWith("/run") && requestUrl.pathname.startsWith("/api/workflows/") || /^\/api\/runs\/[^/]+\/(?:replay|cancel)$/.test(requestUrl.pathname) || /^\/api\/runs\/[^/]+\/tasks\/[^/]+\/retry$/.test(requestUrl.pathname))) {
+      if (request.method === "POST" && (requestUrl.pathname === "/api/memory" || requestUrl.pathname === "/api/memory/delete" || requestUrl.pathname === "/api/adrs" || requestUrl.pathname === "/api/adrs/sync" || requestUrl.pathname === "/api/security/fix" || requestUrl.pathname === "/api/workflows" || requestUrl.pathname === "/api/clean/run" || requestUrl.pathname === "/api/clean/undo" || requestUrl.pathname === "/api/config-files" || requestUrl.pathname === "/api/config-snapshots" || /^\/api\/providers\/(?:openai|anthropic|google|ollama)\/diagnose$/.test(requestUrl.pathname) || requestUrl.pathname === "/api/config-releases" || /^\/api\/config-releases\/rel-[a-f0-9]{12}\/(?:approve|reject)$/.test(requestUrl.pathname) || requestUrl.pathname.endsWith("/run") && requestUrl.pathname.startsWith("/api/workflows/") || requestUrl.pathname.endsWith("/execute") && requestUrl.pathname.startsWith("/api/workflows/") || /^\/api\/runs\/[^/]+\/(?:replay|cancel)$/.test(requestUrl.pathname) || /^\/api\/runs\/[^/]+\/tasks\/[^/]+\/retry$/.test(requestUrl.pathname))) {
         const origin = request.headers.origin;
         if (origin && new URL(origin).host !== request.headers.host) {
           response.writeHead(403, { "content-type": "application/json" }).end(JSON.stringify({ error: "Cross-origin requests are not allowed." }));
@@ -2011,6 +2162,52 @@ export async function startDashboard(options: DashboardOptions): Promise<Dashboa
           const id = String(record.id || "");
           const success = await removeProjectMemory(projectPath, id);
           response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(JSON.stringify({ success }));
+          return;
+        }
+        if (requestUrl.pathname === "/api/adrs") {
+          const record = (body && typeof body === "object" ? body : {}) as Record<string, unknown>;
+          const title = String(record.title || "").trim();
+          if (!title) throw new Error("ADR title is required.");
+          const status = (record.status as AdrStatus) || "Accepted";
+          const context = record.context ? String(record.context) : undefined;
+          const decision = record.decision ? String(record.decision) : undefined;
+          const adr = await createAdr(projectPath, title, { status, context, decision });
+          response.writeHead(201, { "content-type": "application/json; charset=utf-8" }).end(JSON.stringify(adr));
+          return;
+        }
+        if (requestUrl.pathname === "/api/adrs/sync") {
+          const result = await syncMemoryToAdrs(projectPath);
+          response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(JSON.stringify(result));
+          return;
+        }
+        if (requestUrl.pathname === "/api/security/fix") {
+          const scan = await scanProjectSecurity(projectPath);
+          const result = await applySecurityFixes(projectPath, scan.findings);
+          response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(JSON.stringify(result));
+          return;
+        }
+        if (requestUrl.pathname.endsWith("/execute") && requestUrl.pathname.startsWith("/api/workflows/")) {
+          const workflowId = requestUrl.pathname.slice("/api/workflows/".length, -"/execute".length);
+          const workflow = await loadWorkflow(projectPath, decodeURIComponent(workflowId));
+          const run = createRunFromWorkflow(workflow);
+          await saveRun(projectPath, run);
+          broadcastEvent("workflow_started", { runId: run.id, workflowName: workflow.name, taskCount: run.tasks.length });
+          const provider = new DemoAgentProvider();
+          const completed = await advanceRun(run, provider, new Set(), {
+            maxConcurrency: 4,
+            onUpdate: async (updatedRun) => {
+              await saveRun(projectPath, updatedRun);
+              broadcastEvent("workflow_update", { runId: updatedRun.id, status: updatedRun.status, tasks: updatedRun.tasks });
+            },
+            onTaskSettled: async (updatedRun, settledTaskId) => {
+              await saveRun(projectPath, updatedRun);
+              const taskRecord = updatedRun.tasks.find(t => t.task.id === settledTaskId);
+              broadcastEvent("workflow_task_settled", { runId: updatedRun.id, taskId: settledTaskId, status: taskRecord?.status, result: taskRecord?.result });
+            }
+          });
+          await saveRun(projectPath, completed);
+          broadcastEvent("workflow_completed", { runId: completed.id, status: completed.status });
+          response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(JSON.stringify({ id: completed.id, status: completed.status, taskCount: completed.tasks.length, tasks: completed.tasks }));
           return;
         }
         if (requestUrl.pathname === "/api/workflows") {
@@ -2459,6 +2656,16 @@ export async function startDashboard(options: DashboardOptions): Promise<Dashboa
       if (requestUrl.pathname === "/api/memory") {
         const entries = await listProjectMemory(projectPath);
         response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(JSON.stringify({ entries }));
+        return;
+      }
+      if (requestUrl.pathname === "/api/adrs") {
+        const adrs = await listAdrs(projectPath);
+        response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(JSON.stringify({ adrs }));
+        return;
+      }
+      if (requestUrl.pathname === "/api/security") {
+        const report = await scanProjectSecurity(projectPath);
+        response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(JSON.stringify(report));
         return;
       }
       if (requestUrl.pathname === "/api/architecture") {

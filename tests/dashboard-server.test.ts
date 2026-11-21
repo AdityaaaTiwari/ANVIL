@@ -555,4 +555,99 @@ describe("local dashboard server", () => {
     expect(received).toContain("event: test-broadcast");
     expect(received).toContain('"hello":"world"');
   });
+
+  it("serves and manages Architecture Decision Records via /api/adrs and /api/adrs/sync", async () => {
+    root = await mkdtemp(path.join(os.tmpdir(), "forge-dashboard-adrs-"));
+    dashboard = await startDashboard({ projectPath: root, port: 0 });
+    const address = dashboard.server.address();
+    if (!address || typeof address === "string") throw new Error("Dashboard did not bind a TCP port.");
+
+    // Create an ADR
+    const postRes = await fetch(`http://127.0.0.1:${address.port}/api/adrs`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ title: "Adopt Local-First Storage", status: "Accepted" })
+    });
+    expect(postRes.status).toBe(201);
+    const created = await postRes.json();
+    expect(created.title).toBe("Adopt Local-First Storage");
+
+    // List ADRs
+    const getRes = await fetch(`http://127.0.0.1:${address.port}/api/adrs`);
+    expect(getRes.status).toBe(200);
+    const { adrs } = await getRes.json();
+    expect(adrs.length).toBeGreaterThanOrEqual(1);
+    expect(adrs[0].title).toBe("Adopt Local-First Storage");
+
+    // Sync ADRs
+    const syncRes = await fetch(`http://127.0.0.1:${address.port}/api/adrs/sync`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({})
+    });
+    expect(syncRes.status).toBe(200);
+    const syncData = await syncRes.json();
+    expect(syncData).toHaveProperty("syncedCount");
+  });
+
+  it("serves security audit and auto-fixes file exclusions via /api/security and /api/security/fix", async () => {
+    root = await mkdtemp(path.join(os.tmpdir(), "forge-dashboard-security-"));
+    await writeFile(path.join(root, ".env"), "EXPOSED_SECRET=abcdef9876543210\n");
+    dashboard = await startDashboard({ projectPath: root, port: 0 });
+    const address = dashboard.server.address();
+    if (!address || typeof address === "string") throw new Error("Dashboard did not bind a TCP port.");
+
+    // Query security audit
+    const getRes = await fetch(`http://127.0.0.1:${address.port}/api/security`);
+    expect(getRes.status).toBe(200);
+    const report = await getRes.json();
+    expect(report.findings.length).toBeGreaterThanOrEqual(1);
+
+    // Apply auto-fix
+    const fixRes = await fetch(`http://127.0.0.1:${address.port}/api/security/fix`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({})
+    });
+    expect(fixRes.status).toBe(200);
+    const fixData = await fixRes.json();
+    expect(fixData.fixedCount).toBeGreaterThan(0);
+  });
+
+  it("executes multi-agent workflows live and streams results via /api/workflows/:id/execute", async () => {
+    root = await mkdtemp(path.join(os.tmpdir(), "forge-dashboard-workflow-exec-"));
+    dashboard = await startDashboard({ projectPath: root, port: 0 });
+    const address = dashboard.server.address();
+    if (!address || typeof address === "string") throw new Error("Dashboard did not bind a TCP port.");
+
+    // Save a workflow
+    const saveRes = await fetch(`http://127.0.0.1:${address.port}/api/workflows`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        id: "pipeline-live-test",
+        name: "Pipeline Live Test",
+        description: "Test execution of multi-agent pipeline",
+        tasks: [
+          { id: "task-1", agent: "planner", title: "Create Plan", prompt: "Formulate task plan" },
+          { id: "task-2", agent: "code-reviewer", title: "Review Code", prompt: "Inspect boundaries", dependsOn: ["task-1"] }
+        ]
+      })
+    });
+    expect(saveRes.status).toBe(201);
+
+    // Execute the saved workflow live
+    const execRes = await fetch(`http://127.0.0.1:${address.port}/api/workflows/pipeline-live-test/execute`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({})
+    });
+    expect(execRes.status).toBe(200);
+    const execData = await execRes.json();
+    expect(execData.status).toBe("completed");
+    expect(execData.taskCount).toBe(2);
+    expect(execData.tasks[0].status).toBe("completed");
+    expect(execData.tasks[0].result).toBeDefined();
+    expect(execData.tasks[1].status).toBe("completed");
+  });
 });
