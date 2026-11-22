@@ -463,65 +463,75 @@ ANVIL includes a local Claude Code CLI provider adapter. It uses the CLI install
 
 See [Claude Code integration](docs/integrations/claude-code.md).
 
-### Cursor and MCP
+### Model Context Protocol (MCP) Server
 
-Cursor can connect to ANVIL through the local stdio MCP server using Cursor's MCP configuration. This is **MCP interoperability**, not a native Cursor extension.
+ANVIL includes a zero-cloud Model Context Protocol (MCP) server that exposes codebase intelligence, architecture graphs, change risk, and security audits to AI developer tools such as **Claude Code, Cursor, Windsurf, VS Code, and Google Antigravity**.
 
-Example project configuration:
+#### 1-Minute Quick Setup
 
+**Claude Code (Single command):**
+```bash
+claude mcp add anvil -- npx -y anvil-engineering-workbench mcp start
+```
+
+**Cursor (`.cursor/mcp.json`):**
 ```json
 {
   "mcpServers": {
-    "ANVIL": {
-      "command": "node",
-      "args": ["C:/path/to/ANVIL/dist/mcp/server.js"],
+    "anvil": {
+      "command": "npx",
+      "args": ["-y", "anvil-engineering-workbench", "mcp", "start"],
       "env": {
-        "ANVIL_WORKSPACE": "C:/path/to/your-project"
+        "ANVIL_WORKSPACE": "${workspaceFolder}"
       }
     }
   }
 }
 ```
 
-Build ANVIL before using the compiled server:
-
+**Interactive Multi-Editor Setup Wizard:**
 ```bash
-npm run build
+# Auto-configures Cursor, VS Code, Windsurf, and Claude Code
+anvil mcp setup --client all
 ```
 
-Adjust the paths for your machine. See [Cursor MCP documentation](https://docs.cursor.com/context/mcp).
+#### Token Efficiency & Context Protection
 
-### MCP server
+AI coding models have bounded context windows. Loading dozens of raw source files just to inspect architecture or evaluate change risk wastes thousands of tokens.
 
-ANVIL provides a Model Context Protocol server over stdio:
+ANVIL executes analysis entirely locally on CPU without LLM calls. By default, tools return **compact summaries** (`detail: false`), saving up to **90%+ of tokens** compared to unassisted mass file loading. Every response includes `_meta` character and token estimation metrics. Pass `detail: true` to any inspection tool if complete line-by-line graphs are needed.
 
-```bash
-npm run build
-ANVIL_WORKSPACE=/absolute/path/to/project npm run mcp
-```
+See [Token Benchmark Results](docs/token-benchmark-results.md) for reproducible measurements on this repository.
 
-The current MCP server exposes bounded, read-only tools:
+#### Available MCP Tools
 
-| Tool | Function |
-|---|---|
-| `anvil_inspect_project` | Inspect project structure and tooling |
-| `anvil_map_architecture` | Map source files and imports |
-| `anvil_search_code` | Search supported project source |
-| `anvil_list_files` | List supported workspace files |
-| `anvil_read_file` | Read a bounded text/source file |
-| `anvil_quality_audit` | Run static project-quality checks |
-| `anvil_git_intelligence` | Analyze Git changes and impact |
-| `anvil_list_agents` | List built-in and workspace agent roles |
-| `anvil_create_review_plan` | Create a draft engineering review plan |
-| `anvil_agent_intelligence` | Score agent performance from benchmark history |
-| `anvil_project_health` | Unified health snapshot & telemetry |
-| `anvil_change_risk` | Risk analysis for pending changes |
-| `anvil_dependency_impact` | Dependency blast radius & impact analysis |
-| `anvil_security_audit` | Scan secrets, tokens, and script risks |
+All tools are read-only, bounded, and execute locally within your workspace boundaries:
+
+| Tool | Function | Compact Default |
+|---|---|:---:|
+| `anvil_inspect_project` | Project inventory: languages, frameworks, scripts, dependencies | Yes (`detail: false`) |
+| `anvil_map_architecture` | Multi-language AST import graph across TS, Python, Go, Rust, Java, C++ | Yes (`detail: false`) |
+| `anvil_change_risk` | Blast radius, downstream affected modules, and candidate test targets | Yes (`detail: false`) |
+| `anvil_git_intelligence` | Working-tree git diff, uncommitted changes, and heuristic commit risk | Yes (`detail: false`) |
+| `anvil_quality_audit` | Fast static project-quality checks across manifests and tests | Yes (`detail: false`) |
+| `anvil_security_audit` | Deep scan for hardcoded secrets, API keys, and sensitive tokens | Yes (`detail: false`) |
+| `anvil_clean_preview` | Safe preview scan of OS junk, build caches, and orphan source files | Yes (`detail: false`) |
+| `anvil_search_code` | Search supported project source excluding .env and dependencies | - |
+| `anvil_list_files` | List supported workspace files (bounded to 200 entries) | - |
+| `anvil_read_file` | Read bounded text/source file (max 128 KiB, traversal protected) | - |
+| `anvil_project_health` | Unified 0–100 health score & letter grade (A–F) | - |
+| `anvil_list_agents` | List built-in and workspace specialist-agent roles | - |
+| `anvil_create_review_plan` | Create a draft multi-specialist engineering review plan | - |
+| `anvil_agent_intelligence` | Score agent performance from historical benchmark matrices | - |
+| `anvil_remediation_plan` | Advisory dependency remediation plan with approval guardrails | - |
+| `anvil_project_memory` | Read saved project decisions and architecture constraints | - |
+| `anvil_agent_security_audit` | Audit agent instructions and permissions for injection risks | - |
+| `anvil_dependency_impact` | Dependency blast radius & undeclared import analysis | - |
+| `anvil_doctor` | Diagnostic health checks on Node runtime, Git, Docker, and policy | - |
 
 MCP workspace paths are constrained to the configured workspace root. Hidden paths, generated/dependency directories, secret-like filenames and symlinks are excluded or rejected. Reads are bounded. The MCP server does not expose arbitrary shell execution, project-file writes, patch application or test execution.
 
-Some workspace browsing/search operations require an explicit restricted-mode allowlist in `.anvil/permissions.json`; the default proposal-only policy denies them.
+Some workspace browsing/search operations require an explicit restricted-mode allowlist in `.anvil/permissions.json`; the default proposal-only policy denies them. See [MCP Server Guide](docs/mcp-server.md).
 
 ### GitHub Action
 

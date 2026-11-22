@@ -155,6 +155,30 @@ describe("FORGE MCP stdio protocol integration", () => {
     expect(searchText).toContain("src/index.ts");
     expect(searchText).toContain("answer");
 
+    const compactMap = await request("tools/call", {
+      name: "anvil_map_architecture",
+      arguments: {},
+    });
+    expect(compactMap.result?.isError).not.toBe(true);
+    const compactMapText = compactMap.result.content.find((part: { type: string }) => part.type === "text")?.text ?? "";
+    const parsedCompact = JSON.parse(compactMapText);
+    expect(parsedCompact._meta).toBeDefined();
+    expect(parsedCompact._meta.compact).toBe(true);
+    expect(typeof parsedCompact._meta.characterCount).toBe("number");
+    expect(typeof parsedCompact._meta.estimatedTokens).toBe("number");
+    expect(parsedCompact.totalNodes).toBeDefined();
+
+    const detailMap = await request("tools/call", {
+      name: "anvil_map_architecture",
+      arguments: { detail: true },
+    });
+    expect(detailMap.result?.isError).not.toBe(true);
+    const detailMapText = detailMap.result.content.find((part: { type: string }) => part.type === "text")?.text ?? "";
+    const parsedDetail = JSON.parse(detailMapText);
+    expect(parsedDetail._meta).toBeDefined();
+    expect(parsedDetail._meta.compact).toBe(false);
+    expect(Array.isArray(parsedDetail.nodes)).toBe(true);
+
     const denied = await request("tools/call", {
       name: "forge_list_files",
       arguments: { projectPath: "../outside" },

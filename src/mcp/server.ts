@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { realpath } from "node:fs/promises";
+import { readFileSync } from "node:fs";
 import { McpServer } from "@modelcontextprotocol/server";
 import { StdioServerTransport } from "@modelcontextprotocol/server/stdio";
 import { z } from "zod";
@@ -30,13 +31,62 @@ import { cleanProject } from "../core/project-cleaner.js";
 const WORKSPACE_ROOT = await realpath(process.env.ANVIL_WORKSPACE ?? process.env.FORGE_WORKSPACE ?? process.cwd());
 
 const resolveWorkspace = createWorkspaceResolver(WORKSPACE_ROOT);
-function result(data: unknown) {
-  return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] };
+
+function resolveVersion(): string {
+  try {
+    const pkgUrl = new URL("../../package.json", import.meta.url);
+    const raw = readFileSync(pkgUrl, "utf-8");
+    const parsed = JSON.parse(raw);
+    if (typeof parsed.version === "string") return parsed.version;
+  } catch {}
+  return "1.1.1";
 }
+
+function result(data: unknown, meta?: { compact?: boolean; hint?: string }) {
+  if (data && typeof data === "object" && !Array.isArray(data)) {
+    const raw = JSON.stringify(data);
+    const characterCount = raw.length;
+    const estimatedTokens = Math.ceil(characterCount / 4);
+    const enriched = {
+      _meta: {
+        characterCount,
+        estimatedTokens,
+        ...(meta?.compact !== undefined ? { compact: meta.compact } : {}),
+        ...(meta?.hint ? { hint: meta.hint } : {}),
+      },
+      ...(data as Record<string, unknown>),
+    };
+    return { content: [{ type: "text" as const, text: JSON.stringify(enriched, null, 2) }] };
+  }
+  const raw = JSON.stringify(data, null, 2);
+  const characterCount = raw.length;
+  const estimatedTokens = Math.ceil(characterCount / 4);
+  return {
+    content: [
+      {
+        type: "text" as const,
+        text: JSON.stringify(
+          {
+            _meta: {
+              characterCount,
+              estimatedTokens,
+              ...(meta?.compact !== undefined ? { compact: meta.compact } : {}),
+              ...(meta?.hint ? { hint: meta.hint } : {}),
+            },
+            data,
+          },
+          null,
+          2
+        ),
+      },
+    ],
+  };
+}
+
 function failure(error: unknown) {
   return {
     isError: true,
-    content: [{ type: "text" as const, text: error instanceof Error ? error.message : "FORGE tool failed." }],
+    content: [{ type: "text" as const, text: error instanceof Error ? error.message : "ANVIL tool failed." }],
   };
 }
 
@@ -46,7 +96,7 @@ async function auditReadOnlyMcpTool<T>(tool: string, operation: () => Promise<T>
     const value = await operation();
     process.stderr.write(
       JSON.stringify({
-        type: "forge-tool-audit",
+        type: "anvil-tool-audit",
         tool,
         allowed: true,
         outcome: "success",
@@ -59,7 +109,7 @@ async function auditReadOnlyMcpTool<T>(tool: string, operation: () => Promise<T>
   } catch (error) {
     process.stderr.write(
       JSON.stringify({
-        type: "forge-tool-audit",
+        type: "anvil-tool-audit",
         tool,
         allowed: true,
         outcome: "error",
@@ -74,7 +124,7 @@ async function auditReadOnlyMcpTool<T>(tool: string, operation: () => Promise<T>
 
 const server = new McpServer({
   name: "anvil-engineering-workbench",
-  version: "1.1.1",
+  version: resolveVersion(),
 });
 
 function registerToolWithAlias<T extends z.ZodRawShape>(
@@ -97,18 +147,43 @@ registerToolWithAlias(
   {
     title: "Inspect project",
     description:
-      "Read-only inventory of a project: languages, frameworks, package managers, scripts, dependencies and detected warnings. Does not execute project code.",
+      "Inspect project structure, languages, frameworks, package managers, scripts, and dependencies. Call this first when onboarding to an unfamiliar codebase or checking project stack before running builds or migrations. Does NOT execute project code. Returns compact summary by default; pass detail: true for full manifests.",
     inputSchema: z.object({
       projectPath: z
         .string()
         .optional()
         .describe("Workspace-relative directory. Defaults to the configured workspace root."),
+      detail: z
+        .boolean()
+        .optional()
+        .default(false)
+        .describe(
+          "When false (default), returns an executive summary (~500 chars) saving model tokens. Pass true for full dependency manifests and complete script listings."
+        ),
     }),
   },
-  async ({ projectPath }) => {
+  async ({ projectPath, detail }) => {
     try {
       const root = await resolveWorkspace(projectPath);
-      return result(await auditReadOnlyMcpTool("anvil_inspect_project", () => inspectProject(root)));
+      const report = await auditReadOnlyMcpTool("anvil_inspect_project", () => inspectProject(root));
+      if (!detail) {
+        const summary = {
+          root: report.root,
+          languages: report.summary.languages,
+          filesScanned: report.summary.filesScanned,
+          packageManagers: report.packageManagers,
+          frameworks: report.frameworks,
+          dependencies: report.dependencies,
+          scripts: Object.keys(report.scripts),
+          importantFiles: report.importantFiles,
+          warnings: report.warnings,
+        };
+        return result(summary, {
+          compact: true,
+          hint: "Pass detail: true to view full dependency manifests and detailed script definitions.",
+        });
+      }
+      return result(report, { compact: false });
     } catch (error) {
       return failure(error);
     }
@@ -120,18 +195,42 @@ registerToolWithAlias(
   {
     title: "Map architecture",
     description:
-      "Read-only map of source files, internal imports, entry points and external packages. Does not execute project code.",
+      "Map project architecture, entry points, module relationships, and external dependencies. Call this BEFORE modifying core architecture, planning refactors, or tracing imports across files instead of manually reading 20+ files. Does NOT execute project code. Returns compact summary by default; pass detail: true for full graph.",
     inputSchema: z.object({
       projectPath: z
         .string()
         .optional()
         .describe("Workspace-relative directory. Defaults to the configured workspace root."),
+      detail: z
+        .boolean()
+        .optional()
+        .default(false)
+        .describe(
+          "When false (default), returns high-level module graph summary (~600 chars). Pass true for every node and edge in the project graph."
+        ),
     }),
   },
-  async ({ projectPath }) => {
+  async ({ projectPath, detail }) => {
     try {
       const root = await resolveWorkspace(projectPath);
-      return result(await auditReadOnlyMcpTool("anvil_map_architecture", () => mapArchitecture(root)));
+      const map = await auditReadOnlyMcpTool("anvil_map_architecture", () => mapArchitecture(root));
+      if (!detail) {
+        const summary = {
+          root: map.root,
+          scannedFiles: map.scannedFiles,
+          entryPoints: map.entryPoints,
+          totalNodes: map.nodes.length,
+          totalEdges: map.edges.length,
+          externalPackages: map.externalPackages.slice(0, 15),
+          sampleModules: map.nodes.slice(0, 10).map((n) => ({ file: n.file, role: n.role, lines: n.lines })),
+          warnings: map.warnings,
+        };
+        return result(summary, {
+          compact: true,
+          hint: "Pass detail: true to view all file nodes, internal imports, and complete dependency graph.",
+        });
+      }
+      return result(map, { compact: false });
     } catch (error) {
       return failure(error);
     }
@@ -143,7 +242,7 @@ registerToolWithAlias(
   {
     title: "Search code",
     description:
-      "Search source identifiers and text in a project. Secret-like filenames, hidden directories, dependencies and generated output are excluded by the underlying scanner.",
+      "Search identifiers, function names, and text in project source code within workspace security boundaries (excludes .env, secrets, node_modules, generated code). Call this for targeted symbol lookups instead of broad recursive greps.",
     inputSchema: z.object({
       query: z.string().min(2).max(120),
       projectPath: z
@@ -165,7 +264,7 @@ registerToolWithAlias(
           { query, limit: Math.min(limit ?? 10, 20) },
           {
             onAudit: (event) => {
-              process.stderr.write(JSON.stringify({ type: "forge-tool-audit", ...event }) + String.fromCharCode(10));
+              process.stderr.write(JSON.stringify({ type: "anvil-tool-audit", ...event }) + String.fromCharCode(10));
             },
           }
         )
@@ -181,7 +280,7 @@ registerToolWithAlias(
   {
     title: "List workspace files",
     description:
-      "Read-only directory listing for supported source and documentation files. Hidden paths, secrets, dependencies, generated folders and symlinks are excluded. Results are bounded to 200 entries.",
+      "Read-only directory listing for supported source and config files (bounded to 200 entries; excludes .git, node_modules, secrets, symlinks). Call this to explore directory structure safely.",
     inputSchema: z.object({
       projectPath: z
         .string()
@@ -202,7 +301,7 @@ registerToolWithAlias(
           { relativePath: relativePath ?? "" },
           {
             onAudit: (event) => {
-              process.stderr.write(JSON.stringify({ type: "forge-tool-audit", ...event }) + String.fromCharCode(10));
+              process.stderr.write(JSON.stringify({ type: "anvil-tool-audit", ...event }) + String.fromCharCode(10));
             },
           }
         )
@@ -218,7 +317,7 @@ registerToolWithAlias(
   {
     title: "Read workspace file",
     description:
-      "Read a supported text/source file inside the selected project. Rejects traversal, symlinks, secret-like filenames, binary content and files larger than 128 KiB. Read-only; does not modify files.",
+      "Read a supported text/source file with security guardrails (rejects files >128 KiB, traversal, secrets, binary). Read-only; does not modify files.",
     inputSchema: z.object({
       projectPath: z
         .string()
@@ -239,7 +338,7 @@ registerToolWithAlias(
           { relativePath },
           {
             onAudit: (event) => {
-              process.stderr.write(JSON.stringify({ type: "forge-tool-audit", ...event }) + String.fromCharCode(10));
+              process.stderr.write(JSON.stringify({ type: "anvil-tool-audit", ...event }) + String.fromCharCode(10));
             },
           }
         )
@@ -255,13 +354,47 @@ registerToolWithAlias(
   {
     title: "Audit project quality",
     description:
-      "Run FORGE's static, heuristic project-quality checks and return evidence-backed findings. Does not inspect secret contents, execute project code, or query vulnerability databases.",
-    inputSchema: z.object({ projectPath: z.string().optional() }),
+      "Fast, local static quality audit across manifests, test structure, security patterns, and workflow health. Call this before submitting code to catch missing tests, package issues, and configuration bugs without LLM tokens. Returns compact summary by default; pass detail: true for all findings.",
+    inputSchema: z.object({
+      projectPath: z
+        .string()
+        .optional()
+        .describe("Workspace-relative directory. Defaults to the configured workspace root."),
+      detail: z
+        .boolean()
+        .optional()
+        .default(false)
+        .describe(
+          "When false (default), returns score, grade, and top critical/high findings (~500 chars). Pass true for all findings across all severities."
+        ),
+    }),
   },
-  async ({ projectPath }) => {
+  async ({ projectPath, detail }) => {
     try {
       const root = await resolveWorkspace(projectPath);
-      return result(await auditReadOnlyMcpTool("anvil_quality_audit", () => auditProject(root)));
+      const audit = await auditReadOnlyMcpTool("anvil_quality_audit", () => auditProject(root));
+      if (!detail) {
+        const severityCounts = { critical: 0, high: 0, medium: 0, low: 0, info: 0 };
+        for (const f of audit.findings) {
+          severityCounts[f.severity] = (severityCounts[f.severity] ?? 0) + 1;
+        }
+        const summary = {
+          root: audit.root,
+          score: audit.score,
+          grade: audit.grade,
+          coverage: audit.coverage,
+          metrics: audit.metrics,
+          severityCounts,
+          topFindings: audit.findings.filter((f) => f.severity === "critical" || f.severity === "high").slice(0, 5),
+          totalFindings: audit.findings.length,
+          limitations: audit.limitations,
+        };
+        return result(summary, {
+          compact: true,
+          hint: "Pass detail: true to view all findings across medium, low, and info severities.",
+        });
+      }
+      return result(audit, { compact: false });
     } catch (error) {
       return failure(error);
     }
@@ -273,18 +406,46 @@ registerToolWithAlias(
   {
     title: "Analyze Git changes",
     description:
-      "Read-only analysis of working-tree changes, static downstream impact, suggested test targets and heuristic change risk. Runs Git inspection commands only; it does not modify the repository or execute project scripts.",
+      "Inspect working-tree git diff, uncommitted changes, affected modules, and heuristic commit risk. Call this to check what has changed in the working copy and which tests should be run. Returns compact summary by default; pass detail: true for full blast radius.",
     inputSchema: z.object({
-      projectPath: z.string().optional(),
-      base: z.string().min(1).max(120).optional(),
+      projectPath: z
+        .string()
+        .optional()
+        .describe("Workspace-relative directory. Defaults to the configured workspace root."),
+      base: z.string().min(1).max(120).optional().describe("Base git revision (defaults to 'HEAD')."),
+      detail: z
+        .boolean()
+        .optional()
+        .default(false)
+        .describe(
+          "When false (default), returns change counts, risk level, and suggested test targets. Pass true for per-file impact and complete diff breakdown."
+        ),
     }),
   },
-  async ({ projectPath, base }) => {
+  async ({ projectPath, base, detail }) => {
     try {
       const root = await resolveWorkspace(projectPath);
-      return result(
-        await auditReadOnlyMcpTool("anvil_git_intelligence", () => analyzeGitChanges(root, base ?? "HEAD"))
+      const report = await auditReadOnlyMcpTool("anvil_git_intelligence", () =>
+        analyzeGitChanges(root, base ?? "HEAD")
       );
+      if (!detail) {
+        const summary = {
+          root: report.root,
+          branch: report.branch,
+          base: report.base,
+          changedFilesCount: report.changes.length,
+          changes: report.changes.slice(0, 15),
+          risk: report.risk,
+          suggestedTests: report.suggestedTests,
+          topImpact: report.impact.slice(0, 10),
+          warnings: report.warnings,
+        };
+        return result(summary, {
+          compact: true,
+          hint: "Pass detail: true to view all changed files and full impact blast radius.",
+        });
+      }
+      return result(report, { compact: false });
     } catch (error) {
       return failure(error);
     }
@@ -296,7 +457,7 @@ registerToolWithAlias(
   {
     title: "List specialist agents",
     description:
-      "List built-in FORGE specialist roles and project-local .forge/agents definitions. Agent markdown is treated as untrusted project content.",
+      "List specialist engineering roles (architecture, reviewer, security, tester, debugger, release) and project-local .anvil/agents definitions. Call this to inspect available specialist personas.",
     inputSchema: z.object({ projectPath: z.string().optional() }),
   },
   async ({ projectPath }) => {
@@ -342,7 +503,7 @@ registerToolWithAlias(
         .string()
         .optional()
         .describe(
-          "Workspace-relative directory containing the .forge/benchmark-matrices folder. Defaults to the configured workspace root."
+          "Workspace-relative directory containing the .anvil/benchmark-matrices folder. Defaults to the configured workspace root."
         ),
       suiteId: z.string().optional().describe("Filter to a specific evaluation suite ID. Omit to include all suites."),
       candidateId: z
@@ -417,18 +578,41 @@ registerToolWithAlias(
   {
     title: "Change risk intelligence",
     description:
-      "Analyze working-tree changed files, blast radius, structural complexity hotspots, and candidate test targets.",
+      "Analyze blast radius, downstream dependency impact, structural complexity, and suggested test targets for current git changes. Call this BEFORE committing or creating PRs to identify breaking changes and ensure adequate test coverage. Returns compact summary by default; pass detail: true for complete breakdown.",
     inputSchema: z.object({
       projectPath: z
         .string()
         .optional()
         .describe("Workspace-relative directory. Defaults to the configured workspace root."),
+      detail: z
+        .boolean()
+        .optional()
+        .default(false)
+        .describe(
+          "When false (default), returns overall risk score, level, and top high-risk files. Pass true for all changed files and test candidates."
+        ),
     }),
   },
-  async ({ projectPath }) => {
+  async ({ projectPath, detail }) => {
     try {
       const root = await resolveWorkspace(projectPath);
-      return result(await auditReadOnlyMcpTool("anvil_change_risk", () => analyzeChangeIntelligence(root)));
+      const report = await auditReadOnlyMcpTool("anvil_change_risk", () => analyzeChangeIntelligence(root));
+      if (!detail) {
+        const summary = {
+          root: report.root,
+          branch: report.branch,
+          base: report.base,
+          summary: report.summary,
+          overallRisk: report.overallRisk,
+          topHighRiskChanges: report.changes.filter((c) => c.level === "high" || c.level === "elevated").slice(0, 5),
+          warnings: report.warnings,
+        };
+        return result(summary, {
+          compact: true,
+          hint: "Pass detail: true to view all changed files, structural scores, and candidate test targets.",
+        });
+      }
+      return result(report, { compact: false });
     } catch (error) {
       return failure(error);
     }
@@ -578,14 +762,40 @@ registerToolWithAlias(
   {
     title: "Audit repository security & secrets",
     description:
-      "Deep scan repository for hardcoded secrets, API keys, sensitive tokens, and dangerous script patterns.",
-    inputSchema: z.object({ projectPath: z.string().optional() }),
+      "Deep scan repository for hardcoded secrets, API keys, sensitive tokens, and dangerous script patterns. Call this BEFORE pushing code or making public releases to guarantee no credentials leak. Returns compact summary by default; pass detail: true for snippets and evidence.",
+    inputSchema: z.object({
+      projectPath: z
+        .string()
+        .optional()
+        .describe("Workspace-relative directory. Defaults to the configured workspace root."),
+      detail: z
+        .boolean()
+        .optional()
+        .default(false)
+        .describe(
+          "When false (default), returns scan summary and critical/high secrets. Pass true for all findings and code snippets."
+        ),
+    }),
   },
-  async ({ projectPath }) => {
+  async ({ projectPath, detail }) => {
     try {
       const root = await resolveWorkspace(projectPath);
       const { scanProjectSecurity } = await import("../core/security-scanner.js");
-      return result(await auditReadOnlyMcpTool("anvil_security_audit", () => scanProjectSecurity(root)));
+      const report = await auditReadOnlyMcpTool("anvil_security_audit", () => scanProjectSecurity(root));
+      if (!detail) {
+        const summary = {
+          scannedFiles: report.scannedFiles,
+          durationMs: report.durationMs,
+          summary: report.summary,
+          passed: report.passed,
+          topFindings: report.findings.filter((f) => f.severity === "critical" || f.severity === "high").slice(0, 5),
+        };
+        return result(summary, {
+          compact: true,
+          hint: "Pass detail: true to view all security findings, line numbers, and snippet evidence.",
+        });
+      }
+      return result(report, { compact: false });
     } catch (error) {
       return failure(error);
     }
@@ -623,7 +833,7 @@ for (const name of ["forge_clean_preview", "anvil_clean_preview"] as const) {
     {
       title: "Preview workspace cleanup and dead code",
       description:
-        "Perform a safe, read-only dry-run scan to identify junk files, cache files, build artifacts, temporary downloads, and unreferenced orphan source modules.",
+        "Perform a safe, read-only dry-run scan to identify junk files, cache files, build artifacts, temporary downloads, and unreferenced orphan source modules. Call this before releases or repo cleanup. Returns compact summary by default; pass detail: true for itemized list.",
       inputSchema: z.object({
         projectPath: z
           .string()
@@ -633,16 +843,42 @@ for (const name of ["forge_clean_preview", "anvil_clean_preview"] as const) {
           .boolean()
           .optional()
           .describe("Scan and flag unreferenced source files across TypeScript, Python, Rust, Go, Java, and C/C++."),
+        detail: z
+          .boolean()
+          .optional()
+          .default(false)
+          .describe(
+            "When false (default), returns reclaimable byte counts and category totals. Pass true for itemized list of every removable file."
+          ),
       }),
     },
-    async ({ projectPath, includeOrphans }) => {
+    async ({ projectPath, includeOrphans, detail }) => {
       try {
         const root = await resolveWorkspace(projectPath);
-        return result(
-          await auditReadOnlyMcpTool(name, () =>
-            cleanProject(root, { apply: false, checkOrphans: includeOrphans ?? true })
-          )
+        const preview = await auditReadOnlyMcpTool(name, () =>
+          cleanProject(root, { apply: false, checkOrphans: includeOrphans ?? true })
         );
+        if (!detail) {
+          const summary = {
+            root: preview.root,
+            dryRun: preview.dryRun,
+            stats: preview.stats,
+            orphanFilesCount: preview.orphanFiles.length,
+            junkCategories: preview.junkItems.reduce(
+              (acc, item) => {
+                acc[item.category] = (acc[item.category] ?? 0) + 1;
+                return acc;
+              },
+              {} as Record<string, number>
+            ),
+            warnings: preview.warnings,
+          };
+          return result(summary, {
+            compact: true,
+            hint: "Pass detail: true to view the complete list of files identified for cleanup.",
+          });
+        }
+        return result(preview, { compact: false });
       } catch (error) {
         return failure(error);
       }

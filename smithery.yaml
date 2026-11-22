@@ -1,0 +1,10 @@
+# Smithery configuration for ANVIL Engineering Workbench
+startCommand:
+  type: stdio
+  config:
+    command: npx
+    args:
+      - -y
+      - anvil-engineering-workbench
+      - mcp
+      - start

@@ -1409,14 +1409,10 @@ async function main(args: string[]): Promise<void> {
             process.stdout.write(`✓ [${res.client.toUpperCase()}]: ${res.details}\n`);
           }
           process.stdout.write(`\nYour AI harness is ready to use ANVIL tools!\n`);
-        } else if (
-          subcommand === "server" ||
-          subcommand === "start" ||
-          subcommand === "run" ||
-          (!process.stdin.isTTY && subcommand !== "help" && !rest.includes("--help") && !rest.includes("-h"))
-        ) {
+        } else if (subcommand === "server" || subcommand === "start" || subcommand === "run") {
+          const { pathToFileURL } = await import("node:url");
           const script = resolveMcpServerScript();
-          await import(script);
+          await import(pathToFileURL(script).href);
         } else {
           const script = resolveMcpServerScript();
           process.stdout.write(`ANVIL Model Context Protocol (MCP) Server\n\n`);
