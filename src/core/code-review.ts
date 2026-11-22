@@ -3,6 +3,8 @@ import path from "node:path";
 import { analyzeGitChanges } from "./git-intelligence.js";
 
 export type ReviewSeverity = "high" | "medium" | "low";
+export type RuleConfidence = "high" | "medium" | "low" | "heuristic";
+
 export interface ReviewFinding {
   ruleId: string;
   severity: ReviewSeverity;
@@ -11,7 +13,7 @@ export interface ReviewFinding {
   title: string;
   evidence: string;
   recommendation: string;
-  confidence: "heuristic";
+  confidence: RuleConfidence;
 }
 export interface InlineSuppressionRecord {
   file: string;
@@ -109,52 +111,101 @@ function inspectLines(
     fileDisabledReason = parsed.reason;
   }
 
-  const rules: Array<{ id: string; severity: ReviewSeverity; title: string; pattern: RegExp; recommendation: string }> =
-    [
-      {
-        id: "ANVIL-R001",
-        severity: "high",
-        title: "Dynamic code evaluation",
-        pattern: /\beval\s*\(|\bnew\s+Function\s*\(/,
-        recommendation: "Avoid evaluating generated strings. Prefer explicit parsers or allow-listed operations.",
-      },
-      {
-        id: "ANVIL-R002",
-        severity: "medium",
-        title: "Shell execution API usage",
-        pattern: /\b(?:exec|execSync|execFile|execFileSync|spawn|spawnSync)\s*\(/,
-        recommendation:
-          "Review argument handling, executable allow-lists, and whether shell mode is enabled. Prefer argument arrays and avoid shell interpolation.",
-      },
-      {
-        id: "ANVIL-R003",
-        severity: "medium",
-        title: "HTML injection sink",
-        pattern: /\.(?:innerHTML|outerHTML)\s*=/,
-        recommendation: "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer.",
-      },
-      {
-        id: "ANVIL-R004",
-        severity: "low",
-        title: "TypeScript error suppression",
-        pattern: /@ts-ignore\b/,
-        recommendation: "Prefer @ts-expect-error with an explanation, or correct the underlying type mismatch.",
-      },
-      {
-        id: "ANVIL-R005",
-        severity: "low",
-        title: "Potentially empty catch block",
-        pattern: /catch\s*(?:\([^)]*\))?\s*\{\s*\}/,
-        recommendation: "Handle, report, or deliberately document the error instead of silently discarding it.",
-      },
-      {
-        id: "ANVIL-R006",
-        severity: "medium",
-        title: "Dangerously injected HTML property",
-        pattern: /dangerouslySetInnerHTML/,
-        recommendation: "Ensure content is trusted or sanitized immediately before rendering.",
-      },
-    ];
+  interface ReviewRuleDef {
+    id: string;
+    severity: ReviewSeverity;
+    title: string;
+    pattern: RegExp;
+    recommendation: string;
+    baseConfidence: RuleConfidence;
+  }
+
+  const rules: ReviewRuleDef[] = [
+    {
+      id: "ANVIL-R001",
+      severity: "high",
+      title: "Dynamic code evaluation",
+      pattern: /\beval\s*\(|\bnew\s+Function\s*\(/,
+      recommendation: "Avoid evaluating generated strings. Prefer explicit parsers or allow-listed operations.",
+      baseConfidence: "high",
+    },
+    {
+      id: "ANVIL-R002",
+      severity: "medium",
+      title: "Shell execution API usage",
+      pattern: /\b(?:exec|execSync|execFile|execFileSync|spawn|spawnSync)\s*\(/,
+      recommendation:
+        "Review argument handling, executable allow-lists, and whether shell mode is enabled. Prefer argument arrays and avoid shell interpolation.",
+      baseConfidence: "medium",
+    },
+    {
+      id: "ANVIL-R003",
+      severity: "medium",
+      title: "HTML injection sink",
+      pattern: /\.(?:innerHTML|outerHTML)\s*=/,
+      recommendation: "Avoid assigning untrusted strings to HTML sinks. Use textContent or a vetted sanitizer.",
+      baseConfidence: "medium",
+    },
+    {
+      id: "ANVIL-R004",
+      severity: "low",
+      title: "TypeScript error suppression",
+      pattern: /@ts-ignore\b/,
+      recommendation: "Prefer @ts-expect-error with an explanation, or correct the underlying type mismatch.",
+      baseConfidence: "high",
+    },
+    {
+      id: "ANVIL-R005",
+      severity: "low",
+      title: "Potentially empty catch block",
+      pattern: /catch\s*(?:\([^)]*\))?\s*\{\s*\}/,
+      recommendation: "Handle, report, or deliberately document the error instead of silently discarding it.",
+      baseConfidence: "medium",
+    },
+    {
+      id: "ANVIL-R006",
+      severity: "medium",
+      title: "Dangerously injected HTML property",
+      pattern: /dangerouslySetInnerHTML/,
+      recommendation: "Ensure content is trusted or sanitized immediately before rendering.",
+      baseConfidence: "high",
+    },
+  ];
+
+  function calculateConfidence(ruleId: string, baseConfidence: RuleConfidence, lineStr: string): RuleConfidence {
+    const trimmed = lineStr.trim();
+    // Demote to low confidence if the match appears within string literals or documentation comments
+    const isStringContext = /(?:["'`]).*?(?:eval\s*\(|new\s+Function|innerHTML|outerHTML|exec|spawn).*?(?:["'`])/.test(
+      trimmed
+    );
+
+    if (isStringContext) {
+      return "low";
+    }
+
+    if (ruleId === "ANVIL-R001") {
+      if (/(?:^|[^\w$.])(?:eval\s*\([^)]*|new\s+Function\s*\()/.test(trimmed)) {
+        return "high";
+      }
+      return "low";
+    }
+
+    if (ruleId === "ANVIL-R003") {
+      if (/[a-zA-Z0-9_$)\]]\s*\.(?:innerHTML|outerHTML)\s*=/.test(trimmed)) {
+        return "medium";
+      }
+      return "low";
+    }
+
+    if (ruleId === "ANVIL-R002") {
+      if (/shell\s*:\s*true|\$\{|\+\s*[a-zA-Z]/.test(trimmed)) {
+        return "high";
+      }
+      return "medium";
+    }
+
+    return baseConfidence;
+  }
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i] ?? "";
@@ -216,7 +267,7 @@ function inspectLines(
           title: rule.title,
           evidence: line.trim().slice(0, 240),
           recommendation: rule.recommendation,
-          confidence: "heuristic",
+          confidence: calculateConfidence(rule.id, rule.baseConfidence, line),
         });
       }
     }

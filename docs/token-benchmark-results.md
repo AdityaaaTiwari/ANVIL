@@ -13,7 +13,7 @@ When an AI coding assistant (Claude, Cursor, Copilot, Antigravity) answers archi
 
 | Total Unassisted Tokens | ANVIL Compact Tokens | Measured Reduction | Net Token Savings |
 |-------------------------|----------------------|--------------------|-------------------|
-| **224,850 tokens** | **2,216 tokens** | **~99% reduction** | **222,634 tokens** |
+| **226,127 tokens** | **3,698 tokens** | **~98.4% reduction** | **222,429 tokens** |
 
 ---
 
@@ -21,10 +21,10 @@ When an AI coding assistant (Claude, Cursor, Copilot, Antigravity) answers archi
 
 | Scenario | Unassisted Approach | Unassisted Footprint | ANVIL MCP (Compact) | ANVIL Footprint | Reduction | Duration |
 |---|---|---|---|---|---|---|
-| **1. Project Overview & Tech Stack** | Reading package.json, tsconfig.json, and README.md (~full text) | 43,664 chars (~10,916 tokens) | anvil_inspect_project (compact summary) | 862 chars (~216 tokens) | **-98%** | 69ms |
-| **2. Architecture & Module Dependency Mapping** | Reading all 30 source files to trace imports and entry points | 607,424 chars (~151,856 tokens) | anvil_map_architecture (compact summary) | 5,712 chars (~1,428 tokens) | **-99.1%** | 816ms |
-| **3. Change Risk & Blast Radius Analysis** | Reading 5 representative src/core files (stand-in for the files a change touches) | 42,176 chars (~10,544 tokens) | anvil_change_risk (compact summary) | 1,808 chars (~452 tokens) | **-95.7%** | 2413ms |
-| **4. Quality & Security Pre-Commit Audit** | Reading config files, workflows, and sample source files for manual review | 206,135 chars (~51,534 tokens) | anvil_quality_audit + anvil_security_audit (compact) | 477 chars (~120 tokens) | **-99.8%** | 594ms |
+| **1. Project Overview & Tech Stack** | Reading package.json, tsconfig.json, and README.md (~full text) | 43,924 chars (~10,981 tokens) | anvil_inspect_project (compact summary) | 882 chars (~221 tokens) | **-98%** | 80ms |
+| **2. Architecture & Module Dependency Mapping** | Reading all 30 source files to trace imports and entry points | 610,465 chars (~152,617 tokens) | anvil_map_architecture (compact summary) | 5,749 chars (~1,438 tokens) | **-99.1%** | 292ms |
+| **3. Change Risk & Blast Radius Analysis** | Reading 5 representative src/core files (stand-in for the files a change touches) | 42,176 chars (~10,544 tokens) | anvil_change_risk (compact summary) | 7,674 chars (~1,919 tokens) | **-81.8%** | 1134ms |
+| **4. Quality & Security Pre-Commit Audit** | Reading config files, workflows, and sample source files for manual review | 207,939 chars (~51,985 tokens) | anvil_quality_audit + anvil_security_audit (compact) | 478 chars (~120 tokens) | **-99.8%** | 246ms |
 
 ---
 
@@ -65,9 +65,9 @@ In an engineering workflow where an agent evaluates project stack, maps architec
 | **2. Architecture Map** | ~151,856 tokens | ~1,428 tokens | **-150,428 tokens (-99.1%)** |
 | **3. Change Risk Analysis** | ~10,544 tokens | ~448 tokens | **-10,096 tokens (-95.8%)** |
 | **4. Quality & Security Audit** | ~51,511 tokens | ~120 tokens | **-51,391 tokens (-99.8%)** |
-| **Total Net Workflow Tokens** | **224,850 tokens** | **9,046 tokens** (2,216 responses + 6,830 handshake) | **-215,804 net tokens (~96% NET REDUCTION)** |
+| **Total Net Workflow Tokens** | **226,127 tokens** | **10,528 tokens** (3,698 responses + 6,830 handshake) | **-215,599 net tokens (~95.3% NET REDUCTION)** |
 
-> **Conclusion on Overhead:** Even when accounting for the full 6,830-token one-time MCP handshake, ANVIL delivers a **~96% net context reduction** on multi-step engineering tasks because single architecture or quality inspections save 50,000 to 150,000+ tokens each.
+> **Conclusion on Overhead:** Even when accounting for the full 6,830-token one-time MCP handshake, ANVIL delivers a **~95.3% net context reduction** on multi-step engineering tasks because single architecture or quality inspections save 50,000 to 150,000+ tokens each.
 
 ---
 
@@ -76,7 +76,7 @@ In an engineering workflow where an agent evaluates project stack, maps architec
 - **Not equivalent information.** A compact summary omits detail. The percentages show payload size only, not that the agent can answer the same question from it. Use `detail: true` when you need the full graph.
 - **Estimated tokens.** Tokens are `characters / 4`, which varies by model and content.
 - **One repository.** Results come from ANVIL itself. Other repositories will differ, so run the script on yours.
-- **Tool-definition overhead accounted for above.** The initial session handshake is ~6,830 tokens for all 40 declarations, which amortizes over the session to deliver ~96% net savings as shown above.
+- **Tool-definition overhead accounted for above.** The initial session handshake is ~6,830 tokens for all 40 declarations, which amortizes over the session to deliver ~95.3% net savings as shown above.
 
 ---
 

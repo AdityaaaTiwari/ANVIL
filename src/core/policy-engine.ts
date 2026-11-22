@@ -4,6 +4,9 @@ import { createHash } from "node:crypto";
 import { z } from "zod";
 import { scanProjectSecurity, type SecurityAuditReport } from "./security-scanner.js";
 import { reviewProject, type CodeReviewReport, type InlineSuppressionRecord } from "./code-review.js";
+import { analyzeGitChanges } from "./git-intelligence.js";
+import { importExternalSarif } from "./sarif-formatter.js";
+export { importExternalSarif } from "./sarif-formatter.js";
 
 let warnedForgeDockerEnv = false;
 
@@ -30,6 +33,8 @@ export const GatePolicySchema = z
         requireCleanGit: z.boolean().default(false),
         allowInlineSuppressions: z.boolean().default(true),
         requireSuppressionReason: z.boolean().default(false),
+        minConfidence: z.enum(["high", "medium", "low"]).default("medium"),
+        diffOnly: z.boolean().default(false),
       })
       .strict()
       .default({
@@ -37,6 +42,8 @@ export const GatePolicySchema = z
         requireCleanGit: false,
         allowInlineSuppressions: true,
         requireSuppressionReason: false,
+        minConfidence: "medium",
+        diffOnly: false,
       }),
     sandbox: z
       .object({
@@ -68,6 +75,8 @@ export const DEFAULT_GATE_POLICY: GatePolicy = GatePolicySchema.parse({
     requireCleanGit: false,
     allowInlineSuppressions: true,
     requireSuppressionReason: false,
+    minConfidence: "medium",
+    diffOnly: false,
   },
 });
 
@@ -76,6 +85,7 @@ export interface NormalizedFinding {
   source: "security" | "review";
   category?: string | undefined;
   severity: "critical" | "high" | "medium" | "low";
+  confidence?: "high" | "medium" | "low" | "heuristic" | undefined;
   file: string;
   line: number;
   message: string;
@@ -91,6 +101,7 @@ export interface GateEvaluation {
   policy: GatePolicy;
   policySource: string;
   baselineSource?: string | undefined;
+  diffBase?: string | undefined;
   violations: string[];
   warnings: string[];
   summary: {
@@ -100,6 +111,8 @@ export interface GateEvaluation {
     low: number;
     suppressedByBaseline: number;
     inlineSuppressions: number;
+    suppressedByDiff?: number;
+    advisoryLowConfidence?: number;
   };
   activeFindings: NormalizedFinding[];
   suppressedFindings: NormalizedFinding[];
@@ -283,6 +296,10 @@ export interface EvaluateGateOptions {
   policyPath?: string | undefined;
   baselinePath?: string | undefined;
   failOnWarnings?: boolean | undefined;
+  since?: string | undefined;
+  diffOnly?: boolean | undefined;
+  minConfidence?: "high" | "medium" | "low" | undefined;
+  externalSarifPaths?: string[] | undefined;
 }
 
 export async function evaluateGate(targetPath: string, options: EvaluateGateOptions = {}): Promise<GateEvaluation> {
@@ -294,6 +311,11 @@ export async function evaluateGate(targetPath: string, options: EvaluateGateOpti
     security: {
       ...policy.security,
       maxMedium: options.failOnWarnings ? 0 : policy.security.maxMedium,
+    },
+    quality: {
+      ...policy.quality,
+      ...(options.minConfidence ? { minConfidence: options.minConfidence } : {}),
+      ...(options.diffOnly !== undefined ? { diffOnly: options.diffOnly } : {}),
     },
   };
 
@@ -307,6 +329,28 @@ export async function evaluateGate(targetPath: string, options: EvaluateGateOpti
       warnings.push(
         "Sandbox limits (profile, requireRootless, maxMemory, maxCpus, maxProcesses) are designated for containerized verification runs (anvil verify / staged-verification / container-sandbox). They are advisory and not evaluated during static code review gates."
       );
+    }
+  }
+
+  // PR-Diff mode resolution
+  let changedFilesSet: Set<string> | undefined;
+  const diffBase = options.since ?? (effectivePolicy.quality?.diffOnly ? "HEAD" : undefined);
+  if (diffBase) {
+    try {
+      const gitIntel = await analyzeGitChanges(targetPath, diffBase);
+      changedFilesSet = new Set(
+        gitIntel.changes.filter((c) => c.status !== "D").map((c) => c.file.replace(/\\/g, "/"))
+      );
+    } catch (err) {
+      if (options.since) {
+        throw new Error(
+          `Git diff failed for --since ${options.since}: ${err instanceof Error ? err.message : String(err)}`
+        );
+      } else {
+        warnings.push(
+          `Could not determine git diff relative to ${diffBase}: ${err instanceof Error ? err.message : String(err)}`
+        );
+      }
     }
   }
 
@@ -359,6 +403,7 @@ export async function evaluateGate(targetPath: string, options: EvaluateGateOpti
       source: "security",
       category: s.category,
       severity: s.severity,
+      confidence: "high",
       file: s.file,
       line,
       message: s.description,
@@ -380,6 +425,7 @@ export async function evaluateGate(targetPath: string, options: EvaluateGateOpti
       id: r.ruleId,
       source: "review",
       severity: r.severity,
+      confidence: r.confidence ?? "medium",
       file: r.file,
       line: r.line,
       message: r.recommendation,
@@ -390,11 +436,39 @@ export async function evaluateGate(targetPath: string, options: EvaluateGateOpti
     });
   }
 
+  // Phase 3: Ingest external SARIF reports (Semgrep, CodeQL, AgentShield, etc.)
+  if (options.externalSarifPaths && options.externalSarifPaths.length > 0) {
+    for (const sarifPath of options.externalSarifPaths) {
+      try {
+        const externalFindings = await importExternalSarif(sarifPath);
+        allFindings.push(...externalFindings);
+      } catch (err) {
+        violations.push(
+          `Failed to ingest external SARIF from ${sarifPath}: ${err instanceof Error ? err.message : String(err)}`
+        );
+      }
+    }
+  }
+
   const activeFindings: NormalizedFinding[] = [];
   const suppressedFindings: NormalizedFinding[] = [];
+  let suppressedByDiffCount = 0;
+  const resolvedTarget = path.resolve(targetPath);
 
   for (const f of allFindings) {
     const normFile = f.file.replace(/\\/g, "/");
+
+    // PR-diff filtering: if diff scope active, skip findings on untouched files
+    if (changedFilesSet !== undefined) {
+      const relFile = path.isAbsolute(normFile)
+        ? path.relative(resolvedTarget, normFile).replace(/\\/g, "/")
+        : normFile;
+      if (!changedFilesSet.has(relFile) && !changedFilesSet.has(normFile)) {
+        suppressedByDiffCount++;
+        continue;
+      }
+    }
+
     const altLineFp = `${f.source}:${f.id}:${normFile}:L${f.line}`;
     const isSuppressed =
       baseline.has(f.fingerprint) ||
@@ -409,10 +483,38 @@ export async function evaluateGate(targetPath: string, options: EvaluateGateOpti
     }
   }
 
-  const criticalFindings = activeFindings.filter((f) => f.severity === "critical");
-  const highFindings = activeFindings.filter((f) => f.severity === "high");
-  const mediumFindings = activeFindings.filter((f) => f.severity === "medium");
-  const lowFindings = activeFindings.filter((f) => f.severity === "low");
+  // Confidence filtering: demote findings below minConfidence to non-blocking advisory notices
+  const minConfidence = effectivePolicy.quality?.minConfidence ?? "medium";
+  const confidenceRank: Record<string, number> = {
+    high: 3,
+    medium: 2,
+    heuristic: 2,
+    low: 1,
+  };
+  const minRank = confidenceRank[minConfidence] ?? 2;
+
+  const blockingFindings: NormalizedFinding[] = [];
+  const advisoryLowConfidenceFindings: NormalizedFinding[] = [];
+
+  for (const f of activeFindings) {
+    const rank = confidenceRank[f.confidence ?? "medium"] ?? 2;
+    if (rank >= minRank) {
+      blockingFindings.push(f);
+    } else {
+      advisoryLowConfidenceFindings.push(f);
+    }
+  }
+
+  if (advisoryLowConfidenceFindings.length > 0) {
+    warnings.push(
+      `${advisoryLowConfidenceFindings.length} heuristic finding(s) with confidence below '${minConfidence}' were demoted to non-blocking advisory notices.`
+    );
+  }
+
+  const criticalFindings = blockingFindings.filter((f) => f.severity === "critical");
+  const highFindings = blockingFindings.filter((f) => f.severity === "high");
+  const mediumFindings = blockingFindings.filter((f) => f.severity === "medium");
+  const lowFindings = blockingFindings.filter((f) => f.severity === "low");
 
   // Enforce threshold limits
   if (criticalFindings.length > effectivePolicy.security.maxCritical) {
@@ -553,6 +655,7 @@ export async function evaluateGate(targetPath: string, options: EvaluateGateOpti
     policy: effectivePolicy,
     policySource,
     ...(options.baselinePath ? { baselineSource: options.baselinePath } : {}),
+    ...(diffBase ? { diffBase } : {}),
     violations,
     warnings,
     summary: {
@@ -562,6 +665,8 @@ export async function evaluateGate(targetPath: string, options: EvaluateGateOpti
       low: lowFindings.length,
       suppressedByBaseline: suppressedFindings.length,
       inlineSuppressions: inlineSuppressions.length,
+      suppressedByDiff: suppressedByDiffCount,
+      advisoryLowConfidence: advisoryLowConfidenceFindings.length,
     },
     activeFindings,
     suppressedFindings,

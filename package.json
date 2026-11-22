@@ -33,6 +33,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "bench": "tsx scripts/measure-token-footprint.ts",
+    "eval:harness": "tsx scripts/agent-eval-harness.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint": "tsc --noEmit -p tsconfig.json && prettier --check \"src/**/*.ts\" \"tests/**/*.ts\" \"api/**/*.ts\"",
     "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\" \"api/**/*.ts\"",

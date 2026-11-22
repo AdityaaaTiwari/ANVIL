@@ -762,12 +762,12 @@ ANVIL's v1.0.6 release introduced an automated AI harness MCP setup wizard (`anv
 
 ### Provenance & Architectural Origin
 
-ANVIL is an independent, original implementation created and maintained by Aditya Tiwari under the permissive MIT license.
-- **Architectural Reference:** ANVIL draws inspiration from patterns in the Everything-Claude-Code (ECC) ecosystem and modern local-first developer harnesses.
-- **Independent Codebase:** Every line of TypeScript, AST parser, DAG workflow engine, SARIF generator, and MCP integration is independently authored and maintained with dedicated test suites.
-- **No Upstream License Baggage:** ANVIL contains zero proprietary dependencies or borrowed non-permissive code.
+ANVIL builds upon foundational concepts and CLI patterns from the open-source **[FORGE project](https://github.com/ansh44233/FORGE-ECC)** by **Ansh** and the Everything-Claude-Code (ECC) ecosystem.
+- **Upstream Foundation:** ANVIL gratefully attributes its architectural lineage to FORGE-ECC under the permissive MIT license. See [NOTICE](NOTICE) and [ACKNOWLEDGEMENTS.md](ACKNOWLEDGEMENTS.md) for full upstream provenance and contributor attribution.
+- **Evolution into Verification & Gatekeeper:** ANVIL has evolved independently into a specialized, deterministic verification gate (`anvil gate`), multi-language AST code intelligence, multi-tool SARIF aggregator (Semgrep/CodeQL), Policy-as-Code enforcement, and Model Context Protocol (MCP) server.
+- **Permissive Open Source:** Both ANVIL and upstream FORGE are distributed under the permissive [MIT License](LICENSE).
 
-The project is maintained as an original ANVIL codebase. ECC is a capability and documentation reference; ANVIL maintains its own identity, implementation, data models and roadmap.
+The project is actively maintained with its own identity, data models, roadmap, and test suites.
 
 For release-by-release changes, see [CHANGELOG.md](CHANGELOG.md).
 

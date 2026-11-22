@@ -432,4 +432,138 @@ describe("ANVIL Policy-as-Code & Gate Baseline Engine", () => {
       await rm(root, { recursive: true, force: true });
     }
   });
+
+  it("demotes low-confidence heuristic findings to advisory notices under default minConfidence=medium", async () => {
+    const root = await createTempWorkspace();
+    try {
+      await writeFile(path.join(root, "package.json"), JSON.stringify({ name: "confidence-app" }));
+      // Match inside string description - low confidence heuristic
+      await writeFile(
+        path.join(root, "docs.ts"),
+        'export const guide = "Never use eval(untrustedString) in production code";\n'
+      );
+
+      // Under default policy (minConfidence="medium"), low-confidence finding is advisory and does not fail gate
+      const evaluation = await evaluateGate(root);
+      expect(evaluation.passed).toBe(true);
+      expect(evaluation.violations.length).toBe(0);
+      expect(evaluation.summary.critical).toBe(0);
+      expect(evaluation.summary.high).toBe(0);
+      expect(evaluation.summary.advisoryLowConfidence).toBe(1);
+      expect(evaluation.warnings.some((w) => w.includes("demoted to non-blocking advisory"))).toBe(true);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("fails gate on low-confidence finding when minConfidence is set to low", async () => {
+    const root = await createTempWorkspace();
+    try {
+      await writeFile(path.join(root, "package.json"), JSON.stringify({ name: "strict-confidence-app" }));
+      await writeFile(
+        path.join(root, "docs.ts"),
+        'export const guide = "Never use eval(untrustedString) in production code";\n'
+      );
+
+      const strictPolicyPath = path.join(root, "policy.json");
+      await writeFile(
+        strictPolicyPath,
+        JSON.stringify({
+          version: 1,
+          security: { maxCritical: 0, maxHigh: 0, maxMedium: 10, failOnSecrets: true },
+          quality: { minConfidence: "low" },
+        })
+      );
+
+      // When minConfidence="low", even the string match counts as high severity and fails maxHigh=0 limit
+      const evaluation = await evaluateGate(root, { policyPath: strictPolicyPath });
+      expect(evaluation.passed).toBe(false);
+      expect(evaluation.violations.some((v) => v.includes("High-severity findings exceeded limit"))).toBe(true);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("ingests external SARIF reports from linters/security tools and enforces gate thresholds", async () => {
+    const root = await createTempWorkspace();
+    try {
+      await writeFile(path.join(root, "package.json"), JSON.stringify({ name: "sarif-ingest-app" }));
+      await writeFile(path.join(root, "clean.ts"), "export const pi = 3.14;\n");
+
+      // Mock external Semgrep SARIF file with a critical SQL injection finding
+      const semgrepSarif = {
+        version: "2.1.0",
+        runs: [
+          {
+            tool: { driver: { name: "semgrep" } },
+            results: [
+              {
+                ruleId: "javascript.lang.security.injection.sql-injection",
+                level: "error",
+                message: { text: "Detected user-controlled input in database query string" },
+                locations: [
+                  {
+                    physicalLocation: {
+                      artifactLocation: { uri: "src/db.ts" },
+                      region: { startLine: 42 },
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      };
+      const sarifPath = path.join(root, "semgrep.sarif");
+      await writeFile(sarifPath, JSON.stringify(semgrepSarif, null, 2), "utf8");
+
+      // Ingesting the external SARIF report introduces a critical finding that fails the gate
+      const evaluation = await evaluateGate(root, { externalSarifPaths: [sarifPath] });
+      expect(evaluation.passed).toBe(false);
+      expect(evaluation.summary.critical).toBe(1);
+      expect(evaluation.activeFindings.some((f) => f.id === "javascript.lang.security.injection.sql-injection")).toBe(
+        true
+      );
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("suppresses violations in untouched files when diff-only mode is active", async () => {
+    const { execFile } = await import("node:child_process");
+    const { promisify } = await import("node:util");
+    const execAsync = promisify(execFile);
+
+    const root = await createTempWorkspace();
+    try {
+      await writeFile(path.join(root, "package.json"), JSON.stringify({ name: "diff-gate-app" }));
+      // Legacy file with a hardcoded secret
+      await writeFile(path.join(root, "legacy.ts"), 'const token = "sk-12345678901234567890123456789012";\n');
+
+      await execAsync("git", ["init", root]);
+      await execAsync("git", ["-C", root, "config", "user.email", "test@anvil.invalid"]);
+      await execAsync("git", ["-C", root, "config", "user.name", "ANVIL Test"]);
+      await execAsync("git", ["-C", root, "add", "."]);
+      await execAsync("git", ["-C", root, "commit", "-m", "Initial legacy commit"]);
+
+      // Now create a new PR commit that adds a clean file WITHOUT touching legacy.ts
+      await writeFile(path.join(root, "feature.ts"), "export const feature = 'awesome';\n");
+      await execAsync("git", ["-C", root, "add", "feature.ts"]);
+      await execAsync("git", ["-C", root, "commit", "-m", "Add new feature"]);
+
+      // Full gate without diff mode fails due to legacy.ts secret
+      const fullEvaluation = await evaluateGate(root);
+      expect(fullEvaluation.passed).toBe(false);
+      expect(fullEvaluation.summary.critical).toBeGreaterThan(0);
+
+      // Gate in diff mode relative to HEAD~1 PASSES because feature.ts is clean!
+      const diffEvaluation = await evaluateGate(root, { since: "HEAD~1" });
+      expect(diffEvaluation.passed).toBe(true);
+      expect(diffEvaluation.summary.critical).toBe(0);
+      expect(diffEvaluation.summary.suppressedByDiff).toBeGreaterThan(0);
+      expect(diffEvaluation.diffBase).toBe("HEAD~1");
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
 });

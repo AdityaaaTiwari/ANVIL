@@ -107,7 +107,7 @@ ANVIL 1.0.8 focuses on enterprise company-adoption readiness, addressing third-p
   - Loosened CI security audit gate to `npm audit --audit-level=high --omit=dev` to prevent transient dev-dependency advisories from blocking production builds.
   - Added `lint`, `format:check`, and `test:coverage` scripts and contributor metadata to `package.json`.
   - Updated `SECURITY.md` with realistic solo maintainer SLAs (48–72h initial response) and explicitly documented GitHub Private Vulnerability Reporting enablement.
-  - Clarified architectural provenance in `README.md` affirming 100% original, clean-room MIT-licensed code.
+  - Clarified architectural provenance in `README.md` affirming clear upstream attribution to FORGE, independent verification specialization, and MIT licensing.
 
 ## 1.0.7 — Architecture Decision Records (ADR), Deep Security Scanner & Live Workflow DAG Runner
 

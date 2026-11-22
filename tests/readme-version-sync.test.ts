@@ -52,12 +52,29 @@ describe("README and package version/tool synchronization", () => {
     expect(readme).toContain("`anvil_security_audit`");
   });
 
-  it("avoids legally sensitive clean-room claims while maintaining attribution", async () => {
+  it("avoids legally sensitive clean-room claims while maintaining upstream attribution", async () => {
     const readme = await readFile(path.resolve("README.md"), "utf8");
+    const license = await readFile(path.resolve("LICENSE"), "utf8");
+    const notice = await readFile(path.resolve("NOTICE"), "utf8");
+    const ack = await readFile(path.resolve("ACKNOWLEDGEMENTS.md"), "utf8");
 
+    // Must not contain defensive clean-room claims
     expect(readme).not.toContain("clean-room");
-    expect(readme).toContain("independent, original implementation");
-    expect(readme).toContain("MIT license");
+    expect(readme).not.toContain("No Upstream License Baggage");
+
+    // Must contain clear attribution to upstream FORGE and Ansh
+    expect(readme).toContain("FORGE project");
+    expect(readme).toContain("Ansh");
+    expect(readme).toContain("NOTICE");
+    expect(readme).toContain("ACKNOWLEDGEMENTS.md");
+    expect(readme).toContain("MIT License");
+
+    // License and notices must contain dual copyright attribution
+    expect(license).toContain("Aditya Tiwari (ANVIL)");
+    expect(license).toContain("Ansh (FORGE / FORGE-ECC upstream)");
+    expect(notice).toContain("FORGE / FORGE-ECC");
+    expect(notice).toContain("Ansh");
+    expect(ack).toContain("Upstream Foundation: FORGE & Ansh");
   });
 
   it("ensures release.yml validates action.yml default version against package version", async () => {

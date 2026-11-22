@@ -1565,6 +1565,10 @@ Options:
   --policy PATH             Custom JSON policy file (defaults to .anvil/policy.json if present)
   --baseline PATH           Baseline JSON file to suppress known existing findings
   --generate-baseline PATH  Export current findings as a baseline JSON file
+  --since REF               Evaluate only files modified since git revision (e.g. origin/main, HEAD~1)
+  --diff                    Evaluate only modified files in current working tree relative to HEAD
+  --min-confidence LEVEL    Minimum rule confidence to block gate (high, medium, low; default: medium)
+  --import-sarif PATH       Import external SARIF v2.1.0 report (e.g. Semgrep, CodeQL, Snyk)
   --fail-on-warnings        Fail gate (exit 1) on medium-severity warnings as well as critical/high errors
   --json                    Output full gate evaluation in machine-readable JSON format
   --help                    Show this help message
@@ -1583,17 +1587,29 @@ Exit codes:
       };
       const isJson = rest.includes("--json");
       const failOnWarnings = rest.includes("--fail-on-warnings");
+      const diffOnly = rest.includes("--diff");
       const sarifPath = option("--sarif");
       const policyPath = option("--policy");
       const baselinePath = option("--baseline");
       const generateBaselinePath = option("--generate-baseline");
+      const since = option("--since");
+      const minConfidence = option("--min-confidence") as "high" | "medium" | "low" | undefined;
+      const externalSarifPaths: string[] = [];
+      for (let i = 0; i < rest.length; i++) {
+        if (rest[i] === "--import-sarif" && rest[i + 1] && !rest[i + 1]!.startsWith("--")) {
+          externalSarifPaths.push(rest[i + 1]!);
+        }
+      }
       const positional = rest.filter(
-        (arg) =>
+        (arg, index) =>
           !arg.startsWith("--") &&
           arg !== sarifPath &&
           arg !== policyPath &&
           arg !== baselinePath &&
-          arg !== generateBaselinePath
+          arg !== generateBaselinePath &&
+          arg !== since &&
+          arg !== minConfidence &&
+          rest[index - 1] !== "--import-sarif"
       );
       const target = path.resolve(positional[0] ?? ".");
 
@@ -1602,6 +1618,10 @@ Exit codes:
           policyPath,
           baselinePath,
           failOnWarnings,
+          since,
+          diffOnly,
+          minConfidence,
+          externalSarifPaths: externalSarifPaths.length > 0 ? externalSarifPaths : undefined,
         });
 
         if (generateBaselinePath) {
@@ -1662,6 +1682,11 @@ Exit codes:
               `Baseline: ${evaluation.baselineSource} (${evaluation.summary.suppressedByBaseline} findings suppressed)`
             );
           }
+          if (evaluation.diffBase) {
+            lines.push(
+              `Diff Scope: relative to ${evaluation.diffBase} (${evaluation.summary.suppressedByDiff ?? 0} findings outside diff)`
+            );
+          }
           lines.push(
             ``,
             `Findings Summary:`,
@@ -1673,8 +1698,14 @@ Exit codes:
           if (evaluation.summary.suppressedByBaseline > 0) {
             lines.push(`  Suppressed by baseline: ${evaluation.summary.suppressedByBaseline}`);
           }
+          if (evaluation.summary.suppressedByDiff && evaluation.summary.suppressedByDiff > 0) {
+            lines.push(`  Suppressed by diff:     ${evaluation.summary.suppressedByDiff}`);
+          }
           if (evaluation.summary.inlineSuppressions > 0) {
             lines.push(`  Inline suppressions:   ${evaluation.summary.inlineSuppressions}`);
+          }
+          if (evaluation.summary.advisoryLowConfidence && evaluation.summary.advisoryLowConfidence > 0) {
+            lines.push(`  Advisory (low confidence): ${evaluation.summary.advisoryLowConfidence}`);
           }
           lines.push(``);
           if (evaluation.warnings && evaluation.warnings.length > 0) {
