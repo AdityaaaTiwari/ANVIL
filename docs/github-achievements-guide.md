@@ -47,6 +47,9 @@ Share ANVIL with developer friends, post on LinkedIn/Twitter/Reddit, or link it 
 
 ---
 
-## Batch Automation for Gold Tier (x3 / x4)
+## Advancing to Higher Tiers (Silver & Gold)
 
-To level up **Pull Shark** (to 16 / 128 PRs) and **Pair Extraordinaire** (to 24 PRs), see the helper script in `scripts/unlock-pr-achievements.ps1`.
+To level up **Pull Shark** (to 16 / 128 PRs) and **Pair Extraordinaire** (to 10 / 24 PRs):
+- Each genuine feature, bug fix, or documentation PR merged into `main` counts towards Pull Shark.
+- Adding a `Co-authored-by:` trailer to commit messages when collaborating or pairing automatically advances Pair Extraordinaire.
+- No spam or dummy commits are needed—regular open-source development advances both badges organically.
