@@ -372,7 +372,7 @@ body{
     <div class="mark">A.</div>
     <div>
       <strong>ANVIL</strong>
-      <small>THE AI ENGINEERING WORKBENCH · v1.0.7</small>
+      <small>THE AI ENGINEERING WORKBENCH · v1.1.2</small>
     </div>
   </div>
   <div class="header-actions">
@@ -388,7 +388,7 @@ body{
 
 <nav class="tab-nav">
   <button class="tab-btn active" data-tab="tab-overview">📊 Overview & Health</button>
-  <button class="tab-btn" data-tab="tab-cleaner">⚡ Self-Healing & Security (v1.0.7)</button>
+  <button class="tab-btn" data-tab="tab-cleaner">⚡ Self-Healing & Security</button>
   <button class="tab-btn" data-tab="tab-agents">🤖 Agents & Workflow Studio</button>
   <button class="tab-btn" data-tab="tab-architecture">🗺️ Architecture & Graph</button>
   <button class="tab-btn" data-tab="tab-benchmarks">🔬 Benchmarks & Evaluation</button>
@@ -488,12 +488,53 @@ body{
     </div>
     <div id="memoryList" class="list"><div class="loading">Loading project memory…</div></div>
   </section>
+
+  <section class="section card">
+    <div class="section-head">
+      <h2>Model Context Protocol (MCP) & AI Harness</h2>
+      <div class="actions">
+        <span class="pill pill-emerald">MCP READY (v1.1.2)</span>
+        <span class="pill pill-cyan">ZERO-CLOUD</span>
+      </div>
+    </div>
+    <p class="run-meta">Connect AI coding assistants (Claude Code, Cursor, Windsurf, VS Code, Antigravity) to ANVIL's local deterministic code intelligence, architecture maps, and change risk analysis.</p>
+    <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin-top: 12px;">
+      <div style="background:var(--bg);padding:14px;border-radius:8px;border:1px solid var(--border)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <b>Claude Code (CLI)</b>
+          <span class="pill pill-cyan" style="font-size:10px">1-LINE SETUP</span>
+        </div>
+        <code style="font-size:12px;display:block;background:var(--bg-card);padding:6px;border-radius:4px;word-break:break-all">claude mcp add anvil -- npx -y anvil-engineering-workbench mcp start</code>
+      </div>
+      <div style="background:var(--bg);padding:14px;border-radius:8px;border:1px solid var(--border)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <b>Cursor IDE (.cursor/mcp.json)</b>
+          <span class="pill pill-emerald" style="font-size:10px">JSON-RPC</span>
+        </div>
+        <code style="font-size:12px;display:block;background:var(--bg-card);padding:6px;border-radius:4px;word-break:break-all">"anvil": { "command": "npx", "args": ["-y", "anvil-engineering-workbench", "mcp", "start"] }</code>
+      </div>
+      <div style="background:var(--bg);padding:14px;border-radius:8px;border:1px solid var(--border)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <b>Multi-Editor Wizard</b>
+          <span class="pill pill-purple" style="font-size:10px">CLI ASSISTANT</span>
+        </div>
+        <code style="font-size:12px;display:block;background:var(--bg-card);padding:6px;border-radius:4px;word-break:break-all">anvil mcp setup --client all</code>
+      </div>
+      <div style="background:var(--bg);padding:14px;border-radius:8px;border:1px solid var(--border)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <b>Token Efficiency</b>
+          <span class="pill pill-emerald" style="font-size:10px">~99% REDUCTION</span>
+        </div>
+        <p style="font-size:12px;color:var(--text-muted);margin:0">Compact MCP summaries by default (detail: false). Runs locally on CPU with zero cloud LLM API calls.</p>
+      </div>
+    </div>
+  </section>
 </div>
 
-<!-- ==================== TAB 2: SELF-HEALING, CLEANER & SECURITY (v1.0.7) ==================== -->
+<!-- ==================== TAB 2: SELF-HEALING, CLEANER & SECURITY (v1.1.2) ==================== -->
 <div id="tab-cleaner" class="tab-pane">
   <section class="hero">
-    <div class="eyebrow">ANVIL v1.0.7 SELF-HEALING & SECURITY ENGINE</div>
+    <div class="eyebrow">ANVIL v1.1.2 SELF-HEALING & SECURITY ENGINE</div>
     <h1>Zero-Fear Workspace Cleaner & Rollback</h1>
     <p>Automatically eliminates junk clutter and fixes unused imports across TypeScript, JavaScript and Python with deterministic self-healing rollback verification.</p>
   </section>
@@ -1036,7 +1077,7 @@ body{
 </div>
 
 <footer class="footer">
-  <span>ANVIL v1.0.7 · THE AI ENGINEERING WORKBENCH</span>
+  <span>ANVIL v1.1.2 · THE AI ENGINEERING WORKBENCH</span>
   <span>Read-only local dashboard · Telemetry stays on your machine</span>
 </footer>
 

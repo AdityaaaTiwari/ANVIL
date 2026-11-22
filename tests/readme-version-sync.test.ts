@@ -71,4 +71,13 @@ describe("README and package version/tool synchronization", () => {
     expect(serverRaw).toContain("resolveVersion()");
     expect(serverRaw).not.toMatch(/version:\s*"(?:1\.0\.\d+|1\.1\.\d+)"/);
   });
+
+  it("ensures dashboard-server synchronizes displayed version with package.json version", async () => {
+    const pkgRaw = await readFile(path.resolve("package.json"), "utf8");
+    const pkg = JSON.parse(pkgRaw);
+
+    const dashboardRaw = await readFile(path.resolve("src/core/dashboard-server.ts"), "utf8");
+    expect(dashboardRaw).not.toContain("v1.0.7");
+    expect(dashboardRaw).toContain(`v${pkg.version}`);
+  });
 });
