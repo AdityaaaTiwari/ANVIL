@@ -1,0 +1,23 @@
+title: "[Idea]: "
+labels: ["enhancement", "proposal"]
+category: "Ideas"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have an idea to improve ANVIL's deterministic gate, MCP code intelligence, or CLI?
+        Share your proposal with the community.
+  - type: textarea
+    id: summary
+    attributes:
+      label: Proposal Summary
+      description: What capability or improvement would you like to see?
+    validations:
+      required: true
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Problem & Motivation
+      description: What problem does this solve for AI agents or engineering teams?
+    validations:
+      required: true
