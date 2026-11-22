@@ -13,7 +13,7 @@ When an AI coding assistant (Claude, Cursor, Copilot, Antigravity) answers archi
 
 | Total Unassisted Tokens | ANVIL Compact Tokens | Measured Reduction | Net Token Savings |
 |-------------------------|----------------------|--------------------|-------------------|
-| **220,364 tokens** | **2,189 tokens** | **~99% reduction** | **218,175 tokens** |
+| **220,827 tokens** | **2,196 tokens** | **~99% reduction** | **218,631 tokens** |
 
 ---
 
@@ -21,10 +21,10 @@ When an AI coding assistant (Claude, Cursor, Copilot, Antigravity) answers archi
 
 | Scenario | Unassisted Approach | Unassisted Footprint | ANVIL MCP (Compact) | ANVIL Footprint | Reduction | Duration |
 |---|---|---|---|---|---|---|
-| **1. Project Overview & Tech Stack** | Reading package.json, tsconfig.json, and README.md (~full text) | 41,611 chars (~10,403 tokens) | anvil_inspect_project (compact summary) | 848 chars (~212 tokens) | **-98%** | 57ms |
-| **2. Architecture & Module Dependency Mapping** | Reading all 30 source files to trace imports and entry points | 591,610 chars (~147,903 tokens) | anvil_map_architecture (compact summary) | 5,712 chars (~1,428 tokens) | **-99%** | 495ms |
-| **3. Change Risk & Blast Radius Analysis** | Reading modified files and manually tracing downstream callers | 42,176 chars (~10,544 tokens) | anvil_change_risk (compact summary) | 1,715 chars (~429 tokens) | **-96%** | 1389ms |
-| **4. Quality & Security Pre-Commit Audit** | Reading config files, workflows, and sample source files for manual review | 206,056 chars (~51,514 tokens) | anvil_quality_audit + anvil_security_audit (compact) | 477 chars (~120 tokens) | **-100%** | 202ms |
+| **1. Project Overview & Tech Stack** | Reading package.json, tsconfig.json, and README.md (~full text) | 43,588 chars (~10,897 tokens) | anvil_inspect_project (compact summary) | 862 chars (~216 tokens) | **-98%** | 24ms |
+| **2. Architecture & Module Dependency Mapping** | Reading all 30 source files to trace imports and entry points | 591,497 chars (~147,875 tokens) | anvil_map_architecture (compact summary) | 5,712 chars (~1,428 tokens) | **-99%** | 263ms |
+| **3. Change Risk & Blast Radius Analysis** | Reading modified files and manually tracing downstream callers | 42,176 chars (~10,544 tokens) | anvil_change_risk (compact summary) | 1,726 chars (~432 tokens) | **-96%** | 996ms |
+| **4. Quality & Security Pre-Commit Audit** | Reading config files, workflows, and sample source files for manual review | 206,041 chars (~51,511 tokens) | anvil_quality_audit + anvil_security_audit (compact) | 477 chars (~120 tokens) | **-100%** | 209ms |
 
 ---
 

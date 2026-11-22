@@ -179,9 +179,7 @@ function inspectLines(
       const parsed = parseSuppressionComment(sameLineMatch[1]);
       for (const r of parsed.rules) lineDisabled.add(r);
       if (parsed.reason) {
-        lineDisabledReason = lineDisabledReason
-          ? `${lineDisabledReason}; ${parsed.reason}`
-          : parsed.reason;
+        lineDisabledReason = lineDisabledReason ? `${lineDisabledReason}; ${parsed.reason}` : parsed.reason;
       }
     }
 
@@ -283,34 +281,34 @@ export function formatCodeReview(report: CodeReviewReport): string {
     "- Scope: " + report.scope,
     "- Files reviewed: " + report.filesReviewed.length,
     "- Findings: " +
-    report.findings.length +
-    " (high " +
-    report.summary.high +
-    ", medium " +
-    report.summary.medium +
-    ", low " +
-    report.summary.low +
-    ")",
+      report.findings.length +
+      " (high " +
+      report.summary.high +
+      ", medium " +
+      report.summary.medium +
+      ", low " +
+      report.summary.low +
+      ")",
     "",
     "## Findings",
     ...(report.findings.length
       ? report.findings.map(
-        (f) =>
-          "- **" +
-          f.severity.toUpperCase() +
-          " " +
-          f.ruleId +
-          "** — `" +
-          f.file +
-          ":" +
-          f.line +
-          "`: " +
-          f.title +
-          "\n  Evidence: `" +
-          f.evidence +
-          "`\n  Recommendation: " +
-          f.recommendation
-      )
+          (f) =>
+            "- **" +
+            f.severity.toUpperCase() +
+            " " +
+            f.ruleId +
+            "** — `" +
+            f.file +
+            ":" +
+            f.line +
+            "`: " +
+            f.title +
+            "\n  Evidence: `" +
+            f.evidence +
+            "`\n  Recommendation: " +
+            f.recommendation
+        )
       : ["- No configured heuristic patterns detected."]),
     "",
     "## Files reviewed",
