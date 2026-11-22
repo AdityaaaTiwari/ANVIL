@@ -42,11 +42,11 @@ export const GatePolicySchema = z
       .object({
         required: z.boolean().default(false),
         disallowedTools: z.array(z.string()).default([]),
-        profile: z.enum(["balanced", "hardened", "rootless-required"]).default("balanced"),
-        requireRootless: z.boolean().default(false),
-        maxMemory: z.string().default("512m"),
-        maxCpus: z.number().default(1.0),
-        maxProcesses: z.number().int().default(128),
+        profile: z.enum(["balanced", "hardened", "rootless-required"]).optional(),
+        requireRootless: z.boolean().optional(),
+        maxMemory: z.string().optional(),
+        maxCpus: z.number().optional(),
+        maxProcesses: z.number().int().optional(),
       })
       .strict()
       .optional(),

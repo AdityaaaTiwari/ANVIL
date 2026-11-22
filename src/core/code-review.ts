@@ -60,32 +60,22 @@ function parseSuppressionComment(raw: string): { rules: Set<string>; reason?: st
   let rulesPart = trimmed;
   let reason: string | undefined;
 
-  // Split rules from optional justification reason on `--` or `:`
-  const doubleHyphenIdx = trimmed.indexOf("--");
+  const doubleDashIdx = trimmed.indexOf("--");
   const colonIdx = trimmed.indexOf(":");
 
   let splitIdx = -1;
-  let delimLen = 0;
-
-  if (doubleHyphenIdx !== -1 && colonIdx !== -1) {
-    if (doubleHyphenIdx < colonIdx) {
-      splitIdx = doubleHyphenIdx;
-      delimLen = 2;
-    } else {
-      splitIdx = colonIdx;
-      delimLen = 1;
-    }
-  } else if (doubleHyphenIdx !== -1) {
-    splitIdx = doubleHyphenIdx;
-    delimLen = 2;
+  let delimiterLength = 0;
+  if (doubleDashIdx !== -1 && (colonIdx === -1 || doubleDashIdx < colonIdx)) {
+    splitIdx = doubleDashIdx;
+    delimiterLength = 2;
   } else if (colonIdx !== -1) {
     splitIdx = colonIdx;
-    delimLen = 1;
+    delimiterLength = 1;
   }
 
   if (splitIdx !== -1) {
     rulesPart = trimmed.slice(0, splitIdx).trim();
-    const candidateReason = trimmed.slice(splitIdx + delimLen).trim();
+    const candidateReason = trimmed.slice(splitIdx + delimiterLength).trim();
     if (candidateReason.length > 0) {
       reason = candidateReason;
     }
@@ -98,7 +88,7 @@ function parseSuppressionComment(raw: string): { rules: Set<string>; reason?: st
       rules.add(cleaned);
     }
   }
-  return { rules, ...(reason ? { reason } : {}) };
+  return { rules, reason };
 }
 
 function inspectLines(
@@ -175,20 +165,24 @@ function inspectLines(
     const nextLineMatch = prevLine.match(/(?:\/\/|\/\*)\s*anvil-disable-next-line\s+([^\r\n]+)/i);
     const sameLineMatch = line.match(/(?:\/\/|\/\*)\s*anvil-disable-line\s+([^\r\n]+)/i);
 
-    let lineDisabled = new Set<string>();
+    const lineDisabled = new Set<string>();
     let lineDisabledReason: string | undefined;
     let suppressionType: "line" | "next-line" | undefined;
     if (nextLineMatch && nextLineMatch[1]) {
       suppressionType = "next-line";
       const parsed = parseSuppressionComment(nextLineMatch[1]);
-      lineDisabled = parsed.rules;
-      lineDisabledReason = parsed.reason;
+      for (const r of parsed.rules) lineDisabled.add(r);
+      if (parsed.reason) lineDisabledReason = parsed.reason;
     }
     if (sameLineMatch && sameLineMatch[1]) {
-      suppressionType = "line";
+      suppressionType = suppressionType ? "line" : "line";
       const parsed = parseSuppressionComment(sameLineMatch[1]);
-      lineDisabled = parsed.rules;
-      lineDisabledReason = parsed.reason;
+      for (const r of parsed.rules) lineDisabled.add(r);
+      if (parsed.reason) {
+        lineDisabledReason = lineDisabledReason
+          ? `${lineDisabledReason}; ${parsed.reason}`
+          : parsed.reason;
+      }
     }
 
     for (const rule of rules) {
@@ -289,34 +283,34 @@ export function formatCodeReview(report: CodeReviewReport): string {
     "- Scope: " + report.scope,
     "- Files reviewed: " + report.filesReviewed.length,
     "- Findings: " +
-      report.findings.length +
-      " (high " +
-      report.summary.high +
-      ", medium " +
-      report.summary.medium +
-      ", low " +
-      report.summary.low +
-      ")",
+    report.findings.length +
+    " (high " +
+    report.summary.high +
+    ", medium " +
+    report.summary.medium +
+    ", low " +
+    report.summary.low +
+    ")",
     "",
     "## Findings",
     ...(report.findings.length
       ? report.findings.map(
-          (f) =>
-            "- **" +
-            f.severity.toUpperCase() +
-            " " +
-            f.ruleId +
-            "** — `" +
-            f.file +
-            ":" +
-            f.line +
-            "`: " +
-            f.title +
-            "\n  Evidence: `" +
-            f.evidence +
-            "`\n  Recommendation: " +
-            f.recommendation
-        )
+        (f) =>
+          "- **" +
+          f.severity.toUpperCase() +
+          " " +
+          f.ruleId +
+          "** — `" +
+          f.file +
+          ":" +
+          f.line +
+          "`: " +
+          f.title +
+          "\n  Evidence: `" +
+          f.evidence +
+          "`\n  Recommendation: " +
+          f.recommendation
+      )
       : ["- No configured heuristic patterns detected."]),
     "",
     "## Files reviewed",

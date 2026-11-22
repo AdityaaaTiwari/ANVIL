@@ -403,4 +403,33 @@ describe("ANVIL Policy-as-Code & Gate Baseline Engine", () => {
       await rm(root, { recursive: true, force: true });
     }
   });
+
+  it("does not emit sandbox advisory warnings when only disallowedTools is configured", async () => {
+    const root = await createTempWorkspace();
+    try {
+      await writeFile(
+        path.join(root, "package.json"),
+        JSON.stringify({ name: "disallowed-app", scripts: { test: "vitest" } })
+      );
+      await writeFile(path.join(root, "index.ts"), 'console.log("clean");\n');
+
+      const policyPath = path.join(root, "custom-policy.json");
+      await writeFile(
+        policyPath,
+        JSON.stringify({
+          version: 1,
+          sandbox: {
+            disallowedTools: ["curl"],
+          },
+        })
+      );
+
+      const evaluation = await evaluateGate(root, { policyPath });
+      expect(evaluation.passed).toBe(true);
+      const advisoryWarnings = evaluation.warnings.filter((w) => w.includes("Sandbox limits"));
+      expect(advisoryWarnings).toHaveLength(0);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
 });

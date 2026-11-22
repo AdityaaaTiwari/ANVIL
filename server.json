@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/modelcontextprotocol/registry/main/schema/server.json",
   "name": "anvil-engineering-workbench",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Deterministic local code intelligence, architecture mapping, change risk analysis, and quality/security gating for AI coding assistants.",
   "homepage": "https://github.com/AdityaaaTiwari/ANVIL",
   "repository": {

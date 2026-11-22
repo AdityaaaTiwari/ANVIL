@@ -37,4 +37,25 @@ describe("code review", () => {
     expect(report.scope).toBe("source-files");
     expect(report.findings[0]?.ruleId).toBe("ANVIL-R001");
   });
+
+  it("unions rules and reasons when next-line and same-line suppressions target the same line", async () => {
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-review-union-"));
+    await mkdir(path.join(root, "src"));
+    // Line 1: anvil-disable-next-line ANVIL-R001 -- reason one
+    // Line 2: eval(input); node.innerHTML = val; // anvil-disable-line ANVIL-R003 -- reason two
+    await writeFile(
+      path.join(root, "src", "union.ts"),
+      "// anvil-disable-next-line ANVIL-R001 -- reason one\neval(input); node.innerHTML = val; // anvil-disable-line ANVIL-R003 -- reason two\n"
+    );
+    const report = await reviewProject(root, { all: true });
+    // Both ANVIL-R001 (eval) and ANVIL-R003 (innerHTML) must be suppressed on line 2
+    expect(report.findings).toHaveLength(0);
+    expect(report.inlineSuppressions).toHaveLength(2);
+    const ruleIds = report.inlineSuppressions.map((s) => s.ruleId);
+    expect(ruleIds).toContain("ANVIL-R001");
+    expect(ruleIds).toContain("ANVIL-R003");
+    const reasons = report.inlineSuppressions.map((s) => s.reason).join("; ");
+    expect(reasons).toContain("reason one");
+    expect(reasons).toContain("reason two");
+  });
 });

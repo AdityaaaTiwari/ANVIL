@@ -69,3 +69,10 @@ The schema is defined in [docs/anvil-policy.schema.json](anvil-policy.schema.jso
 | **sandbox** | `maxMemory` | `string` | `"512m"` | Memory ceiling for containerized verification scripts. *(Advisory in static code gate; enforced in dynamic container verification)* |
 | **sandbox** | `maxCpus` | `number` | `1.0` | CPU quota for container verification. *(Advisory in static code gate; enforced in dynamic container verification)* |
 | **sandbox** | `maxProcesses` | `number` | `128` | Process limit for container verification. *(Advisory in static code gate; enforced in dynamic container verification)* |
+
+> [!NOTE] Scope and Operational Boundaries of `sandbox.disallowedTools`
+> `sandbox.disallowedTools` performs static heuristic inspection specifically on:
+> 1. **`package.json` script definitions** (e.g., verifying `npm test` or `npm run build` do not execute prohibited tools such as `curl` or `nc`).
+> 2. **Active code review finding snippets** (e.g., catching code containing dynamic tool invocations).
+>
+> It does NOT parse Makefiles, standalone shell scripts (`.sh`), Dockerfiles, or CI workflow YAML files. For deep runtime execution isolation and mandatory resource constraints, use containerized sandbox verification (`anvil verify`).

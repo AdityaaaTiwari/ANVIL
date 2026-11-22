@@ -65,4 +65,10 @@ describe("README and package version/tool synchronization", () => {
     expect(releaseRaw).toContain("ACTION_DEFAULT=");
     expect(releaseRaw).toContain("action.yml default version");
   });
+
+  it("ensures MCP server dynamically resolves version from package.json without hardcoded version strings", async () => {
+    const serverRaw = await readFile(path.resolve("src/mcp/server.ts"), "utf8");
+    expect(serverRaw).toContain("resolveVersion()");
+    expect(serverRaw).not.toMatch(/version:\s*"(?:1\.0\.\d+|1\.1\.\d+)"/);
+  });
 });

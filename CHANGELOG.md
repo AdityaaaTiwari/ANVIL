@@ -1,5 +1,32 @@
 # ANVIL Changelog
 
+## 1.1.2 — MCP Ecosystem Hardening, Compact Tool Telemetry, Empirical Token Benchmarking & Inline Suppression Union
+
+ANVIL 1.1.2 delivers comprehensive MCP ecosystem readiness, compact tool responses saving 90%+ model context tokens, empirical token footprint measurement, cross-platform Windows ESM fixes, and inline suppression rule unioning:
+
+### Features & MCP Improvements
+- **Compact MCP Responses by Default (`detail: false`):**
+  - Core inspection tools (`anvil_inspect_project`, `anvil_map_architecture`, `anvil_change_risk`, `anvil_git_intelligence`, `anvil_quality_audit`, `anvil_security_audit`, `anvil_clean_preview`) return concise summaries by default, protecting AI agent context windows.
+  - Every tool response includes structured telemetry in `_meta: { characterCount, estimatedTokens, compact, hint }`.
+  - Passing `detail: true` returns the full AST graph, itemized findings, and file breakdowns on demand.
+- **Model-Optimized Tool Descriptions:**
+  - Enriched tool schemas in `src/mcp/server.ts` with explicit model directives detailing when to call, what data is returned, and boundary guarantees (read-only, no code execution).
+- **Empirical Token Footprint Benchmark (`npm run bench`):**
+  - Introduced reproducible benchmark script (`scripts/measure-token-footprint.ts`) measuring unassisted file loading (~220,000 tokens) vs ANVIL compact MCP output (~2,189 tokens), achieving 96–99% context token reduction across realistic engineering tasks.
+- **Agent Ecosystem Assets:**
+  - Added root `AGENTS.md` (operating guide for Cursor, Claude Code, Copilot, Windsurf, Antigravity).
+  - Added standard `llms.txt` and `public/llms.txt` documentation for AI search indexing.
+  - Added official MCP registry manifests `server.json` and `.well-known/mcp/server.json`, plus `smithery.yaml`.
+- **Dynamic MCP Server Versioning:**
+  - MCP server dynamically resolves its version from `package.json` (`resolveVersion()`), verified in CI.
+- **Cross-Platform CLI & Safe Auto-Start:**
+  - Fixed Windows ESM path resolution in `src/cli.ts` by using `pathToFileURL(script).href`.
+  - Guarded `anvil mcp`: displays usage and setup commands safely without hanging stdin on non-TTY calls; server runs only on explicit `anvil mcp start`.
+- **Inline Suppression Rule Unioning:**
+  - Fixed regression in `code-review.ts` so that when both `anvil-disable-next-line` and `anvil-disable-line` apply to the same line, their suppressed rule sets and justification reasons are unioned rather than overwriting.
+- **Accurate Sandbox Advisory Warnings:**
+  - Made sandbox resource fields (`profile`, `maxMemory`, etc.) optional in policy schema so advisory warnings are emitted only when users explicitly define resource ceilings.
+
 ## 1.1.1 — Governance Hardening: Disallowed Tools Matcher, SARIF inSource Suppressions & Suppression Reason Enforcement
 
 ANVIL 1.1.1 introduces strict governance hardening, accurate disallowed tool evaluation, full SARIF in-source suppression metadata, and release consistency checks:
