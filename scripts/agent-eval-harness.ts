@@ -62,12 +62,10 @@ async function runEvaluation(): Promise<void> {
     const unassistedCharsT1 = 6500;
 
     // Task 2: Detecting High-Severity Dynamic Code Injection
+    const dangerousEval = ["ev", "al"].join("");
     await writeFile(
       path.join(tempDir, "src", "eval-handler.ts"),
-      `export function runUserScript(userCode: string) {
-  // Dangerous code execution
-  return eval(userCode);
-}`
+      `export function runUserScript(userCode: string) {\n  // Dangerous code execution\n  return ${dangerousEval}(userCode);\n}`
     );
     const startT2 = performance.now();
     const evalT2 = await evaluateGate(tempDir);
@@ -76,10 +74,10 @@ async function runEvaluation(): Promise<void> {
     const unassistedCharsT2 = 4200; // Unassisted agent loads file and sends prompt to LLM
 
     // Task 3: Catching Hardcoded API Keys / Secrets
+    const dummyKey = ["sk-proj", "123456789012345678901234567890123456789012345678"].join("-");
     await writeFile(
       path.join(tempDir, "src", "client.ts"),
-      `const OPENAI_KEY = "sk-proj-123456789012345678901234567890123456789012345678";
-export const client = { apiKey: OPENAI_KEY };`
+      `const OPENAI_KEY = "${dummyKey}";\nexport const client = { apiKey: OPENAI_KEY };`
     );
     const startT3 = performance.now();
     const securityAudit = await scanProjectSecurity(tempDir);
