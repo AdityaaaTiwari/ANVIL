@@ -8,7 +8,7 @@ ANVIL is an open-source, local-first engineering toolkit and Model Context Proto
 - **Change Risk Intelligence:** Blast radius calculation, downstream affected modules, and automated test candidate recommendations.
 - **Pre-Commit Quality & Security Gate:** Local policy-as-code gate (`anvil gate`) with content-hash baselines, suppression auditing, and SARIF export.
 - **Safe Workspace Cleanup:** Dry-run preview and cleanup of OS junk, build caches, and unreferenced orphan source modules.
-- **Token Efficiency:** Compact summaries by default (`detail: false`) saving 90%+ context tokens compared to unassisted mass file loading.
+- **Token Efficiency:** Compact summaries by default (`detail: false`) with responses 96–99% smaller than the files they summarize in ANVIL's own benchmark (see docs/token-benchmark-results.md for limits).
 
 ## Quick Start
 ```bash
@@ -32,8 +32,8 @@ anvil mcp start
 - **VS Code:** Add server in `.vscode/mcp.json`
 
 ## Documentation Links
-- [GitHub Repository](https://github.com/AdityaaaTiwari/ANVIL)
-- [MCP Server Documentation](https://github.com/AdityaaaTiwari/ANVIL/blob/main/docs/mcp-server.md)
-- [Policy & Gate Guide](https://github.com/AdityaaaTiwari/ANVIL/blob/main/docs/policy-guide.md)
-- [Token Benchmark Results](https://github.com/AdityaaaTiwari/ANVIL/blob/main/docs/token-benchmark-results.md)
-- [Agent Operating Guide](https://github.com/AdityaaaTiwari/ANVIL/blob/main/AGENTS.md)
+- [GitHub Repository](https://github.com/anvil-workbench/ANVIL)
+- [MCP Server Documentation](https://github.com/anvil-workbench/ANVIL/blob/main/docs/mcp-server.md)
+- [Policy & Gate Guide](https://github.com/anvil-workbench/ANVIL/blob/main/docs/policy-guide.md)
+- [Token Benchmark Results](https://github.com/anvil-workbench/ANVIL/blob/main/docs/token-benchmark-results.md)
+- [Agent Operating Guide](https://github.com/anvil-workbench/ANVIL/blob/main/AGENTS.md)
