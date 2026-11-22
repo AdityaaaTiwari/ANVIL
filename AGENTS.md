@@ -9,7 +9,7 @@ This repository and projects using the **ANVIL Engineering Workbench** provide l
 When working in this workspace, follow these operating rules:
 
 ### 1. Consult ANVIL MCP Tools Before Mass File Reads
-- **Do not read dozens of files to understand architecture or imports.** Call `anvil_map_architecture` to get the module graph, entry points, and dependency relationships in a compact payload (~1,400 tokens vs 140,000+ tokens for raw files).
+- **Do not read dozens of files to understand architecture or imports.** Call `anvil_map_architecture` to get the module graph, entry points, and dependency relationships in a compact payload (~1,400 tokens, versus ~150,000 tokens to read every source file in ANVIL's own repo; your repo will differ).
 - **Do not guess tech stack or scripts.** Call `anvil_inspect_project` to get languages, framework indicators, package managers, and script names.
 
 ### 2. Verify Blast Radius Before Committing

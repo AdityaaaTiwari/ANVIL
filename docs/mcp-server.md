@@ -46,7 +46,7 @@ anvil mcp setup --client vscode
 
 AI coding models have limited context windows and charge per token. Reading dozens of raw source files just to understand architecture or check diff blast radius wastes thousands of tokens.
 
-**ANVIL executes analysis entirely locally on CPU without LLM calls.** By default, tools return **compact summaries** (`detail: false`), saving up to **90%+ of tokens** compared to unassisted file reading.
+**ANVIL executes analysis entirely locally on CPU without LLM calls.** By default, tools return **compact summaries** (`detail: false`), which were 96–99% smaller than the files they summarize in our benchmark on this repository (payload size only, not an end-to-end agent measurement).
 
 Every response includes telemetry in `_meta`:
 ```json

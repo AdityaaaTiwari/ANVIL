@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 
 describe("README and package version/tool synchronization", () => {
@@ -79,5 +79,64 @@ describe("README and package version/tool synchronization", () => {
     const dashboardRaw = await readFile(path.resolve("src/core/dashboard-server.ts"), "utf8");
     expect(dashboardRaw).not.toContain("v1.0.7");
     expect(dashboardRaw).toContain(`v${pkg.version}`);
+  });
+
+  it("ensures the MCP server has no hardcoded semver literal fallback", async () => {
+    const serverRaw = await readFile(path.resolve("src/mcp/server.ts"), "utf8");
+    expect(serverRaw).not.toMatch(/return\s+"\d+\.\d+\.\d+"/);
+  });
+
+  it("synchronizes server.json and .well-known/mcp/server.json with package.json version", async () => {
+    const pkg = JSON.parse(await readFile(path.resolve("package.json"), "utf8"));
+    const rootManifestRaw = await readFile(path.resolve("server.json"), "utf8");
+    const wellKnownRaw = await readFile(path.resolve(".well-known/mcp/server.json"), "utf8");
+    expect(JSON.parse(rootManifestRaw).version).toBe(pkg.version);
+    expect(JSON.parse(wellKnownRaw).version).toBe(pkg.version);
+    expect(wellKnownRaw).toBe(rootManifestRaw);
+  });
+
+  it("keeps llms.txt and public/llms.txt identical", async () => {
+    const rootCopy = await readFile(path.resolve("llms.txt"), "utf8");
+    const publicCopy = await readFile(path.resolve("public/llms.txt"), "utf8");
+    expect(publicCopy).toBe(rootCopy);
+  });
+
+  it("lists the current minor release line as supported in SECURITY.md", async () => {
+    const pkg = JSON.parse(await readFile(path.resolve("package.json"), "utf8"));
+    const [major, minor] = String(pkg.version).split(".");
+    const security = await readFile(path.resolve("SECURITY.md"), "utf8");
+    const row = security.split("\n").find((line) => line.startsWith(`| ${major}.${minor}.x`));
+    expect(row, `SECURITY.md has no row for ${major}.${minor}.x`).toBeDefined();
+    expect(row).toContain("Yes");
+  });
+
+  it("pins every third-party GitHub Action to a full commit SHA", async () => {
+    const dir = path.resolve(".github/workflows");
+    const files = (await readdir(dir)).filter((name) => name.endsWith(".yml") || name.endsWith(".yaml"));
+    const unpinned: string[] = [];
+    for (const name of files) {
+      const raw = await readFile(path.join(dir, name), "utf8");
+      for (const match of raw.matchAll(/^\s*-?\s*uses:\s*(\S+)/gm)) {
+        const ref = match[1];
+        if (ref.startsWith("./")) continue;
+        if (!/@[0-9a-f]{40}$/.test(ref)) unpinned.push(`${name}: ${ref}`);
+      }
+    }
+    expect(unpinned).toEqual([]);
+  });
+
+  it("validates server.json aligns with MCP registry schema and workbench repository", async () => {
+    const raw = await readFile(path.resolve("server.json"), "utf8");
+    const manifest = JSON.parse(raw);
+    expect(manifest.homepage).toBe("https://github.com/anvil-workbench/ANVIL");
+    expect(manifest.repository.url).toBe("https://github.com/anvil-workbench/ANVIL.git");
+    expect(manifest.license).toBe("MIT");
+    expect(manifest.author.email).toBeUndefined();
+    expect(Array.isArray(manifest.packages)).toBe(true);
+    expect(manifest.packages[0]).toMatchObject({
+      registry: "npm",
+      package: "anvil-engineering-workbench",
+      version: manifest.version,
+    });
   });
 });

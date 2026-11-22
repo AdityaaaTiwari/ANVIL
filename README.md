@@ -499,7 +499,7 @@ anvil mcp setup --client all
 
 AI coding models have bounded context windows. Loading dozens of raw source files just to inspect architecture or evaluate change risk wastes thousands of tokens.
 
-ANVIL executes analysis entirely locally on CPU without LLM calls. By default, tools return **compact summaries** (`detail: false`), saving up to **90%+ of tokens** compared to unassisted mass file loading. Every response includes `_meta` character and token estimation metrics. Pass `detail: true` to any inspection tool if complete line-by-line graphs are needed.
+ANVIL executes analysis entirely locally on CPU without LLM calls. By default, tools return **compact summaries** (`detail: false`), which were 96–99% smaller than the files they summarize in our benchmark on this repository (payload size only, not an end-to-end agent measurement). Every response includes `_meta` character and token estimation metrics. Pass `detail: true` to any inspection tool if complete line-by-line graphs are needed.
 
 See [Token Benchmark Results](docs/token-benchmark-results.md) for reproducible measurements on this repository.
 

@@ -3,17 +3,27 @@
   "name": "anvil-engineering-workbench",
   "version": "1.1.2",
   "description": "Deterministic local code intelligence, architecture mapping, change risk analysis, and quality/security gating for AI coding assistants.",
-  "homepage": "https://github.com/AdityaaaTiwari/ANVIL",
+  "homepage": "https://github.com/anvil-workbench/ANVIL",
   "repository": {
     "type": "git",
-    "url": "https://github.com/AdityaaaTiwari/ANVIL.git"
+    "url": "https://github.com/anvil-workbench/ANVIL.git"
   },
-  "license": "Apache-2.0",
+  "license": "MIT",
   "author": {
     "name": "Aditya Tiwari",
-    "email": "m.g.atiwari28@gmail.com",
     "url": "https://github.com/AdityaaaTiwari"
   },
+  "packages": [
+    {
+      "registry": "npm",
+      "package": "anvil-engineering-workbench",
+      "version": "1.1.2",
+      "transport": {
+        "type": "stdio"
+      },
+      "entrypoint": ["npx", "-y", "anvil-engineering-workbench", "mcp", "start"]
+    }
+  ],
   "runtime": "node",
   "transport": {
     "type": "stdio"

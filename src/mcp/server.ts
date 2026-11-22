@@ -39,7 +39,7 @@ function resolveVersion(): string {
     const parsed = JSON.parse(raw);
     if (typeof parsed.version === "string") return parsed.version;
   } catch {}
-  return "1.1.1";
+  return "0.0.0-unknown";
 }
 
 function result(data: unknown, meta?: { compact?: boolean; hint?: string }) {
