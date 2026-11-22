@@ -761,4 +761,30 @@ describe("local dashboard server", () => {
     expect(execData.tasks[0].result).toBeDefined();
     expect(execData.tasks[1].status).toBe("completed");
   });
+
+  it("serves policy-as-code gate evaluation via /api/gate", async () => {
+    root = await mkdtemp(path.join(os.tmpdir(), "forge-dashboard-gate-"));
+    await mkdir(path.join(root, "src"), { recursive: true });
+    await writeFile(path.join(root, "src", "clean.ts"), "export const value = 42;\n");
+    dashboard = await startDashboard({ projectPath: root, port: 0 });
+    const address = dashboard.server.address();
+    if (!address || typeof address === "string") throw new Error("Dashboard did not bind a TCP port.");
+
+    const res = await fetch(`http://127.0.0.1:${address.port}/api/gate`);
+    expect(res.status).toBe(200);
+    const evaluation = await res.json();
+    expect(typeof evaluation.passed).toBe("boolean");
+    expect(evaluation.summary).toBeDefined();
+    expect(typeof evaluation.summary.critical).toBe("number");
+    expect(typeof evaluation.summary.suppressedByBaseline).toBe("number");
+    expect(Array.isArray(evaluation.activeFindings)).toBe(true);
+    expect(Array.isArray(evaluation.violations)).toBe(true);
+    expect(Array.isArray(evaluation.warnings)).toBe(true);
+
+    const page = await fetch(`http://127.0.0.1:${address.port}/`);
+    const html = await page.text();
+    expect(html).toContain("tab-gate");
+    expect(html).toContain("Policy & Gate");
+    expect(html).toContain("Empirical Measured Token Footprint Benchmark");
+  });
 });
