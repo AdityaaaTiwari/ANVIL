@@ -463,6 +463,32 @@ body{
     <div id="healthPanel" class="list"><div class="loading">Generating project health snapshot…</div></div>
   </section>
 
+  <section class="section card">
+    <div class="section-head">
+      <h2>GitHub Community, CI Gate & Achievements</h2>
+      <div class="actions">
+        <span class="pill pill-purple">COMMUNITY & CI</span>
+        <a href="https://github.com/anvil-workbench/ANVIL/discussions" target="_blank" rel="noreferrer" class="btn btn-primary" style="text-decoration:none;font-size:11px">Open Discussions (#10 Q&A)</a>
+        <a href="https://github.com/anvil-workbench/ANVIL/actions" target="_blank" rel="noreferrer" class="btn" style="text-decoration:none;font-size:11px">GitHub Actions CI</a>
+      </div>
+    </div>
+    <p class="run-meta">Official ANVIL engineering workbench community, discussions, PR verification workflows, and developer badges guide.</p>
+    <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-top: 10px;">
+      <div style="background:var(--bg);padding:12px;border-radius:8px;border:1px solid var(--border)">
+        <div style="font-size:12px;font-weight:600;margin-bottom:4px;color:var(--emerald)">🛡️ PR-Diff Quality Gate</div>
+        <p style="font-size:11px;color:var(--muted);margin:0">Deterministic policy gate on pull requests using <code>--since origin/main</code> and SARIF ingestion.</p>
+      </div>
+      <div style="background:var(--bg);padding:12px;border-radius:8px;border:1px solid var(--border)">
+        <div style="font-size:12px;font-weight:600;margin-bottom:4px;color:var(--cyan)">💬 Q&A & Galaxy Brain</div>
+        <p style="font-size:11px;color:var(--muted);margin:0">Ask and answer technical questions in GitHub Discussions Q&A category to unlock accepted answers.</p>
+      </div>
+      <div style="background:var(--bg);padding:12px;border-radius:8px;border:1px solid var(--border)">
+        <div style="font-size:12px;font-weight:600;margin-bottom:4px;color:var(--accent)">🦈 Pull Shark & Pair Extraordinaire</div>
+        <p style="font-size:11px;color:var(--muted);margin:0">Collaborative co-authored commits and pull request merges continuously verified by local test suites.</p>
+      </div>
+    </div>
+  </section>
+
   <section class="section columns">
     <div class="card">
       <div class="section-head"><h2>Engineering quality</h2><span class="pill">STATIC AUDIT</span></div>
@@ -653,6 +679,28 @@ body{
     </div>
     <div id="gateViolationsContainer" style="margin-bottom:14px"></div>
     <div id="gateAdvisoriesContainer" style="margin-bottom:14px"></div>
+    <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center;background:rgba(255,255,255,0.02);padding:12px;border-radius:8px;border:1px solid var(--line)">
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em">Scan Mode</label>
+        <select id="gateScanMode" class="btn" style="padding:6px 10px;font-size:12px;background:var(--panel2)">
+          <option value="">Full Repository Audit</option>
+          <option value="origin/main">PR-Diff Mode (since origin/main)</option>
+          <option value="HEAD~1">Incremental (since HEAD~1)</option>
+        </select>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em">Min Confidence</label>
+        <select id="gateMinConfidence" class="btn" style="padding:6px 10px;font-size:12px;background:var(--panel2)">
+          <option value="low">All Severities (Low / Medium / High)</option>
+          <option value="medium">Medium & High Only</option>
+          <option value="high">High Confidence Only (Low Noise)</option>
+        </select>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:200px">
+        <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em">External SARIF Ingestion</label>
+        <input type="text" id="gateImportSarif" placeholder="e.g. .anvil/external-sarif.json (optional)" style="background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:6px 10px;color:var(--text);font-family:inherit;font-size:12px">
+      </div>
+    </div>
     <div class="section-head"><h3 style="margin:0">Active Findings & Suppressions</h3><span class="pill" id="findingsCountPill">0 FINDINGS</span></div>
     <div id="gateFindingsList" class="list"><div class="loading">Evaluating repository gate…</div></div>
   </section>
@@ -1904,7 +1952,16 @@ async function loadGate() {
   }
 
   try {
-    const data = await api("/api/gate");
+    const scanMode = el("gateScanMode") ? el("gateScanMode").value : "";
+    const minConf = el("gateMinConfidence") ? el("gateMinConfidence").value : "";
+    const importSarif = el("gateImportSarif") ? el("gateImportSarif").value.trim() : "";
+    const qp = new URLSearchParams();
+    if (scanMode) qp.set("since", scanMode);
+    if (minConf && minConf !== "low") qp.set("minConfidence", minConf);
+    if (importSarif) qp.set("importSarif", importSarif);
+    const qs = qp.toString() ? "?" + qp.toString() : "";
+
+    const data = await api("/api/gate" + qs);
     if (statusMetric) {
       statusMetric.textContent = data.passed ? "PASSED" : "FAILED";
       statusMetric.style.color = data.passed ? "var(--emerald)" : "var(--danger)";
@@ -1942,7 +1999,9 @@ async function loadGate() {
       const items = [];
       if (data.activeFindings) {
         for (const f of data.activeFindings) {
-          items.push('<div class="rowitem"><div><b>' + esc(f.ruleId || 'ANVIL-RULE') + '</b> [' + esc(f.severity || 'info') + '] ' + esc(f.message) + '<div class="run-meta">' + esc(f.filePath) + ':' + esc(f.line || 1) + '</div></div><span class="pill ' + (f.severity === 'critical' || f.severity === 'high' ? 'pill-danger' : 'pill-warning') + '">' + esc((f.severity || 'FINDING').toUpperCase()) + '</span></div>');
+          const confBadge = f.confidence ? ' <span class="pill pill-cyan" style="font-size:10px">' + esc(f.confidence).toUpperCase() + ' CONFIDENCE</span>' : '';
+          const srcBadge = f.source && f.source !== 'anvil' ? ' <span class="pill pill-purple" style="font-size:10px">' + esc(f.source).toUpperCase() + '</span>' : '';
+          items.push('<div class="rowitem"><div><b>' + esc(f.ruleId || 'ANVIL-RULE') + '</b> [' + esc(f.severity || 'info') + ']' + confBadge + srcBadge + ' ' + esc(f.message) + '<div class="run-meta">' + esc(f.filePath) + ':' + esc(f.line || 1) + '</div></div><span class="pill ' + (f.severity === 'critical' || f.severity === 'high' ? 'pill-danger' : 'pill-warning') + '">' + esc((f.severity || 'FINDING').toUpperCase()) + '</span></div>');
         }
       }
       if (data.suppressedFindings) {
@@ -2262,6 +2321,8 @@ on("createAdrBtn","click",handleCreateAdr);
 on("autoFixSecurityBtn","click",handleAutoFixSecurity);
 on("refreshSecurityBtn","click",loadSecurityAudit);
 on("refreshGateBtn","click",loadGate);
+on("gateScanMode","change",loadGate);
+on("gateMinConfidence","change",loadGate);
 
 function reloadAllViews(){
   loadOverview();loadAgents();loadRuns();loadActivity();loadObservability();
@@ -3394,7 +3455,16 @@ export async function startDashboard(options: DashboardOptions): Promise<Dashboa
         return;
       }
       if (requestUrl.pathname === "/api/gate") {
-        const gateEvaluation = await evaluateGate(projectPath);
+        const since = requestUrl.searchParams.get("since") || undefined;
+        const minConfidence = (requestUrl.searchParams.get("minConfidence") || undefined) as
+          "high" | "medium" | "low" | undefined;
+        const importSarif = requestUrl.searchParams.get("importSarif") || undefined;
+        const externalSarifPaths = importSarif ? [importSarif] : undefined;
+        const gateEvaluation = await evaluateGate(projectPath, {
+          since,
+          minConfidence,
+          externalSarifPaths,
+        });
         response
           .writeHead(200, { "content-type": "application/json; charset=utf-8" })
           .end(JSON.stringify(gateEvaluation));

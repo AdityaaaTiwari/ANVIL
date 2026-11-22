@@ -39,6 +39,8 @@
     "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\" \"api/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\" \"tests/**/*.ts\" \"api/**/*.ts\"",
     "test:coverage": "vitest run --coverage",
+    "dashboard": "node dist/cli.js dashboard .",
+    "dashboard:dev": "tsx src/cli.ts dashboard .",
     "mcp": "node dist/mcp/server.js",
     "prepare": "npm run build",
     "prepack": "npm run build",

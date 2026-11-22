@@ -781,10 +781,18 @@ describe("local dashboard server", () => {
     expect(Array.isArray(evaluation.violations)).toBe(true);
     expect(Array.isArray(evaluation.warnings)).toBe(true);
 
+    const resFiltered = await fetch(`http://127.0.0.1:${address.port}/api/gate?minConfidence=high`);
+    expect(resFiltered.status).toBe(200);
+    const filteredEvaluation = await resFiltered.json();
+    expect(typeof filteredEvaluation.passed).toBe("boolean");
+
     const page = await fetch(`http://127.0.0.1:${address.port}/`);
     const html = await page.text();
     expect(html).toContain("tab-gate");
     expect(html).toContain("Policy & Gate");
     expect(html).toContain("Empirical Measured Token Footprint Benchmark");
+    expect(html).toContain("GitHub Community, CI Gate & Achievements");
+    expect(html).toContain("gateScanMode");
+    expect(html).toContain("gateMinConfidence");
   });
 });
