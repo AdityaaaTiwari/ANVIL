@@ -69,6 +69,34 @@ describe("local dashboard server", () => {
     expect(JSON.parse(response.body)).toMatchObject({ error: "Unexpected Host header." });
   });
 
+  it("accepts localhost as a valid loopback Host header", async () => {
+    root = await mkdtemp(path.join(os.tmpdir(), "forge-dashboard-localhost-"));
+    dashboard = await startDashboard({ projectPath: root, port: 0 });
+    const address = dashboard.server.address();
+    if (!address || typeof address === "string") throw new Error("Dashboard did not bind a TCP port.");
+    const response = await new Promise<{ statusCode: number | undefined; body: string }>((resolve, reject) => {
+      const request = httpRequest(
+        {
+          hostname: "127.0.0.1",
+          port: address.port,
+          path: "/api/providers",
+          headers: { host: `localhost:${address.port}` },
+        },
+        (incoming) => {
+          let body = "";
+          incoming.setEncoding("utf8");
+          incoming.on("data", (chunk) => {
+            body += chunk;
+          });
+          incoming.on("end", () => resolve({ statusCode: incoming.statusCode, body }));
+        }
+      );
+      request.on("error", reject);
+      request.end();
+    });
+    expect(response.statusCode).toBe(200);
+  });
+
   it("renders visual candidate comparisons from historical benchmark entries", async () => {
     root = await mkdtemp(path.join(os.tmpdir(), "forge-visual-experiment-history-"));
     dashboard = await startDashboard({ projectPath: root, port: 0 });

@@ -17,10 +17,13 @@ export function pkceChallenge(verifier: string): string {
   return createHash("sha256").update(verifier).digest("base64url");
 }
 export function stateKey(state: string): string {
-  return `forge:github:oauth-state:${state}`;
+  return `anvil:github:oauth-state:${state}`;
 }
 export function sessionKey(id: string): string {
-  return `forge:github:session:${id}`;
+  return `anvil:github:session:${id}`;
+}
+export function installationKey(id: number): string {
+  return `anvil:github:installation:${id}`;
 }
 export function getCookie(req: VercelRequest, name: string): string | undefined {
   const raw = req.headers.cookie;
@@ -76,7 +79,10 @@ export async function createSession(session: AuthSession): Promise<string> {
 export async function getVerifiedInstallations(ids: number[]): Promise<InstallationRecord[]> {
   const records: InstallationRecord[] = [];
   for (const id of ids.slice(0, 100)) {
-    const raw = await redisCommand<string | null>(["GET", `forge:github:installation:${id}`]);
+    let raw = await redisCommand<string | null>(["GET", installationKey(id)]);
+    if (!raw) {
+      raw = await redisCommand<string | null>(["GET", `forge:github:installation:${id}`]);
+    }
     const record = parseInstallationRecord(raw);
     if (
       record &&
@@ -97,15 +103,17 @@ export function oauthConfig() {
   const clientId = process.env.GITHUB_CLIENT_ID;
   const clientSecret = process.env.GITHUB_CLIENT_SECRET;
   const appId = Number(process.env.GITHUB_APP_ID);
-  const callbackUrl = process.env.GITHUB_CALLBACK_URL ?? "https://forge-ecc.vercel.app/api/github/callback";
-  if (
-    !clientId ||
-    !clientSecret ||
-    !Number.isSafeInteger(appId) ||
-    appId <= 0 ||
-    callbackUrl !== "https://forge-ecc.vercel.app/api/github/callback"
-  ) {
-    throw new Error("GitHub OAuth configuration is incomplete or callback URL is not the approved production URL");
+  const callbackUrl = process.env.GITHUB_CALLBACK_URL ?? "https://anvil-workbench.vercel.app/api/github/callback";
+  if (!clientId || !clientSecret || !Number.isSafeInteger(appId) || appId <= 0) {
+    throw new Error("GitHub OAuth configuration is incomplete (missing client ID, secret, or app ID)");
+  }
+  try {
+    const parsed = new URL(callbackUrl);
+    if (parsed.protocol !== "https:" && parsed.hostname !== "localhost") {
+      throw new Error("GitHub OAuth callback URL must use HTTPS protocol in production");
+    }
+  } catch (err: any) {
+    throw new Error(`Invalid GITHUB_CALLBACK_URL provided: ${err?.message || String(err)}`);
   }
   return { clientId, clientSecret, appId, callbackUrl };
 }
@@ -115,7 +123,7 @@ export async function githubApi<T>(path: string, token: string): Promise<T> {
       Accept: "application/vnd.github+json",
       Authorization: `Bearer ${token}`,
       "X-GitHub-Api-Version": API_VERSION,
-      "User-Agent": "FORGE-Workbench",
+      "User-Agent": "ANVIL-Workbench",
     },
     cache: "no-store",
   });

@@ -22,7 +22,7 @@ async function readRawBody(req: VercelRequest): Promise<Buffer> {
   return Buffer.concat(chunks);
 }
 
-const key = (id: number) => `forge:github:installation:${id}`;
+const key = (id: number) => `anvil:github:installation:${id}`;
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Cache-Control", "no-store");

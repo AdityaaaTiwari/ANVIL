@@ -510,7 +510,7 @@ All tools are read-only, bounded, and execute locally within your workspace boun
 | Tool | Function | Compact Default |
 |---|---|:---:|
 | `anvil_inspect_project` | Project inventory: languages, frameworks, scripts, dependencies | Yes (`detail: false`) |
-| `anvil_map_architecture` | Multi-language AST import graph across TS, Python, Go, Rust, Java, C++ | Yes (`detail: false`) |
+| `anvil_map_architecture` | Multi-language import graph across TS, Python, Go, Rust, Java, C++; TypeScript AST symbols | Yes (`detail: false`) |
 | `anvil_change_risk` | Blast radius, downstream affected modules, and candidate test targets | Yes (`detail: false`) |
 | `anvil_git_intelligence` | Working-tree git diff, uncommitted changes, and heuristic commit risk | Yes (`detail: false`) |
 | `anvil_quality_audit` | Fast static project-quality checks across manifests and tests | Yes (`detail: false`) |

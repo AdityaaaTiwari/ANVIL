@@ -137,9 +137,13 @@ function registerToolWithAlias<T extends z.ZodRawShape>(
   handler: (args: z.infer<z.ZodObject<T>>) => Promise<any>
 ) {
   const anvilName = name.startsWith("anvil_") ? name : name.replace(/^forge_/, "anvil_");
-  const forgeName = name.startsWith("forge_") ? name : name.replace(/^anvil_/, "forge_");
   (server.registerTool as any)(anvilName, config, handler);
-  (server.registerTool as any)(forgeName, config, handler);
+
+  // Opt-in legacy forge_* alias registration to avoid doubling token overhead in tools/list
+  if (process.env.ANVIL_FORGE_ALIASES === "1" || process.env.FORGE_ALIASES === "1") {
+    const forgeName = name.startsWith("forge_") ? name : name.replace(/^anvil_/, "forge_");
+    (server.registerTool as any)(forgeName, config, handler);
+  }
 }
 
 registerToolWithAlias(

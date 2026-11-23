@@ -1563,6 +1563,7 @@ or OASIS SARIF v2.1.0 for PR comments and GitHub Security tab integration.
 Options:
   --sarif PATH              Export findings to an OASIS SARIF v2.1.0 report file
   --policy PATH             Custom JSON policy file (defaults to .anvil/policy.json if present)
+  --policy-ref REF          Read baseline policy file from git ref (e.g. origin/main, HEAD~1)
   --baseline PATH           Baseline JSON file to suppress known existing findings
   --generate-baseline PATH  Export current findings as a baseline JSON file
   --since REF               Evaluate only files modified since git revision (e.g. origin/main, HEAD~1)
@@ -1590,6 +1591,7 @@ Exit codes:
       const diffOnly = rest.includes("--diff");
       const sarifPath = option("--sarif");
       const policyPath = option("--policy");
+      const policyRef = option("--policy-ref");
       const baselinePath = option("--baseline");
       const generateBaselinePath = option("--generate-baseline");
       const since = option("--since");
@@ -1605,6 +1607,7 @@ Exit codes:
           !arg.startsWith("--") &&
           arg !== sarifPath &&
           arg !== policyPath &&
+          arg !== policyRef &&
           arg !== baselinePath &&
           arg !== generateBaselinePath &&
           arg !== since &&
@@ -1616,6 +1619,7 @@ Exit codes:
       try {
         const evaluation = await evaluateGate(target, {
           policyPath,
+          policyRef,
           baselinePath,
           failOnWarnings,
           since,

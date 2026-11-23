@@ -14,8 +14,8 @@ describe("GitHub OAuth helpers", () => {
   it("creates URL-safe random state and session identifiers", () => {
     const token = randomToken();
     expect(token).toMatch(/^[A-Za-z0-9_-]{40,60}$/);
-    expect(stateKey(token)).toBe(`forge:github:oauth-state:${token}`);
-    expect(sessionKey(token)).toBe(`forge:github:session:${token}`);
+    expect(stateKey(token)).toBe(`anvil:github:oauth-state:${token}`);
+    expect(sessionKey(token)).toBe(`anvil:github:session:${token}`);
   });
 
   it("creates a 43-character base64url S256 PKCE challenge", () => {

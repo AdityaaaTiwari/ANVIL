@@ -76,7 +76,7 @@ All tools are read-only, bounded, and execute locally within your workspace boun
 | Tool Name | Aliases | Model Directive / Purpose | Compact Default |
 |---|---|---|:---:|
 | `anvil_inspect_project` | `forge_inspect_project` | Inspect project structure, languages, frameworks, package managers, scripts, and dependencies. Call first on onboarding. | Yes (`detail: false`) |
-| `anvil_map_architecture` | `forge_map_architecture` | In-memory AST import graph across TS, JS, Python, Go, Rust, Java, C++. Call before planning refactors or tracing imports. | Yes (`detail: false`) |
+| `anvil_map_architecture` | `forge_map_architecture` | In-memory import graph across TS, JS, Python, Go, Rust, Java, C++; TypeScript AST symbols. Call before planning refactors or tracing imports. | Yes (`detail: false`) |
 | `anvil_change_risk` | `forge_change_risk` | Blast radius, downstream affected modules, and candidate test targets. Call before committing or opening PRs. | Yes (`detail: false`) |
 | `anvil_git_intelligence` | `forge_git_intelligence` | Working-tree git diff, uncommitted changes, affected modules, and heuristic commit risk. | Yes (`detail: false`) |
 | `anvil_quality_audit` | `forge_quality_audit` | Fast static quality audit across manifests, tests, workflows, and security patterns. | Yes (`detail: false`) |

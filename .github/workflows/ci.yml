@@ -96,6 +96,8 @@ jobs:
           docker info
       - name: Execute real container boundary tests
         env:
+          ANVIL_DOCKER_IMAGE: ${{ steps.image.outputs.ref }}
+          ANVIL_HOST_SECRET_SENTINEL: must-not-enter-container
           FORGE_DOCKER_IMAGE: ${{ steps.image.outputs.ref }}
           FORGE_HOST_SECRET_SENTINEL: must-not-enter-container
         run: npx vitest run tests/container-sandbox.integration.test.ts

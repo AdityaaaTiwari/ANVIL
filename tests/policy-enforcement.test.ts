@@ -257,26 +257,26 @@ describe("ANVIL Policy-as-Code & Gate Baseline Engine", () => {
         "export function render(el: any) {\n  el.innerHTML = 'test'; // anvil-disable-line ANVIL-R003\n}\n"
       );
 
-      // 1. Under default policy, inline suppression is allowed
+      // 1. Under default policy (allowInlineSuppressions: false), inline suppression fails the gate!
       const defaultEval = await evaluateGate(root);
-      expect(defaultEval.passed).toBe(true);
-      expect(defaultEval.summary.inlineSuppressions).toBe(1);
+      expect(defaultEval.passed).toBe(false);
+      expect(defaultEval.violations.some((v) => v.includes("Policy forbids inline suppressions"))).toBe(true);
 
-      // 2. Under strict policy with allowInlineSuppressions: false, gate FAILS!
-      const strictPolicyPath = path.join(root, "strict-policy.json");
+      // 2. Under permissive policy with allowInlineSuppressions: true, gate PASSES!
+      const permissivePolicyPath = path.join(root, "permissive-policy.json");
       await writeFile(
-        strictPolicyPath,
+        permissivePolicyPath,
         JSON.stringify({
           version: 1,
           quality: {
-            allowInlineSuppressions: false,
+            allowInlineSuppressions: true,
           },
         })
       );
 
-      const strictEval = await evaluateGate(root, { policyPath: strictPolicyPath });
-      expect(strictEval.passed).toBe(false);
-      expect(strictEval.violations.some((v) => v.includes("Policy forbids inline suppressions"))).toBe(true);
+      const permissiveEval = await evaluateGate(root, { policyPath: permissivePolicyPath });
+      expect(permissiveEval.passed).toBe(true);
+      expect(permissiveEval.summary.inlineSuppressions).toBe(1);
     } finally {
       await rm(root, { recursive: true, force: true });
     }
@@ -351,6 +351,7 @@ describe("ANVIL Policy-as-Code & Gate Baseline Engine", () => {
         JSON.stringify({
           version: 1,
           quality: {
+            allowInlineSuppressions: true,
             requireSuppressionReason: true,
           },
         })

@@ -73,9 +73,6 @@ const PAGE = String.raw`<!doctype html>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#07080e">
 <title>ANVIL — Engineering Workbench</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
   color-scheme:dark;
@@ -2370,8 +2367,9 @@ export async function startDashboard(options: DashboardOptions): Promise<Dashboa
     try {
       // The dashboard is loopback-only. Reject arbitrary Host headers so a
       // DNS-rebinding page cannot reach local APIs with a matching attacker Origin.
-      const expectedHost = `${host}:${request.socket.localPort}`;
-      if (request.headers.host !== expectedHost) {
+      const localPort = request.socket.localPort;
+      const allowedHosts = new Set([`${host}:${localPort}`, `localhost:${localPort}`, `[::1]:${localPort}`]);
+      if (!request.headers.host || !allowedHosts.has(request.headers.host)) {
         response
           .writeHead(421, { "content-type": "application/json" })
           .end(JSON.stringify({ error: "Unexpected Host header." }));
@@ -2501,7 +2499,7 @@ export async function startDashboard(options: DashboardOptions): Promise<Dashboa
             typeof input.content !== "string" ||
             !input.content.trim() ||
             Buffer.byteLength(input.content, "utf8") > 128 * 1024 ||
-            input.content.includes("\\0")
+            input.content.includes("\0")
           )
             throw new Error("Markdown content must be non-empty and at most 128 KiB.");
           const root = path.resolve(projectPath);
@@ -2628,6 +2626,7 @@ export async function startDashboard(options: DashboardOptions): Promise<Dashboa
           const workflowId = requestUrl.pathname.slice("/api/workflows/".length, -"/execute".length);
           const workflow = await loadWorkflow(projectPath, decodeURIComponent(workflowId));
           const run = createRunFromWorkflow(workflow);
+          run.isDemo = true;
           await saveRun(projectPath, run);
           broadcastEvent("workflow_started", {
             runId: run.id,
@@ -2935,49 +2934,7 @@ export async function startDashboard(options: DashboardOptions): Promise<Dashboa
         );
         return;
       }
-      if (requestUrl.pathname === "/api/config-files") {
-        const category = requestUrl.searchParams.get("category");
-        const id = requestUrl.searchParams.get("id");
-        if (category !== null && category !== "agents" && category !== "skills")
-          throw new Error("Choose agents or skills.");
-        if (id !== null && !/^[a-z0-9][a-z0-9-]{0,63}$/.test(id)) throw new Error("Invalid configuration file ID.");
-        if (id !== null && category === null)
-          throw new Error("A category is required when reading one configuration file.");
-        if (id !== null) {
-          const file = path.join(path.resolve(projectPath), ".forge", category!, id + ".md");
-          const info = await lstat(file);
-          if (!info.isFile() || info.isSymbolicLink() || info.size > 128 * 1024)
-            throw new Error("Configuration file is not a supported regular Markdown file.");
-          const content = await readFile(file, "utf8");
-          response
-            .writeHead(200, { "content-type": "application/json; charset=utf-8" })
-            .end(JSON.stringify({ category, id, content }));
-          return;
-        }
-        const categories = category ? [category] : ["agents", "skills"];
-        const items: Array<{ category: string; id: string; bytes: number }> = [];
-        for (const kind of categories) {
-          const directory = path.join(path.resolve(projectPath), ".forge", kind);
-          let entries;
-          try {
-            entries = await readdir(directory, { withFileTypes: true });
-          } catch (error) {
-            if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") continue;
-            throw error;
-          }
-          for (const entry of entries) {
-            const name = entry.name.replace(/\.md$/, "");
-            if (!entry.isFile() || !entry.name.endsWith(".md") || !/^[a-z0-9][a-z0-9-]{0,63}$/.test(name)) continue;
-            const info = await lstat(path.join(directory, entry.name));
-            if (info.isSymbolicLink() || info.size > 128 * 1024) continue;
-            items.push({ category: kind, id: name, bytes: info.size });
-          }
-        }
-        response
-          .writeHead(200, { "content-type": "application/json; charset=utf-8" })
-          .end(JSON.stringify(items.sort((a, b) => a.category.localeCompare(b.category) || a.id.localeCompare(b.id))));
-        return;
-      }
+
       if (requestUrl.pathname === "/api/agents") {
         const agents = await loadAgentRegistry(projectPath);
         response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(

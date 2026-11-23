@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { lstat, readFile, realpath, writeFile } from "node:fs/promises";
+import { lstat, readFile, realpath, writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 
 export type VerificationStatus = "passed" | "failed" | "timed_out" | "spawn_error";
@@ -48,11 +48,36 @@ async function packageScripts(root: string): Promise<Record<string, string>> {
     Object.entries(scripts).filter((entry): entry is [string, string] => typeof entry[1] === "string")
   );
 }
+function isLifecycleHook(name: string, allScripts: Record<string, string>): boolean {
+  const standardHooks = new Set([
+    "preinstall",
+    "postinstall",
+    "prepack",
+    "postpack",
+    "prepublish",
+    "postpublish",
+    "prepublishOnly",
+    "prepare",
+    "preversion",
+    "postversion",
+    "prestop",
+    "poststop",
+    "prestart",
+    "poststart",
+    "prerestart",
+    "postrestart",
+  ]);
+  if (standardHooks.has(name)) return true;
+  if (name.startsWith("pre") && name.slice(3) in allScripts) return true;
+  if (name.startsWith("post") && name.slice(4) in allScripts) return true;
+  return false;
+}
+
 export async function discoverChecks(inputPath: string): Promise<AvailableCheck[]> {
   const root = await verifiedProjectRoot(inputPath);
   const scripts = await packageScripts(root);
   return Object.entries(scripts)
-    .filter(([name]) => SCRIPT_NAME.test(name) && !/^pre|^post/.test(name))
+    .filter(([name]) => SCRIPT_NAME.test(name) && !isLifecycleHook(name, scripts))
     .map(([name, command]) => ({ name, command, packageManager: "npm" as const }))
     .sort((a, b) => a.name.localeCompare(b.name));
 }
@@ -62,9 +87,9 @@ export async function runVerification(
   options: { timeoutMs?: number } = {}
 ): Promise<VerificationResult> {
   const root = await verifiedProjectRoot(inputPath);
-  if (!SCRIPT_NAME.test(script) || /^pre|^post/.test(script))
-    throw new Error("Choose a valid, explicit package script name (pre/post lifecycle scripts are not selectable).");
   const scripts = await packageScripts(root);
+  if (!SCRIPT_NAME.test(script) || isLifecycleHook(script, scripts))
+    throw new Error("Choose a valid, explicit package script name (pre/post lifecycle scripts are not selectable).");
   if (!(script in scripts)) throw new Error(`Script "${script}" is not defined in package.json.`);
   const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT;
   if (!Number.isInteger(timeoutMs) || timeoutMs < 1000 || timeoutMs > MAX_TIMEOUT)
@@ -84,6 +109,11 @@ export async function runVerification(
     if (value.length > remaining) outputTruncated = true;
   };
   const windows = process.platform === "win32";
+  const isolatedHome = path.join(root, ".anvil", "tmp");
+  try {
+    await mkdir(isolatedHome, { recursive: true });
+  } catch {}
+
   // Do not forward provider/API credentials or arbitrary parent-process variables to project scripts.
   const env: NodeJS.ProcessEnv = {
     PATH: process.env.PATH ?? "",
@@ -91,11 +121,12 @@ export async function runVerification(
     NODE_ENV: "test",
     ANVIL_VERIFICATION: "1",
     FORGE_VERIFICATION: "1",
+    HOME: isolatedHome,
+    USERPROFILE: isolatedHome,
     ...(process.env.SystemRoot ? { SystemRoot: process.env.SystemRoot } : {}),
     ...(process.env.WINDIR ? { WINDIR: process.env.WINDIR } : {}),
     ...(process.env.TEMP ? { TEMP: process.env.TEMP } : {}),
     ...(process.env.TMP ? { TMP: process.env.TMP } : {}),
-    ...(process.env.HOME ? { HOME: process.env.HOME } : {}),
   };
   const child = spawn(
     windows ? "cmd.exe" : "npm",
@@ -114,6 +145,7 @@ export async function runVerification(
   child.stdout.on("data", append);
   child.stderr.on("data", append);
   let timedOut = false;
+  let forceKillTimer: NodeJS.Timeout | null = null;
   const timer = setTimeout(() => {
     timedOut = true;
     if (!windows && child.pid) {
@@ -123,12 +155,31 @@ export async function runVerification(
         child.kill("SIGTERM");
       }
     } else child.kill("SIGTERM");
+
+    // Escalate to SIGKILL after 5 seconds grace period
+    forceKillTimer = setTimeout(() => {
+      try {
+        if (!windows && child.pid) {
+          process.kill(-child.pid, "SIGKILL");
+        } else {
+          child.kill("SIGKILL");
+        }
+      } catch {}
+    }, 5000);
   }, timeoutMs);
+
   const outcome = await new Promise<{ exitCode: number | null; signal: string | null; error?: string }>((resolve) => {
-    child.once("error", (error) => resolve({ exitCode: null, signal: null, error: error.message }));
-    child.once("close", (code, signal) => resolve({ exitCode: code, signal }));
+    child.once("error", (error) => {
+      if (forceKillTimer) clearTimeout(forceKillTimer);
+      resolve({ exitCode: null, signal: null, error: error.message });
+    });
+    child.once("close", (code, signal) => {
+      if (forceKillTimer) clearTimeout(forceKillTimer);
+      resolve({ exitCode: code, signal });
+    });
   });
   clearTimeout(timer);
+  if (forceKillTimer) clearTimeout(forceKillTimer);
   if (outcome.error) append(`\nFORGE could not start npm: ${outcome.error}\n`);
   const finishedAt = new Date();
   return {
@@ -239,12 +290,14 @@ export async function installVerificationDependencies(
   child.stdout.on("data", append);
   child.stderr.on("data", append);
   let timedOut = false;
+  let forceKillTimer: NodeJS.Timeout | null = null;
   const outcome = await new Promise<{ exitCode: number | null; error?: string }>((resolve) => {
     let settled = false;
     const finish = (value: { exitCode: number | null; error?: string }) => {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
+      if (forceKillTimer) clearTimeout(forceKillTimer);
       resolve(value);
     };
     const timer = setTimeout(() => {
@@ -256,10 +309,21 @@ export async function installVerificationDependencies(
           child.kill("SIGTERM");
         }
       } else child.kill("SIGTERM");
+
+      forceKillTimer = setTimeout(() => {
+        try {
+          if (!windows && child.pid) {
+            process.kill(-child.pid, "SIGKILL");
+          } else {
+            child.kill("SIGKILL");
+          }
+        } catch {}
+      }, 5000);
     }, timeoutMs);
     child.once("error", (error) => finish({ exitCode: null, error: error.message }));
     child.once("close", (code) => finish({ exitCode: code }));
   });
+  if (forceKillTimer) clearTimeout(forceKillTimer);
   if (outcome.error) append("\nFORGE could not start npm: " + outcome.error + "\n");
   return {
     status: outcome.error ? "spawn_error" : timedOut ? "timed_out" : outcome.exitCode === 0 ? "passed" : "failed",

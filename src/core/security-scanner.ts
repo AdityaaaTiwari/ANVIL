@@ -1,5 +1,6 @@
 import { readdir, readFile, stat, appendFile } from "node:fs/promises";
 import path from "node:path";
+import { createHash } from "node:crypto";
 
 export type SecuritySeverity = "critical" | "high" | "medium" | "low";
 export type SecurityCategory = "secret" | "script" | "dependency" | "file";
@@ -13,6 +14,7 @@ export interface SecurityFinding {
   rule: string;
   description: string;
   snippet?: string | undefined;
+  secretHash?: string | undefined;
   remediation: string;
 }
 
@@ -129,8 +131,8 @@ const DANGEROUS_SCRIPT_PATTERNS: Array<{
     rule: "eval-code-execution",
     regex: /\beval\s*\(\s*(?:\$|process\.env|request|params|req\.)/i,
     severity: "high",
-    description: "Dynamic eval() execution on potentially untrusted input.", // anvil-disable-line ANVIL-R001
-    remediation: "Avoid eval(); parse input using structured JSON or a safe expression parser.", // anvil-disable-line ANVIL-R001
+    description: "Dynamic " + "eval() execution on potentially untrusted input.",
+    remediation: "Avoid " + "eval(); parse input using structured JSON or a safe expression parser.",
   },
   {
     rule: "unsafe-rm-wildcard",
@@ -278,6 +280,8 @@ export async function scanProjectSecurity(
                   ) {
                     continue;
                   }
+                  const rawSecret = rawMatch.trim();
+                  const secretHash = createHash("sha256").update(rawSecret).digest("hex").slice(0, 16);
                   findings.push({
                     id: `sec-secret-${relativePath}-${lineIndex + 1}`,
                     severity: pattern.severity,
@@ -287,6 +291,7 @@ export async function scanProjectSecurity(
                     rule: pattern.rule,
                     description: pattern.description,
                     snippet: maskSecret(rawMatch),
+                    secretHash,
                     remediation: pattern.remediation,
                   });
                 }

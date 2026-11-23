@@ -48,6 +48,7 @@ export interface RunRecord {
   updatedAt: string;
   status: "pending" | "awaiting_approval" | "running" | "completed" | "failed" | "cancelled";
   tasks: TaskRecord[];
+  isDemo?: boolean;
   /** Cumulative estimated provider token usage persisted with run state. */
   tokenUsage?: { estimatedTokensUsed: number; estimatedTokensByAgent: Record<string, number> };
   events: Array<{

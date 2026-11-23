@@ -31,7 +31,7 @@ export const GatePolicySchema = z
       .object({
         maxReviewHigh: z.number().int().min(0).optional(),
         requireCleanGit: z.boolean().default(false),
-        allowInlineSuppressions: z.boolean().default(true),
+        allowInlineSuppressions: z.boolean().default(false),
         requireSuppressionReason: z.boolean().default(false),
         minConfidence: z.enum(["high", "medium", "low"]).default("medium"),
         diffOnly: z.boolean().default(false),
@@ -40,7 +40,7 @@ export const GatePolicySchema = z
       .default({
         maxReviewHigh: 0,
         requireCleanGit: false,
-        allowInlineSuppressions: true,
+        allowInlineSuppressions: false,
         requireSuppressionReason: false,
         minConfidence: "medium",
         diffOnly: false,
@@ -73,7 +73,7 @@ export const DEFAULT_GATE_POLICY: GatePolicy = GatePolicySchema.parse({
   quality: {
     maxReviewHigh: 0,
     requireCleanGit: false,
-    allowInlineSuppressions: true,
+    allowInlineSuppressions: false,
     requireSuppressionReason: false,
     minConfidence: "medium",
     diffOnly: false,
@@ -162,16 +162,20 @@ export async function isRunningInContainer(): Promise<boolean> {
 
 /**
  * Computes a deterministic finding fingerprint.
- * If snippet content is provided, uses a SHA-256 content hash so line shifts don't invalidate baselines.
+ * If secretHash or snippet content is provided, uses a SHA-256 content hash so line shifts don't invalidate baselines.
  */
 export function computeFindingFingerprint(
   source: string,
   ruleId: string,
   filePath: string,
   line: number,
-  snippet?: string
+  snippet?: string,
+  secretHash?: string
 ): string {
   const normFile = filePath.replace(/\\/g, "/");
+  if (secretHash) {
+    return `${source}:${ruleId}:${normFile}:${secretHash}`;
+  }
   if (snippet && snippet.trim().length > 0) {
     const hash = createHash("sha256").update(snippet.trim()).digest("hex").slice(0, 16);
     return `${source}:${ruleId}:${normFile}:${hash}`;
@@ -204,7 +208,8 @@ export function validateGatePolicy(rawContent: string, sourcePath: string): Gate
 
 export async function loadGatePolicy(
   targetPath: string,
-  explicitPolicyPath?: string
+  explicitPolicyPath?: string,
+  policyRef?: string
 ): Promise<{ policy: GatePolicy; source: string }> {
   if (explicitPolicyPath) {
     const fullPath = path.resolve(explicitPolicyPath);
@@ -215,6 +220,23 @@ export async function loadGatePolicy(
     } catch (err) {
       throw new Error(
         `Failed to load policy file at ${explicitPolicyPath}: ${err instanceof Error ? err.message : String(err)}`
+      );
+    }
+  }
+
+  if (policyRef) {
+    try {
+      const { execFile } = await import("node:child_process");
+      const { promisify } = await import("node:util");
+      const execFileAsync = promisify(execFile);
+      const { stdout } = await execFileAsync("git", ["show", `${policyRef}:.anvil/policy.json`], {
+        cwd: targetPath,
+      });
+      const policy = validateGatePolicy(stdout, `git:${policyRef}:.anvil/policy.json`);
+      return { policy, source: `git:${policyRef}:.anvil/policy.json` };
+    } catch (err) {
+      throw new Error(
+        `Failed to load policy from git ref "${policyRef}:.anvil/policy.json": ${err instanceof Error ? err.message : String(err)}`
       );
     }
   }
@@ -257,7 +279,7 @@ export async function loadBaseline(baselinePath?: string): Promise<Set<string>> 
         const normFile = item.file.replace(/\\/g, "/");
         const rule = item.rule ?? item.ruleId;
         const source = item.source ?? "security";
-        baseline.add(computeFindingFingerprint(source, rule, normFile, item.line ?? 0, item.snippet));
+        baseline.add(computeFindingFingerprint(source, rule, normFile, item.line ?? 0, item.snippet, item.secretHash));
         baseline.add(`${source}:${rule}:${normFile}:${item.line ?? 0}`);
         baseline.add(`${source}:${rule}:${normFile}:L${item.line ?? 0}`);
       }
@@ -294,6 +316,7 @@ export function generateBaselineJson(findings: NormalizedFinding[]): string {
 
 export interface EvaluateGateOptions {
   policyPath?: string | undefined;
+  policyRef?: string | undefined;
   baselinePath?: string | undefined;
   failOnWarnings?: boolean | undefined;
   since?: string | undefined;
@@ -303,7 +326,7 @@ export interface EvaluateGateOptions {
 }
 
 export async function evaluateGate(targetPath: string, options: EvaluateGateOptions = {}): Promise<GateEvaluation> {
-  const { policy, source: policySource } = await loadGatePolicy(targetPath, options.policyPath);
+  const { policy, source: policySource } = await loadGatePolicy(targetPath, options.policyPath, options.policyRef);
   const baseline = await loadBaseline(options.baselinePath);
 
   const effectivePolicy: GatePolicy = {
@@ -394,8 +417,9 @@ export async function evaluateGate(targetPath: string, options: EvaluateGateOpti
     const line = s.line ?? 1;
     const normFile = s.file.replace(/\\/g, "/");
     const snippet = s.snippet;
-    const snippetHash = snippet ? createHash("sha256").update(snippet.trim()).digest("hex").slice(0, 16) : undefined;
-    const fp = computeFindingFingerprint("security", s.rule, normFile, line, snippet);
+    const snippetHash =
+      s.secretHash || (snippet ? createHash("sha256").update(snippet.trim()).digest("hex").slice(0, 16) : undefined);
+    const fp = computeFindingFingerprint("security", s.rule, normFile, line, snippet, s.secretHash);
     const legacyFp = `security:${s.rule}:${normFile}:${line}`;
 
     allFindings.push({

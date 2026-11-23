@@ -36,7 +36,7 @@ When an AI coding assistant (Claude, Cursor, Copilot, Antigravity) answers archi
 
 ### 2. Architecture & Module Dependency Mapping
 - **Unassisted:** To understand the project structure and imports, the agent must read dozens of source files across `src/`.
-- **ANVIL Compact:** `anvil_map_architecture` builds an in-memory AST import graph across all supported languages (TypeScript, Python, Go, Rust, Java, C++) and returns entry points, total module counts, external package frequencies, and high-level sample nodes.
+- **ANVIL Compact:** `anvil_map_architecture` builds an in-memory import graph across all supported languages (TypeScript, Python, Go, Rust, Java, C++; TypeScript AST symbols) and returns entry points, total module counts, external package frequencies, and high-level sample nodes.
 
 ### 3. Change Risk & Blast Radius Analysis
 - **Unassisted:** Stand-in baseline: the script reads the first 5 `.ts` files under `src/core`. It does not read the real git diff or trace callers, so this row is an approximation.

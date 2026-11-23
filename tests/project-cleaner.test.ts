@@ -281,4 +281,63 @@ end\`}
     const cleaned = await readFile(filePath, "utf8");
     expect(cleaned).toContain("template with space   \n");
   });
+
+  it("backs up and restores junk directories like __pycache__ during clean & undo", async () => {
+    const root = await createTempWorkspace();
+    const pycache = path.join(root, "__pycache__");
+    await mkdir(pycache);
+    const pycFile = path.join(pycache, "cache.pyc");
+    await writeFile(pycFile, "compiled python cache data");
+
+    const cleanResult = await cleanProject(root, { apply: true });
+    expect(cleanResult.applied).toBe(true);
+    await expect(stat(pycFile)).rejects.toThrow();
+
+    const undoResult = await undoLastClean(root, cleanResult.backupId);
+    expect(undoResult.errors).toHaveLength(0);
+    const restored = await stat(pycFile);
+    expect(restored.isFile()).toBe(true);
+    const restoredContent = await readFile(pycFile, "utf8");
+    expect(restoredContent).toBe("compiled python cache data");
+  });
+
+  it("refuses to overwrite existing pre-commit hook and uses non-destructive dry-run", async () => {
+    const root = await createTempWorkspace();
+    const hooksDir = path.join(root, ".git", "hooks");
+    await mkdir(hooksDir, { recursive: true });
+    const hookPath = path.join(hooksDir, "pre-commit");
+    await writeFile(hookPath, "#!/bin/sh\necho custom-hook\n");
+
+    const result = await installPrecommitHook(root);
+    expect(result.success).toBe(false);
+    expect(result.detail).toContain("already exists");
+
+    const content = await readFile(hookPath, "utf8");
+    expect(content).toContain("custom-hook");
+  });
+
+  it("does not classify .pyd or top-level Protein Data Bank .pdb files as junk", async () => {
+    const root = await createTempWorkspace();
+    const pydFile = path.join(root, "native_ext.pyd");
+    const pdbMolecule = path.join(root, "protein_structure.pdb");
+    const objDir = path.join(root, "obj");
+    await mkdir(objDir);
+    const objPdb = path.join(objDir, "symbols.pdb");
+
+    await writeFile(pydFile, "compiled c-extension");
+    await writeFile(pdbMolecule, "ATOM      1  N   ASP A   1");
+    await writeFile(objPdb, "microsoft pdb debug symbols");
+
+    const result = await cleanProject(root, { apply: false });
+    const junkPaths = result.junkItems.map((i) => i.path);
+    expect(junkPaths).not.toContain("native_ext.pyd");
+    expect(junkPaths).not.toContain("protein_structure.pdb");
+    expect(junkPaths.some((p) => p.includes("obj") && p.includes("symbols.pdb"))).toBe(true);
+  });
+
+  it("preserves PEP 8 two blank lines in Python files", () => {
+    const pyCode = "def func_a():\n    pass\n\n\ndef func_b():\n    pass\n";
+    const { newContent } = autoFixCodeContent(pyCode, "module.py");
+    expect(newContent).toBe(pyCode);
+  });
 });

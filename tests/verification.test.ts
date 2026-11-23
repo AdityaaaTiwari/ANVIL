@@ -24,6 +24,17 @@ describe("verification engine", () => {
     await setup({ test: "vitest run", build: "tsc", pretest: "echo before", posttest: "echo after" });
     expect((await discoverChecks(root)).map((item) => item.name)).toEqual(["build", "test"]);
   });
+  it("allows non-lifecycle scripts with pre/post prefixes such as prettier, preview, postcss", async () => {
+    await setup({
+      prettier: "echo prettier",
+      preview: "echo preview",
+      postcss: "echo postcss",
+      build: "echo build",
+      prebuild: "echo prebuild",
+    });
+    const checks = (await discoverChecks(root)).map((item) => item.name);
+    expect(checks).toEqual(["build", "postcss", "prettier", "preview"]);
+  });
   it("rejects unknown and lifecycle scripts without executing anything", async () => {
     await setup({ test: 'node -e "process.exit(0)"', pretest: "echo unsafe" });
     await expect(runVerification(root, "missing")).rejects.toThrow(/not defined/);

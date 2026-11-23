@@ -1,4 +1,4 @@
-import { readdir, readFile, stat, unlink, rm, writeFile, mkdir, copyFile } from "node:fs/promises";
+import { readdir, readFile, stat, unlink, rm, writeFile, mkdir, copyFile, cp } from "node:fs/promises";
 import path from "node:path";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
@@ -7,6 +7,11 @@ import { mapArchitecture } from "./architecture-map.js";
 import ts from "typescript";
 
 const execFileAsync = promisify(execFile);
+
+function isInside(parent: string, candidate: string): boolean {
+  const rel = path.relative(parent, candidate);
+  return !rel.startsWith("..") && !path.isAbsolute(rel);
+}
 
 export type JunkCategory = "os" | "editor" | "temporary" | "download" | "log" | "cache" | "empty-dir";
 
@@ -92,10 +97,7 @@ function classifyJunkFile(basename: string, relPath: string): { category: JunkCa
   }
 
   // Logs
-  if (
-    /^(npm-debug|yarn-debug|yarn-error|pnpm-debug|lerna-debug)\.log/i.test(basename) ||
-    (lower.endsWith(".log") && !relPath.startsWith(".anvil/") && !relPath.startsWith(".forge/"))
-  ) {
+  if (/^(npm-debug|yarn-debug|yarn-error|pnpm-debug|lerna-debug|vite-error)\.log/i.test(basename)) {
     return { category: "log", reason: "Debug or error log leftover" };
   }
 
@@ -132,8 +134,8 @@ function classifyJunkFile(basename: string, relPath: string): { category: JunkCa
     return { category: "editor", reason: "Editor backup, swap, or merge residue" };
   }
 
-  // Python bytecode & caches
-  if (lower.endsWith(".pyc") || lower.endsWith(".pyo") || lower.endsWith(".pyd")) {
+  // Python bytecode & caches (.pyd is a valid compiled extension module and is not junk)
+  if (lower.endsWith(".pyc") || lower.endsWith(".pyo")) {
     return { category: "cache", reason: "Compiled Python bytecode artifact" };
   }
 
@@ -142,13 +144,25 @@ function classifyJunkFile(basename: string, relPath: string): { category: JunkCa
     return { category: "cache", reason: "Compiled Java bytecode class file" };
   }
 
-  // C / C++ / Rust / Windows object and debug files
+  // C / C++ / Rust / Windows object and debug files (.pdb restricted to build directories to protect Protein Data Bank files)
+  const isBuildDir =
+    relPath.includes("/bin/") ||
+    relPath.includes("/obj/") ||
+    relPath.includes("/build/") ||
+    relPath.includes("/target/") ||
+    relPath.includes("/dist/") ||
+    relPath.startsWith("bin/") ||
+    relPath.startsWith("obj/") ||
+    relPath.startsWith("build/") ||
+    relPath.startsWith("target/") ||
+    relPath.startsWith("dist/");
+
   if (
     lower.endsWith(".o") ||
     lower.endsWith(".obj") ||
-    lower.endsWith(".pdb") ||
     lower.endsWith(".ilk") ||
-    lower.endsWith(".idb")
+    lower.endsWith(".idb") ||
+    (lower.endsWith(".pdb") && isBuildDir)
   ) {
     return { category: "cache", reason: "Native object or debug symbol artifact" };
   }
@@ -451,26 +465,30 @@ export function autoFixCodeContent(content: string, filePath: string): { newCont
     return { newContent: content, fixes: [] };
   }
 
+  const isPythonFile = [".py", ".pyw", ".pyi"].includes(ext);
+  const isCrlf = content.includes("\r\n");
+  const eol = isCrlf ? "\r\n" : "\n";
+
   let updated = content;
 
-  // 1. Whitespace normalization: remove trailing spaces ONLY outside protected string literals
+  // 1. Whitespace normalization: remove trailing spaces ONLY outside protected string literals (preserve EOL)
   const protectedLines = getProtectedMultilineLines(updated, ext);
-  const lines = updated.split("\n");
+  const lines = updated.split(/\r?\n/);
   let trailingWhitespaceRemoved = false;
   const cleanedLines = lines.map((line, lineIdx) => {
     // If line is inside a template literal or docstring, preserve trailing whitespace exactly!
     if (protectedLines.has(lineIdx)) {
       return line;
     }
-    const stripped = line.replace(/[ \t\r]+$/, "");
-    if (stripped !== line.replace(/\r$/, "")) {
+    const stripped = line.replace(/[ \t]+$/, "");
+    if (stripped !== line) {
       trailingWhitespaceRemoved = true;
     }
     return stripped;
   });
 
   if (trailingWhitespaceRemoved) {
-    updated = cleanedLines.join("\n");
+    updated = cleanedLines.join(eol);
     fixes.push({
       file: filePath,
       type: "whitespace",
@@ -479,56 +497,49 @@ export function autoFixCodeContent(content: string, filePath: string): { newCont
     });
   }
 
-  // 2. Blank line normalization: collapse 3+ consecutive newlines outside string literals
-  if (protectedLines.size === 0) {
-    if (/\n{3,}/.test(updated)) {
-      updated = updated.replace(/\n{3,}/g, "\n\n");
-      fixes.push({
-        file: filePath,
-        type: "blank-lines",
-        detail: "Collapsed excessive consecutive blank lines",
-        applied: true,
-      });
-    }
-  } else {
-    const recheckedLines = updated.split("\n");
-    const freshProtected = getProtectedMultilineLines(updated, ext);
-    let consecutiveBlank = 0;
-    const finalLines: string[] = [];
-    let blankLinesCollapsed = false;
+  // 2. Blank line normalization:
+  // For Python: PEP 8 allows up to 2 blank lines between classes/functions. Collapse 4+ newlines to 3 newlines (2 blank lines).
+  // For other languages: collapse 3+ newlines to 2 newlines (1 blank line).
+  const maxConsecutiveBlank = isPythonFile ? 2 : 1;
+  const recheckedLines = updated.split(/\r?\n/);
+  const freshProtected = getProtectedMultilineLines(updated, ext);
+  let consecutiveBlank = 0;
+  const finalLines: string[] = [];
+  let blankLinesCollapsed = false;
 
-    for (let i = 0; i < recheckedLines.length; i++) {
-      const line = recheckedLines[i] ?? "";
-      const isBlank = line.trim() === "";
-      const isProtected = freshProtected.has(i);
+  for (let i = 0; i < recheckedLines.length; i++) {
+    const line = recheckedLines[i] ?? "";
+    const isBlank = line.trim() === "";
+    const isProtected = freshProtected.has(i);
 
-      if (isBlank && !isProtected) {
-        consecutiveBlank++;
-        if (consecutiveBlank <= 2) {
-          finalLines.push(line);
-        } else {
-          blankLinesCollapsed = true;
-        }
-      } else {
-        consecutiveBlank = 0;
+    if (isBlank && !isProtected) {
+      consecutiveBlank++;
+      if (consecutiveBlank <= maxConsecutiveBlank) {
         finalLines.push(line);
+      } else {
+        blankLinesCollapsed = true;
       }
-    }
-
-    if (blankLinesCollapsed) {
-      updated = finalLines.join("\n");
-      fixes.push({
-        file: filePath,
-        type: "blank-lines",
-        detail: "Collapsed excessive consecutive blank lines outside string literals",
-        applied: true,
-      });
+    } else {
+      consecutiveBlank = 0;
+      finalLines.push(line);
     }
   }
 
+  if (blankLinesCollapsed) {
+    updated = finalLines.join(eol);
+    fixes.push({
+      file: filePath,
+      type: "blank-lines",
+      detail: isPythonFile
+        ? "Collapsed excessive consecutive blank lines (>2 blank lines, PEP 8 compliant)"
+        : "Collapsed excessive consecutive blank lines",
+      applied: true,
+    });
+  }
+
   // 3. Ensure single trailing newline
-  if (updated.length > 0 && !updated.endsWith("\n")) {
-    updated += "\n";
+  if (updated.length > 0 && !updated.endsWith(eol)) {
+    updated += eol;
   }
 
   // 4. Safe unused named imports removal for JS/TS source files
@@ -696,6 +707,7 @@ interface BackupManifest {
   root: string;
   deletedFiles: Array<{ relPath: string; backupRelative: string; sizeBytes: number }>;
   deletedDirs: string[];
+  deletedJunkDirs: Array<{ relPath: string; backupRelative: string }>;
   modifiedFiles: Array<{ relPath: string; backupRelative: string }>;
 }
 
@@ -712,9 +724,11 @@ async function createBackupSnapshot(
   const backupId = `backup-${Date.now()}`;
   const backupRoot = path.join(root, ".anvil", "backups", backupId);
   const filesBackupDir = path.join(backupRoot, "files");
+  const dirsBackupDir = path.join(backupRoot, "dirs");
   const modifiedBackupDir = path.join(backupRoot, "modified");
 
   await mkdir(filesBackupDir, { recursive: true });
+  await mkdir(dirsBackupDir, { recursive: true });
   await mkdir(modifiedBackupDir, { recursive: true });
 
   const manifest: BackupManifest = {
@@ -723,41 +737,43 @@ async function createBackupSnapshot(
     root,
     deletedFiles: [],
     deletedDirs: [...emptyDirsToDelete],
+    deletedJunkDirs: [],
     modifiedFiles: [],
   };
 
-  // 1. Back up junk files before deletion
+  // 1. Back up junk files and directories before deletion
   for (let i = 0; i < junkToDelete.length; i++) {
     const item = junkToDelete[i]!;
-    if (item.isDirectory) continue;
-    try {
-      const backupRel = `junk_${i}_${path.basename(item.path)}`;
-      const backupDest = path.join(filesBackupDir, backupRel);
-      await copyFile(item.absolutePath, backupDest);
-      manifest.deletedFiles.push({
+    if (item.isDirectory) {
+      const backupRel = `junk_dir_${i}_${path.basename(item.path)}`;
+      const backupDest = path.join(dirsBackupDir, backupRel);
+      await cp(item.absolutePath, backupDest, { recursive: true });
+      manifest.deletedJunkDirs.push({
         relPath: item.path,
         backupRelative: backupRel,
-        sizeBytes: item.sizeBytes,
       });
-    } catch {
-      // Ignore copy error
+      continue;
     }
+    const backupRel = `junk_${i}_${path.basename(item.path)}`;
+    const backupDest = path.join(filesBackupDir, backupRel);
+    await copyFile(item.absolutePath, backupDest);
+    manifest.deletedFiles.push({
+      relPath: item.path,
+      backupRelative: backupRel,
+      sizeBytes: item.sizeBytes,
+    });
   }
 
   // 2. Back up files before code fixes
   for (let i = 0; i < filesToModify.length; i++) {
     const item = filesToModify[i]!;
-    try {
-      const backupRel = `mod_${i}_${path.basename(item.file)}`;
-      const backupDest = path.join(modifiedBackupDir, backupRel);
-      await writeFile(backupDest, item.originalContent, "utf8");
-      manifest.modifiedFiles.push({
-        relPath: item.file,
-        backupRelative: backupRel,
-      });
-    } catch {
-      // Ignore
-    }
+    const backupRel = `mod_${i}_${path.basename(item.file)}`;
+    const backupDest = path.join(modifiedBackupDir, backupRel);
+    await writeFile(backupDest, item.originalContent, "utf8");
+    manifest.modifiedFiles.push({
+      relPath: item.file,
+      backupRelative: backupRel,
+    });
   }
 
   const manifestPath = path.join(backupRoot, "manifest.json");
@@ -769,26 +785,55 @@ async function createBackupSnapshot(
   return backupId;
 }
 
-export async function undoLastClean(inputPath: string): Promise<UndoResult> {
+export async function undoLastClean(inputPath: string, explicitBackupId?: string): Promise<UndoResult> {
   const root = path.resolve(inputPath);
-  const latestPath = path.join(root, ".anvil", "backups", "latest.json");
-  let pointer: { backupId: string; backupRoot: string } | null = null;
-  try {
-    const raw = await readFile(latestPath, "utf8");
-    pointer = JSON.parse(raw);
-  } catch {
+  const backupsDir = path.join(root, ".anvil", "backups");
+  let backupId = explicitBackupId;
+
+  if (!backupId) {
+    const latestPath = path.join(backupsDir, "latest.json");
+    try {
+      const raw = await readFile(latestPath, "utf8");
+      const pointer = JSON.parse(raw);
+      backupId = pointer.backupId;
+    } catch {
+      return {
+        root,
+        backupId: "",
+        restoredAt: new Date().toISOString(),
+        restoredFiles: [],
+        restoredDirs: [],
+        revertedCodeFixes: [],
+        errors: ["No previous ANVIL clean/fix backup found in this workspace."],
+      };
+    }
+  }
+
+  if (!backupId || !/^[a-zA-Z0-9_-]+$/.test(backupId)) {
     return {
       root,
-      backupId: "",
+      backupId: backupId || "",
       restoredAt: new Date().toISOString(),
       restoredFiles: [],
       restoredDirs: [],
       revertedCodeFixes: [],
-      errors: ["No previous ANVIL clean/fix backup found in this workspace."],
+      errors: ["Invalid backup ID."],
     };
   }
 
-  const backupRoot = pointer!.backupRoot || path.join(root, ".anvil", "backups", pointer!.backupId);
+  const backupRoot = path.join(backupsDir, backupId);
+  if (!isInside(backupsDir, backupRoot)) {
+    return {
+      root,
+      backupId,
+      restoredAt: new Date().toISOString(),
+      restoredFiles: [],
+      restoredDirs: [],
+      revertedCodeFixes: [],
+      errors: ["Path traversal detected in backup location."],
+    };
+  }
+
   const manifestPath = path.join(backupRoot, "manifest.json");
   let manifest: BackupManifest;
   try {
@@ -797,7 +842,7 @@ export async function undoLastClean(inputPath: string): Promise<UndoResult> {
   } catch {
     return {
       root,
-      backupId: pointer!.backupId,
+      backupId,
       restoredAt: new Date().toISOString(),
       restoredFiles: [],
       restoredDirs: [],
@@ -817,6 +862,10 @@ export async function undoLastClean(inputPath: string): Promise<UndoResult> {
     try {
       const src = path.join(modifiedBackupDir, item.backupRelative);
       const dest = path.join(root, item.relPath);
+      if (!isInside(root, dest)) {
+        errors.push(`Path traversal blocked for modified file: ${item.relPath}`);
+        continue;
+      }
       const fileContent = await readFile(src, "utf8");
       await mkdir(path.dirname(dest), { recursive: true });
       await writeFile(dest, fileContent, "utf8");
@@ -832,6 +881,10 @@ export async function undoLastClean(inputPath: string): Promise<UndoResult> {
     try {
       const src = path.join(filesBackupDir, item.backupRelative);
       const dest = path.join(root, item.relPath);
+      if (!isInside(root, dest)) {
+        errors.push(`Path traversal blocked for deleted file: ${item.relPath}`);
+        continue;
+      }
       await mkdir(path.dirname(dest), { recursive: true });
       await copyFile(src, dest);
       restoredFiles.push(item.relPath);
@@ -840,10 +893,34 @@ export async function undoLastClean(inputPath: string): Promise<UndoResult> {
     }
   }
 
+  // Restore junk directories
+  if (manifest.deletedJunkDirs) {
+    const dirsBackupDir = path.join(backupRoot, "dirs");
+    for (const item of manifest.deletedJunkDirs) {
+      try {
+        const src = path.join(dirsBackupDir, item.backupRelative);
+        const dest = path.join(root, item.relPath);
+        if (!isInside(root, dest)) {
+          errors.push(`Path traversal blocked for deleted directory: ${item.relPath}`);
+          continue;
+        }
+        await mkdir(path.dirname(dest), { recursive: true });
+        await cp(src, dest, { recursive: true });
+        restoredDirs.push(item.relPath);
+      } catch (err: any) {
+        errors.push(`Could not restore deleted directory ${item.relPath}: ${err?.message || String(err)}`);
+      }
+    }
+  }
+
   // Restore empty directories
   for (const relDir of manifest.deletedDirs) {
     try {
       const dest = path.join(root, relDir);
+      if (!isInside(root, dest)) {
+        errors.push(`Path traversal blocked for empty directory: ${relDir}`);
+        continue;
+      }
       await mkdir(dest, { recursive: true });
       restoredDirs.push(relDir);
     } catch (err: any) {
@@ -853,6 +930,7 @@ export async function undoLastClean(inputPath: string): Promise<UndoResult> {
 
   // Invalidate latest pointer so undo is not run twice on the same snapshot
   try {
+    const latestPath = path.join(backupsDir, "latest.json");
     await rm(latestPath, { force: true });
   } catch {}
 
@@ -899,13 +977,24 @@ export async function installPrecommitHook(
 ): Promise<{ success: boolean; hookPath: string; detail: string }> {
   const root = path.resolve(inputPath);
   const gitHooksDir = path.join(root, ".git", "hooks");
+  const hookPath = path.join(gitHooksDir, "pre-commit");
   try {
+    try {
+      await stat(hookPath);
+      return {
+        success: false,
+        hookPath,
+        detail: "Pre-commit hook already exists. Refusing to overwrite existing git hook.",
+      };
+    } catch {
+      // Hook does not exist, proceed
+    }
+
     await mkdir(gitHooksDir, { recursive: true });
-    const hookPath = path.join(gitHooksDir, "pre-commit");
     const script = `#!/usr/bin/env sh
 # ANVIL automated pre-commit quality gate
 echo "[ANVIL] Running pre-commit clean & quality check..."
-anvil clean --apply --json > /dev/null 2>&1 || true
+anvil clean --json > /dev/null 2>&1 || true
 `;
     await writeFile(hookPath, script, { encoding: "utf8", mode: 0o755 });
     return {
@@ -916,7 +1005,7 @@ anvil clean --apply --json > /dev/null 2>&1 || true
   } catch (err: any) {
     return {
       success: false,
-      hookPath: path.join(gitHooksDir, "pre-commit"),
+      hookPath,
       detail: `Failed to install pre-commit hook: ${err?.message || String(err)}`,
     };
   }
@@ -1104,13 +1193,12 @@ export async function cleanProject(inputPath: string, options: CleanOptions = {}
   let verification: CleanVerificationResult | undefined;
 
   if (apply) {
-    // A. Create snapshot backup before modifying or deleting anything
-    try {
-      const bid = await createBackupSnapshot(root, junkItems, emptyDirs, filesToModify);
-      if (bid) backupId = bid;
-    } catch (err: any) {
-      warnings.push(`Could not create rollback backup: ${err?.message || String(err)}`);
+    // A. Create snapshot backup before modifying or deleting anything (Transactional, non-destructive safety)
+    const bid = await createBackupSnapshot(root, junkItems, emptyDirs, filesToModify);
+    if (!bid && (junkItems.length > 0 || filesToModify.length > 0)) {
+      throw new Error("Could not create rollback backup. Deletion aborted to prevent data loss.");
     }
+    if (bid) backupId = bid;
 
     // B. Delete junk files and empty directories
     for (const item of junkItems) {
@@ -1163,8 +1251,8 @@ export async function cleanProject(inputPath: string, options: CleanOptions = {}
             output: stdout.trim().slice(0, 500),
           };
         } catch (testErr: any) {
-          // Tests failed! Auto-rollback to restore original workspace
-          await undoLastClean(root);
+          // Tests failed! Auto-rollback to restore original workspace using explicit backupId
+          await undoLastClean(root, backupId);
           verification = {
             enabled: true,
             passed: false,

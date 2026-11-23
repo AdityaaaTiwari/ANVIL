@@ -16,7 +16,7 @@ inputs:
     required: false
     default: .
   operation:
-    description: Safe built-in operation to run (gate, inspect, security, quality, health, review, doctor, clean, undo)
+    description: Safe built-in operation to run (gate, inspect, security, quality, health, review, doctor)
     required: false
     default: gate
   sarif-file:
@@ -109,28 +109,28 @@ runs:
 
         case "$ANVIL_OPERATION" in
           gate)
-            EXTRA_ARGS=""
-            if [[ -n "$ANVIL_SARIF_FILE" ]]; then EXTRA_ARGS="$EXTRA_ARGS --sarif $ANVIL_SARIF_FILE"; fi
+            EXTRA_ARGS=()
+            if [[ -n "$ANVIL_SARIF_FILE" ]]; then EXTRA_ARGS+=(--sarif "$ANVIL_SARIF_FILE"); fi
 
             # Resolve policy file
             if [[ -n "$ANVIL_POLICY_FILE" ]]; then
-              EXTRA_ARGS="$EXTRA_ARGS --policy $ANVIL_POLICY_FILE"
+              EXTRA_ARGS+=(--policy "$ANVIL_POLICY_FILE")
             elif [[ -f "$ANVIL_PROJECT_PATH/.anvil/policy.json" ]]; then
-              EXTRA_ARGS="$EXTRA_ARGS --policy $ANVIL_PROJECT_PATH/.anvil/policy.json"
+              EXTRA_ARGS+=(--policy "$ANVIL_PROJECT_PATH/.anvil/policy.json")
             fi
 
             # Resolve baseline file
             if [[ -n "$ANVIL_BASELINE_FILE" ]]; then
-              EXTRA_ARGS="$EXTRA_ARGS --baseline $ANVIL_BASELINE_FILE"
+              EXTRA_ARGS+=(--baseline "$ANVIL_BASELINE_FILE")
             elif [[ -f "$ANVIL_PROJECT_PATH/.anvil/baseline.json" ]]; then
-              EXTRA_ARGS="$EXTRA_ARGS --baseline $ANVIL_PROJECT_PATH/.anvil/baseline.json"
+              EXTRA_ARGS+=(--baseline "$ANVIL_PROJECT_PATH/.anvil/baseline.json")
             fi
 
-            if [[ "$ANVIL_FAIL_ON_WARNINGS" == "true" ]]; then EXTRA_ARGS="$EXTRA_ARGS --fail-on-warnings"; fi
-            if [[ -n "$ANVIL_SINCE" ]]; then EXTRA_ARGS="$EXTRA_ARGS --since $ANVIL_SINCE"; fi
-            if [[ -n "$ANVIL_MIN_CONFIDENCE" ]]; then EXTRA_ARGS="$EXTRA_ARGS --min-confidence $ANVIL_MIN_CONFIDENCE"; fi
-            if [[ -n "$ANVIL_IMPORT_SARIF" ]]; then EXTRA_ARGS="$EXTRA_ARGS --import-sarif $ANVIL_IMPORT_SARIF"; fi
-            "$RUN_BIN" gate "$ANVIL_PROJECT_PATH" $EXTRA_ARGS
+            if [[ "$ANVIL_FAIL_ON_WARNINGS" == "true" ]]; then EXTRA_ARGS+=(--fail-on-warnings); fi
+            if [[ -n "$ANVIL_SINCE" ]]; then EXTRA_ARGS+=(--since "$ANVIL_SINCE"); fi
+            if [[ -n "$ANVIL_MIN_CONFIDENCE" ]]; then EXTRA_ARGS+=(--min-confidence "$ANVIL_MIN_CONFIDENCE"); fi
+            if [[ -n "$ANVIL_IMPORT_SARIF" ]]; then EXTRA_ARGS+=(--import-sarif "$ANVIL_IMPORT_SARIF"); fi
+            "$RUN_BIN" gate "$ANVIL_PROJECT_PATH" "${EXTRA_ARGS[@]}"
             ;;
           inspect) "$RUN_BIN" inspect "$ANVIL_PROJECT_PATH" ;;
           security) "$RUN_BIN" security "$ANVIL_PROJECT_PATH" ;;
@@ -138,7 +138,5 @@ runs:
           health) "$RUN_BIN" health "$ANVIL_PROJECT_PATH" ;;
           review) "$RUN_BIN" review "$ANVIL_PROJECT_PATH" ;;
           doctor) "$RUN_BIN" doctor "$ANVIL_PROJECT_PATH" ;;
-          clean) "$RUN_BIN" clean "$ANVIL_PROJECT_PATH" ;;
-          undo) "$RUN_BIN" undo "$ANVIL_PROJECT_PATH" ;;
           *) echo "Unsupported ANVIL operation: $ANVIL_OPERATION" >&2; exit 2 ;;
         esac

@@ -33,7 +33,7 @@ When working in this workspace, follow these operating rules:
 | Task | Recommended Tool | Why |
 |---|---|---|
 | Project stack / setup | `anvil_inspect_project` | Returns languages, package managers, frameworks, and scripts. |
-| Codebase architecture | `anvil_map_architecture` | In-memory AST import graph across TS, Python, Go, Rust, Java, C++. |
+| Codebase architecture | `anvil_map_architecture` | Deterministic import graph across TS, Python, Go, Rust, Java, C++; TypeScript AST symbol analysis. |
 | Pre-commit risk check | `anvil_change_risk` | Computes blast radius, affected modules, and suggested test targets. |
 | Working copy diff | `anvil_git_intelligence` | Structured diff, changed files list, and test recommendations. |
 | Quality audit | `anvil_quality_audit` | Static heuristic project check (manifests, tests, workflows). |

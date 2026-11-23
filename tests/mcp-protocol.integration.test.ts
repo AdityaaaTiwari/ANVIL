@@ -41,7 +41,7 @@ describe("FORGE MCP stdio protocol integration", () => {
 
     child = spawn(process.execPath, ["--import", "tsx", "src/mcp/server.ts"], {
       cwd: process.cwd(),
-      env: { ...process.env, FORGE_WORKSPACE: workspace },
+      env: { ...process.env, FORGE_WORKSPACE: workspace, ANVIL_FORGE_ALIASES: "1" },
       stdio: ["pipe", "pipe", "pipe"],
     });
 

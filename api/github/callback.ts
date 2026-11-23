@@ -81,13 +81,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (oauthState.installationId !== null && !accessibleIds.includes(oauthState.installationId)) {
       return res.status(403).json({
         error:
-          "This GitHub account does not have access to the selected FORGE installation. Sign in with an authorized account.",
+          "This GitHub account does not have access to the selected ANVIL installation. Sign in with an authorized account.",
       });
     }
 
     for (const item of installations) {
       const record = installationRecord({ ...item, app_id: appId });
-      await redisCommand(["SET", `forge:github:installation:${item.id}`, JSON.stringify(record)]);
+      await redisCommand(["SET", `anvil:github:installation:${item.id}`, JSON.stringify(record)]);
     }
 
     const session: AuthSession = {
