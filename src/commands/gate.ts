@@ -21,6 +21,7 @@ Options:
   --diff                    Evaluate only modified files in current working tree relative to HEAD
   --min-confidence LEVEL    Minimum rule confidence to block gate (high, medium, low; default: medium)
   --import-sarif PATH       Import external SARIF v2.1.0 report (e.g. Semgrep, CodeQL, Snyk)
+  --skip-agent-config       Don't scan AI-agent configs (AGENTS.md, Claude hooks, MCP configs)
   --fail-on-warnings        Fail gate (exit 1) on medium-severity warnings as well as critical/high errors
   --json                    Output full gate evaluation in machine-readable JSON format
   --help                    Show this help message
@@ -76,6 +77,7 @@ Exit codes:
       diffOnly,
       minConfidence,
       externalSarifPaths: externalSarifPaths.length > 0 ? externalSarifPaths : undefined,
+      skipAgentConfig: rest.includes("--skip-agent-config"),
     });
 
     if (generateBaselinePath) {

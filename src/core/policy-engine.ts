@@ -5,6 +5,7 @@ import { z } from "zod";
 import { scanProjectSecurity, type SecurityAuditReport } from "./security-scanner.js";
 import { reviewProject, type CodeReviewReport, type InlineSuppressionRecord } from "./code-review.js";
 import { analyzeGitChanges } from "./git-intelligence.js";
+import { auditAgentConfiguration } from "./agent-security-audit.js";
 import { importExternalSarif } from "./sarif-formatter.js";
 export { importExternalSarif } from "./sarif-formatter.js";
 
@@ -323,6 +324,8 @@ export interface EvaluateGateOptions {
   diffOnly?: boolean | undefined;
   minConfidence?: "high" | "medium" | "low" | undefined;
   externalSarifPaths?: string[] | undefined;
+  /** Skip the AI-agent configuration scan (AGENTS.md, Claude settings/hooks, MCP configs). */
+  skipAgentConfig?: boolean | undefined;
 }
 
 export async function evaluateGate(targetPath: string, options: EvaluateGateOptions = {}): Promise<GateEvaluation> {
@@ -458,6 +461,30 @@ export async function evaluateGate(targetPath: string, options: EvaluateGateOpti
       fingerprint: fp,
       legacyFingerprint: legacyFp,
     });
+  }
+
+  // AI-agent configuration: instruction files, Claude settings and hooks, MCP server configs.
+  if (!options.skipAgentConfig) {
+    try {
+      const agentReport = await auditAgentConfiguration(targetPath);
+      for (const a of agentReport.findings) {
+        const fp = computeFindingFingerprint("security", a.id, a.file, a.line);
+        allFindings.push({
+          id: a.id,
+          source: "security",
+          category: "agent-config",
+          severity: a.severity,
+          confidence: "high",
+          file: a.file,
+          line: a.line,
+          message: `${a.title}. ${a.recommendation}`,
+          fingerprint: fp,
+          legacyFingerprint: `security:${a.id}:${a.file.replace(/\\/g, "/")}:${a.line}`,
+        });
+      }
+    } catch (err) {
+      warnings.push(`Agent configuration scan skipped: ${err instanceof Error ? err.message : String(err)}`);
+    }
   }
 
   // Phase 3: Ingest external SARIF reports (Semgrep, CodeQL, AgentShield, etc.)

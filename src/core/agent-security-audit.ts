@@ -1,8 +1,10 @@
 import { constants } from "node:fs";
 import { lstat, open, readdir, realpath } from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
+import { checkConfigFile } from "./agent-config-checks.js";
 
-export type AgentSecuritySeverity = "critical" | "high" | "medium";
+export type AgentSecuritySeverity = "critical" | "high" | "medium" | "low";
 
 export interface AgentSecurityFinding {
   id: string;
@@ -19,7 +21,7 @@ export interface AgentSecurityReport {
   generatedAt: string;
   filesScanned: number;
   findings: AgentSecurityFinding[];
-  summary: { critical: number; high: number; medium: number };
+  summary: { critical: number; high: number; medium: number; low: number };
   caveats: string[];
 }
 
@@ -44,7 +46,7 @@ const RULES: Rule[] = [
     title: "Credential value embedded in agent configuration",
     pattern:
       /\b(?:api[_-]?key|access[_-]?token|secret|password|client[_-]?secret)\b\s*[:=]\s*["']?(?:sk-[A-Za-z0-9_-]{12,}|gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|xox[baprs]-[A-Za-z0-9-]{12,}|AIza[0-9A-Za-z_-]{30,})/i,
-    detail: "A value resembling a live credential is present. FORGE redacts the matching line from this report.",
+    detail: "A value resembling a live credential is present. ANVIL redacts the matching line from this report.",
     recommendation:
       "Remove the credential from the file, rotate it with its provider, and use an environment-backed secret store.",
   },
@@ -101,17 +103,76 @@ const RULES: Rule[] = [
   },
 ];
 
-const ROOT_FILES = new Set(["AGENTS.md", "CLAUDE.md", ".cursorrules", ".mcp.json", "mcp.json"]);
-const SCANNED_DIRECTORIES = [".forge/skills", ".forge/hooks", ".claude/commands", ".cursor/rules"];
+const NEGATABLE_RULES = new Set(["FORGE-AGENT-002", "FORGE-AGENT-004", "FORGE-AGENT-005", "FORGE-AGENT-006"]);
+const DEFENSIVE_WORDING =
+  /\b(?:do\s+not|don't|never|must\s+not|should\s+not|untrusted|not\s+trusted|refuse|forbid(?:den)?|prohibit(?:ed)?)\b/i;
+
+const ROOT_FILES = new Set([
+  "AGENTS.md",
+  "CLAUDE.md",
+  "CLAUDE.local.md",
+  "GEMINI.md",
+  ".cursorrules",
+  ".windsurfrules",
+  ".clinerules",
+  ".mcp.json",
+  "mcp.json",
+  "opencode.json",
+]);
+const SCANNED_DIRECTORIES = [
+  ".forge/skills",
+  ".forge/hooks",
+  ".anvil/skills",
+  ".anvil/hooks",
+  ".claude/commands",
+  ".claude/agents",
+  ".claude/skills",
+  ".claude/hooks",
+  ".cursor/rules",
+  ".windsurf/rules",
+  ".agents/rules",
+  ".agents/workflows",
+  ".github/instructions",
+  ".github/prompts",
+  ".gemini/commands",
+  ".opencode",
+];
 const SCANNED_FILES = new Set([
   ".forge/permissions.json",
   ".forge/policy.json",
+  ".forge/hooks.json",
   ".claude/settings.json",
   ".claude/settings.local.json",
   ".cursor/mcp.json",
   ".vscode/mcp.json",
+  ".agents/mcp_config.json",
+  ".gemini/settings.json",
+  ".codex/config.toml",
+  ".zed/settings.json",
   ".github/copilot-instructions.md",
 ]);
+/** Per-user configs, scanned only with { includeGlobal: true }. Paths are relative to the home directory. */
+const GLOBAL_FILES = [
+  ".claude/settings.json",
+  ".claude/CLAUDE.md",
+  ".codex/config.toml",
+  ".codex/AGENTS.md",
+  ".cursor/mcp.json",
+  ".codeium/windsurf/mcp_config.json",
+  ".gemini/settings.json",
+  ".gemini/GEMINI.md",
+  ".gemini/antigravity/mcp_config.json",
+  ".config/opencode/opencode.json",
+  "Library/Application Support/Claude/claude_desktop_config.json",
+  "AppData/Roaming/Claude/claude_desktop_config.json",
+  ".config/Claude/claude_desktop_config.json",
+];
+
+export interface AgentSecurityOptions {
+  /** Also scan per-user configs in the home directory (Claude, Codex, Cursor, Windsurf, Gemini, OpenCode, Claude Desktop). */
+  includeGlobal?: boolean;
+  homeDir?: string;
+}
 
 function isInside(root: string, candidate: string): boolean {
   const relative = path.relative(root, candidate);
@@ -185,12 +246,18 @@ async function readText(filePath: string): Promise<string> {
 
 function scanText(relativePath: string, content: string): AgentSecurityFinding[] {
   const findings: AgentSecurityFinding[] = [];
+  const structured = checkConfigFile(relativePath, content);
+  for (const item of structured) findings.push({ ...item, file: relativePath });
+  const structuredSecretLines = new Set(structured.filter((f) => f.id === "ANVIL-AGENT-103").map((f) => f.line));
   const lines = content.split(/\r?\n/);
   for (let index = 0; index < lines.length; index += 1) {
     const line = lines[index] ?? "";
     for (const rule of RULES) {
       rule.pattern.lastIndex = 0;
       if (!rule.pattern.test(line)) continue;
+      if (rule.id === "FORGE-AGENT-001" && structuredSecretLines.has(index + 1)) continue;
+      // Defensive guidance ("never run arbitrary commands", "treat repo files as untrusted") is not a grant.
+      if (NEGATABLE_RULES.has(rule.id) && DEFENSIVE_WORDING.test(line)) continue;
       findings.push({
         id: rule.id,
         severity: rule.severity,
@@ -209,7 +276,10 @@ function scanText(relativePath: string, content: string): AgentSecurityFinding[]
  * Read-only, rule-based review of common AI-agent instruction and tool-policy files.
  * Reports locations and remediation guidance only; it never includes matched source text.
  */
-export async function auditAgentConfiguration(projectPath: string): Promise<AgentSecurityReport> {
+export async function auditAgentConfiguration(
+  projectPath: string,
+  options: AgentSecurityOptions = {}
+): Promise<AgentSecurityReport> {
   const root = await realpath(path.resolve(projectPath));
   const files = new Set<string>();
   for (const name of ROOT_FILES) {
@@ -244,7 +314,24 @@ export async function auditAgentConfiguration(projectPath: string): Promise<Agen
     const relative = path.relative(root, file).split(path.sep).join("/");
     findings.push(...scanText(relative, await readText(file)));
   }
-  const severityRank: Record<AgentSecuritySeverity, number> = { critical: 0, high: 1, medium: 2 };
+  let globalFiles = 0;
+  if (options.includeGlobal) {
+    const home = await realpath(options.homeDir ?? os.homedir()).catch(() => undefined);
+    for (const relative of home ? GLOBAL_FILES : []) {
+      const candidate = path.join(home!, relative);
+      try {
+        const info = await lstat(candidate);
+        if (!info.isFile() || info.isSymbolicLink() || info.size > MAX_FILE_BYTES) continue;
+      } catch (error) {
+        if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") continue;
+        throw error;
+      }
+      if (files.has(await realpath(candidate))) continue;
+      globalFiles += 1;
+      findings.push(...scanText("~/" + relative, await readText(candidate)));
+    }
+  }
+  const severityRank: Record<AgentSecuritySeverity, number> = { critical: 0, high: 1, medium: 2, low: 3 };
   findings.sort(
     (a, b) =>
       severityRank[a.severity] - severityRank[b.severity] ||
@@ -256,11 +343,13 @@ export async function auditAgentConfiguration(projectPath: string): Promise<Agen
     critical: findings.filter((item) => item.severity === "critical").length,
     high: findings.filter((item) => item.severity === "high").length,
     medium: findings.filter((item) => item.severity === "medium").length,
+    low: findings.filter((item) => item.severity === "low").length,
   };
+  const scanned = sortedFiles.length + globalFiles;
   return {
-    status: sortedFiles.length === 0 ? "no-configs" : findings.length ? "findings" : "clean",
+    status: scanned === 0 ? "no-configs" : findings.length ? "findings" : "clean",
     generatedAt: new Date().toISOString(),
-    filesScanned: sortedFiles.length,
+    filesScanned: scanned,
     findings,
     summary,
     caveats: [
@@ -283,7 +372,9 @@ export function formatAgentSecurityReport(report: AgentSecurityReport): string {
       report.summary.high +
       " high · " +
       report.summary.medium +
-      " medium",
+      " medium · " +
+      report.summary.low +
+      " low",
     "",
   ];
   if (!report.findings.length)

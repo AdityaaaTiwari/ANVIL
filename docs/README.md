@@ -28,6 +28,7 @@ Welcome to the ANVIL documentation. ANVIL is the deterministic **verification la
 
 ## 🔒 Security & Analysis
 - [Security Model](security-model.md) — Local-first boundaries, read-only MCP guarantees, and execution isolation.
+- [AI Agent Security Audit](agent-security.md) — Deep audit of agent configs, prompt injection, hidden Unicode, MCP secrets, and tool permissions.
 - [False Positive Analysis](false-positive-analysis.md) — Heuristic precision, suppression mechanisms, and validation methodology.
 - [Rule Confidence Catalog](rule-confidence-catalog.md) — Comprehensive catalog of security and quality inspection rules and their confidence ratings.
 - [Token Benchmark Results](token-benchmark-results.md) — Empirical benchmarks demonstrating 96–99% token reductions using compact deterministic payloads.

@@ -4,11 +4,16 @@
 
 ### Added
 - `anvil install` / `anvil uninstall`: connect ANVIL to Claude Code, Codex, Cursor, VS Code (Copilot), Windsurf, Google Antigravity, Gemini CLI, OpenCode and Claude Desktop in one command. Writes each tool's MCP config in its own format, adds a managed ANVIL section to `AGENTS.md` / `CLAUDE.md` / `GEMINI.md`, keeps every existing setting, supports `--dry-run`, and never rewrites JSON it cannot parse.
+- `anvil agent-security` now understands agent configs instead of only matching lines: Claude Code permissions (`Bash(*)`, `bypassPermissions`, `enableAllProjectMcpServers`) and hooks, MCP servers in every tool's format (plain-text credentials in `env`/`headers`/URLs, plain-HTTP remotes, unpinned `npx`/`uvx` packages), Codex `config.toml` (`danger-full-access`, `approval_policy = "never"`), commands that pipe downloads into a shell or send secrets over the network, prompt injection (worse inside HTML comments) and hidden Unicode. Scans the files of every tool `anvil install` supports; `--global` adds per-user configs; `--sarif PATH` writes SARIF. Rule IDs `ANVIL-AGENT-101`…`112`; matched values are never printed.
+- `anvil gate` now includes the agent configuration scan (opt out with `--skip-agent-config`).
 
 ### Changed
+- `ANVIL-R002` (shell execution) no longer flags `RegExp.prototype.exec` calls such as `pattern.exec(text)`.
 - `src/cli.ts` split into one module per command under `src/commands/` (no behavior change).
 
 ### Docs
+- Added comprehensive AI Agent Security Audit documentation at `docs/agent-security.md` covering structured rule catalog (`ANVIL-AGENT-101`..`112`), heuristic checks (`FORGE-AGENT-001`..`006`), files scanned, `--global`, `--sarif` export, exit codes, and GitHub Actions code scanning workflows.
+- Linked `docs/agent-security.md` across `docs/README.md`, `docs/security-model.md`, and the `README.md` feature matrix.
 - Repositioned ANVIL as the deterministic verification layer for AI coding agents across `README.md`, landing page, manifests, and documentation.
 - Added comprehensive documentation index at `docs/README.md`.
 - Added end-to-end `docs/getting-started.md` guide covering quick start, CLI commands, pre-commit hooks, and CI/CD integration.

@@ -38,6 +38,24 @@ describe("code review", () => {
     expect(report.findings[0]?.ruleId).toBe("ANVIL-R001");
   });
 
+  it("ANVIL-R002 flags child_process calls but not RegExp.prototype.exec", async () => {
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-review-r002-"));
+    await mkdir(path.join(root, "src"));
+    await writeFile(
+      path.join(root, "src", "shell.ts"),
+      [
+        "const m = /a(b)/.exec(text);",
+        "const n = pattern.exec(line);",
+        'exec("ls " + dir);',
+        "cp.exec(cmd);",
+        'spawn("git", ["status"]);',
+      ].join("\n")
+    );
+    const report = await reviewProject(root, { all: true });
+    const lines = report.findings.filter((f) => f.ruleId === "ANVIL-R002").map((f) => f.line);
+    expect(lines).toEqual([3, 4, 5]);
+  });
+
   it("unions rules and reasons when next-line and same-line suppressions target the same line", async () => {
     root = await mkdtemp(path.join(os.tmpdir(), "anvil-review-union-"));
     await mkdir(path.join(root, "src"));

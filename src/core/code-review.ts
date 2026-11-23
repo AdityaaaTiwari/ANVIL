@@ -133,7 +133,9 @@ function inspectLines(
       id: "ANVIL-R002",
       severity: "medium",
       title: "Shell execution API usage",
-      pattern: /\b(?:exec|execSync|execFile|execFileSync|spawn|spawnSync)\s*\(/,
+      // `.exec(` alone is usually RegExp.prototype.exec, so only count it on child_process-like receivers.
+      pattern:
+        /(?:^|[^\w$])(?:execSync|execFile|execFileSync|spawn|spawnSync)\s*\(|(?:^|[^.\w$])exec\s*\(|\b(?:cp|child_process|childProcess|childprocess|shell|shelljs)\.exec\s*\(/,
       recommendation:
         "Review argument handling, executable allow-lists, and whether shell mode is enabled. Prefer argument arrays and avoid shell interpolation.",
       baseConfidence: "medium",
