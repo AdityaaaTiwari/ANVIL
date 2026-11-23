@@ -28,16 +28,10 @@ Add ANVIL to `.cursor/mcp.json` in your repository:
 ```
 
 ### Option 3: Built-in Setup Wizard
-Run the interactive wizard from your project directory:
+Run the setup wizard from your project directory:
 ```bash
-# Auto-configure all detected AI clients (Cursor, VS Code, Windsurf, Claude Code)
-anvil mcp setup --client all
-
-# Or configure a specific editor
-anvil mcp setup --client cursor
-anvil mcp setup --client claude
-anvil mcp setup --client windsurf
-anvil mcp setup --client vscode
+# Auto-configure all detected AI clients (Cursor, VS Code, Windsurf) and print Claude Code command
+anvil mcp setup
 ```
 
 ---
