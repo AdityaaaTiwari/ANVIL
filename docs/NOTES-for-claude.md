@@ -53,7 +53,10 @@ Planned features are explicitly marked as "Coming soon":
    Because `isAnvilHook` checks `/\banvil/` without the `/i` case-insensitivity flag, paths with uppercase `ANVIL` (like `D:\ANVIL`) do not match during `anvil uninstall`, leaving the hook in `.claude/settings.json` and `.cursor/hooks.json`.
    Changing the check from `/\banvil/` to `/\banvil/i` resolves this for all folder casing variations on Windows.
 
-2. **Pre-commit Hook**:
+2. **Multi-MCP Coexistence (`anvil install` + `rea`)**:
+   Users frequently pair ANVIL with reverse-engineering MCP servers like `morluto/rea` (`npx rea-agents setup`). `planJsonEntry` in `src/core/harness-installer.ts` cleanly respects foreign MCP server entries in `.mcp.json` and `.cursor/mcp.json`. Keep ensuring `anvil uninstall` only deletes the `"anvil"` entry and never removes user-added or third-party servers.
+
+3. **Pre-commit Hook**:
    - `anvil hook install` and `anvil hook remove` are wired into `src/cli.ts` and `src/core/project-cleaner.ts`.
 2. **Action PR Commenting**:
    - `scripts/post-pr-comment.cjs` supports the `pr-comment: "true"` option in `action.yml`.

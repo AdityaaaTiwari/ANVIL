@@ -16,6 +16,8 @@
 - `src/cli.ts` split into one module per command under `src/commands/` (no behavior change).
 
 ### Docs
+- Added Everything Claude Code (ECC) Integration Guide at `docs/integrations/ecc.md` detailing lifecycle pairing (`plan -> test -> implement -> verify`), skill security auditing, and stop hook automation.
+- Added REA Reverse-Engineering Integration Guide at `docs/integrations/rea.md` outlining the Clean-Room Reengineering Pipeline combining `morluto/rea` binary analysis with ANVIL CI policy verification.
 - Added agent stop hooks documentation at `docs/agent-hooks.md` covering `anvil install --hooks`, automatic `gate --diff` triggers on agent finish, loop guards, and Claude Code/Cursor hook protocols.
 - Documented `--hooks` flag in `docs/install.md`, `README.md` quick start, and indexed in `docs/README.md`.
 - Added comprehensive AI Agent Security Audit documentation at `docs/agent-security.md` covering structured rule catalog (`ANVIL-AGENT-101`..`112`), heuristic checks (`FORGE-AGENT-001`..`006`), files scanned, `--global`, `--sarif` export, exit codes, and GitHub Actions code scanning workflows.

@@ -129,12 +129,16 @@ ANVIL acts as the local inspection and verification harness for your agent:
    Codex / Antigravity)                  Secrets, Downstream Tests)
 ```
 
-### Supported Harnesses
+### Supported Harnesses & Ecosystems
 
 - **Claude Code:**
-  Run `anvil mcp setup --client claude`. Claude accesses read-only MCP tools (`anvil_map_architecture`, `anvil_change_risk`, `anvil_inspect_project`) to query repository structure without bloating context windows.
+  Run `anvil install . --hooks --target claude`. Claude accesses read-only MCP tools (`anvil_map_architecture`, `anvil_change_risk`, `anvil_inspect_project`) to query repository structure without bloating context windows, while stop hooks automatically check changes on completion.
 - **Cursor IDE:**
-  Run `anvil mcp setup --client cursor`. Automatically configures `.cursor/mcp.json` so you can call ANVIL tools directly during inline chat.
+  Run `anvil install . --hooks --target cursor`. Automatically configures `.cursor/mcp.json` and `.cursor/hooks.json` so Cursor's agent receives immediate gate feedback before stopping.
+- **ECC (affaan-m/ECC):**
+  Complements ECC's 1,500+ skills and prompt workflows with ANVIL's deterministic verification, blast radius, and agent security scanning. See the [ECC Integration Guide](docs/integrations/ecc.md).
+- **REA (morluto/rea):**
+  Powers an end-to-end reverse-engineering and binary analysis pipeline: use REA for binary/bundle inspection and ANVIL for safe patch verification and CI gating. See the [REA Integration Guide](docs/integrations/rea.md).
 - **Codex & OpenCode:**
   Use standard `AGENTS.md` instructions and run `anvil gate .` to verify changes before committing.
 - **Google Antigravity (AGY):**
