@@ -4,8 +4,11 @@
 
 ### Added
 - `anvil install` / `anvil uninstall`: connect ANVIL to Claude Code, Codex, Cursor, VS Code (Copilot), Windsurf, Google Antigravity, Gemini CLI, OpenCode and Claude Desktop in one command. Writes each tool's MCP config in its own format, adds a managed ANVIL section to `AGENTS.md` / `CLAUDE.md` / `GEMINI.md`, keeps every existing setting, supports `--dry-run`, and never rewrites JSON it cannot parse.
+- `anvil agent-security` now understands agent configs instead of only matching lines: Claude Code permissions (`Bash(*)`, `bypassPermissions`, `enableAllProjectMcpServers`) and hooks, MCP servers in every tool's format (plain-text credentials in `env`/`headers`/URLs, plain-HTTP remotes, unpinned `npx`/`uvx` packages), Codex `config.toml` (`danger-full-access`, `approval_policy = "never"`), commands that pipe downloads into a shell or send secrets over the network, prompt injection (worse inside HTML comments) and hidden Unicode. Scans the files of every tool `anvil install` supports; `--global` adds per-user configs; `--sarif PATH` writes SARIF. Rule IDs `ANVIL-AGENT-101`…`112`; matched values are never printed.
+- `anvil gate` now includes the agent configuration scan (opt out with `--skip-agent-config`).
 
 ### Changed
+- `ANVIL-R002` (shell execution) no longer flags `RegExp.prototype.exec` calls such as `pattern.exec(text)`.
 - `src/cli.ts` split into one module per command under `src/commands/` (no behavior change).
 
 ### Docs
