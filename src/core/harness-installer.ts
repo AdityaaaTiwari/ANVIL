@@ -57,6 +57,8 @@ export interface InstallOptions {
   instructions?: boolean;
   /** Also install agent stop hooks (Claude Code, Cursor) that run `anvil gate --diff` when the agent finishes. */
   hooks?: boolean;
+  /** Also register REA reverse-engineering MCP server (npx -y rea-agents serve) */
+  rea?: boolean;
   homeDir?: string;
   platform?: NodeJS.Platform;
   /** Used for the Claude Desktop config location on Windows. */
@@ -225,33 +227,36 @@ const isObject = (value: unknown): value is JsonObject =>
  * other setting. Files that are not plain JSON (e.g. with comments) are never
  * rewritten; the user gets the snippet to paste instead.
  */
-async function planJsonEntry(
+async function planJsonEntries(
   target: HarnessTarget,
   file: string,
   scope: "project" | "global",
   key: string,
-  entry: JsonObject | undefined,
+  entries: Record<string, JsonObject | undefined>,
   base: JsonObject = {}
 ): Promise<PlannedFile> {
   const existing = await readText(file);
   let data: JsonObject;
+  const anyDefined = Object.values(entries).some((v) => v !== undefined);
   if (existing === undefined || existing.trim() === "") {
-    if (!entry) return { target, path: file, scope, action: "unchanged" };
+    if (!anyDefined) return { target, path: file, scope, action: "unchanged" };
     data = { ...base };
   } else {
     let parsed: unknown;
     try {
       parsed = JSON.parse(existing);
     } catch {
-      if (!entry && !existing.includes(`"${SERVER_NAME}"`)) return { target, path: file, scope, action: "unchanged" };
+      if (!anyDefined && !Object.keys(entries).some((k) => existing.includes(`"${k}"`))) {
+        return { target, path: file, scope, action: "unchanged" };
+      }
       return {
         target,
         path: file,
         scope,
         action: "skip",
-        note: entry
-          ? `Not plain JSON (comments?), left untouched. Add under "${key}": ${JSON.stringify({ [SERVER_NAME]: entry })}`
-          : `Not plain JSON (comments?), left untouched. Remove "${SERVER_NAME}" from "${key}" by hand.`,
+        note: anyDefined
+          ? `Not plain JSON (comments?), left untouched. Add under "${key}".`
+          : `Not plain JSON (comments?), left untouched. Remove entries from "${key}" by hand.`,
       };
     }
     if (!isObject(parsed))
@@ -259,18 +264,32 @@ async function planJsonEntry(
     data = parsed;
   }
   const section = isObject(data[key]) ? { ...(data[key] as JsonObject) } : {};
-  if (entry) section[SERVER_NAME] = entry;
-  else delete section[SERVER_NAME];
+  for (const [name, entry] of Object.entries(entries)) {
+    if (entry) section[name] = entry;
+    else delete section[name];
+  }
   const next: JsonObject = { ...data, [key]: section };
-  if (!entry && Object.keys(section).length === 0) delete next[key];
+  if (!anyDefined && Object.keys(section).length === 0) delete next[key];
   const content = JSON.stringify(next, null, 2) + "\n";
   if (existing !== undefined && content === existing) return { target, path: file, scope, action: "unchanged" };
   if (existing !== undefined && JSON.stringify(next) === JSON.stringify(JSON.parse(existing)))
     return { target, path: file, scope, action: "unchanged" };
-  const action: FileAction = existing === undefined ? "create" : entry ? "update" : "remove";
+  const action: FileAction = existing === undefined ? "create" : anyDefined ? "update" : "remove";
   const leftover = Object.keys(next).filter((k) => !(k in base) || next[k] !== base[k]);
-  if (!entry && leftover.length === 0) return { target, path: file, scope, action, content, deleteFile: true };
+  if (!anyDefined && leftover.length === 0) return { target, path: file, scope, action, content, deleteFile: true };
   return { target, path: file, scope, action, content };
+}
+
+function planJsonEntry(
+  target: HarnessTarget,
+  file: string,
+  scope: "project" | "global",
+  key: string,
+  entry: JsonObject | undefined,
+  base: JsonObject = {},
+  serverName: string = SERVER_NAME
+): Promise<PlannedFile> {
+  return planJsonEntries(target, file, scope, key, { [serverName]: entry }, base);
 }
 
 /** Replaces (or appends, or removes) the managed block in a text file. */
@@ -350,6 +369,12 @@ export async function planHarnessInstall(options: InstallOptions, remove = false
   const platform = options.platform ?? process.platform;
   const plans: PlannedFile[] = [];
   const env = { ANVIL_WORKSPACE: project };
+  const reaLaunch = { command: "npx", args: ["-y", "rea-agents", "serve"] };
+  const reaPick = remove ? undefined : reaLaunch;
+  const serversWithRea = (anvilEntry: JsonObject | undefined) => ({
+    [SERVER_NAME]: anvilEntry,
+    ...(options.rea ? { rea: reaPick } : {}),
+  });
 
   for (const target of options.targets) {
     const launch = launchFor(options, target);
@@ -358,38 +383,43 @@ export async function planHarnessInstall(options: InstallOptions, remove = false
     switch (target) {
       case "claude":
         // Claude Code starts project servers in the project root.
-        plans.push(await planJsonEntry(target, path.join(project, ".mcp.json"), "project", "mcpServers", pick(stdio)));
+        plans.push(
+          await planJsonEntries(
+            target,
+            path.join(project, ".mcp.json"),
+            "project",
+            "mcpServers",
+            serversWithRea(pick(stdio))
+          )
+        );
         break;
       case "cursor":
         plans.push(
-          await planJsonEntry(
+          await planJsonEntries(
             target,
             path.join(project, ".cursor", "mcp.json"),
             "project",
             "mcpServers",
-            pick({ ...stdio, env: { ANVIL_WORKSPACE: "${workspaceFolder}" } })
+            serversWithRea(pick({ ...stdio, env: { ANVIL_WORKSPACE: "${workspaceFolder}" } }))
           )
         );
         break;
       case "vscode":
         plans.push(
-          await planJsonEntry(
-            target,
-            path.join(project, ".vscode", "mcp.json"),
-            "project",
-            "servers",
-            pick({ type: "stdio", ...stdio, env: { ANVIL_WORKSPACE: "${workspaceFolder}" } })
-          )
+          await planJsonEntries(target, path.join(project, ".vscode", "mcp.json"), "project", "servers", {
+            [SERVER_NAME]: pick({ type: "stdio", ...stdio, env: { ANVIL_WORKSPACE: "${workspaceFolder}" } }),
+            ...(options.rea ? { rea: remove ? undefined : { type: "stdio", ...reaLaunch } } : {}),
+          })
         );
         break;
       case "antigravity":
         plans.push(
-          await planJsonEntry(
+          await planJsonEntries(
             target,
             path.join(project, ".agents", "mcp_config.json"),
             "project",
             "mcpServers",
-            pick({ ...stdio, env })
+            serversWithRea(pick({ ...stdio, env }))
           )
         );
         break;

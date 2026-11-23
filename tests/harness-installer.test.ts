@@ -159,6 +159,30 @@ describe("anvil install (harness installer)", () => {
     expect(JSON.parse(win[0]!.content!).mcpServers.anvil.command).toBe("cmd");
   });
 
+  it("registers rea MCP server alongside anvil when rea is requested", async () => {
+    const { project, options } = await setup();
+    await install({ ...options, targets: ["claude", "cursor"], rea: true });
+
+    const claudeMcp = await readJson(path.join(project, ".mcp.json"));
+    expect(claudeMcp.mcpServers.anvil).toBeDefined();
+    expect(claudeMcp.mcpServers.rea).toEqual({
+      command: "npx",
+      args: ["-y", "rea-agents", "serve"],
+    });
+
+    const cursorMcp = await readJson(path.join(project, ".cursor", "mcp.json"));
+    expect(cursorMcp.mcpServers.anvil).toBeDefined();
+    expect(cursorMcp.mcpServers.rea).toEqual({
+      command: "npx",
+      args: ["-y", "rea-agents", "serve"],
+    });
+
+    // Uninstall removes rea as well
+    await install({ ...options, targets: ["claude", "cursor"], rea: true }, true);
+    expect(await exists(path.join(project, ".mcp.json"))).toBe(false);
+    expect(await exists(path.join(project, ".cursor", "mcp.json"))).toBe(false);
+  });
+
   it("parses target lists and aliases", () => {
     expect(parseTargets(undefined)).toEqual([...DEFAULT_TARGETS]);
     expect(parseTargets("claude-code,copilot,cursor,cursor")).toEqual(["claude", "vscode", "cursor"]);

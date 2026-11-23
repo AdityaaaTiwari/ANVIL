@@ -113,4 +113,30 @@ describe("skill registry", () => {
     if (!(await trySymlink(outside, path.join(dir, "linked.md")))) return;
     expect((await loadSkillRegistry(root)).some((skill) => skill.id === "linked")).toBe(false);
   });
+  it("discovers ECC format skills from .claude/skills and rules from .cursor/rules", async () => {
+    root = await mkdtemp(path.join(os.tmpdir(), "forge-skills-"));
+    const claudeDir = path.join(root, ".claude", "skills", "ecc-pack");
+    await mkdir(claudeDir, { recursive: true });
+    await writeFile(
+      path.join(claudeDir, "SKILL.md"),
+      "---\nname: ECC Fast Prototyping\ndescription: Rapid prototyping workflow\ntriggers: prototype, fast\n---\n# Fast Prototyping\nBuild MVPs quickly."
+    );
+
+    const cursorDir = path.join(root, ".cursor", "rules");
+    await mkdir(cursorDir, { recursive: true });
+    await writeFile(
+      path.join(cursorDir, "coding-standards.md"),
+      "---\ndescription: Cursor coding rules\ntriggers: style, lint\n---\n# Coding Standards\nFollow conventions."
+    );
+
+    const skills = await loadSkillRegistry(root);
+    const eccSkill = skills.find((s) => s.id === "ecc-pack");
+    expect(eccSkill).toBeDefined();
+    expect(eccSkill?.name).toBe("ECC Fast Prototyping");
+    expect(eccSkill?.triggers).toContain("prototype");
+
+    const cursorRule = skills.find((s) => s.id === "coding-standards");
+    expect(cursorRule).toBeDefined();
+    expect(cursorRule?.triggers).toContain("style");
+  });
 });

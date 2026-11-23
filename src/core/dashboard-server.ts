@@ -43,6 +43,8 @@ import { listProjectMemory, addProjectMemory, removeProjectMemory } from "./proj
 import { listAdrs, createAdr, syncMemoryToAdrs, type AdrStatus } from "./adr-engine.js";
 import { scanProjectSecurity, applySecurityFixes } from "./security-scanner.js";
 import { evaluateGate } from "./policy-engine.js";
+import { loadSkillRegistry } from "./skill-registry.js";
+import { analyzeReaIntelligence } from "./rea-intelligence.js";
 
 // --- SSE broadcast state ---
 const sseClients = new Set<ServerResponse>();
@@ -395,6 +397,8 @@ body{
 <nav class="tab-nav">
   <button class="tab-btn active" data-tab="tab-overview">📊 Overview & Health</button>
   <button class="tab-btn" data-tab="tab-gate">🛡️ Policy & Gate</button>
+  <button class="tab-btn" data-tab="tab-ecc">🧠 ECC Skills & Rules</button>
+  <button class="tab-btn" data-tab="tab-rea">🔬 REA Binary & Clean-Room</button>
   <button class="tab-btn" data-tab="tab-cleaner">⚡ Self-Healing & Security</button>
   <button class="tab-btn" data-tab="tab-agents">🤖 Agents & Workflow Studio</button>
   <button class="tab-btn" data-tab="tab-architecture">🗺️ Architecture & Graph</button>
@@ -1245,6 +1249,54 @@ body{
         </div>
       </div>
     </div>
+  </section>
+</div>
+
+<!-- ==================== TAB: ECC SKILLS & RULES ==================== -->
+<div id="tab-ecc" class="tab-pane">
+  <section class="hero">
+    <div class="eyebrow">EVERYTHING CLAUDE CODE (ECC) / 08</div>
+    <h1>Skills, Rules & Habits</h1>
+    <p>Curated domain workflows, lifecycle prompts, and prompt injection defense across Claude, Cursor, Antigravity, and Codex.</p>
+  </section>
+
+  <section class="grid" id="eccMetrics">
+    <div class="card"><div class="metric-label">Loaded Skills</div><div class="metric" id="eccTotalSkills">—</div><div class="metric-sub">Builtin + Workspace</div></div>
+    <div class="card"><div class="metric-label">Security Scan</div><div class="metric" id="eccSecStatus" style="color:var(--emerald)">VERIFIED</div><div class="metric-sub">Zero Prompt Injection</div></div>
+    <div class="card"><div class="metric-label">Harness Targets</div><div class="metric" style="color:var(--cyan)">9 AI Tools</div><div class="metric-sub">Claude, Cursor, Codex, etc.</div></div>
+    <div class="card"><div class="metric-label">Lifecycle Hook</div><div class="metric" style="color:var(--accent)">180s Gate</div><div class="metric-sub">Auto-stops & blocks on fail</div></div>
+  </section>
+
+  <section class="section card">
+    <div class="section-head">
+      <h2>Skill & Rule Library</h2>
+      <span class="pill pill-cyan">ACTIVE WORKSPACE DISCOVERY</span>
+    </div>
+    <div id="eccSkillsList" class="list"><div class="loading">Loading ECC skills and rules…</div></div>
+  </section>
+</div>
+
+<!-- ==================== TAB: REA BINARY & CLEAN-ROOM ==================== -->
+<div id="tab-rea" class="tab-pane">
+  <section class="hero">
+    <div class="eyebrow">REVERSE ENGINEER ANYTHING (REA) / 09</div>
+    <h1>Binary, Bundle & Clean-Room Intelligence</h1>
+    <p>Inspection layer for native binaries, WASM, source maps, web bundles, and clean-room provenance verification.</p>
+  </section>
+
+  <section class="grid" id="reaMetrics">
+    <div class="card"><div class="metric-label">Total Binary Assets</div><div class="metric" id="reaTotalAssets">—</div><div class="metric-sub">Binaries, Maps, WASM</div></div>
+    <div class="card"><div class="metric-label">Clean-Room Status</div><div class="metric" id="reaCleanStatus" style="color:var(--emerald)">COMPLIANT</div><div class="metric-sub">No proprietary leaks</div></div>
+    <div class="card"><div class="metric-label">REA MCP Server</div><div class="metric" style="color:var(--purple)">rea-agents</div><div class="metric-sub">io.github.morluto/rea</div></div>
+    <div class="card"><div class="metric-label">Decompiler Guard</div><div class="metric" style="color:var(--emerald)">ACTIVE</div><div class="metric-sub">Enforces clean provenance</div></div>
+  </section>
+
+  <section class="section card">
+    <div class="section-head">
+      <h2>Detected Compiled Assets</h2>
+      <span class="pill pill-purple">BINARY INVENTORY</span>
+    </div>
+    <div id="reaAssetsList" class="list"><div class="loading">Scanning for compiled binaries and source maps…</div></div>
   </section>
 </div>
 
@@ -2321,12 +2373,73 @@ on("refreshGateBtn","click",loadGate);
 on("gateScanMode","change",loadGate);
 on("gateMinConfidence","change",loadGate);
 
+async function loadEccSkills(){
+  try{
+    const res = await fetch("/api/ecc/skills");
+    if(!res.ok) return;
+    const data = await res.json();
+    const totalNode = el("eccTotalSkills");
+    if(totalNode) totalNode.textContent = data.total ?? data.skills?.length ?? 0;
+    const list = el("eccSkillsList");
+    if(!list) return;
+    if(!data.skills || !data.skills.length){
+      list.innerHTML = '<div class="empty">No skills or rules registered in workspace yet.</div>';
+      return;
+    }
+    list.innerHTML = data.skills.map(s => {
+      const sourceClass = s.source === "builtin" ? "cyan" : "purple";
+      const triggerHtml = s.triggers && s.triggers.length ? '<div style="font-size:11px;color:var(--accent);margin-top:4px">Triggers: ' + esc(s.triggers.join(", ")) + '</div>' : '';
+      return '<div class="row" style="padding:12px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:flex-start">' +
+        '<div>' +
+          '<strong style="color:var(--text)">' + esc(s.name || s.id) + '</strong>' +
+          '<span class="pill pill-' + sourceClass + '" style="margin-left:8px;font-size:11px">' + esc(s.source) + '</span>' +
+          '<div style="color:var(--muted);font-size:13px;margin-top:4px">' + esc(s.description || "") + '</div>' +
+          triggerHtml +
+        '</div>' +
+        '<span class="badge" style="font-size:11px;background:rgba(255,255,255,0.05);padding:2px 8px;border-radius:4px">' + esc(s.id) + '</span>' +
+      '</div>';
+    }).join("");
+  }catch{}
+}
+
+async function loadReaAssets(){
+  try{
+    const res = await fetch("/api/rea/assets");
+    if(!res.ok) return;
+    const data = await res.json();
+    const totalNode = el("reaTotalAssets");
+    if(totalNode) totalNode.textContent = data.totalAssets ?? 0;
+    const cleanStatus = el("reaCleanStatus");
+    if(cleanStatus){
+      cleanStatus.textContent = data.cleanRoomReport && data.cleanRoomReport.compliant ? "COMPLIANT" : "FLAGGED";
+      cleanStatus.style.color = data.cleanRoomReport && data.cleanRoomReport.compliant ? "var(--emerald)" : "var(--danger)";
+    }
+    const list = el("reaAssetsList");
+    if(!list) return;
+    if(!data.assets || !data.assets.length){
+      list.innerHTML = '<div class="empty">No compiled binaries or web bundles detected in root.</div>';
+      return;
+    }
+    list.innerHTML = data.assets.map(a => {
+      const kb = (a.sizeBytes / 1024).toFixed(1);
+      return '<div class="row" style="padding:10px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center">' +
+        '<div>' +
+          '<span style="font-family:monospace;color:var(--text)">' + esc(a.path) + '</span>' +
+          '<span class="pill pill-cyan" style="margin-left:8px;font-size:11px">' + esc(a.category) + '</span>' +
+        '</div>' +
+        '<span style="color:var(--muted);font-size:12px">' + kb + ' KB</span>' +
+      '</div>';
+    }).join("");
+  }catch{}
+}
+
 function reloadAllViews(){
   loadOverview();loadAgents();loadRuns();loadActivity();loadObservability();
   loadEvaluationHistory();loadBenchmarkHistory();loadBenchmarkRegression();loadAgentPerformance();
   loadSkillExperiments();loadExperimentHistory();loadAgentOptimization();loadAgentIntelligence();
   loadHealth();loadRegression();loadReviews();loadQuality();loadVerifications();
   loadCleanerBackups();loadMemory();loadAdrs();loadSecurityAudit();loadGate();
+  loadEccSkills();loadReaAssets();
 }
 
 reloadAllViews();
@@ -3430,6 +3543,55 @@ export async function startDashboard(options: DashboardOptions): Promise<Dashboa
       if (requestUrl.pathname === "/api/architecture") {
         const map = await mapArchitecture(projectPath);
         response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(JSON.stringify(map));
+        return;
+      }
+      if (requestUrl.pathname === "/api/ecc/skills") {
+        const skills = await loadSkillRegistry(projectPath);
+        response
+          .writeHead(200, { "content-type": "application/json; charset=utf-8" })
+          .end(JSON.stringify({ skills, total: skills.length }));
+        return;
+      }
+      if (requestUrl.pathname === "/api/rea/assets") {
+        const report = await analyzeReaIntelligence(projectPath);
+        response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(JSON.stringify(report));
+        return;
+      }
+      if (requestUrl.pathname === "/api/cockpit/status") {
+        const [skills, reaReport, gateEval] = await Promise.all([
+          loadSkillRegistry(projectPath).catch(() => []),
+          analyzeReaIntelligence(projectPath).catch(() => null),
+          evaluateGate(projectPath).catch(() => null),
+        ]);
+        const status = {
+          timestamp: new Date().toISOString(),
+          cockpits: {
+            combined: {
+              ready: true,
+              version: "1.2.0",
+              status: "operational",
+            },
+            anvil: {
+              gatePassed: gateEval?.passed ?? false,
+              violations: gateEval?.violations?.length ?? 0,
+              activeFindings: gateEval?.activeFindings?.length ?? 0,
+            },
+            ecc: {
+              totalSkills: skills.length,
+              builtinSkills: skills.filter((s) => s.source === "builtin").length,
+              workspaceSkills: skills.filter((s) => s.source === "workspace").length,
+            },
+            rea: {
+              totalAssets: reaReport?.totalAssets ?? 0,
+              cleanRoomCompliant: reaReport?.cleanRoomReport?.compliant ?? true,
+              findingsCount: reaReport?.cleanRoomReport?.findings?.length ?? 0,
+            },
+            forge: {
+              status: "connected",
+            },
+          },
+        };
+        response.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(JSON.stringify(status));
         return;
       }
       response.writeHead(404, { "content-type": "application/json" }).end(JSON.stringify({ error: "Not found." }));

@@ -67,6 +67,7 @@ import { runUndo } from "./undo.js";
 import { runQuality } from "./quality.js";
 import { runInspect } from "./inspect.js";
 import { runDoctor } from "./doctor.js";
+import { runRea } from "./rea.js";
 
 export type CommandHandler = (command: string, rest: string[]) => Promise<void>;
 
@@ -74,6 +75,7 @@ export const COMMANDS: ReadonlyMap<string, CommandHandler> = new Map<string, Com
   ["init", runInit],
   ["install", runInstall],
   ["uninstall", runInstall],
+  ["rea", runRea],
   ["evals", runEvals],
   ["agent-release", runAgentRelease],
   ["agent-config", runAgentConfig],

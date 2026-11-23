@@ -823,4 +823,44 @@ describe("local dashboard server", () => {
     expect(html).toContain("gateScanMode");
     expect(html).toContain("gateMinConfidence");
   });
+
+  it("exposes ECC skills, REA assets, and combined cockpit status", async () => {
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-dashboard-cockpit-"));
+    const claudeDir = path.join(root, ".claude", "skills", "test-skill");
+    await mkdir(claudeDir, { recursive: true });
+    await writeFile(path.join(claudeDir, "SKILL.md"), "# Test Skill\nDescription text");
+
+    const assetsDir = path.join(root, "assets");
+    await mkdir(assetsDir, { recursive: true });
+    await writeFile(path.join(assetsDir, "tool.wasm"), "wasm-bytes");
+
+    dashboard = await startDashboard({ projectPath: root, port: 0 });
+    const address = dashboard.server.address();
+    if (!address || typeof address === "string") throw new Error("Dashboard did not bind a TCP port.");
+
+    const eccRes = await fetch(`http://127.0.0.1:${address.port}/api/ecc/skills`);
+    expect(eccRes.status).toBe(200);
+    const eccData = await eccRes.json();
+    expect(eccData.total).toBeGreaterThanOrEqual(1);
+
+    const reaRes = await fetch(`http://127.0.0.1:${address.port}/api/rea/assets`);
+    expect(reaRes.status).toBe(200);
+    const reaData = await reaRes.json();
+    expect(reaData.totalAssets).toBe(1);
+    expect(reaData.categories.wasm).toBe(1);
+
+    const statusRes = await fetch(`http://127.0.0.1:${address.port}/api/cockpit/status`);
+    expect(statusRes.status).toBe(200);
+    const statusData = await statusRes.json();
+    expect(statusData.cockpits.combined.ready).toBe(true);
+    expect(statusData.cockpits.ecc.totalSkills).toBeGreaterThanOrEqual(1);
+    expect(statusData.cockpits.rea.totalAssets).toBe(1);
+
+    const page = await fetch(`http://127.0.0.1:${address.port}/`);
+    const html = await page.text();
+    expect(html).toContain("tab-ecc");
+    expect(html).toContain("tab-rea");
+    expect(html).toContain("ECC Skills & Rules");
+    expect(html).toContain("REA Binary & Clean-Room");
+  });
 });

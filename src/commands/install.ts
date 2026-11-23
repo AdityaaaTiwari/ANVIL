@@ -31,6 +31,8 @@ Options:
                      \`anvil gate --diff\` runs on its changes and, if it fails, the
                      agent is told what to fix and keeps going (at most 1-2 times).
                      \`anvil uninstall\` always removes these hooks.
+  --rea              Also register the REA reverse-engineering MCP server (npx -y rea-agents serve)
+                     for black-box binary analysis and bundle inspection.
   --no-instructions  Do not touch AGENTS.md / CLAUDE.md / GEMINI.md.
   --dry-run          Show what would change without writing anything.
   --json             Print the plan as JSON.
@@ -70,6 +72,7 @@ export async function runInstall(command: string, rest: string[]): Promise<void>
         localServerScript: resolveMcpServerScript(),
         instructions: !rest.includes("--no-instructions"),
         hooks: rest.includes("--hooks"),
+        rea: rest.includes("--rea"),
         ...(process.env.APPDATA ? { appData: process.env.APPDATA } : {}),
       },
       remove

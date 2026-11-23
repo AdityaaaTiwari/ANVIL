@@ -27,6 +27,7 @@ import { auditAgentConfiguration } from "../core/agent-security-audit.js";
 import { analyzeDependencyImpact } from "../core/dependency-impact.js";
 import { runDoctorChecks } from "../core/doctor.js";
 import { cleanProject } from "../core/project-cleaner.js";
+import { analyzeReaIntelligence } from "../core/rea-intelligence.js";
 
 const WORKSPACE_ROOT = await realpath(process.env.ANVIL_WORKSPACE ?? process.env.FORGE_WORKSPACE ?? process.cwd());
 
@@ -889,6 +890,52 @@ for (const name of ["forge_clean_preview", "anvil_clean_preview"] as const) {
     }
   );
 }
+
+registerToolWithAlias(
+  "anvil_rea_intelligence",
+  {
+    title: "Binary, Bundle & Clean-Room Analysis",
+    description:
+      "Inspect workspace for compiled native binaries, web bundles, source maps, WASM, and capture files using REA intelligence. Audits clean-room invariants and flags proprietary binary leaks. Returns compact summary by default; pass detail: true for full asset inventory.",
+    inputSchema: z.object({
+      projectPath: z
+        .string()
+        .optional()
+        .describe("Workspace-relative directory. Defaults to the configured workspace root."),
+      detail: z
+        .boolean()
+        .optional()
+        .default(false)
+        .describe(
+          "When false (default), returns category counts and clean-room summary. Pass true for itemized asset lists."
+        ),
+    }),
+  },
+  async ({ projectPath, detail }) => {
+    try {
+      const root = await resolveWorkspace(projectPath);
+      const report = await auditReadOnlyMcpTool("anvil_rea_intelligence", () => analyzeReaIntelligence(root));
+      if (!detail) {
+        const summary = {
+          workspace: report.workspace,
+          totalAssets: report.totalAssets,
+          categories: report.categories,
+          cleanRoomCompliant: report.cleanRoomReport.compliant,
+          findingsCount: report.cleanRoomReport.findings.length,
+          findings: report.cleanRoomReport.findings,
+          summary: report.cleanRoomReport.summary,
+        };
+        return result(summary, {
+          compact: true,
+          hint: "Pass detail: true to view itemized list of all detected binary and bundle assets.",
+        });
+      }
+      return result(report, { compact: false });
+    } catch (error) {
+      return failure(error);
+    }
+  }
+);
 
 const transport = new StdioServerTransport();
 await server.connect(transport);
