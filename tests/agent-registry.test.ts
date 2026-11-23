@@ -95,4 +95,21 @@ describe("agent registry", () => {
     const agents = await loadAgentRegistry(temporaryDirectory);
     expect(agents.some((agent) => agent.id.includes("bad"))).toBe(false);
   });
+
+  it("discovers agents from catalog/agents when present", async () => {
+    temporaryDirectory = await mkdtemp(path.join(os.tmpdir(), "forge-agents-"));
+    const directory = path.join(temporaryDirectory, "catalog", "agents");
+    await mkdir(directory, { recursive: true });
+    await writeFile(
+      path.join(directory, "reverse-engineer.md"),
+      "# Reverse Engineer\n\nAnalyzes binaries and protocols.\n"
+    );
+
+    const agents = await loadAgentRegistry(temporaryDirectory);
+    const reAgent = agents.find((agent) => agent.id === "reverse-engineer");
+    expect(reAgent).toBeDefined();
+    expect(reAgent?.name).toBe("Reverse Engineer");
+    expect(reAgent?.source).toBe("workspace");
+    expect(reAgent?.instructions).toContain("Analyzes binaries");
+  });
 });

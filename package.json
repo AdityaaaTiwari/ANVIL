@@ -76,6 +76,8 @@
   },
   "files": [
     "dist",
+    "catalog",
+    "skills",
     "README.md",
     "LICENSE",
     "SECURITY.md",
