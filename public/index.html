@@ -6,12 +6,12 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#07080c">
   <link rel="icon" type="image/svg+xml" href="anvil-mark.svg">
-  <meta property="og:title" content="ANVIL — The Verified Layer for Your Coding Agents">
+  <meta property="og:title" content="ANVIL — AI-Powered Codebase Intelligence & Verification">
   <meta property="og:description"
-    content="Local-first AI engineering workbench for deterministic codebase intelligence, AST architecture mapping, change-risk blast radius, and quality gates on your own machine.">
+    content="Code goes in. Verified architecture comes out. Local-first AI engineering workbench for deterministic AST architecture mapping, change-risk blast radius, and pre-commit quality gates with zero cloud token leaks.">
   <meta name="description"
-    content="ANVIL is a local-first AI engineering workbench for deterministic codebase intelligence, AST architecture mapping, change-risk blast radius, and pre-commit quality gates with zero cloud token leaks.">
-  <title>ANVIL — The Verified Layer for Your Coding Agents</title>
+    content="ANVIL is a local-first AI engineering workbench and deployment-ready verification harness. Deterministic AST mapping, change-risk blast radius, and quality gates across Claude Code, Cursor, Antigravity, and GitHub Actions.">
+  <title>ANVIL — AI-Powered Codebase Intelligence &amp; Verification</title>
   <style>
     :root {
       --bg: #07080c;
@@ -19,20 +19,19 @@
       --bg-elevated: #131824;
       --bg-card: #101520;
       --border: rgba(255, 255, 255, 0.08);
-      --border-hover: rgba(249, 115, 22, 0.4);
-      --border-focus: rgba(56, 189, 248, 0.4);
+      --border-hover: rgba(249, 115, 22, 0.45);
+      --border-focus: rgba(56, 189, 248, 0.45);
       --text: #f1f5f9;
       --text-muted: #94a3b8;
       --text-subtle: #64748b;
       --amber: #f97316;
       --amber-light: #fb923c;
-      --amber-glow: rgba(249, 115, 22, 0.15);
+      --amber-glow: rgba(249, 115, 22, 0.16);
       --cyan: #38bdf8;
-      --cyan-glow: rgba(56, 189, 248, 0.14);
+      --cyan-glow: rgba(56, 189, 248, 0.15);
       --emerald: #34d399;
-      --emerald-glow: rgba(52, 211, 153, 0.15);
+      --emerald-glow: rgba(52, 211, 153, 0.16);
       --purple: #a855f7;
-      --rose: #fb7185;
       --max-w: 1220px;
     }
 
@@ -55,8 +54,8 @@
       overflow-x: hidden;
       background-image:
         radial-gradient(ellipse 80% 50% at 50% -20%, rgba(249, 115, 22, 0.12), transparent 70%),
-        radial-gradient(ellipse 60% 40% at 80% 20%, rgba(56, 189, 248, 0.08), transparent 60%),
-        radial-gradient(ellipse 50% 30% at 20% 60%, rgba(168, 85, 247, 0.06), transparent 50%);
+        radial-gradient(ellipse 60% 40% at 85% 20%, rgba(56, 189, 248, 0.08), transparent 60%),
+        radial-gradient(ellipse 50% 30% at 15% 60%, rgba(168, 85, 247, 0.06), transparent 50%);
       background-attachment: fixed;
     }
 
@@ -77,9 +76,9 @@
       margin: 0 auto;
     }
 
-    /* Top Banner Announcement */
+    /* Top Announcement Bar */
     .top-announcement {
-      background: linear-gradient(90deg, rgba(249, 115, 22, 0.15), rgba(56, 189, 248, 0.15));
+      background: linear-gradient(90deg, rgba(249, 115, 22, 0.16), rgba(56, 189, 248, 0.16));
       border-bottom: 1px solid var(--border);
       padding: 8px 16px;
       text-align: center;
@@ -106,7 +105,7 @@
       font-weight: 600;
     }
 
-    /* Header Nav */
+    /* Sticky Header Nav */
     header {
       position: sticky;
       top: 14px;
@@ -161,7 +160,7 @@
     .nav-links {
       display: flex;
       align-items: center;
-      gap: 22px;
+      gap: 20px;
     }
 
     .nav-links a {
@@ -227,7 +226,7 @@
 
     /* Hero Section */
     .hero {
-      padding: 80px 0 60px;
+      padding: 70px 0 50px;
       text-align: center;
     }
 
@@ -244,7 +243,7 @@
       border: 1px solid rgba(249, 115, 22, 0.25);
       padding: 5px 14px;
       border-radius: 999px;
-      margin-bottom: 24px;
+      margin-bottom: 22px;
     }
 
     .hero-eyebrow .dot {
@@ -256,13 +255,13 @@
     }
 
     .hero h1 {
-      font-size: clamp(38px, 5.5vw, 68px);
+      font-size: clamp(38px, 5.2vw, 66px);
       font-weight: 850;
       letter-spacing: -0.04em;
       line-height: 1.08;
       color: #ffffff;
-      max-width: 900px;
-      margin: 0 auto 20px;
+      max-width: 920px;
+      margin: 0 auto 18px;
     }
 
     .gradient-text {
@@ -272,11 +271,11 @@
     }
 
     .hero-subtitle {
-      font-size: clamp(16px, 1.9vw, 19px);
+      font-size: clamp(16px, 1.8vw, 19px);
       line-height: 1.6;
       color: var(--text-muted);
-      max-width: 760px;
-      margin: 0 auto 34px;
+      max-width: 780px;
+      margin: 0 auto 32px;
     }
 
     .hero-ctas {
@@ -285,13 +284,13 @@
       justify-content: center;
       gap: 14px;
       flex-wrap: wrap;
-      margin-bottom: 30px;
+      margin-bottom: 28px;
     }
 
     /* Hero CLI Install Box */
     .hero-cli {
       max-width: 620px;
-      margin: 0 auto 24px;
+      margin: 0 auto 22px;
       background: var(--bg-surface);
       border: 1px solid var(--border);
       border-radius: 12px;
@@ -356,7 +355,7 @@
       justify-content: center;
       gap: 10px;
       flex-wrap: wrap;
-      margin-bottom: 50px;
+      margin-bottom: 45px;
     }
 
     .harness-strip-title {
@@ -387,7 +386,221 @@
       transform: translateY(-1px);
     }
 
-    /* 6-Grid Stats Bar (Deplo & FORGE Style) */
+    /* ========================================================
+       deplo.ai Signature Pipeline Orchestration Visualizer
+       ======================================================== */
+    .pipeline-container {
+      background: #090c12;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      box-shadow: 0 32px 80px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.05);
+      padding: 30px;
+      margin-bottom: 60px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .pipeline-container::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 15%;
+      width: 70%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--amber), var(--cyan), transparent);
+      opacity: 0.7;
+    }
+
+    .pipeline-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .pipeline-title-box {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .pipeline-tag {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--amber);
+      background: rgba(249, 115, 22, 0.12);
+      border: 1px solid rgba(249, 115, 22, 0.3);
+      padding: 3px 10px;
+      border-radius: 999px;
+    }
+
+    .pipeline-status {
+      font-size: 12.5px;
+      color: var(--emerald);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600;
+    }
+
+    .pipeline-status .pulsing-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--emerald);
+      box-shadow: 0 0 10px var(--emerald);
+      animation: pulseDot 2s infinite;
+    }
+
+    @keyframes pulseDot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    .pipeline-flow {
+      display: grid;
+      grid-template-columns: 1fr auto 2fr auto 1fr;
+      align-items: center;
+      gap: 16px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px 20px;
+      margin-bottom: 24px;
+    }
+
+    .pipeline-node {
+      background: #0d121c;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 14px;
+      text-align: left;
+      transition: all 0.2s ease;
+    }
+
+    .pipeline-node:hover {
+      border-color: rgba(249, 115, 22, 0.4);
+      transform: translateY(-2px);
+    }
+
+    .node-label {
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-subtle);
+      margin-bottom: 6px;
+    }
+
+    .node-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #fff;
+      font-family: ui-monospace, "SF Mono", monospace;
+      margin-bottom: 4px;
+    }
+
+    .node-sub {
+      font-size: 11.5px;
+      color: var(--text-muted);
+    }
+
+    .pipeline-arrow {
+      color: var(--amber);
+      font-size: 18px;
+      font-weight: 700;
+      user-select: none;
+    }
+
+    .stages-box {
+      background: #0b0f17;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .stage-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      padding: 6px 10px;
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .stage-row-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .stage-row-badge {
+      font-size: 10.5px;
+      font-family: ui-monospace, "SF Mono", monospace;
+      color: var(--cyan);
+    }
+
+    .pipeline-targets {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .target-badge {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #0d121c;
+      border: 1px solid var(--border);
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+    }
+
+    .target-badge b {
+      color: #fff;
+    }
+
+    .target-status {
+      font-size: 10.5px;
+      color: var(--emerald);
+      font-weight: 600;
+    }
+
+    .pipeline-metrics-bar {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      border-top: 1px solid var(--border);
+      padding-top: 20px;
+      text-align: center;
+    }
+
+    .p-metric b {
+      display: block;
+      font-size: 20px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.02em;
+    }
+
+    .p-metric span {
+      font-size: 12px;
+      color: var(--text-subtle);
+    }
+
+    /* 6-Grid Stats Bar */
     .stats-bar {
       display: grid;
       grid-template-columns: repeat(6, 1fr);
@@ -419,17 +632,9 @@
       margin-bottom: 6px;
     }
 
-    .stat-box .val-amber {
-      color: var(--amber);
-    }
-
-    .stat-box .val-cyan {
-      color: var(--cyan);
-    }
-
-    .stat-box .val-emerald {
-      color: var(--emerald);
-    }
+    .stat-box .val-amber { color: var(--amber); }
+    .stat-box .val-cyan { color: var(--cyan); }
+    .stat-box .val-emerald { color: var(--emerald); }
 
     .stat-box .title {
       font-size: 12.5px;
@@ -749,6 +954,52 @@
       color: var(--cyan);
     }
 
+    /* ========================================================
+       Seven Steps Section (deplo.in How It Works pattern)
+       ======================================================== */
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-top: 36px;
+    }
+
+    .step-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 22px 18px;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .step-card:hover {
+      border-color: rgba(249, 115, 22, 0.4);
+      transform: translateY(-2px);
+    }
+
+    .step-num {
+      font-size: 28px;
+      font-weight: 850;
+      color: rgba(249, 115, 22, 0.3);
+      line-height: 1;
+      margin-bottom: 12px;
+      letter-spacing: -0.03em;
+    }
+
+    .step-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+
+    .step-desc {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+
     /* Comparison Table: Cloud LLM vs ANVIL Local */
     .compare-table-wrap {
       margin-top: 36px;
@@ -797,65 +1048,6 @@
 
     .compare-table tr:last-child td {
       border-bottom: none;
-    }
-
-    /* Three Pillars (Useful from the first task) */
-    .pillars-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
-      margin-top: 36px;
-    }
-
-    .pillar-card {
-      background: var(--bg-surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 28px 24px;
-      position: relative;
-      transition: all 0.2s ease;
-    }
-
-    .pillar-card:hover {
-      border-color: rgba(249, 115, 22, 0.4);
-      transform: translateY(-2px);
-    }
-
-    .pillar-tag {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: var(--amber);
-      margin-bottom: 12px;
-    }
-
-    .pillar-card h3 {
-      font-size: 19px;
-      font-weight: 750;
-      color: #fff;
-      letter-spacing: -0.02em;
-      margin-bottom: 12px;
-    }
-
-    .pillar-card p {
-      font-size: 13.5px;
-      color: var(--text-muted);
-      line-height: 1.6;
-      margin-bottom: 20px;
-    }
-
-    .pillar-link {
-      font-size: 12.5px;
-      font-weight: 600;
-      color: var(--amber-light);
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .pillar-link:hover {
-      text-decoration: underline;
     }
 
     /* Stack Grid */
@@ -979,7 +1171,9 @@
       align-self: flex-start;
     }
 
-    /* Terminal Showcase */
+    /* ========================================================
+       CLI Showcase (deplo.in Never Leave The Terminal style)
+       ======================================================== */
     .terminal-window {
       background: #090c12;
       border: 1px solid rgba(255, 255, 255, 0.1);
@@ -1009,17 +1203,9 @@
       border-radius: 50%;
     }
 
-    .dot-r {
-      background: #ef4444;
-    }
-
-    .dot-y {
-      background: #eab308;
-    }
-
-    .dot-g {
-      background: #22c55e;
-    }
+    .dot-r { background: #ef4444; }
+    .dot-y { background: #eab308; }
+    .dot-g { background: #22c55e; }
 
     .term-title {
       font-size: 12px;
@@ -1067,23 +1253,40 @@
       overflow-x: auto;
     }
 
-    .term-green {
-      color: var(--emerald);
+    .term-green { color: var(--emerald); }
+    .term-amber { color: var(--amber-light); }
+    .term-cyan { color: var(--cyan); }
+    .term-dim { color: var(--text-subtle); }
+
+    /* CLI Commands Reference Table */
+    .cli-ref-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 20px;
     }
 
-    .term-amber {
-      color: var(--amber-light);
+    .cli-ref-item {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
     }
 
-    .term-cyan {
-      color: var(--cyan);
+    .cli-ref-cmd {
+      font-family: ui-monospace, "SF Mono", monospace;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--amber);
+      margin-bottom: 4px;
     }
 
-    .term-dim {
-      color: var(--text-subtle);
+    .cli-ref-desc {
+      font-size: 11.5px;
+      color: var(--text-muted);
     }
 
-    /* Pricing Grid (Deplo Style) */
+    /* Pricing Grid */
     .pricing-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -1216,7 +1419,7 @@
       display: block;
     }
 
-    /* Final CTA Box */
+    /* Final CTA Banner */
     .cta-banner {
       background: radial-gradient(circle at 80% 20%, rgba(249, 115, 22, 0.18), transparent 60%),
         linear-gradient(135deg, rgba(19, 24, 36, 0.95), rgba(9, 12, 18, 0.95));
@@ -1305,6 +1508,18 @@
 
     /* Responsive */
     @media (max-width: 1024px) {
+      .pipeline-flow {
+        grid-template-columns: 1fr;
+      }
+
+      .pipeline-arrow {
+        display: none;
+      }
+
+      .steps-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
       .stats-bar {
         grid-template-columns: repeat(3, 1fr);
       }
@@ -1317,15 +1532,15 @@
         grid-template-columns: 1fr;
       }
 
-      .pillars-grid {
-        grid-template-columns: 1fr;
-      }
-
       .stack-grid {
         grid-template-columns: repeat(3, 1fr);
       }
 
       .bento-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .cli-ref-grid {
         grid-template-columns: repeat(2, 1fr);
       }
 
@@ -1343,6 +1558,10 @@
         display: none;
       }
 
+      .steps-grid {
+        grid-template-columns: 1fr;
+      }
+
       .stats-bar {
         grid-template-columns: repeat(2, 1fr);
       }
@@ -1356,6 +1575,10 @@
       }
 
       .bento-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .cli-ref-grid {
         grid-template-columns: 1fr;
       }
 
@@ -1410,11 +1633,12 @@
       </a>
 
       <nav class="nav-links">
-        <a href="#dashboard">Live Dashboard</a>
+        <a href="#pipeline">Pipeline</a>
+        <a href="#dashboard">Dashboard</a>
+        <a href="#workflow">How It Works</a>
+        <a href="#terminal">CLI</a>
+        <a href="#stack">Stacks</a>
         <a href="#comparison">Why ANVIL</a>
-        <a href="#stack">Supported Stacks</a>
-        <a href="#features">Features</a>
-        <a href="#terminal">CLI Showcase</a>
         <a href="#pricing">Pricing</a>
         <a href="#faq">FAQ</a>
       </nav>
@@ -1434,17 +1658,17 @@
   </header>
 
   <main>
-    <!-- Hero Section -->
+    <!-- Hero Section (deplo.ai & FORGE fusion) -->
     <section class="wrap hero">
       <div class="hero-eyebrow">
         <span class="dot"></span>
-        <span>ANVIL 1.1.2 · 100% LOCAL-FIRST AI ENGINEERING WORKBENCH</span>
+        <span>AI-POWERED CODEBASE INTELLIGENCE &amp; ORCHESTRATION</span>
       </div>
 
-      <h1>The verified layer for <span class="gradient-text">your coding agents.</span></h1>
+      <h1>Code goes in. <span class="gradient-text">Verified architecture comes out.</span></h1>
 
       <p class="hero-subtitle">
-        A ridiculously good workbench for deterministic codebase intelligence, AST architecture mapping, change-risk blast radius, and quality gates on your own machine. Zero cloud fees, zero token leaks, zero surprises.
+        ANVIL orchestrates deterministic AST mapping, change-risk blast radius, secret scanning, and pre-commit quality gates across your repositories into tools you already use — Claude Code, Cursor, Antigravity, and GitHub Actions. No cloud fees, no token leaks, zero surprises.
       </p>
 
       <div class="hero-ctas">
@@ -1454,8 +1678,8 @@
           </svg>
           <span>Install CLI Free</span>
         </a>
-        <a class="btn btn-ghost btn-large" href="#dashboard">
-          <span>Explore Live Dashboard ↓</span>
+        <a class="btn btn-ghost btn-large" href="#pipeline">
+          <span>See How Pipeline Works ↓</span>
         </a>
       </div>
 
@@ -1476,21 +1700,123 @@
 
       <!-- Harness Support Strip -->
       <div class="harness-strip">
-        <span class="harness-strip-title">Install in your coding tool:</span>
+        <span class="harness-strip-title">Connects to your tools:</span>
         <span class="harness-pill">Claude Code (MCP)</span>
         <span class="harness-pill">Cursor IDE</span>
         <span class="harness-pill">Antigravity (AGY)</span>
         <span class="harness-pill">OpenCode</span>
         <span class="harness-pill">Codex</span>
-        <span class="harness-pill">GitHub CLI & Actions</span>
+        <span class="harness-pill">GitHub CLI &amp; Actions</span>
       </div>
 
-      <!-- 6-Grid Stats Bar (Deplo & FORGE Aesthetic) -->
+      <!-- ========================================================
+           deplo.ai Signature Pipeline Orchestration Visualizer
+           ======================================================== -->
+      <div class="pipeline-container" id="pipeline">
+        <div class="pipeline-head">
+          <div class="pipeline-title-box">
+            <span class="pipeline-tag">ORCHESTRATION PIPELINE</span>
+            <span style="font-size: 14px; font-weight: 700; color: #fff;">Local Verification Flow</span>
+          </div>
+          <div class="pipeline-status">
+            <span class="pulsing-dot"></span>
+            <span>Deterministic Engine Active</span>
+          </div>
+        </div>
+
+        <div class="pipeline-flow">
+          <!-- Node 1: Source Repo -->
+          <div class="pipeline-node">
+            <div class="node-label">SOURCE CODEBASE</div>
+            <div class="node-title">anvil-workbench/ANVIL</div>
+            <div class="node-sub">main · 1cf87cc (Push feat: gate)</div>
+          </div>
+
+          <div class="pipeline-arrow">➔</div>
+
+          <!-- Node 2: ANVIL Orchestrating Pipeline -->
+          <div class="stages-box">
+            <div style="font-size: 11px; font-weight: 700; color: var(--amber); letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 4px;">
+              ANVIL LOCAL ORCHESTRATION
+            </div>
+            <div class="stage-row">
+              <div class="stage-row-left">
+                <span style="color: var(--emerald);">✓</span>
+                <span>01 Stack Detection</span>
+              </div>
+              <span class="stage-row-badge">TypeScript 88% · Vitest</span>
+            </div>
+            <div class="stage-row">
+              <div class="stage-row-left">
+                <span style="color: var(--emerald);">✓</span>
+                <span>02 AST Module Graph</span>
+              </div>
+              <span class="stage-row-badge">&lt; 1.4k compact tokens</span>
+            </div>
+            <div class="stage-row">
+              <div class="stage-row-left">
+                <span style="color: var(--emerald);">✓</span>
+                <span>03 Shield Security</span>
+              </div>
+              <span class="stage-row-badge">0 secrets · temp HOME</span>
+            </div>
+            <div class="stage-row">
+              <div class="stage-row-left">
+                <span style="color: var(--emerald);">✓</span>
+                <span>04 Blast Radius</span>
+              </div>
+              <span class="stage-row-badge">Downstream tests identified</span>
+            </div>
+            <div class="stage-row">
+              <div class="stage-row-left">
+                <span style="color: var(--emerald);">✓</span>
+                <span>05 Pre-Commit Gate</span>
+              </div>
+              <span class="stage-row-badge">100/100 Grade A verified</span>
+            </div>
+          </div>
+
+          <div class="pipeline-arrow">➔</div>
+
+          <!-- Node 3: Outputs / Verified Targets -->
+          <div class="pipeline-targets">
+            <div class="target-badge">
+              <span><b>Claude Code</b> (MCP)</span>
+              <span class="target-status">● Synced</span>
+            </div>
+            <div class="target-badge">
+              <span><b>Cursor IDE</b> (AST)</span>
+              <span class="target-status">● Ready</span>
+            </div>
+            <div class="target-badge">
+              <span><b>GitHub Actions</b> (CI)</span>
+              <span class="target-status">● Passed</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="pipeline-metrics-bar">
+          <div class="p-metric">
+            <b>&lt; 500 ms</b>
+            <span>Average Local AST Analysis</span>
+          </div>
+          <div class="p-metric">
+            <b>Zero YAML</b>
+            <span>Config Files Needed</span>
+          </div>
+          <div class="p-metric">
+            <b>100% Local</b>
+            <span>Zero Data Telemetry Sent</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6-Grid Stats Bar -->
       <div class="stats-bar">
         <div class="stat-box">
           <div class="val val-amber">100%</div>
-          <div class="title">Deterministic & Local</div>
-          <div class="sub">AST rules & local pre-commit policy gates</div>
+          <div class="title">Deterministic &amp; Local</div>
+          <div class="sub">AST rules &amp; local pre-commit policy gates</div>
         </div>
         <div class="stat-box">
           <div class="val val-cyan">7+</div>
@@ -1509,7 +1835,7 @@
         </div>
         <div class="stat-box">
           <div class="val val-amber">561</div>
-          <div class="title">Verified Unit & E2E Tests</div>
+          <div class="title">Verified Unit &amp; E2E Tests</div>
           <div class="sub">10/10 production architecture rating</div>
         </div>
         <div class="stat-box">
@@ -1583,7 +1909,7 @@
           <div class="dash-grid">
             <div class="dash-pane">
               <div class="dash-pane-title">
-                SHIELD SECURITY & POLICY FINDINGS
+                SHIELD SECURITY &amp; POLICY FINDINGS
                 <span>187 files scanned</span>
               </div>
 
@@ -1606,7 +1932,7 @@
               <div class="finding-row">
                 <span class="finding-badge badge-pass">PASS</span>
                 <div class="finding-text">
-                  <div class="finding-title">Transitive Module Imports & Circular Graphs <span class="finding-loc">AST-DEP-003</span></div>
+                  <div class="finding-title">Transitive Module Imports &amp; Circular Graphs <span class="finding-loc">AST-DEP-003</span></div>
                   <div class="finding-desc">No circular dependency rings detected across TypeScript and multi-language parsers.</div>
                 </div>
               </div>
@@ -1622,7 +1948,7 @@
 
             <div class="dash-pane">
               <div class="dash-pane-title">
-                CHANGE RISK & DOWNSTREAM BLAST RADIUS
+                CHANGE RISK &amp; DOWNSTREAM BLAST RADIUS
                 <span>2 Active Changesets</span>
               </div>
 
@@ -1641,7 +1967,7 @@
 
               <div class="risk-card">
                 <div class="risk-card-head">
-                  <span class="risk-title">#49 docs: architecture & agent guidelines</span>
+                  <span class="risk-title">#49 docs: architecture &amp; agent guidelines</span>
                   <span class="risk-pill risk-pill-low">low 0</span>
                 </div>
                 <div class="risk-stats">0/100 risk score · 1 file touched · +42 / -2 lines</div>
@@ -1669,11 +1995,75 @@
       </div>
     </section>
 
+    <!-- ========================================================
+         deplo.ai "Seven Steps from Repo to Production" Section
+         Adapted for ANVIL: "Seven Steps from Diff to Verified Merge"
+         ======================================================== -->
+    <section class="section" id="workflow">
+      <div class="wrap">
+        <div class="section-eyebrow">STEP-BY-STEP ORCHESTRATION</div>
+        <h2 class="section-title">Seven steps from <span class="gradient-text">repo to verified merge.</span></h2>
+        <p class="section-lead">
+          Automated deterministic verification that executes in seconds directly on your machine without custom YAML files.
+        </p>
+
+        <div class="steps-grid">
+          <div class="step-card">
+            <div class="step-num">01</div>
+            <div class="step-title">Initialize &amp; Connect</div>
+            <div class="step-desc">Run <code>anvil init</code> in one command. ANVIL prepares local baseline storage in <code>.anvil/</code> with zero telemetry.</div>
+          </div>
+
+          <div class="step-card">
+            <div class="step-num">02</div>
+            <div class="step-title">Zero-Config Stack Detection</div>
+            <div class="step-desc">Automatically scans <code>package.json</code>, tsconfig, requirements.txt, or Cargo.toml to resolve languages and test runners.</div>
+          </div>
+
+          <div class="step-card">
+            <div class="step-num">03</div>
+            <div class="step-title">AST Architecture Mapping</div>
+            <div class="step-desc">Maps functions, classes, interfaces, circular dependencies, and entrypoints in &lt;1.4k compact tokens.</div>
+          </div>
+
+          <div class="step-card">
+            <div class="step-num">04</div>
+            <div class="step-title">Secret &amp; Sandbox Audit</div>
+            <div class="step-desc">High-entropy heuristics scan for exposed API keys and enforce temporary isolated HOME execution boundaries.</div>
+          </div>
+
+          <div class="step-card">
+            <div class="step-num">05</div>
+            <div class="step-title">Change-Risk &amp; Blast Radius</div>
+            <div class="step-desc">Traces uncommitted git diffs through AST trees to identify affected downstream files and recommended test files.</div>
+          </div>
+
+          <div class="step-card">
+            <div class="step-num">06</div>
+            <div class="step-title">Transactional Clean &amp; Undo</div>
+            <div class="step-desc">Prunes caches and scrubs clutter with atomic snapshot backups. Revert anytime with <code>anvil clean --undo</code>.</div>
+          </div>
+
+          <div class="step-card">
+            <div class="step-num">07</div>
+            <div class="step-title">Pre-Commit Quality Gate</div>
+            <div class="step-desc">Blocks unapproved structural drift, secret leaks, and regressions. Emits standard SARIF reports for pull requests.</div>
+          </div>
+
+          <div class="step-card" style="border-color: rgba(52, 211, 153, 0.35); background: rgba(52, 211, 153, 0.03);">
+            <div class="step-num" style="color: var(--emerald);">✓</div>
+            <div class="step-title" style="color: var(--emerald);">Verified &amp; Merged</div>
+            <div class="step-desc">Both your local agent and CI are in complete alignment. Total analysis duration: under 500 milliseconds.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Comparison Section: Deplo-style Cost Matrix -->
     <section class="section" id="comparison">
       <div class="wrap">
         <div class="section-eyebrow">DETERMINISTIC VS BLACK-BOX</div>
-        <h2 class="section-title">Why pay $150+/mo when <span class="gradient-text">ANVIL is local & $0?</span></h2>
+        <h2 class="section-title">Why pay $150+/mo when <span class="gradient-text">ANVIL is local &amp; $0?</span></h2>
         <p class="section-lead">
           Cloud AI review tools burn thousands of tokens per file read, leak your proprietary code, and invent hallucinated issues. ANVIL evaluates deterministic AST proof directly on your machine.
         </p>
@@ -1699,13 +2089,13 @@
                 <td>150,000+ tokens (re-reads every file)</td>
               </tr>
               <tr>
-                <td><strong>Code & Secret Privacy</strong></td>
+                <td><strong>Code &amp; Secret Privacy</strong></td>
                 <td class="col-anvil"><span style="color: var(--emerald);">100% on your machine</span> (0 KB uploaded)</td>
                 <td>Transmitted to 3rd party AI APIs</td>
               </tr>
               <tr>
                 <td><strong>Review Determinism</strong></td>
-                <td class="col-anvil">AST syntax trees & policy hashes (0 hallucinations)</td>
+                <td class="col-anvil">AST syntax trees &amp; policy hashes (0 hallucinations)</td>
                 <td>Probabilistic LLM (hallucinates fake bugs)</td>
               </tr>
               <tr>
@@ -1714,7 +2104,7 @@
                 <td>Heuristic guess or unsupported</td>
               </tr>
               <tr>
-                <td><strong>Rollback & Clean Protection</strong></td>
+                <td><strong>Rollback &amp; Clean Protection</strong></td>
                 <td class="col-anvil">Transactional snapshot undo (0 data loss)</td>
                 <td>None (edits applied without rollback)</td>
               </tr>
@@ -1734,40 +2124,6 @@
       </div>
     </section>
 
-    <!-- Three Core Pillars (Useful from the first task) -->
-    <section class="section">
-      <div class="wrap">
-        <div class="section-eyebrow">CORE WORKFLOW</div>
-        <h2 class="section-title">Useful from the <span class="gradient-text">very first task.</span></h2>
-        <p class="section-lead">
-          Whether you are running an AI coding assistant or reviewing a colleague's pull request, ANVIL guards your engineering velocity.
-        </p>
-
-        <div class="pillars-grid">
-          <div class="pillar-card">
-            <div class="pillar-tag">01 / BLAST RADIUS</div>
-            <h3>Review before you merge</h3>
-            <p>Compute downstream module dependencies and determine exactly which unit test files need to run before opening a PR.</p>
-            <a class="pillar-link" href="#terminal">Try anvil git →</a>
-          </div>
-
-          <div class="pillar-card">
-            <div class="pillar-tag">02 / TRANSACTIONAL SAFETY</div>
-            <h3>Run sandbox without risk</h3>
-            <p>Scrub caches and format code with transactional snapshot rollback. If anything breaks, restore instantly with zero data loss.</p>
-            <a class="pillar-link" href="#terminal">Try anvil clean →</a>
-          </div>
-
-          <div class="pillar-card">
-            <div class="pillar-tag">03 / AGENT GUIDELINES</div>
-            <h3>A golden harness for your repo</h3>
-            <p>Standardized MCP tools and pre-commit gate policies that keep Claude, Cursor, and Antigravity aligned with your conventions.</p>
-            <a class="pillar-link" href="#terminal">Try anvil gate →</a>
-          </div>
-        </div>
-      </div>
-    </section>
-
     <!-- Bring The Stack You Love (Interactive Multi-Language Grid) -->
     <section class="section" id="stack">
       <div class="wrap">
@@ -1781,7 +2137,7 @@
           <div class="stack-card active" data-lang="ts">
             <div class="stack-icon">⚡</div>
             <div class="stack-name">TypeScript / JS</div>
-            <div class="stack-detail">Full AST symbols & circular rings</div>
+            <div class="stack-detail">Full AST symbols &amp; circular rings</div>
           </div>
           <div class="stack-card" data-lang="py">
             <div class="stack-icon">🐍</div>
@@ -1791,22 +2147,22 @@
           <div class="stack-card" data-lang="go">
             <div class="stack-icon">🔷</div>
             <div class="stack-name">Go</div>
-            <div class="stack-detail">Module packages & entrypoints</div>
+            <div class="stack-detail">Module packages &amp; entrypoints</div>
           </div>
           <div class="stack-card" data-lang="rs">
             <div class="stack-icon">🦀</div>
             <div class="stack-name">Rust</div>
-            <div class="stack-detail">Cargo crate graph & dependencies</div>
+            <div class="stack-detail">Cargo crate graph &amp; dependencies</div>
           </div>
           <div class="stack-card" data-lang="java">
             <div class="stack-icon">☕</div>
             <div class="stack-name">Java</div>
-            <div class="stack-detail">Package namespaces & class paths</div>
+            <div class="stack-detail">Package namespaces &amp; class paths</div>
           </div>
           <div class="stack-card" data-lang="cpp">
             <div class="stack-icon">⚙️</div>
             <div class="stack-name">C / C++</div>
-            <div class="stack-detail">Header inclusions & compiler flags</div>
+            <div class="stack-detail">Header inclusions &amp; compiler flags</div>
           </div>
           <div class="stack-card" data-lang="docker">
             <div class="stack-icon">🐳</div>
@@ -1816,7 +2172,7 @@
           <div class="stack-card" data-lang="react">
             <div class="stack-icon">⚛️</div>
             <div class="stack-name">React / Next.js</div>
-            <div class="stack-detail">Component hierarchy & routes</div>
+            <div class="stack-detail">Component hierarchy &amp; routes</div>
           </div>
           <div class="stack-card" data-lang="claude">
             <div class="stack-icon">🤖</div>
@@ -1831,7 +2187,7 @@
           <div class="stack-card" data-lang="agy">
             <div class="stack-icon">✨</div>
             <div class="stack-name">Antigravity</div>
-            <div class="stack-detail">Built-in skills & AGENTS.md</div>
+            <div class="stack-detail">Built-in skills &amp; AGENTS.md</div>
           </div>
           <div class="stack-card" data-lang="actions">
             <div class="stack-icon">🚀</div>
@@ -1914,15 +2270,18 @@
       </div>
     </section>
 
-    <!-- Interactive Terminal Showcase -->
+    <!-- ========================================================
+         deplo.ai "Never Leave The Terminal" CLI Section
+         ======================================================== -->
     <section class="section" id="terminal">
       <div class="wrap">
-        <div class="section-eyebrow">INTERACTIVE TERMINAL</div>
-        <h2 class="section-title">See the CLI <span class="gradient-text">in action.</span></h2>
+        <div class="section-eyebrow">COMMAND LINE FIRST</div>
+        <h2 class="section-title">Never leave <span class="gradient-text">the terminal.</span></h2>
         <p class="section-lead">
-          Test-drive the command line experience. Click through the tabs below to explore real CLI outputs.
+          The ANVIL CLI does everything the dashboard does — inspect, map, clean, evaluate risk, gate PRs — from the directory you're already in. Published on npm, free, and open to everyone.
         </p>
 
+        <!-- Simulated Terminal Box -->
         <div class="terminal-window">
           <div class="term-top">
             <div class="term-dots">
@@ -1945,6 +2304,34 @@
             <!-- Populated via JS -->
           </div>
         </div>
+
+        <!-- CLI Command Quick Reference Grid (deplo.in pattern) -->
+        <div class="cli-ref-grid">
+          <div class="cli-ref-item">
+            <div class="cli-ref-cmd">anvil init</div>
+            <div class="cli-ref-desc">Scaffolds local .anvil/ baseline configuration and guidelines.</div>
+          </div>
+          <div class="cli-ref-item">
+            <div class="cli-ref-cmd">anvil inspect [path]</div>
+            <div class="cli-ref-desc">Auto-detects languages, package managers, frameworks, and scripts.</div>
+          </div>
+          <div class="cli-ref-item">
+            <div class="cli-ref-cmd">anvil map [--deep]</div>
+            <div class="cli-ref-desc">Generates deterministic module import graph and circular ring map.</div>
+          </div>
+          <div class="cli-ref-item">
+            <div class="cli-ref-cmd">anvil git [base]</div>
+            <div class="cli-ref-desc">Calculates blast radius and suggested test targets for uncommitted diffs.</div>
+          </div>
+          <div class="cli-ref-item">
+            <div class="cli-ref-cmd">anvil clean [--fix]</div>
+            <div class="cli-ref-desc">Scrubs caches and orphans with transactional snapshot undo protection.</div>
+          </div>
+          <div class="cli-ref-item">
+            <div class="cli-ref-cmd">anvil gate [--baseline]</div>
+            <div class="cli-ref-desc">Enforces baseline policy, checks secrets, and emits SARIF for CI.</div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -1962,12 +2349,12 @@
             <div>
               <div class="pricing-eyebrow">OPEN SOURCE · LOCAL-FIRST</div>
               <div class="pricing-price">$0</div>
-              <div class="pricing-price-sub">Free forever for developers & teams</div>
+              <div class="pricing-price-sub">Free forever for developers &amp; teams</div>
               <ul class="pricing-features">
                 <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> 100% local execution on your hardware</li>
-                <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Complete CLI & MCP tool suite (16+ tools)</li>
+                <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Complete CLI &amp; MCP tool suite (16+ tools)</li>
                 <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Multi-language AST architecture mapping</li>
-                <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Pre-commit quality gate & baseline hashes</li>
+                <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Pre-commit quality gate &amp; baseline hashes</li>
                 <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Zero cloud token leaks or data telemetry</li>
               </ul>
             </div>
@@ -1976,11 +2363,11 @@
 
           <div class="pricing-card">
             <div>
-              <div class="pricing-eyebrow">TEAM & ENTERPRISE SELF-HOSTED</div>
+              <div class="pricing-eyebrow">TEAM &amp; ENTERPRISE SELF-HOSTED</div>
               <div class="pricing-price">$0</div>
               <div class="pricing-price-sub">Deploy on your own private infrastructure</div>
               <ul class="pricing-features">
-                <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Self-hosted dashboard & SSE server</li>
+                <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Self-hosted dashboard &amp; SSE server</li>
                 <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Air-gapped CI/CD pipeline integration</li>
                 <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Custom org-wide policy enforcement rules</li>
                 <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Multi-repo baseline synchronization</li>
@@ -1992,14 +2379,14 @@
 
           <div class="pricing-card">
             <div>
-              <div class="pricing-eyebrow">CLOUD SYNC & REPUTATION</div>
+              <div class="pricing-eyebrow">CLOUD SYNC &amp; REPUTATION</div>
               <div class="pricing-price">Soon</div>
-              <div class="pricing-price-sub">Optional encrypted cloud backup & team feeds</div>
+              <div class="pricing-price-sub">Optional encrypted cloud backup &amp; team feeds</div>
               <ul class="pricing-features">
                 <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> End-to-end encrypted baseline vault</li>
                 <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Cross-agent review historical analytics</li>
                 <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> GitHub App automated PR commenting</li>
-                <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Priority support & agent templates</li>
+                <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Priority support &amp; agent templates</li>
               </ul>
             </div>
             <button class="btn btn-ghost" disabled style="opacity: 0.6; cursor: default;">Coming Soon</button>
@@ -2109,10 +2496,12 @@
 
         <div class="footer-col">
           <b>Platform</b>
+          <a href="#pipeline">Orchestration Pipeline</a>
           <a href="#dashboard">Live Dashboard</a>
+          <a href="#workflow">Seven-Step Workflow</a>
+          <a href="#terminal">CLI Command Line</a>
           <a href="#comparison">Cost Comparison</a>
           <a href="#stack">Supported Stacks</a>
-          <a href="#features">Feature Bento</a>
         </div>
 
         <div class="footer-col">
