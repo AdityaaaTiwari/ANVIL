@@ -1,12 +1,37 @@
 ---
-description: Review a pull request with risk score, findings and verdict
-argument-hint: <PR number or URL>
-profile: standard
+description: Comprehensive PR review using specialized agents (code-reviewer, comment-analyzer, pr-test-analyzer, silent-failure-hunter, type-design-analyzer, code-simplifier). Use for a multi-agent PR review pass; for the adversarially-verified Workflow pass use /orch-review, and for the standalone step-by-step checklist review use /code-review.
 ---
 
-# /review-pr
-Review pull request `$ARGUMENTS`:
-1. Fetch the diff (`gh pr diff`) and description (`gh pr view`).
-2. Summarize intent and the riskiest files (auth, CI, migrations, agent config, dependencies).
-3. Apply the FORGE **code-review-checklist** skill; findings ordered by severity with file:line.
-4. Verdict: approve / approve with fixes / request changes.
+Run a comprehensive multi-perspective review of a pull request.
+
+## Usage
+
+`/review-pr [PR-number-or-URL] [--focus=comments|tests|errors|types|code|simplify]`
+
+If no PR is specified, review the current branch's PR. If no focus is specified, run the full review stack.
+
+## Steps
+
+1. Identify the PR:
+   - use `gh pr view` to get PR details, changed files, and diff
+2. Find project guidance:
+   - look for `CLAUDE.md`, lint config, TypeScript config, repo conventions
+3. Run specialized review agents:
+   - `code-reviewer`
+   - `comment-analyzer`
+   - `pr-test-analyzer`
+   - `silent-failure-hunter`
+   - `type-design-analyzer`
+   - `code-simplifier`
+4. Aggregate results:
+   - dedupe overlapping findings
+   - rank by severity
+5. Report findings grouped by severity
+
+## Confidence Rule
+
+Only report issues with confidence >= 80:
+
+- Critical: bugs, security, data loss
+- Important: missing tests, quality problems, style violations
+- Advisory: suggestions only when explicitly requested
