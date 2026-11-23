@@ -56,7 +56,6 @@ jobs:
           version: local
           operation: gate
           project-path: .
-          baseline-file: .anvil/baseline.json
           sarif-file: test-action-gate.sarif
       - name: Pack and install CLI in a clean directory
         run: |

@@ -168,7 +168,7 @@ function inspectLines(
       id: "ANVIL-R006",
       severity: "medium",
       title: "Dangerously injected HTML property",
-      pattern: /dangerouslySetInnerHTML/,
+      pattern: /dangerouslySetInnerHTML/, // anvil-disable-line ANVIL-R006 -- this is the rule definition itself
       recommendation: "Ensure content is trusted or sanitized immediately before rendering.",
       baseConfidence: "high",
     },
@@ -202,6 +202,15 @@ function inspectLines(
     if (ruleId === "ANVIL-R002") {
       if (/shell\s*:\s*true|\$\{|\+\s*[a-zA-Z]/.test(trimmed)) {
         return "high";
+      }
+      // The rule's own advice: an argument array, or an explicit shell: false, is the safe form.
+      if (
+        /shell\s*:\s*false/.test(trimmed) ||
+        /(?:exec|execSync|execFile|execFileSync|spawn|spawnSync)\s*\(\s*(?:"[^"]*"|'[^']*'|[\w$.]+)\s*,\s*\[/.test(
+          trimmed
+        )
+      ) {
+        return "low";
       }
       return "medium";
     }

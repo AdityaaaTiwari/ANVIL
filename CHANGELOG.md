@@ -8,6 +8,8 @@
 - `anvil gate` now includes the agent configuration scan (opt out with `--skip-agent-config`).
 
 ### Changed
+- `ANVIL-R002` treats `spawn`/`exec` calls with an argument array or an explicit `shell: false` as low confidence (the form the rule recommends), so they no longer block the gate.
+- ANVIL's own `anvil gate .` now passes with no baseline; `.anvil/baseline.json` (51 stale fingerprints) is removed and CI gates without it.
 - `ANVIL-R002` (shell execution) no longer flags `RegExp.prototype.exec` calls such as `pattern.exec(text)`.
 - `src/cli.ts` split into one module per command under `src/commands/` (no behavior change).
 

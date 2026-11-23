@@ -454,6 +454,7 @@ describe("patch-verify CLI policy argument validation", () => {
   const stageId = "patch-stage-12345678901234567890";
 
   it("rejects a missing --policy value", () => {
+    // anvil-disable-next-line ANVIL-R002 -- test runs ANVIL's own CLI with a fixed argument array
     const result = spawnSync(
       process.execPath,
       ["--import", "tsx", "src/cli.ts", "patch-verify", stageId, "test", "--sandbox-image", image, "--policy"],
@@ -468,6 +469,7 @@ describe("patch-verify CLI policy argument validation", () => {
   });
 
   it("rejects another flag where the policy path should be", () => {
+    // anvil-disable-next-line ANVIL-R002 -- test runs ANVIL's own CLI with a fixed argument array
     const result = spawnSync(
       process.execPath,
       [
