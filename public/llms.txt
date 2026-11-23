@@ -1,39 +1,56 @@
 # ANVIL Engineering Workbench
-> Deterministic local code intelligence, architecture mapping, quality/security gating, and change risk analysis for AI coding assistants and CI/CD pipelines.
+> The Deterministic Verification Layer for AI Coding Agents.
 
-ANVIL is an open-source, local-first engineering toolkit and Model Context Protocol (MCP) server. It equips AI coding assistants (Claude Code, Cursor, Copilot, Windsurf, Antigravity) with deterministic tools to inspect codebases, analyze change risk, and verify quality without executing untrusted code or making third-party LLM API calls.
+ANVIL is an open-source, local-first verification harness and Model Context Protocol (MCP) server. Any AI coding agent — Claude Code, Codex, Cursor, Antigravity, OpenCode — writes the code; ANVIL verifies it locally (blast radius, policy-as-code, secrets, tests) before it merges. Zero source code or tokens are sent to third-party LLMs.
 
 ## Core Capabilities
-- **Architecture Mapping:** Multi-language import graph across TypeScript, JavaScript, Python, Go, Rust, Java, Kotlin, C/C++, C#, Ruby, PHP; TypeScript AST symbol analysis.
-- **Change Risk Intelligence:** Blast radius calculation, downstream affected modules, and automated test candidate recommendations.
-- **Pre-Commit Quality & Security Gate:** Local policy-as-code gate (`anvil gate`) with content-hash baselines, suppression auditing, and SARIF export.
-- **Safe Workspace Cleanup:** Dry-run preview and cleanup of OS junk, build caches, and unreferenced orphan source modules.
-- **Token Efficiency:** Compact summaries by default (`detail: false`) with responses 96–99% smaller than the files they summarize in ANVIL's own benchmark (see docs/token-benchmark-results.md for limits).
+- **Deterministic Architecture Mapping:** Multi-language import graph across TypeScript, JavaScript, Python, Go, Rust, Java, Kotlin, C/C++, C#, Ruby, PHP; TypeScript AST symbol analysis in <1,400 compact tokens.
+- **Change Risk & Blast Radius:** AST-backed dependency tracing from uncommitted git diffs to downstream impacted modules and recommended test candidates.
+- **Pre-Commit Quality & Security Gate:** Local policy-as-code gate (`anvil gate`) with content-hash baselines (`.anvil/baseline.json`), secret entropy scanning, inline suppression governance, and SARIF export.
+- **Git Pre-Commit Hook:** 1-command hook management (`anvil hook install` / `anvil hook remove`) ensuring code is verified before every commit.
+- **Transactional Workspace Cleanup:** Dry-run preview and cleanup of build caches, temp files, and orphan source modules with atomic snapshot rollback (`anvil clean --undo <backupId>`).
+- **Context Budget Protection:** Compact summaries by default (`detail: false`) with structured `_meta` token estimations saving 96–99% context tokens compared to raw file reads.
 
 ## Quick Start
 ```bash
+# Run one-shot gate check (no install needed)
+npx -y anvil-engineering-workbench@1.2.0 gate
+
 # Install globally
 npm install -g anvil-engineering-workbench
 
-# Run project inspection
+# Initialize repository baseline and policy
+anvil init
+
+# Inspect project tech stack & scripts
 anvil inspect
 
-# Run quality & security gate
-anvil gate
+# Map architecture & circular dependencies
+anvil map
+
+# Check change risk of working tree
+anvil git
+
+# Install git pre-commit hook
+anvil hook install
 
 # Start MCP server for AI assistants
 anvil mcp start
 ```
 
-## MCP Setup
+## MCP Setup for Coding Agents
 - **Claude Code:** `claude mcp add anvil -- npx -y anvil-engineering-workbench mcp start`
 - **Cursor:** Add command `npx -y anvil-engineering-workbench mcp start` in `.cursor/mcp.json`
+- **Antigravity:** Add server in `.gemini/mcp.json` (see docs/integrations/antigravity.md)
 - **Windsurf:** Add server in `.windsurf/mcp_config.json`
 - **VS Code:** Add server in `.vscode/mcp.json`
 
 ## Documentation Links
 - [GitHub Repository](https://github.com/anvil-workbench/ANVIL)
+- [Documentation Index](https://github.com/anvil-workbench/ANVIL/blob/main/docs/README.md)
+- [Getting Started Guide](https://github.com/anvil-workbench/ANVIL/blob/main/docs/getting-started.md)
 - [MCP Server Documentation](https://github.com/anvil-workbench/ANVIL/blob/main/docs/mcp-server.md)
-- [Policy & Gate Guide](https://github.com/anvil-workbench/ANVIL/blob/main/docs/policy-guide.md)
-- [Token Benchmark Results](https://github.com/anvil-workbench/ANVIL/blob/main/docs/token-benchmark-results.md)
-- [Agent Operating Guide](https://github.com/anvil-workbench/ANVIL/blob/main/AGENTS.md)
+- [Antigravity Integration Guide](https://github.com/anvil-workbench/ANVIL/blob/main/docs/integrations/antigravity.md)
+- [Policy & Gate Guide](https://github.com/anvil-workbench/ANVIL/blob/main/docs/policy-as-code.md)
+- [CI Gate & SARIF Integration](https://github.com/anvil-workbench/ANVIL/blob/main/docs/ci-gate-and-sarif.md)
+- [Agent Operating Guidelines](https://github.com/anvil-workbench/ANVIL/blob/main/AGENTS.md)

@@ -1,5 +1,16 @@
 # ANVIL Changelog
 
+## Unreleased
+
+### Docs
+- Repositioned ANVIL as the deterministic verification layer for AI coding agents across `README.md`, landing page, manifests, and documentation.
+- Added comprehensive documentation index at `docs/README.md`.
+- Added end-to-end `docs/getting-started.md` guide covering quick start, CLI commands, pre-commit hooks, and CI/CD integration.
+- Added `docs/integrations/antigravity.md` guide with exact configuration file paths, MCP tool schemas, and AGENTS.md rules.
+- Added `docs/NOTES-for-claude.md` to document scope boundaries, verified commands, and collaboration notes for parallel agent development.
+- Removed unsubstantiated "10/10 production architecture rating" claims, anchoring claims on 561 verified automated tests passing across Node 22/24.
+- Synchronized `llms.txt` and `public/llms.txt` with verified flags and the verification layer positioning.
+
 ## 1.2.0 — Production Architecture 10/10 Overhaul, Automated PR Comment Bot, Pre-Commit Hook Suite & Deplo/FORGE Orchestration
 
 ANVIL 1.2.0 represents a major milestone, achieving a certified 10/10 production architecture rating through the resolution of all 22 architectural review findings, introducing automated GitHub PR review comments, 1-command pre-commit git hooks, transactional rollback, and a modernized orchestration website inspired by Deplo and FORGE:
