@@ -34,7 +34,8 @@ export async function runMcp(_command: string, rest: string[]): Promise<void> {
       process.stdout.write(`Server entrypoint: ${script}\n\n`);
       process.stdout.write(`Commands:\n`);
       process.stdout.write(
-        `  anvil mcp setup [--client cursor|claude|windsurf|vscode|all]  Configure your AI harness\n`
+        `  anvil mcp setup [--client cursor|claude|windsurf|vscode|all]  Configure your AI harness (legacy)\n` +
+          `  anvil install [--target all|claude|codex|cursor|...]          Connect ANVIL to every AI tool\n`
       );
       process.stdout.write(
         `  anvil mcp start                                                Run MCP stdio transport\n\n`

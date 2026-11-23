@@ -23,6 +23,8 @@ Usage:
 
 Commands:
   init [path]      Create a safe, local-first .anvil starter workspace
+  install [path]   Connect ANVIL to Claude Code, Codex, Cursor, Copilot, Antigravity, Gemini and more
+  uninstall [path] Remove ANVIL from those AI tools (use --target to pick)
   inspect [path]   Analyze project languages, tooling, dependencies, and scripts
   evaluate RUNID  Score a saved run against a local evaluation suite
   benchmark [RUN_ID] [--suite SUITE_ID] [--path PROJECT]  Record or view benchmark results

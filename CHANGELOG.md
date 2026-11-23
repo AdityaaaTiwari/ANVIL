@@ -1,5 +1,15 @@
 # ANVIL Changelog
 
+## Unreleased
+
+### Added
+
+- `anvil install` / `anvil uninstall`: connect ANVIL to Claude Code, Codex, Cursor, VS Code (Copilot), Windsurf, Google Antigravity, Gemini CLI, OpenCode and Claude Desktop in one command. Writes each tool's MCP config in its own format, adds a managed ANVIL section to `AGENTS.md` / `CLAUDE.md` / `GEMINI.md`, keeps every existing setting, supports `--dry-run`, and never rewrites JSON it cannot parse.
+
+### Changed
+
+- `src/cli.ts` split into one module per command under `src/commands/` (no behavior change).
+
 ## 1.2.0 — Production Architecture 10/10 Overhaul, Automated PR Comment Bot, Pre-Commit Hook Suite & Deplo/FORGE Orchestration
 
 ANVIL 1.2.0 represents a major milestone, achieving a certified 10/10 production architecture rating through the resolution of all 22 architectural review findings, introducing automated GitHub PR review comments, 1-command pre-commit git hooks, transactional rollback, and a modernized orchestration website inspired by Deplo and FORGE:

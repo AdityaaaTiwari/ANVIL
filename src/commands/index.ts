@@ -1,5 +1,6 @@
 // Maps each CLI command name to its handler.
 import { runInit } from "./init.js";
+import { runInstall } from "./install.js";
 import { runEvals } from "./evals.js";
 import { runAgentRelease } from "./agent-release.js";
 import { runAgentConfig } from "./agent-config.js";
@@ -71,6 +72,8 @@ export type CommandHandler = (command: string, rest: string[]) => Promise<void>;
 
 export const COMMANDS: ReadonlyMap<string, CommandHandler> = new Map<string, CommandHandler>([
   ["init", runInit],
+  ["install", runInstall],
+  ["uninstall", runInstall],
   ["evals", runEvals],
   ["agent-release", runAgentRelease],
   ["agent-config", runAgentConfig],
