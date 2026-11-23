@@ -12,6 +12,8 @@
 - `src/cli.ts` split into one module per command under `src/commands/` (no behavior change).
 
 ### Docs
+- Added comprehensive AI Agent Security Audit documentation at `docs/agent-security.md` covering structured rule catalog (`ANVIL-AGENT-101`..`112`), heuristic checks (`FORGE-AGENT-001`..`006`), files scanned, `--global`, `--sarif` export, exit codes, and GitHub Actions code scanning workflows.
+- Linked `docs/agent-security.md` across `docs/README.md`, `docs/security-model.md`, and the `README.md` feature matrix.
 - Repositioned ANVIL as the deterministic verification layer for AI coding agents across `README.md`, landing page, manifests, and documentation.
 - Added comprehensive documentation index at `docs/README.md`.
 - Added end-to-end `docs/getting-started.md` guide covering quick start, CLI commands, pre-commit hooks, and CI/CD integration.

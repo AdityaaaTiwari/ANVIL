@@ -24,7 +24,17 @@ Scans project files for hardcoded tokens, API credentials, and private cryptogra
 - Detection of unvetted command pipelines: e.g. `curl ... | bash` or `wget ... | sh`.
 - Detection of insecure HTTP dependencies: `http://` URLs in `package.json` dependencies instead of secure HTTPS registries.
 
-### 3. Code Review & Risk Heuristics
+### 3. AI Agent Configuration & Instruction Security
+Scans AI agent instructions, MCP configurations, settings, hooks, and permissions (`anvil agent-security`):
+- **Hidden Unicode & Trojan Source:** Detects invisible zero-width and directional control characters (`U+200B`..`U+200F`, `U+202A`..`U+202E`, tag characters) used to conceal adversarial prompt injections in Markdown instructions.
+- **Adversarial Prompt Injection:** Identifies instruction-override directives, developer/jailbreak modes, instructions to hide agent behavior from users, and prompts hidden inside HTML comments (`<!-- ... -->`).
+- **MCP Server Hardening:** Scans MCP server configs (`.mcp.json`, `.cursor/mcp.json`, `opencode.json`, Codex TOML) for plain-text credentials in `env`, `headers`, or URLs, unencrypted remote HTTP endpoints, and unpinned package runners (`npx`, `bunx`, `uvx`).
+- **Excessive Agent Permissions:** Flags dangerous pre-approved permissions such as unrestricted `Bash(*)` execution, `bypassPermissions` modes, and automatic trust for arbitrary cloned MCP servers.
+- **Harmful Commands & Exfiltration:** Identifies hooks and launch scripts that pipe downloads directly into shells or combine network tools with access to secrets and private keys.
+
+For detailed rules and remediation guidance, see the [AI Agent Security Audit Guide](agent-security.md).
+
+### 4. Code Review & Risk Heuristics
 - Detection of dangerous dynamic execution primitives (`eval(`, `new Function(`).
 - Command injection risk in process spawns without shell escaping or parameterization.
 - Circular dependency cycles across multi-language imports (TypeScript, Python, Go, Rust, Java, C/C++).

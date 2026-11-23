@@ -102,7 +102,7 @@ Every command and flag listed below is verified and supported in ANVIL v1.2.0:
 | Command | Description | Verified Flags | Status |
 |---|---|---|---|
 | `anvil install [path]` / `uninstall` | Connects ANVIL to every AI tool config (Cursor, Claude, VS Code, Antigravity, etc.) | `--target <list>`, `--server <mode>`, `--dry-run`, `--no-instructions`, `--json` | **Available** |
-| `anvil gate [path]` | Deterministic CI quality & security gate with SARIF and policy enforcement | `--sarif <file>`, `--policy <file>`, `--policy-ref <ref>`, `--baseline <file>`, `--generate-baseline <file>`, `--since <ref>`, `--diff`, `--min-confidence <level>`, `--import-sarif <file>`, `--fail-on-warnings`, `--json` | **Available** |
+| `anvil gate [path]` | Deterministic CI quality & security gate with SARIF and policy enforcement | `--sarif <file>`, `--policy <file>`, `--policy-ref <ref>`, `--baseline <file>`, `--generate-baseline <file>`, `--since <ref>`, `--diff`, `--min-confidence <level>`, `--import-sarif <file>`, `--skip-agent-config`, `--fail-on-warnings`, `--json` | **Available** |
 | `anvil inspect [path]` | Analyzes project languages, manifests, frameworks, dependencies, and scripts | `--json` | **Available** |
 | `anvil map [path]` | Maps module import relationships and candidate entry points | `--json` | **Available** |
 | `anvil git [path]` | Calculates blast radius, downstream dependency impact, and suggested tests | `[base]` (e.g. `origin/main`, `HEAD~1`) | **Available** |
@@ -110,10 +110,10 @@ Every command and flag listed below is verified and supported in ANVIL v1.2.0:
 | `anvil undo [path]` | Rolls back last clean operation with byte-accurate snapshot restoration | `<backupId>` | **Available** |
 | `anvil hook [install\|remove]` | Injects or removes automated pre-commit gate in `.git/hooks/pre-commit` | `--force` | **Available** |
 | `anvil security [path]` | Scans repository for hardcoded secrets, API keys, and sensitive tokens | `--fix`, `--json` | **Available** |
+| `anvil agent-security [path]` | Audits agent instructions, prompt injection, hidden Unicode, MCP secrets, and permissions | `--global`, `--sarif <file>`, `--json` | **Available** |
 | `anvil doctor [path]` | Verifies environment health (Node, Git, Docker, workspace permissions) | `--fix`, `--json` | **Available** |
 | `anvil mcp [setup\|start]` | Sets up or runs local read-only Model Context Protocol server | `[setup]` | **Available** |
 | `anvil dashboard [path]` | Launches local read-only web dashboard on loopback | `[path]` | **Available** |
-| `agent-config security scan` | Deep audit of instructions, skills, hooks, and permissions across agents | — | *Coming soon* |
 | `cross-harness handoff` | Synchronize active task state between Cursor and Claude Code | — | *Coming soon* |
 | `GitHub App Service` | Hosted GitHub App for automatic pull request comments & check runs | — | *Coming soon* |
 
