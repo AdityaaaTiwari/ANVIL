@@ -125,7 +125,7 @@ export function hookCommand(options: InstallOptions, harness: "claude" | "cursor
 }
 
 const isAnvilHook = (command: unknown) =>
-  typeof command === "string" && /\banvil/.test(command) && /\bhook\s+stop\s+--harness\b/.test(command);
+  typeof command === "string" && /\banvil/i.test(command) && /\bhook\s+stop\s+--harness\b/.test(command);
 
 /** Adds (command) or removes (undefined) ANVIL's Stop hook in Claude Code settings, keeping all other hooks. */
 function transformClaudeHooks(data: JsonObject, command: string | undefined): JsonObject {

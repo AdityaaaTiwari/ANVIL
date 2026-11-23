@@ -167,6 +167,49 @@ describe("anvil install --hooks", () => {
     expect(await exists(path.join(project, ".cursor", "hooks.json"))).toBe(false);
   });
 
+  it("removes hooks even with uppercase Windows paths during uninstall", async () => {
+    const options = await setup();
+    const project = options.projectPath;
+    await mkdir(path.join(project, ".claude"), { recursive: true });
+    await mkdir(path.join(project, ".cursor"), { recursive: true });
+
+    const windowsClaudeCommand = 'node "D:\\\\ANVIL\\\\dist\\\\cli.js" hook stop --harness claude';
+    const windowsCursorCommand = 'node "D:\\\\ANVIL\\\\dist\\\\cli.js" hook stop --harness cursor';
+
+    await writeFile(
+      path.join(project, ".claude", "settings.json"),
+      JSON.stringify(
+        {
+          permissions: { allow: ["Bash(*)"] },
+          hooks: {
+            Stop: [{ hooks: [{ type: "command", command: windowsClaudeCommand, timeout: 180 }] }],
+          },
+        },
+        null,
+        2
+      ) + "\n"
+    );
+    await writeFile(
+      path.join(project, ".cursor", "hooks.json"),
+      JSON.stringify(
+        {
+          version: 1,
+          hooks: {
+            stop: [{ command: windowsCursorCommand }],
+          },
+        },
+        null,
+        2
+      ) + "\n"
+    );
+
+    await applyHarnessPlan(await planHarnessInstall({ ...options, hooks: false }, true));
+    const claudeCleaned = await readJson(path.join(project, ".claude", "settings.json"));
+    expect(claudeCleaned.permissions).toEqual({ allow: ["Bash(*)"] });
+    expect(claudeCleaned.hooks?.Stop).toBeUndefined();
+    expect(await exists(path.join(project, ".cursor", "hooks.json"))).toBe(false);
+  });
+
   it("does not add hooks unless asked", async () => {
     const options = await setup();
     await applyHarnessPlan(await planHarnessInstall({ ...options, hooks: false }));
