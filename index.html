@@ -6,12 +6,12 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#07080c">
   <link rel="icon" type="image/svg+xml" href="anvil-mark.svg">
-  <meta property="og:title" content="ANVIL — AI-Powered Codebase Intelligence & Verification">
+  <meta property="og:title" content="ANVIL — The Deterministic Verification Layer for AI Coding Agents">
   <meta property="og:description"
-    content="Code goes in. Verified architecture comes out. Local-first AI engineering workbench for deterministic AST architecture mapping, change-risk blast radius, and pre-commit quality gates with zero cloud token leaks.">
+    content="Any agent writes the code. ANVIL verifies it before merge. Local-first deterministic verification layer checking blast radius, policy-as-code, secrets, and tests before pull requests. Zero code sent to LLMs.">
   <meta name="description"
-    content="ANVIL is a local-first AI engineering workbench and deployment-ready verification harness. Deterministic AST mapping, change-risk blast radius, and quality gates across Claude Code, Cursor, Antigravity, and GitHub Actions.">
-  <title>ANVIL — AI-Powered Codebase Intelligence &amp; Verification</title>
+    content="ANVIL is the deterministic verification layer for AI coding agents. Any agent — Claude Code, Codex, Cursor, Antigravity, OpenCode — writes code; ANVIL verifies it locally before merge. 100% local-first, zero code sent to LLMs.">
+  <title>ANVIL — The Deterministic Verification Layer for AI Coding Agents</title>
   <style>
     :root {
       --bg: #07080c;
@@ -1598,8 +1598,8 @@
   <!-- Top Announcement Bar -->
   <aside class="top-announcement" aria-label="Version announcement">
     <span class="badge-mini">v1.2.0</span>
-    <span><strong>ANVIL 10/10 Architecture Review Certified</strong> · 561 Tests Passing · 0 Cloud Telemetry Leaks</span>
-    <a href="https://github.com/anvil-workbench/ANVIL/releases" target="_blank" rel="noopener" style="text-decoration: underline; color: #fff;">Changelog →</a>
+    <span><strong>The Deterministic Verification Layer for AI Coding Agents</strong> · 561 Tests Passing · 100% Local</span>
+    <a href="https://github.com/anvil-workbench/ANVIL" target="_blank" rel="noopener" style="text-decoration: underline; color: #fff;">GitHub →</a>
   </aside>
 
   <!-- Sticky Glassmorphic Header -->
@@ -1633,13 +1633,12 @@
       </a>
 
       <nav class="nav-links">
-        <a href="#pipeline">Pipeline</a>
-        <a href="#dashboard">Dashboard</a>
-        <a href="#workflow">How It Works</a>
+        <a href="#how-it-works">How It Works</a>
+        <a href="#pipeline">Verification Flow</a>
+        <a href="#dashboard">PR Intelligence</a>
         <a href="#terminal">CLI</a>
-        <a href="#stack">Stacks</a>
+        <a href="#quickstart">Quick Start</a>
         <a href="#comparison">Why ANVIL</a>
-        <a href="#pricing">Pricing</a>
         <a href="#faq">FAQ</a>
       </nav>
 
@@ -1650,7 +1649,7 @@
           </svg>
           <span>Star on GitHub</span>
         </a>
-        <a class="btn btn-primary" href="#terminal">
+        <a class="btn btn-primary" href="#quickstart">
           <span>Get Started Free</span>
         </a>
       </div>
@@ -1658,28 +1657,28 @@
   </header>
 
   <main>
-    <!-- Hero Section (deplo.ai & FORGE fusion) -->
+    <!-- Hero Section -->
     <section class="wrap hero">
       <div class="hero-eyebrow">
         <span class="dot"></span>
-        <span>AI-POWERED CODEBASE INTELLIGENCE &amp; ORCHESTRATION · v1.2.0</span>
+        <span>THE DETERMINISTIC VERIFICATION LAYER FOR AI CODING AGENTS · v1.2.0</span>
       </div>
 
-      <h1>Code goes in. <span class="gradient-text">Verified architecture comes out.</span></h1>
+      <h1>Any agent writes the code. <br><span class="gradient-text">ANVIL verifies it before merge.</span></h1>
 
       <p class="hero-subtitle">
-        ANVIL orchestrates deterministic AST mapping, change-risk blast radius, secret scanning, and pre-commit quality gates across your repositories into tools you already use — Claude Code, Cursor, Antigravity, and GitHub Actions. No cloud fees, no token leaks, zero surprises.
+        Claude Code, Codex, Cursor, Antigravity, or OpenCode write the changes. ANVIL checks blast radius, policy-as-code, secret scans, and test impact locally on your machine — before code reaches a pull request. Deterministic, local-first, zero code sent to LLMs.
       </p>
 
       <div class="hero-ctas">
-        <a class="btn btn-primary btn-large" href="#terminal">
+        <a class="btn btn-primary btn-large" href="#quickstart">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <path d="M5 12h14M12 5l7 7-7 7"/>
           </svg>
-          <span>Install CLI Free</span>
+          <span>Get Started Free</span>
         </a>
-        <a class="btn btn-ghost btn-large" href="#pipeline">
-          <span>See How Pipeline Works ↓</span>
+        <a class="btn btn-ghost btn-large" href="#how-it-works">
+          <span>How It Works ↓</span>
         </a>
       </div>
 
@@ -1687,7 +1686,7 @@
       <div class="hero-cli">
         <div class="cli-cmd">
           <span class="prompt">$</span>
-          <span id="installCmd">npm install -g anvil-engineering-workbench && anvil init</span>
+          <span id="installCmd">npx -y anvil-engineering-workbench@1.2.0 gate</span>
         </div>
         <button class="copy-pill" id="copyHeroBtn" type="button" aria-label="Copy install command">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1700,13 +1699,13 @@
 
       <!-- Harness Support Strip -->
       <div class="harness-strip">
-        <span class="harness-strip-title">Connects to your tools:</span>
-        <span class="harness-pill">Claude Code (MCP)</span>
-        <span class="harness-pill">Cursor IDE</span>
+        <span class="harness-strip-title">Compatible with every agent:</span>
+        <span class="harness-pill">Claude Code</span>
+        <span class="harness-pill">Codex</span>
+        <span class="harness-pill">Cursor</span>
         <span class="harness-pill">Antigravity (AGY)</span>
         <span class="harness-pill">OpenCode</span>
-        <span class="harness-pill">Codex</span>
-        <span class="harness-pill">GitHub CLI &amp; Actions</span>
+        <span class="harness-pill">GitHub Actions</span>
       </div>
 
       <!-- ========================================================
@@ -1836,7 +1835,7 @@
         <div class="stat-box">
           <div class="val val-amber">561</div>
           <div class="title">Verified Unit &amp; E2E Tests</div>
-          <div class="sub">10/10 production architecture rating</div>
+          <div class="sub">100% test pass rate across Node 22/24</div>
         </div>
         <div class="stat-box">
           <div class="val val-cyan">1</div>
@@ -1995,17 +1994,46 @@
       </div>
     </section>
 
-    <!-- ========================================================
-         deplo.ai "Seven Steps from Repo to Production" Section
-         Adapted for ANVIL: "Seven Steps from Diff to Verified Merge"
-         ======================================================== -->
-    <section class="section" id="workflow">
+    <!-- How It Works Section: Agent writes → ANVIL verifies → PR gate -->
+    <section class="section" id="how-it-works">
       <div class="wrap">
-        <div class="section-eyebrow">STEP-BY-STEP ORCHESTRATION</div>
-        <h2 class="section-title">Seven steps from <span class="gradient-text">repo to verified merge.</span></h2>
+        <div class="section-eyebrow">HOW IT WORKS</div>
+        <h2 class="section-title">Agent writes. <span class="gradient-text">ANVIL verifies. PR gates.</span></h2>
         <p class="section-lead">
-          Automated deterministic verification that executes in seconds directly on your machine without custom YAML files.
+          Any AI coding assistant writes the code. ANVIL evaluates deterministic AST proof, blast radius, secrets, and tests locally on your machine before code ever hits a pull request.
         </p>
+
+        <div class="bento-grid" style="margin-bottom: 40px;">
+          <div class="bento-card" style="border-top: 3px solid var(--cyan);">
+            <div>
+              <div class="bento-icon" style="color: var(--cyan); border-color: rgba(56, 189, 248, 0.3); background: rgba(56, 189, 248, 0.1);">01</div>
+              <h3>1. Any Agent Writes Code</h3>
+              <p>Claude Code, Codex, Cursor, Antigravity, or OpenCode implement features, refactor code, or fix bugs. Agents use ANVIL's read-only MCP tools (like <code>anvil_map_architecture</code>) to understand imports and dependencies in &lt;1.4k compact tokens instead of flooding context with raw files.</p>
+            </div>
+            <span class="bento-tag">AI Coding Agents</span>
+          </div>
+
+          <div class="bento-card" style="border-top: 3px solid var(--amber);">
+            <div>
+              <div class="bento-icon">02</div>
+              <h3>2. ANVIL Verifies Locally</h3>
+              <p>Before changes are committed, ANVIL evaluates blast radius (<code>anvil_change_risk</code>), secret scanner (<code>anvil_security_audit</code>), and quality hygiene deterministically in milliseconds. Zero source code or tokens are ever sent to external LLMs.</p>
+            </div>
+            <span class="bento-tag">ANVIL Verification Layer</span>
+          </div>
+
+          <div class="bento-card" style="border-top: 3px solid var(--emerald);">
+            <div>
+              <div class="bento-icon" style="color: var(--emerald); border-color: rgba(52, 211, 153, 0.3); background: rgba(52, 211, 153, 0.1);">03</div>
+              <h3>3. PR Gate Enforces Rules</h3>
+              <p><code>anvil gate</code> verifies baseline content hashes, runs test targets, exports standard SARIF reports, and posts automated PR review comments in GitHub Actions. Unapproved architectural drift or secret leaks are blocked before merging.</p>
+            </div>
+            <span class="bento-tag">PR Gate &amp; CI/CD</span>
+          </div>
+        </div>
+
+        <div class="section-eyebrow" style="margin-top: 20px;">STEP-BY-STEP ORCHESTRATION</div>
+        <h3 style="font-size: 22px; font-weight: 700; color: #fff; margin-bottom: 12px;">Detailed verification pipeline from diff to merge</h3>
 
         <div class="steps-grid">
           <div class="step-card">
@@ -2335,6 +2363,51 @@
       </div>
     </section>
 
+    <!-- Quick Start in 60 Seconds -->
+    <section class="section" id="quickstart">
+      <div class="wrap">
+        <div class="section-eyebrow">QUICK START IN 60 SECONDS</div>
+        <h2 class="section-title">Zero setup friction. <span class="gradient-text">Run in 60 seconds.</span></h2>
+        <p class="section-lead">
+          Test your repo right now with npx, install globally, configure your agent MCP server, or drop the verification gate directly into your GitHub Actions workflow.
+        </p>
+
+        <div class="bento-grid" style="grid-template-columns: repeat(2, 1fr); margin-top: 36px;">
+          <div class="step-card">
+            <div class="step-title">1. One-Line Gate Check (No Install Needed)</div>
+            <p class="step-desc" style="margin-bottom: 14px;">Run the policy and security gate on any repo instantly:</p>
+            <div class="hero-cli" style="margin: 0;">
+              <div class="cli-cmd"><span class="prompt">$</span><span>npx -y anvil-engineering-workbench@1.2.0 gate</span></div>
+            </div>
+          </div>
+
+          <div class="step-card">
+            <div class="step-title">2. Install Globally &amp; Setup Pre-Commit Hook</div>
+            <p class="step-desc" style="margin-bottom: 14px;">Install the CLI and verify before every git commit:</p>
+            <div class="hero-cli" style="margin: 0;">
+              <div class="cli-cmd"><span class="prompt">$</span><span>npm i -g anvil-engineering-workbench &amp;&amp; anvil hook install</span></div>
+            </div>
+          </div>
+
+          <div class="step-card">
+            <div class="step-title">3. Connect to AI Agents (Claude Code, Cursor, AGY)</div>
+            <p class="step-desc" style="margin-bottom: 14px;">Register ANVIL's local MCP tools with your agent:</p>
+            <div class="hero-cli" style="margin: 0;">
+              <div class="cli-cmd"><span class="prompt">$</span><span>anvil mcp setup</span></div>
+            </div>
+          </div>
+
+          <div class="step-card">
+            <div class="step-title">4. Add to GitHub Actions CI/CD</div>
+            <p class="step-desc" style="margin-bottom: 14px;">Drop into <code>.github/workflows/verify.yml</code>:</p>
+            <div class="hero-cli" style="margin: 0;">
+              <div class="cli-cmd"><span class="prompt">uses:</span><span>anvil-workbench/ANVIL@v1.2.0</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Pricing Grid (Deplo Style) -->
     <section class="section" id="pricing">
       <div class="wrap">
@@ -2451,7 +2524,7 @@
               <span class="faq-arrow">▼</span>
             </button>
             <div class="faq-a">
-              Yes. ANVIL has undergone comprehensive architectural review audits, achieving a certified 10/10 production architecture rating with 561 automated unit and integration tests passing across Node 22 and Node 24 on macOS, Ubuntu, and Windows runners in GitHub Actions CI.
+              Yes. ANVIL is backed by 561 automated unit and integration tests passing across Node 22 and Node 24 on macOS, Ubuntu, and Windows runners in GitHub Actions CI. It provides deterministic, zero-hallucination AST inspection, blast radius evaluation, and pre-commit verification without external network calls.
             </div>
           </div>
         </div>
@@ -2522,8 +2595,8 @@
       </div>
 
       <div class="footer-bottom">
-        <div>Crafted with precision by <strong>Aditya Tiwari (@AdixAnsh)</strong> · Licensed under MIT / Apache 2.0</div>
-        <div>v1.2.0 · 100% Local-First · Zero Cloud Telemetry</div>
+        <div>ANVIL started as a fork of <a href="https://github.com/ansh44233/FORGE-ECC" target="_blank" rel="noopener" style="text-decoration: underline; color: #fff;">FORGE-ECC</a> by Ansh · Complements <a href="https://github.com/affaan-m/ECC" target="_blank" rel="noopener" style="text-decoration: underline; color: #fff;">ECC</a> · Built on <a href="https://modelcontextprotocol.io" target="_blank" rel="noopener" style="text-decoration: underline; color: #fff;">MCP</a> &amp; <a href="https://sarifweb.azurewebsites.net" target="_blank" rel="noopener" style="text-decoration: underline; color: #fff;">OASIS SARIF</a></div>
+        <div>Maintained by <strong>Aditya Tiwari</strong> · Licensed under MIT · v1.2.0 · 100% Local-First · Zero Cloud Telemetry</div>
       </div>
     </div>
   </footer>
