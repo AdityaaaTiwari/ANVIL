@@ -40,6 +40,7 @@ Usage: anvil install [path] [options]
 | Flag | Description |
 |---|---|
 | `--target <list>` | Comma-separated list of tools, or `all` (default). Examples: `--target cursor,claude` or `--target antigravity`. (`all` installs all tools except `claude-desktop`). |
+| `--hooks` | Automatically register stop hooks with Claude Code and Cursor (`anvil gate --diff` triggers when the agent finishes). See [Agent Stop Hooks](agent-hooks.md). |
 | `--server <mode>` | How tools start ANVIL: `npx` (default), `global`, or `local`. |
 | `--dry-run` | Preview what files would be created or modified without making changes. |
 | `--json` | Output the installation plan as machine-readable JSON. |

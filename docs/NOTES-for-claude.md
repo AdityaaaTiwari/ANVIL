@@ -47,7 +47,13 @@ Planned features are explicitly marked as "Coming soon":
 
 ## 4. Code & Test Observations for Your Attention
 
-1. **Pre-commit Hook**:
+1. **Case-Insensitive Regex in `isAnvilHook` (`src/core/harness-installer.ts:128`)**:
+   During Windows live testing with `anvil install . --hooks --server local --target claude,cursor`, the command written into settings was:
+   `node "D:\\ANVIL\\dist\\cli.js" hook stop --harness claude`
+   Because `isAnvilHook` checks `/\banvil/` without the `/i` case-insensitivity flag, paths with uppercase `ANVIL` (like `D:\ANVIL`) do not match during `anvil uninstall`, leaving the hook in `.claude/settings.json` and `.cursor/hooks.json`.
+   Changing the check from `/\banvil/` to `/\banvil/i` resolves this for all folder casing variations on Windows.
+
+2. **Pre-commit Hook**:
    - `anvil hook install` and `anvil hook remove` are wired into `src/cli.ts` and `src/core/project-cleaner.ts`.
 2. **Action PR Commenting**:
    - `scripts/post-pr-comment.cjs` supports the `pr-comment: "true"` option in `action.yml`.

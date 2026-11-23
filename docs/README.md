@@ -6,6 +6,7 @@ Welcome to the ANVIL documentation. ANVIL is the deterministic **verification la
 
 ## 🚀 Getting Started
 - [Universal AI Tool Installer](install.md) — Connect ANVIL to Claude Code, Cursor, Copilot, Antigravity, Windsurf, Codex, Gemini in one command.
+- [Agent Stop Hooks](agent-hooks.md) — Automatically gate agent changes on finish with Claude Code and Cursor (`anvil install --hooks`).
 - [Getting Started Guide](getting-started.md) — 60-second quick start, installation, everyday CLI commands, and pre-commit hook setup.
 - [Model Context Protocol (MCP) Server](mcp-server.md) — Connect ANVIL's local deterministic tools to any MCP-compliant AI client.
 - [Agent Guidelines (AGENTS.md)](../AGENTS.md) — Standard operating rules for AI coding assistants working in ANVIL repositories.

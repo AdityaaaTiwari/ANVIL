@@ -46,11 +46,11 @@ When AI coding agents (Claude Code, Cursor, Codex, Antigravity, OpenCode) genera
 ### 1. Connect ANVIL to your AI tools in one step
 
 ```bash
-# Registers ANVIL MCP server and guidelines in Cursor, Claude Code, VS Code, Antigravity, etc.
-npx -y anvil-engineering-workbench install .
+# Registers ANVIL MCP server, stop hooks, and guidelines in Cursor, Claude Code, VS Code, etc.
+npx -y anvil-engineering-workbench install . --hooks
 ```
 
-*See the [Universal Tool Installer Guide](docs/install.md) for tool-specific targets (`--target`), dry-run preview, and uninstall.*
+*See the [Universal Tool Installer Guide](docs/install.md) and [Agent Stop Hooks Guide](docs/agent-hooks.md) for tool-specific targets (`--target`), dry-run preview, and uninstall.*
 
 ### 2. Run verification gate instantly with npx
 
