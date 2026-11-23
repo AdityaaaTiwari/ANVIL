@@ -128,6 +128,7 @@ export async function runVerification(
     ...(process.env.TEMP ? { TEMP: process.env.TEMP } : {}),
     ...(process.env.TMP ? { TMP: process.env.TMP } : {}),
   };
+  // anvil-disable-next-line ANVIL-R002 -- shell: false; on Windows the script name is interpolated, but SCRIPT_NAME (^[a-zA-Z0-9][a-zA-Z0-9:_-]*$) is enforced first, so no shell metacharacters can reach cmd.exe
   const child = spawn(
     windows ? "cmd.exe" : "npm",
     windows
@@ -275,6 +276,7 @@ export async function installVerificationDependencies(
   };
   const command =
     "npm ci --ignore-scripts --no-audit --no-fund --userconfig <temporary-empty-config> --globalconfig <temporary-empty-config>";
+  // anvil-disable-next-line ANVIL-R002 -- fixed argument list; shell is only used on Windows to launch npm.cmd, and the two paths are ANVIL-created temp files
   const child = spawn(
     windows ? "npm.cmd" : "npm",
     ["ci", "--ignore-scripts", "--no-audit", "--no-fund", "--userconfig", userConfig, "--globalconfig", globalConfig],

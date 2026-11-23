@@ -54,6 +54,12 @@ describe("code review", () => {
     const report = await reviewProject(root, { all: true });
     const lines = report.findings.filter((f) => f.ruleId === "ANVIL-R002").map((f) => f.line);
     expect(lines).toEqual([3, 4, 5]);
+    const confidence = Object.fromEntries(
+      report.findings.filter((f) => f.ruleId === "ANVIL-R002").map((f) => [f.line, f.confidence])
+    );
+    // String concatenation is the risky form; an argument array is the recommended one.
+    expect(confidence[3]).toBe("high");
+    expect(confidence[5]).toBe("low");
   });
 
   it("unions rules and reasons when next-line and same-line suppressions target the same line", async () => {

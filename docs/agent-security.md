@@ -176,7 +176,7 @@ jobs:
 
       - name: Run ANVIL Agent Security Audit
         run: |
-          npx anvil agent-security . --sarif agent-security.sarif
+          npx -y anvil-engineering-workbench@latest agent-security . --sarif agent-security.sarif
         continue-on-error: true
 
       - name: Upload SARIF to GitHub Code Scanning
@@ -186,6 +186,8 @@ jobs:
           sarif_file: agent-security.sarif
           category: anvil-agent-security
 ```
+
+> Uses the npm package `anvil-engineering-workbench` (not `anvil`, which is an unrelated package). Requires version 1.3.0 or later, the first release with `--sarif` for `agent-security`.
 
 ---
 

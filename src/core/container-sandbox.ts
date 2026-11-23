@@ -156,6 +156,7 @@ function runProcess(
       spawnCommand = process.execPath;
       spawnArgs = [command, ...args];
     }
+    // anvil-disable-next-line ANVIL-R002 -- argument array with shell: false; command comes from the sandbox runtime, not user text
     const child = spawn(spawnCommand, spawnArgs, {
       cwd,
       shell: false,
