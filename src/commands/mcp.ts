@@ -28,6 +28,16 @@ export async function runMcp(_command: string, rest: string[]): Promise<void> {
       const { pathToFileURL } = await import("node:url");
       const script = resolveMcpServerScript();
       await import(pathToFileURL(script).href);
+    } else if (subcommand === "check" || subcommand === "test" || subcommand === "verify") {
+      const { spawnSync } = await import("node:child_process");
+      const script = resolveMcpServerScript();
+      process.stdout.write(`Checking ANVIL MCP Server at ${script}...\n`);
+      const res = spawnSync(process.execPath, [script, "--check"], { encoding: "utf8" });
+      if (res.status === 0) {
+        process.stdout.write(`✓ ${res.stdout.trim()}\n`);
+      } else {
+        throw new Error(res.stderr || `Check exited with status ${res.status}`);
+      }
     } else {
       const script = resolveMcpServerScript();
       process.stdout.write(`ANVIL Model Context Protocol (MCP) Server\n\n`);
@@ -38,7 +48,8 @@ export async function runMcp(_command: string, rest: string[]): Promise<void> {
           `  anvil install [--target all|claude|codex|cursor|...]          Connect ANVIL to every AI tool\n`
       );
       process.stdout.write(
-        `  anvil mcp start                                                Run MCP stdio transport\n\n`
+        `  anvil mcp check                                               Verify MCP server entrypoint health\n` +
+          `  anvil mcp start                                                Run MCP stdio transport\n\n`
       );
     }
   } catch (error) {

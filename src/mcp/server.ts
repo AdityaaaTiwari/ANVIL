@@ -937,5 +937,18 @@ registerToolWithAlias(
   }
 );
 
+if (process.argv.includes("--check") || process.argv.includes("--smoke-test") || process.env.MCP_CHECK === "1") {
+  process.stdout.write(`ANVIL MCP Server ready (version: ${resolveVersion()}, workspace: ${WORKSPACE_ROOT})\n`);
+  process.exit(0);
+}
+
+if (process.stdin.isTTY) {
+  process.stderr.write(
+    `ANVIL MCP Server v${resolveVersion()} (Model Context Protocol stdio transport)\n` +
+      `Workspace: ${WORKSPACE_ROOT}\n` +
+      `Listening on stdio (awaiting JSON-RPC requests). Press Ctrl+C to stop.\n`
+  );
+}
+
 const transport = new StdioServerTransport();
 await server.connect(transport);
