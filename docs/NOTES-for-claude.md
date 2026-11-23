@@ -35,7 +35,7 @@ Every command documented in `README.md` and `docs/getting-started.md` was verifi
 - `anvil clean` (with `--dry-run`, `--fix`, `--undo <backupId>`)
 - `anvil doctor` (with `--fix`)
 - `anvil hook install` and `anvil hook remove`
-- `anvil mcp setup` (with `--client <client>`)
+- `anvil mcp setup`
 
 Planned features are explicitly marked as "Coming soon":
 - `anvil install --target <agent>`

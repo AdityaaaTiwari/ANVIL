@@ -135,14 +135,8 @@ ANVIL includes a zero-cloud Model Context Protocol (MCP) server that provides 16
 
 ### Automatic Wizard
 ```bash
-# Auto-configure all detected AI clients on your system
-anvil mcp setup --client all
-
-# Or target a specific client
-anvil mcp setup --client claude
-anvil mcp setup --client cursor
-anvil mcp setup --client vscode
-anvil mcp setup --client windsurf
+# Auto-configure all detected AI clients (Cursor, VS Code, Windsurf) and display Claude Code command
+anvil mcp setup
 ```
 
 ### Manual Configuration
