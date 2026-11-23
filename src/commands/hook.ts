@@ -1,7 +1,12 @@
 import path from "node:path";
 import { loadHooks } from "../core/hook-engine.js";
+import { runAgentStopHook } from "./agent-stop-hook.js";
 
 export async function runHook(_command: string, rest: string[]): Promise<void> {
+  if (rest[0] === "stop") {
+    await runAgentStopHook(rest);
+    return;
+  }
   if (rest[0] === "install" || rest.includes("--install")) {
     const force = rest.includes("--force") || rest.includes("-f");
     const target = path.resolve(

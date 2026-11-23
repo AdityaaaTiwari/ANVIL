@@ -55,11 +55,17 @@ export interface InstallOptions {
   /** Absolute path to dist/mcp/server.js, used when server is "local". */
   localServerScript?: string;
   instructions?: boolean;
+  /** Also install agent stop hooks (Claude Code, Cursor) that run `anvil gate --diff` when the agent finishes. */
+  hooks?: boolean;
   homeDir?: string;
   platform?: NodeJS.Platform;
   /** Used for the Claude Desktop config location on Windows. */
   appData?: string;
 }
+
+/** Tools whose agents can be sent back to work by a stop hook. */
+export const HOOK_TARGETS: readonly HarnessTarget[] = ["claude", "cursor"];
+const HOOK_TIMEOUT_SECONDS = 180;
 
 export type FileAction = "create" | "update" | "unchanged" | "skip" | "remove";
 
@@ -103,6 +109,102 @@ function launchFor(options: InstallOptions, target: HarnessTarget): ServerLaunch
     launch = { command: "cmd", args: ["/c", launch.command, ...launch.args] };
   }
   return launch;
+}
+
+/** Shell command a tool's stop hook runs. */
+export function hookCommand(options: InstallOptions, harness: "claude" | "cursor"): string {
+  const mode = options.server ?? "npx";
+  const tail = `hook stop --harness ${harness}`;
+  if (mode === "global") return `anvil ${tail}`;
+  if (mode === "local") {
+    if (!options.localServerScript) throw new Error("--server local needs the path to dist/mcp/server.js.");
+    const cli = path.join(path.dirname(path.dirname(options.localServerScript)), "cli.js");
+    return `node ${JSON.stringify(cli)} ${tail}`;
+  }
+  return `npx -y ${NPM_PACKAGE} ${tail}`;
+}
+
+const isAnvilHook = (command: unknown) =>
+  typeof command === "string" && /\banvil/.test(command) && /\bhook\s+stop\s+--harness\b/.test(command);
+
+/** Adds (command) or removes (undefined) ANVIL's Stop hook in Claude Code settings, keeping all other hooks. */
+function transformClaudeHooks(data: JsonObject, command: string | undefined): JsonObject {
+  const hooks = isObject(data.hooks) ? { ...data.hooks } : {};
+  const groups = Array.isArray(hooks.Stop) ? (hooks.Stop as unknown[]) : [];
+  const kept = groups
+    .map((group) => {
+      if (!isObject(group) || !Array.isArray(group.hooks)) return group;
+      return { ...group, hooks: group.hooks.filter((h) => !(isObject(h) && isAnvilHook(h.command))) };
+    })
+    .filter((group) => !(isObject(group) && Array.isArray(group.hooks) && group.hooks.length === 0));
+  if (command) kept.push({ hooks: [{ type: "command", command, timeout: HOOK_TIMEOUT_SECONDS }] });
+  const next: JsonObject = { ...data };
+  if (kept.length) hooks.Stop = kept;
+  else delete hooks.Stop;
+  if (Object.keys(hooks).length) next.hooks = hooks;
+  else delete next.hooks;
+  return next;
+}
+
+/** Adds (command) or removes (undefined) ANVIL's stop hook in .cursor/hooks.json. */
+function transformCursorHooks(data: JsonObject, command: string | undefined): JsonObject {
+  const hooks = isObject(data.hooks) ? { ...data.hooks } : {};
+  const stop = (Array.isArray(hooks.stop) ? (hooks.stop as unknown[]) : []).filter(
+    (h) => !(isObject(h) && isAnvilHook(h.command))
+  );
+  if (command) stop.push({ command, timeout: HOOK_TIMEOUT_SECONDS });
+  const next: JsonObject = { version: 1, ...data };
+  if (stop.length) hooks.stop = stop;
+  else delete hooks.stop;
+  if (Object.keys(hooks).length) next.hooks = hooks;
+  else delete next.hooks;
+  return next;
+}
+
+const withHookNote = (plan: PlannedFile): PlannedFile =>
+  plan.note || (plan.action !== "create" && plan.action !== "update")
+    ? plan
+    : { ...plan, note: "stop hook: runs `anvil gate --diff` when the agent finishes" };
+
+async function planJsonTransform(
+  target: HarnessTarget,
+  file: string,
+  transform: (data: JsonObject) => JsonObject,
+  remove: boolean,
+  emptyShape: JsonObject
+): Promise<PlannedFile> {
+  const scope = "project" as const;
+  const existing = await readText(file);
+  let data: JsonObject = {};
+  if (existing !== undefined && existing.trim() !== "") {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(existing);
+    } catch {
+      if (remove && !/hook\s+stop\s+--harness/.test(existing))
+        return { target, path: file, scope, action: "unchanged" };
+      return {
+        target,
+        path: file,
+        scope,
+        action: "skip",
+        note: "Not plain JSON (comments?), left untouched; add or remove the ANVIL stop hook by hand.",
+      };
+    }
+    if (!isObject(parsed))
+      return { target, path: file, scope, action: "skip", note: "Top level is not a JSON object." };
+    data = parsed;
+  } else if (remove) {
+    return { target, path: file, scope, action: "unchanged" };
+  }
+  const next = transform(data);
+  if (existing !== undefined && JSON.stringify(next) === JSON.stringify(data))
+    return { target, path: file, scope, action: "unchanged" };
+  const content = JSON.stringify(next, null, 2) + "\n";
+  const action: FileAction = existing === undefined ? "create" : remove ? "remove" : "update";
+  if (remove && JSON.stringify(next) === JSON.stringify(emptyShape))
+    return { target, path: file, scope, action, content, deleteFile: true };
+  return { target, path: file, scope, action, content };
 }
 
 async function readText(file: string): Promise<string | undefined> {
@@ -353,6 +455,33 @@ export async function planHarnessInstall(options: InstallOptions, remove = false
           )
         );
         break;
+    }
+  }
+
+  // Uninstall always removes ANVIL's hooks, whether or not --hooks is passed.
+  if (options.hooks || remove) {
+    for (const target of options.targets) {
+      if (target === "claude") {
+        const command = remove ? undefined : hookCommand(options, "claude");
+        const plan = await planJsonTransform(
+          target,
+          path.join(project, ".claude", "settings.json"),
+          (data) => transformClaudeHooks(data, command),
+          remove,
+          {}
+        );
+        plans.push(withHookNote(plan));
+      } else if (target === "cursor") {
+        const command = remove ? undefined : hookCommand(options, "cursor");
+        const plan = await planJsonTransform(
+          target,
+          path.join(project, ".cursor", "hooks.json"),
+          (data) => transformCursorHooks(data, command),
+          remove,
+          { version: 1 }
+        );
+        plans.push(withHookNote(plan));
+      }
     }
   }
 

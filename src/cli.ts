@@ -95,6 +95,7 @@ Commands:
   fix [path]       Auto-repair code errors, trim whitespace & prune unused imports (add --verify)
   undo [path]      Rollback the last anvil clean/fix operation using saved snapshot backup
   hook [install|remove]  Install or remove ANVIL automated pre-commit hook in Git (use --force to overwrite)
+  hook stop --harness claude|cursor  Agent stop hook: gate the agent's changes (installed by anvil install --hooks)
   doctor [path]    Run environment health checks; add --fix to auto-scaffold config
   dashboard [path] Start the local read-only web dashboard
   version          Print the installed version
