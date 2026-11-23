@@ -973,19 +973,22 @@ async function detectTestCommand(root: string): Promise<string | null> {
 }
 
 export async function installPrecommitHook(
-  inputPath: string
+  inputPath: string,
+  options?: { force?: boolean }
 ): Promise<{ success: boolean; hookPath: string; detail: string }> {
   const root = path.resolve(inputPath);
   const gitHooksDir = path.join(root, ".git", "hooks");
   const hookPath = path.join(gitHooksDir, "pre-commit");
   try {
     try {
-      await stat(hookPath);
-      return {
-        success: false,
-        hookPath,
-        detail: "Pre-commit hook already exists. Refusing to overwrite existing git hook.",
-      };
+      const existing = await readFile(hookPath, "utf8");
+      if (!options?.force && !existing.includes("# ANVIL")) {
+        return {
+          success: false,
+          hookPath,
+          detail: "Pre-commit hook already exists. Refusing to overwrite existing git hook (use --force to override).",
+        };
+      }
     } catch {
       // Hook does not exist, proceed
     }
@@ -994,7 +997,13 @@ export async function installPrecommitHook(
     const script = `#!/usr/bin/env sh
 # ANVIL automated pre-commit quality gate
 echo "[ANVIL] Running pre-commit clean & quality check..."
-anvil clean --json > /dev/null 2>&1 || true
+if command -v anvil >/dev/null 2>&1; then
+  anvil clean --json > /dev/null 2>&1 || true
+  anvil gate . --fail-on-warnings
+elif [ -f "./dist/cli.js" ]; then
+  node ./dist/cli.js clean --json > /dev/null 2>&1 || true
+  node ./dist/cli.js gate . --fail-on-warnings
+fi
 `;
     await writeFile(hookPath, script, { encoding: "utf8", mode: 0o755 });
     return {
@@ -1007,6 +1016,44 @@ anvil clean --json > /dev/null 2>&1 || true
       success: false,
       hookPath,
       detail: `Failed to install pre-commit hook: ${err?.message || String(err)}`,
+    };
+  }
+}
+
+export async function uninstallPrecommitHook(
+  inputPath: string
+): Promise<{ success: boolean; hookPath: string; detail: string }> {
+  const root = path.resolve(inputPath);
+  const gitHooksDir = path.join(root, ".git", "hooks");
+  const hookPath = path.join(gitHooksDir, "pre-commit");
+  try {
+    try {
+      const content = await readFile(hookPath, "utf8");
+      if (!content.includes("# ANVIL")) {
+        return {
+          success: false,
+          hookPath,
+          detail: "Pre-commit hook was not installed by ANVIL. Refusing to delete unknown hook.",
+        };
+      }
+      await unlink(hookPath);
+      return {
+        success: true,
+        hookPath,
+        detail: "Successfully removed ANVIL pre-commit hook from .git/hooks/pre-commit",
+      };
+    } catch {
+      return {
+        success: false,
+        hookPath,
+        detail: "No pre-commit hook found to remove.",
+      };
+    }
+  } catch (err: any) {
+    return {
+      success: false,
+      hookPath,
+      detail: `Failed to remove pre-commit hook: ${err?.message || String(err)}`,
     };
   }
 }

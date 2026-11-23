@@ -10,7 +10,7 @@ inputs:
   version:
     description: ANVIL Git ref to install (tag, branch, commit, or 'local')
     required: false
-    default: v1.1.2
+    default: v1.2.0
   project-path:
     description: Repository directory to analyze
     required: false
@@ -45,6 +45,14 @@ inputs:
     default: ""
   import-sarif:
     description: External SARIF report file path to ingest (e.g. semgrep.sarif, codeql.sarif)
+    required: false
+    default: ""
+  pr-comment:
+    description: Whether to post/update an automated ANVIL quality & risk summary comment on pull requests (true/false)
+    required: false
+    default: "false"
+  github-token:
+    description: GitHub Token (secrets.GITHUB_TOKEN) used to post the PR comment
     required: false
     default: ""
 
@@ -140,3 +148,17 @@ runs:
           doctor) "$RUN_BIN" doctor "$ANVIL_PROJECT_PATH" ;;
           *) echo "Unsupported ANVIL operation: $ANVIL_OPERATION" >&2; exit 2 ;;
         esac
+    - name: Post ANVIL PR Comment
+      if: ${{ always() && inputs.pr-comment == 'true' && inputs.github-token != '' }}
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        SARIF_FILE: ${{ inputs.sarif-file }}
+      run: |
+        SCRIPT_PATH="${GITHUB_ACTION_PATH}/scripts/post-pr-comment.cjs"
+        if [[ ! -f "$SCRIPT_PATH" ]]; then
+          SCRIPT_PATH="./scripts/post-pr-comment.cjs"
+        fi
+        if [[ -f "$SCRIPT_PATH" ]]; then
+          node "$SCRIPT_PATH" || true
+        fi

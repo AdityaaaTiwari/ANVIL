@@ -1,5 +1,40 @@
 # ANVIL Changelog
 
+## 1.2.0 — Production Architecture 10/10 Overhaul, Automated PR Comment Bot, Pre-Commit Hook Suite & Deplo/FORGE Orchestration
+
+ANVIL 1.2.0 represents a major milestone, achieving a certified 10/10 production architecture rating through the resolution of all 22 architectural review findings, introducing automated GitHub PR review comments, 1-command pre-commit git hooks, transactional rollback, and a modernized orchestration website inspired by Deplo and FORGE:
+
+### 10/10 Production Architecture Overhaul (22 Findings Resolved)
+- **Transactional Rollback & Directory Backups:**
+  - Enhanced workspace cleaner with full recursive snapshot backups into `.anvil/backups/cleaner/` and strict byte-level checksum tracking.
+  - Added explicit `backupId` parameter support to `anvil clean --undo <backupId>` for predictable rollback targeting.
+- **Strict Policy & Suppression Governance:**
+  - Defaulted `allowInlineSuppressions` to `false` in policy engine, requiring explicit opt-in or `--policy-ref` justification.
+  - Enforced mandatory justification reasons for inline suppressions.
+- **Security & Multi-Tenant Isolation:**
+  - Hardened Docker sandbox with isolated temporary `HOME` environments and 5-second graceful SIGKILL escalation.
+  - Added dynamic callback URL generation and strict `anvil:` Redis key namespaces.
+  - Path traversal protection using strict `isInside(root, dest)` guards across all file utilities.
+- **Multi-Language AST & Regex Alignment:**
+  - Fully aligned multi-language documentation across TS/JS, Python, Go, Rust, Java, C++, and Docker.
+  - Preserved PEP 8 two blank line hygiene during Python auto-fixing.
+
+### GitHub PR Review Commenter & Action Enhancements
+- **Automated PR Review Commenter (`pr-comment: true`):**
+  - Added native GitHub PR commenting to `action.yml` (`scripts/post-pr-comment.cjs`) that parses SARIF gate reports and updates an itemized review table with Gate Shield score, secret scan results, and blast radius directly on pull requests.
+  - Zero third-party dependencies using native Node 18+ `fetch`.
+
+### Pre-Commit Git Hook Suite (`anvil hook`)
+- **1-Command Pre-Commit Hook Management:**
+  - Added `anvil hook install [--force]` to automatically inject ANVIL quality gate and clean checks into `.git/hooks/pre-commit`.
+  - Added `anvil hook remove` to safely uninstall ANVIL git hooks without affecting custom scripts.
+
+### Deplo & FORGE Web Redesign
+- **Modernized Public Landing Page (`public/index.html`):**
+  - Integrated signature 5-stage orchestration pipeline visualizer from `deplo.in`.
+  - Added seven-step workflow from diff to verified merge.
+  - Added live interactive dashboard preview, deterministic cost matrix table ($0 vs $150+/mo), and 12-stack language grid.
+
 ## 1.1.2 — MCP Ecosystem Hardening, Compact Tool Telemetry, Empirical Token Benchmarking & Inline Suppression Union
 
 ANVIL 1.1.2 delivers comprehensive MCP ecosystem readiness, compact tool responses saving 90%+ model context tokens, empirical token footprint measurement, cross-platform Windows ESM fixes, and inline suppression rule unioning:

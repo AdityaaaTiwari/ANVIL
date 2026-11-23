@@ -298,7 +298,7 @@ Commands:
   clean [path]     Scan and delete junk, logs, temp downloads; add --apply and --fix
   fix [path]       Auto-repair code errors, trim whitespace & prune unused imports (add --verify)
   undo [path]      Rollback the last anvil clean/fix operation using saved snapshot backup
-  hook install     Install ANVIL automated pre-commit hook into Git
+  hook [install|remove]  Install or remove ANVIL automated pre-commit hook in Git (use --force to overwrite)
   doctor [path]    Run environment health checks; add --fix to auto-scaffold config
   dashboard [path] Start the local read-only web dashboard
   version          Print the installed version
@@ -1301,17 +1301,42 @@ async function main(args: string[]): Promise<void> {
     case "hook":
     case "hooks": {
       if (rest[0] === "install" || rest.includes("--install")) {
+        const force = rest.includes("--force") || rest.includes("-f");
         const target = path.resolve(
           rest.find((arg) => !arg.startsWith("--") && arg !== "install" && arg !== "pre-commit") ?? "."
         );
         try {
           const { installPrecommitHook } = await import("./core/project-cleaner.js");
-          const result = await installPrecommitHook(target);
+          const result = await installPrecommitHook(target, { force });
           process.stdout.write(`${result.detail}\n`);
           if (!result.success) process.exitCode = 1;
         } catch (error) {
           process.stderr.write(
             "Could not install hook: " + (error instanceof Error ? error.message : String(error)) + "\n"
+          );
+          process.exitCode = 1;
+        }
+        return;
+      }
+      if (
+        rest[0] === "remove" ||
+        rest[0] === "uninstall" ||
+        rest.includes("--remove") ||
+        rest.includes("--uninstall")
+      ) {
+        const target = path.resolve(
+          rest.find(
+            (arg) => !arg.startsWith("--") && arg !== "remove" && arg !== "uninstall" && arg !== "pre-commit"
+          ) ?? "."
+        );
+        try {
+          const { uninstallPrecommitHook } = await import("./core/project-cleaner.js");
+          const result = await uninstallPrecommitHook(target);
+          process.stdout.write(`${result.detail}\n`);
+          if (!result.success) process.exitCode = 1;
+        } catch (error) {
+          process.stderr.write(
+            "Could not remove hook: " + (error instanceof Error ? error.message : String(error)) + "\n"
           );
           process.exitCode = 1;
         }

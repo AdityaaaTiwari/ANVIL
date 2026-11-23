@@ -9,6 +9,7 @@ import {
   undoLastClean,
   formatUndoReport,
   installPrecommitHook,
+  uninstallPrecommitHook,
 } from "../src/core/project-cleaner.js";
 import { safeRm } from "./test-helpers.js";
 
@@ -314,6 +315,17 @@ end\`}
 
     const content = await readFile(hookPath, "utf8");
     expect(content).toContain("custom-hook");
+
+    // Overwrite with force
+    const forceResult = await installPrecommitHook(root, { force: true });
+    expect(forceResult.success).toBe(true);
+    const forcedContent = await readFile(hookPath, "utf8");
+    expect(forcedContent).toContain("ANVIL automated pre-commit");
+
+    // Uninstall hook
+    const uninstallResult = await uninstallPrecommitHook(root);
+    expect(uninstallResult.success).toBe(true);
+    await expect(stat(hookPath)).rejects.toThrow();
   });
 
   it("does not classify .pyd or top-level Protein Data Bank .pdb files as junk", async () => {
