@@ -4,7 +4,7 @@
 ANVIL is an open-source, local-first engineering toolkit and Model Context Protocol (MCP) server. It equips AI coding assistants (Claude Code, Cursor, Copilot, Windsurf, Antigravity) with deterministic tools to inspect codebases, analyze change risk, and verify quality without executing untrusted code or making third-party LLM API calls.
 
 ## Core Capabilities
-- **Architecture Mapping:** Multi-language AST import graph across TypeScript, JavaScript, Python, Go, Rust, Java, Kotlin, C/C++, C#, Ruby, PHP.
+- **Architecture Mapping:** Multi-language import graph across TypeScript, JavaScript, Python, Go, Rust, Java, Kotlin, C/C++, C#, Ruby, PHP; TypeScript AST symbol analysis.
 - **Change Risk Intelligence:** Blast radius calculation, downstream affected modules, and automated test candidate recommendations.
 - **Pre-Commit Quality & Security Gate:** Local policy-as-code gate (`anvil gate`) with content-hash baselines, suppression auditing, and SARIF export.
 - **Safe Workspace Cleanup:** Dry-run preview and cleanup of OS junk, build caches, and unreferenced orphan source modules.
