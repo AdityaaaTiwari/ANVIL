@@ -16,6 +16,7 @@
 - `src/cli.ts` split into one module per command under `src/commands/` (no behavior change).
 
 ### Docs
+- Added Unified Multi-Cockpit Dashboard architecture at `docs/unified-dashboard-architecture.md` and upgraded `public/index.html` with an interactive 5-tab control center spanning Combined Overview, ANVIL Verification, ECC Skills, REA Binary Analysis, and FORGE Benchmarks.
 - Added Everything Claude Code (ECC) Integration Guide at `docs/integrations/ecc.md` detailing lifecycle pairing (`plan -> test -> implement -> verify`), skill security auditing, and stop hook automation.
 - Added REA Reverse-Engineering Integration Guide at `docs/integrations/rea.md` outlining the Clean-Room Reengineering Pipeline combining `morluto/rea` binary analysis with ANVIL CI policy verification.
 - Added agent stop hooks documentation at `docs/agent-hooks.md` covering `anvil install --hooks`, automatic `gate --diff` triggers on agent finish, loop guards, and Claude Code/Cursor hook protocols.

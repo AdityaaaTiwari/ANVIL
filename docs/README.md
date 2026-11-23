@@ -23,6 +23,7 @@ Welcome to the ANVIL documentation. ANVIL is the deterministic **verification la
 ---
 
 ## 🛡️ Policy, Verification & CI/CD
+- [Unified Multi-Cockpit Dashboard](unified-dashboard-architecture.md) — Unified control center combining Verification (ANVIL), Skills (ECC), Binary Inspection (REA), and Benchmarks (FORGE).
 - [Policy as Code](policy-as-code.md) — Declare governance, security thresholds, and sandbox execution limits in `.anvil/policy.json`.
 - [CI Quality Gate & SARIF Integration](ci-gate-and-sarif.md) — Running `anvil gate` in GitHub Actions, PR diff mode, SARIF export/import, and baseline snapshots.
 - [Policy Schema](anvil-policy.schema.json) — JSON schema definition for ANVIL policy configurations.

@@ -924,6 +924,65 @@
       margin-right: 8px;
     }
 
+    
+    /* Multi-Cockpit Dashboard Tabs */
+    .dash-tab-nav {
+      display: flex;
+      align-items: center;
+      background: #090d14;
+      border-bottom: 1px solid var(--border);
+      padding: 6px 14px 0;
+      gap: 6px;
+      overflow-x: auto;
+    }
+
+    .dash-tab-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+      background: none;
+      border-top: none;
+      border-left: none;
+      border-right: none;
+      cursor: pointer;
+    }
+
+    .dash-tab-btn:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .dash-tab-btn.active {
+      color: #fff;
+      border-bottom-color: var(--amber);
+      background: rgba(249, 115, 22, 0.08);
+    }
+
+    .dash-tab-btn .tab-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+    .tab-dot.dot-combined { background: linear-gradient(135deg, #f97316, #38bdf8); box-shadow: 0 0 8px #f97316; }
+    .tab-dot.dot-anvil { background: #38bdf8; box-shadow: 0 0 8px #38bdf8; }
+    .tab-dot.dot-ecc { background: #a855f7; box-shadow: 0 0 8px #a855f7; }
+    .tab-dot.dot-rea { background: #34d399; box-shadow: 0 0 8px #34d399; }
+    .tab-dot.dot-forge { background: #f97316; box-shadow: 0 0 8px #f97316; }
+
+    .dash-tab-panel {
+      display: none;
+    }
+    .dash-tab-panel.active {
+      display: block;
+    }
+
     .dash-footer-bar {
       background: #0d111a;
       border-top: 1px solid var(--border);
@@ -1854,126 +1913,580 @@
           Inspect change risk, blast radius, security findings, and downstream test targets before committing. No guessing, no regressions.
         </p>
 
-        <!-- Simulated Interactive Dashboard Window -->
+                <!-- Simulated Interactive Dashboard Window -->
         <div class="dash-window">
           <div class="dash-header">
             <div class="dash-repo-info">
               <span class="dash-repo-name">anvil-workbench/ANVIL</span>
-              <span class="dash-repo-badge">● Default branch main · verified just now</span>
+              <span class="dash-repo-badge">● Unified Cockpit v1.2.0 · Verified Just Now</span>
             </div>
             <div class="dash-actions">
               <a class="btn btn-ghost" href="https://github.com/anvil-workbench/ANVIL" target="_blank" rel="noopener" style="padding: 5px 12px; font-size: 12px;">GitHub ↗</a>
-              <button class="btn btn-primary" style="padding: 5px 12px; font-size: 12px;">Run Gate Check</button>
+              <button class="btn btn-primary" id="dashRunGateBtn" style="padding: 5px 12px; font-size: 12px;">Run Gate Check</button>
             </div>
           </div>
 
-          <!-- 4 Top Cards -->
-          <div class="dash-top-metrics">
-            <div class="dash-metric-card">
-              <div class="dash-metric-label">GATE SHIELD</div>
-              <div class="dash-metric-val">
-                <span class="dash-metric-num">100</span>
-                <span style="font-size: 14px; color: var(--text-subtle);">/100</span>
-                <span class="dash-grade-badge">GRADE A</span>
+          <!-- Multi-Cockpit Navigation Tabs -->
+          <div class="dash-tab-nav" role="tablist">
+            <button class="dash-tab-btn active" data-cockpit-tab="tab-combined" role="tab" aria-selected="true">
+              <span class="tab-dot dot-combined"></span> 🌐 Combined Cockpit
+            </button>
+            <button class="dash-tab-btn" data-cockpit-tab="tab-anvil" role="tab" aria-selected="false">
+              <span class="tab-dot dot-anvil"></span> 🛡️ ANVIL Verification
+            </button>
+            <button class="dash-tab-btn" data-cockpit-tab="tab-ecc" role="tab" aria-selected="false">
+              <span class="tab-dot dot-ecc"></span> 🧠 ECC Skills &amp; Memory
+            </button>
+            <button class="dash-tab-btn" data-cockpit-tab="tab-rea" role="tab" aria-selected="false">
+              <span class="tab-dot dot-rea"></span> 🔍 REA Reverse Engineering
+            </button>
+            <button class="dash-tab-btn" data-cockpit-tab="tab-forge" role="tab" aria-selected="false">
+              <span class="tab-dot dot-forge"></span> 📊 FORGE Multi-Agent Benchmarks
+            </button>
+          </div>
+
+          <!-- TAB 1: COMBINED COCKPIT (UNIFIED EXECUTIVE VIEW) -->
+          <div class="dash-tab-panel active" id="tab-combined" role="tabpanel">
+            <div class="dash-top-metrics">
+              <div class="dash-metric-card">
+                <div class="dash-metric-label">UNIFIED SAFETY SHIELD</div>
+                <div class="dash-metric-val">
+                  <span class="dash-metric-num">100</span>
+                  <span style="font-size: 14px; color: var(--text-subtle);">/100</span>
+                  <span class="dash-grade-badge">GRADE A</span>
+                </div>
+                <div class="dash-metric-sub">0 critical · 0 leaks · 0 regressions detected</div>
               </div>
-              <div class="dash-metric-sub">0 critical · 0 high · 0 leaks detected</div>
+
+              <div class="dash-metric-card">
+                <div class="dash-metric-label">ACTIVE AGENT SKILLS (ECC)</div>
+                <div class="dash-metric-val">
+                  <span class="dash-metric-num" style="color: #a855f7;">1,542</span>
+                  <span style="font-size: 13px; color: var(--text-subtle);">rules</span>
+                </div>
+                <div class="dash-metric-sub">Curated across Next.js, Rust, Go, Python</div>
+              </div>
+
+              <div class="dash-metric-card">
+                <div class="dash-metric-label">DECOMPILED TARGETS (REA)</div>
+                <div class="dash-metric-val">
+                  <span class="dash-metric-num" style="color: var(--emerald);">4</span>
+                  <span style="font-size: 13px; color: var(--text-subtle);">modules</span>
+                </div>
+                <div class="dash-metric-sub">2 native .dll · 1 source map · 1 .har capture</div>
+              </div>
+
+              <div class="dash-metric-card">
+                <div class="dash-metric-label">TEST VERIFICATION SUITE</div>
+                <div class="dash-metric-val">
+                  <span class="dash-metric-num" style="color: var(--cyan);">588</span>
+                  <span style="font-size: 13px; color: var(--text-subtle);">passed</span>
+                </div>
+                <div class="dash-metric-sub">85 test files · 0-baseline green gate</div>
+              </div>
             </div>
 
-            <div class="dash-metric-card">
-              <div class="dash-metric-label">ANVIL SETUP</div>
-              <div class="dash-metric-val">
-                <span class="dash-metric-num" style="color: var(--emerald); font-size: 18px;">● Active</span>
-              </div>
-              <div class="dash-metric-sub">All 7 local verification engines synced</div>
-            </div>
+            <div class="dash-grid">
+              <div class="dash-pane">
+                <div class="dash-pane-title">
+                  ECOSYSTEM HEALTH &amp; SYNCHRONIZATION
+                  <span>All 4 Platforms Connected</span>
+                </div>
 
-            <div class="dash-metric-card">
-              <div class="dash-metric-label">OPEN PULL REQUESTS</div>
-              <div class="dash-metric-val">
-                <span class="dash-metric-num">2</span>
-              </div>
-              <div class="dash-metric-sub">Highest risk: <span style="color: var(--emerald); font-weight: 600;">low 12</span> (#48)</div>
-            </div>
+                <div class="finding-row">
+                  <span class="finding-badge badge-pass">ACTIVE</span>
+                  <div class="finding-text">
+                    <div class="finding-title">ANVIL Verification Gate &amp; Stop Hooks <span class="finding-loc">ANVIL-CORE</span></div>
+                    <div class="finding-desc">Stop hooks registered in Claude Code &amp; Cursor. Automatically runs <code>gate --diff</code> upon task completion.</div>
+                  </div>
+                </div>
 
-            <div class="dash-metric-card">
-              <div class="dash-metric-label">TECH STACK</div>
-              <div class="dash-metric-val">
-                <span style="font-size: 14px; font-weight: 700; color: #fff;">TypeScript · Express · MCP</span>
+                <div class="finding-row">
+                  <span class="finding-badge badge-pass" style="background: rgba(168, 85, 247, 0.15); color: #c084fc; border-color: rgba(168, 85, 247, 0.3);">SYNCED</span>
+                  <div class="finding-text">
+                    <div class="finding-title">affaan-m/ECC Skills &amp; Behavioral Guardrails <span class="finding-loc">ECC-KNOWLEDGE</span></div>
+                    <div class="finding-desc">Development lifecycle enforced: plan ➔ test ➔ implement ➔ review ➔ verify. 0 prompt injection risks.</div>
+                  </div>
+                </div>
+
+                <div class="finding-row">
+                  <span class="finding-badge badge-pass" style="background: rgba(52, 211, 153, 0.15); color: var(--emerald); border-color: rgba(52, 211, 153, 0.3);">READY</span>
+                  <div class="finding-text">
+                    <div class="finding-title">morluto/rea Reverse-Engineering MCP Engine <span class="finding-loc">REA-BINARY</span></div>
+                    <div class="finding-desc">Binary disassembler &amp; source map recovery bridge active. Emits structured behavioral evidence.</div>
+                  </div>
+                </div>
+
+                <div class="finding-row">
+                  <span class="finding-badge badge-pass" style="background: rgba(249, 115, 22, 0.15); color: var(--amber); border-color: rgba(249, 115, 22, 0.3);">RECORDED</span>
+                  <div class="finding-text">
+                    <div class="finding-title">ansh44233/FORGE Multi-Agent Execution Traces <span class="finding-loc">FORGE-TRACE</span></div>
+                    <div class="finding-desc">Historical evaluation matrix and regression traces synced. 98.4% agent candidate benchmark pass rate.</div>
+                  </div>
+                </div>
               </div>
-              <div class="dash-metric-sub">npm · Vitest · Node 22+</div>
+
+              <div class="dash-pane">
+                <div class="dash-pane-title">
+                  LIVE WORKBENCH PIPELINE
+                  <span>Continuous Orchestration</span>
+                </div>
+
+                <div class="risk-card">
+                  <div class="risk-card-head">
+                    <span class="risk-title">Step 1: Black-Box Analysis (REA)</span>
+                    <span class="risk-pill risk-pill-low">evidence ready</span>
+                  </div>
+                  <div class="risk-stats">Target: libauth_native.dll · 128 symbols extracted</div>
+                  <ul class="risk-bullets">
+                    <li>Recovered crypto token verification logic without source</li>
+                    <li>Zero closed-source proprietary blobs copied to project</li>
+                  </ul>
+                </div>
+
+                <div class="risk-card">
+                  <div class="risk-card-head">
+                    <span class="risk-title">Step 2: Clean Reimplementation (ECC)</span>
+                    <span class="risk-pill risk-pill-low">in progress</span>
+                  </div>
+                  <div class="risk-stats">Skill: ts-crypto-best-practices · Next.js 15 route</div>
+                  <ul class="risk-bullets">
+                    <li>Authoring pure TypeScript replacement with constant-time verify</li>
+                    <li>Strict adherence to memory safety and zero eval() operations</li>
+                  </ul>
+                </div>
+
+                <div class="risk-card">
+                  <div class="risk-card-head">
+                    <span class="risk-title">Step 3: Verification &amp; PR Gate (ANVIL)</span>
+                    <span class="risk-pill risk-pill-low">armed</span>
+                  </div>
+                  <div class="risk-stats">Automated stop hook ready on agent completion</div>
+                  <ul class="risk-bullets">
+                    <li>Will run <code>anvil gate --diff</code> against unstaged changes</li>
+                    <li>GitHub Action PR comment bot prepared to post SARIF findings</li>
+                  </ul>
+                </div>
+              </div>
             </div>
           </div>
 
-          <!-- Split Panes: Findings vs Change Risk -->
-          <div class="dash-grid">
-            <div class="dash-pane">
-              <div class="dash-pane-title">
-                SHIELD SECURITY &amp; POLICY FINDINGS
-                <span>187 files scanned</span>
+          <!-- TAB 2: ANVIL VERIFICATION GATE -->
+          <div class="dash-tab-panel" id="tab-anvil" role="tabpanel">
+            <div class="dash-top-metrics">
+              <div class="dash-metric-card">
+                <div class="dash-metric-label">GATE SHIELD</div>
+                <div class="dash-metric-val">
+                  <span class="dash-metric-num">100</span>
+                  <span style="font-size: 14px; color: var(--text-subtle);">/100</span>
+                  <span class="dash-grade-badge">GRADE A</span>
+                </div>
+                <div class="dash-metric-sub">0 critical · 0 high · 0 leaks detected</div>
               </div>
 
-              <div class="finding-row">
-                <span class="finding-badge badge-pass">PASS</span>
-                <div class="finding-text">
-                  <div class="finding-title">Zero Hardcoded Secrets or Exposed API Keys <span class="finding-loc">SHIELD-SEC-001</span></div>
-                  <div class="finding-desc">High-entropy heuristics verified zero leaked tokens in environment or code files.</div>
+              <div class="dash-metric-card">
+                <div class="dash-metric-label">STOP HOOK DEFENSE</div>
+                <div class="dash-metric-val">
+                  <span class="dash-metric-num" style="color: var(--emerald); font-size: 18px;">● Armed</span>
                 </div>
+                <div class="dash-metric-sub">Claude Code &amp; Cursor stop hooks active</div>
               </div>
 
-              <div class="finding-row">
-                <span class="finding-badge badge-pass">PASS</span>
-                <div class="finding-text">
-                  <div class="finding-title">Least-Privilege Container Sandbox Boundaries <span class="finding-loc">SHIELD-PERM-002</span></div>
-                  <div class="finding-desc">Isolated temp HOME directory, 5-second SIGKILL escalation, zero network bypass.</div>
+              <div class="dash-metric-card">
+                <div class="dash-metric-label">OPEN PULL REQUESTS</div>
+                <div class="dash-metric-val">
+                  <span class="dash-metric-num">2</span>
                 </div>
+                <div class="dash-metric-sub">Highest risk: <span style="color: var(--emerald); font-weight: 600;">low 12</span> (#48)</div>
               </div>
 
-              <div class="finding-row">
-                <span class="finding-badge badge-pass">PASS</span>
-                <div class="finding-text">
-                  <div class="finding-title">Transitive Module Imports &amp; Circular Graphs <span class="finding-loc">AST-DEP-003</span></div>
-                  <div class="finding-desc">No circular dependency rings detected across TypeScript and multi-language parsers.</div>
+              <div class="dash-metric-card">
+                <div class="dash-metric-label">TECH STACK</div>
+                <div class="dash-metric-val">
+                  <span style="font-size: 14px; font-weight: 700; color: #fff;">TypeScript · Express · MCP</span>
                 </div>
-              </div>
-
-              <div class="finding-row">
-                <span class="finding-badge badge-pass">PASS</span>
-                <div class="finding-text">
-                  <div class="finding-title">Deterministic Baseline Policy Hash Verification <span class="finding-loc">GATE-POL-004</span></div>
-                  <div class="finding-desc">Current tree matches canonical baseline .anvil/baseline.json with 0 drift.</div>
-                </div>
+                <div class="dash-metric-sub">npm · Vitest · Node 22+</div>
               </div>
             </div>
 
-            <div class="dash-pane">
-              <div class="dash-pane-title">
-                CHANGE RISK &amp; DOWNSTREAM BLAST RADIUS
-                <span>2 Active Changesets</span>
+            <div class="dash-grid">
+              <div class="dash-pane">
+                <div class="dash-pane-title">
+                  SHIELD SECURITY &amp; POLICY FINDINGS
+                  <span>187 files scanned</span>
+                </div>
+
+                <div class="finding-row">
+                  <span class="finding-badge badge-pass">PASS</span>
+                  <div class="finding-text">
+                    <div class="finding-title">Zero Hardcoded Secrets or Exposed API Keys <span class="finding-loc">SHIELD-SEC-001</span></div>
+                    <div class="finding-desc">High-entropy heuristics verified zero leaked tokens in environment or code files.</div>
+                  </div>
+                </div>
+
+                <div class="finding-row">
+                  <span class="finding-badge badge-pass">PASS</span>
+                  <div class="finding-text">
+                    <div class="finding-title">Least-Privilege Container Sandbox Boundaries <span class="finding-loc">SHIELD-PERM-002</span></div>
+                    <div class="finding-desc">Isolated temp HOME directory, 5-second SIGKILL escalation, zero network bypass.</div>
+                  </div>
+                </div>
+
+                <div class="finding-row">
+                  <span class="finding-badge badge-pass">PASS</span>
+                  <div class="finding-text">
+                    <div class="finding-title">Transitive Module Imports &amp; Circular Graphs <span class="finding-loc">AST-DEP-003</span></div>
+                    <div class="finding-desc">No circular dependency rings detected across TypeScript and multi-language parsers.</div>
+                  </div>
+                </div>
+
+                <div class="finding-row">
+                  <span class="finding-badge badge-pass">PASS</span>
+                  <div class="finding-text">
+                    <div class="finding-title">Deterministic Baseline-Free Policy Verification <span class="finding-loc">GATE-POL-004</span></div>
+                    <div class="finding-desc">Repository satisfies all policy thresholds natively without relying on baseline suppression.</div>
+                  </div>
+                </div>
               </div>
 
-              <div class="risk-card">
-                <div class="risk-card-head">
-                  <span class="risk-title">#48 feat(core): AST dependency engine update</span>
-                  <span class="risk-pill risk-pill-low">low 12</span>
+              <div class="dash-pane">
+                <div class="dash-pane-title">
+                  CHANGE RISK &amp; DOWNSTREAM BLAST RADIUS
+                  <span>2 Active Changesets</span>
                 </div>
-                <div class="risk-stats">12/100 risk score · 3 files touched · +18 / -4 lines</div>
-                <ul class="risk-bullets">
-                  <li>Downstream modules impacted: src/mcp/index.ts, src/gate/index.ts</li>
-                  <li>Suggested test verification target: tests/ast-parser.test.ts</li>
-                  <li>Zero breaking changes to public CLI exports</li>
-                </ul>
+
+                <div class="risk-card">
+                  <div class="risk-card-head">
+                    <span class="risk-title">#48 feat(core): AST dependency engine update</span>
+                    <span class="risk-pill risk-pill-low">low 12</span>
+                  </div>
+                  <div class="risk-stats">12/100 risk score · 3 files touched · +18 / -4 lines</div>
+                  <ul class="risk-bullets">
+                    <li>Downstream modules impacted: src/mcp/index.ts, src/gate/index.ts</li>
+                    <li>Suggested test verification target: tests/ast-parser.test.ts</li>
+                    <li>Zero breaking changes to public CLI exports</li>
+                  </ul>
+                </div>
+
+                <div class="risk-card">
+                  <div class="risk-card-head">
+                    <span class="risk-title">#49 docs: architecture &amp; agent guidelines</span>
+                    <span class="risk-pill risk-pill-low">low 0</span>
+                  </div>
+                  <div class="risk-stats">0/100 risk score · 1 file touched · +42 / -2 lines</div>
+                  <ul class="risk-bullets">
+                    <li>Documentation-only change; zero downstream blast radius</li>
+                    <li>Target verified: AGENTS.md</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 3: ECC SKILLS & MEMORY -->
+          <div class="dash-tab-panel" id="tab-ecc" role="tabpanel">
+            <div class="dash-top-metrics">
+              <div class="dash-metric-card">
+                <div class="dash-metric-label">ECC SKILLS CATALOG</div>
+                <div class="dash-metric-val">
+                  <span class="dash-metric-num" style="color: #a855f7;">1,542</span>
+                  <span class="dash-grade-badge" style="background: rgba(168, 85, 247, 0.15); color: #c084fc; border-color: rgba(168, 85, 247, 0.4);">CURATED</span>
+                </div>
+                <div class="dash-metric-sub">Full Everything Claude Code skills library synced</div>
               </div>
 
-              <div class="risk-card">
-                <div class="risk-card-head">
-                  <span class="risk-title">#49 docs: architecture &amp; agent guidelines</span>
-                  <span class="risk-pill risk-pill-low">low 0</span>
+              <div class="dash-metric-card">
+                <div class="dash-metric-label">LIFECYCLE STAGE</div>
+                <div class="dash-metric-val">
+                  <span class="dash-metric-num" style="font-size: 18px; color: var(--cyan);">● Implement</span>
                 </div>
-                <div class="risk-stats">0/100 risk score · 1 file touched · +42 / -2 lines</div>
-                <ul class="risk-bullets">
-                  <li>Documentation-only change; zero downstream blast radius</li>
-                  <li>Target verified: AGENTS.md</li>
-                </ul>
+                <div class="dash-metric-sub">Stage 3 of 6: plan ➔ test ➔ <b>implement</b> ➔ review</div>
+              </div>
+
+              <div class="dash-metric-card">
+                <div class="dash-metric-label">INSTINCTS &amp; MEMORY</div>
+                <div class="dash-metric-val">
+                  <span class="dash-metric-num">48</span>
+                </div>
+                <div class="dash-metric-sub">Learned habits preventing recurring regressions</div>
+              </div>
+
+              <div class="dash-metric-card">
+                <div class="dash-metric-label">SKILL SECURITY AUDIT</div>
+                <div class="dash-metric-val">
+                  <span class="dash-metric-num" style="color: var(--emerald); font-size: 18px;">● Verified</span>
+                </div>
+                <div class="dash-metric-sub">anvil agent-security: 0 hidden Unicode / injections</div>
+              </div>
+            </div>
+
+            <div class="dash-grid">
+              <div class="dash-pane">
+                <div class="dash-pane-title">
+                  ACTIVE DOMAIN SKILLS IN WORKBENCH
+                  <span>Prompt &amp; Subagent Registry</span>
+                </div>
+
+                <div class="finding-row">
+                  <span class="finding-badge badge-pass" style="background: rgba(168, 85, 247, 0.15); color: #c084fc; border-color: rgba(168, 85, 247, 0.3);">SKILL</span>
+                  <div class="finding-text">
+                    <div class="finding-title">Next.js 15 App Router &amp; Server Actions <span class="finding-loc">nextjs-expert</span></div>
+                    <div class="finding-desc">Enforces server/client boundaries, React 19 hooks, and streaming metadata protocols.</div>
+                  </div>
+                </div>
+
+                <div class="finding-row">
+                  <span class="finding-badge badge-pass" style="background: rgba(168, 85, 247, 0.15); color: #c084fc; border-color: rgba(168, 85, 247, 0.3);">SKILL</span>
+                  <div class="finding-text">
+                    <div class="finding-title">Rust Safe Concurrency &amp; Memory Bounds <span class="finding-loc">rust-systems</span></div>
+                    <div class="finding-desc">Zero-unsafe guidelines, Send/Sync validation, and lifetime annotations for multi-threaded crates.</div>
+                  </div>
+                </div>
+
+                <div class="finding-row">
+                  <span class="finding-badge badge-pass" style="background: rgba(168, 85, 247, 0.15); color: #c084fc; border-color: rgba(168, 85, 247, 0.3);">SKILL</span>
+                  <div class="finding-text">
+                    <div class="finding-title">Docker Least-Privilege &amp; Multi-Stage Builds <span class="finding-loc">docker-hardened</span></div>
+                    <div class="finding-desc">Non-root USER directives, Alpine/distroless bases, and pinned package hash checking.</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="dash-pane">
+                <div class="dash-pane-title">
+                  ENGINEERING INSTINCTS &amp; POST-MORTEM LEDGER
+                  <span>Persistent Agent Memory</span>
+                </div>
+
+                <div class="risk-card">
+                  <div class="risk-card-head">
+                    <span class="risk-title">Instinct #12: Safe Regex Execution</span>
+                    <span class="risk-pill risk-pill-low">active</span>
+                  </div>
+                  <div class="risk-stats">Pattern learned from ANVIL-R002 false positive fix</div>
+                  <ul class="risk-bullets">
+                    <li>Never flag RegExp.prototype.exec as arbitrary shell command execution</li>
+                    <li>Always provide explicit shell: false on child_process invocations</li>
+                  </ul>
+                </div>
+
+                <div class="risk-card">
+                  <div class="risk-card-head">
+                    <span class="risk-title">Instinct #14: Windows Path Casing Safety</span>
+                    <span class="risk-pill risk-pill-low">active</span>
+                  </div>
+                  <div class="risk-stats">Pattern learned from hook uninstaller audit</div>
+                  <ul class="risk-bullets">
+                    <li>Use case-insensitive regex /\banvil/i when matching Windows filesystem paths</li>
+                    <li>Ensure byte-accurate restoration of untouched user settings</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 4: REA REVERSE ENGINEERING -->
+          <div class="dash-tab-panel" id="tab-rea" role="tabpanel">
+            <div class="dash-top-metrics">
+              <div class="dash-metric-card">
+                <div class="dash-metric-label">DECOMPILED MODULES</div>
+                <div class="dash-metric-val">
+                  <span class="dash-metric-num" style="color: var(--emerald);">4</span>
+                  <span class="dash-grade-badge">INSPECTED</span>
+                </div>
+                <div class="dash-metric-sub">Zero proprietary source code required</div>
+              </div>
+
+              <div class="dash-metric-card">
+                <div class="dash-metric-label">RECOVERED SYMBOLS</div>
+                <div class="dash-metric-val">
+                  <span class="dash-metric-num" style="color: var(--cyan);">128</span>
+                  <span style="font-size: 13px; color: var(--text-subtle);">functions</span>
+                </div>
+                <div class="dash-metric-sub">34 struct signatures &amp; interface shapes extracted</div>
+              </div>
+
+              <div class="dash-metric-card">
+                <div class="dash-metric-label">CLEAN REENGINEERING</div>
+                <div class="dash-metric-val">
+                  <span class="dash-metric-num">100%</span>
+                </div>
+                <div class="dash-metric-sub">Zero binary blobs; pure TypeScript polyfill</div>
+              </div>
+
+              <div class="dash-metric-card">
+                <div class="dash-metric-label">REA MCP STATUS</div>
+                <div class="dash-metric-val">
+                  <span class="dash-metric-num" style="color: var(--emerald); font-size: 18px;">● Active</span>
+                </div>
+                <div class="dash-metric-sub">rea_decompile, rea_extract_symbols registered</div>
+              </div>
+            </div>
+
+            <div class="dash-grid">
+              <div class="dash-pane">
+                <div class="dash-pane-title">
+                  REVERSE-ENGINEERING EVIDENCE LEDGER
+                  <span>Binary &amp; Bundle Disassembly</span>
+                </div>
+
+                <div class="finding-row">
+                  <span class="finding-badge badge-pass" style="background: rgba(52, 211, 153, 0.15); color: var(--emerald); border-color: rgba(52, 211, 153, 0.3);">NATIVE</span>
+                  <div class="finding-text">
+                    <div class="finding-title">Decompiled Native Auth Bridge <span class="finding-loc">libauth_native.dll</span></div>
+                    <div class="finding-desc">Ghidra decompiled x86_64 assembly into clean C pseudocode. Identified HMAC-SHA256 signature verification method.</div>
+                  </div>
+                </div>
+
+                <div class="finding-row">
+                  <span class="finding-badge badge-pass" style="background: rgba(52, 211, 153, 0.15); color: var(--emerald); border-color: rgba(52, 211, 153, 0.3);">WEB</span>
+                  <div class="finding-text">
+                    <div class="finding-title">Source Map Reconstruction <span class="finding-loc">dashboard.chunk.min.js</span></div>
+                    <div class="finding-desc">Recovered original TypeScript variable names and module boundaries from minified production build.</div>
+                  </div>
+                </div>
+
+                <div class="finding-row">
+                  <span class="finding-badge badge-pass" style="background: rgba(52, 211, 153, 0.15); color: var(--emerald); border-color: rgba(52, 211, 153, 0.3);">IPC</span>
+                  <div class="finding-text">
+                    <div class="finding-title">Electron IPC Channel Mapping <span class="finding-loc">main-preload.js</span></div>
+                    <div class="finding-desc">Extracted 8 bidirectional IPC channels between Electron renderer and background main process.</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="dash-pane">
+                <div class="dash-pane-title">
+                  CLEAN-ROOM IMPLEMENTATION PREVIEW
+                  <span>Verified by ANVIL Gate</span>
+                </div>
+
+                <div class="risk-card">
+                  <div class="risk-card-head">
+                    <span class="risk-title">src/compat/auth-bridge.ts</span>
+                    <span class="risk-pill risk-pill-low">clean polyfill</span>
+                  </div>
+                  <div class="risk-stats">100% native Node.js crypto · 0 binary dependencies</div>
+                  <ul class="risk-bullets">
+                    <li>Replaced closed .dll dependency with pure Node 22 crypto.timingSafeEqual</li>
+                    <li>Verified against ANVIL-R001 (eval check) and secret scanner</li>
+                  </ul>
+                </div>
+
+                <div class="risk-card">
+                  <div class="risk-card-head">
+                    <span class="risk-title">Downstream Consumer Impact</span>
+                    <span class="risk-pill risk-pill-low">0 breaking changes</span>
+                  </div>
+                  <div class="risk-stats">Tested against 2 internal service consumers</div>
+                  <ul class="risk-bullets">
+                    <li>All 14 integration test cases passed</li>
+                    <li>Ready for pull request merge</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 5: FORGE BENCHMARKS -->
+          <div class="dash-tab-panel" id="tab-forge" role="tabpanel">
+            <div class="dash-top-metrics">
+              <div class="dash-metric-card">
+                <div class="dash-metric-label">BENCHMARK PASS RATE</div>
+                <div class="dash-metric-val">
+                  <span class="dash-metric-num" style="color: var(--amber);">98.4%</span>
+                  <span class="dash-grade-badge">OPTIMAL</span>
+                </div>
+                <div class="dash-metric-sub">Across 85 automated test matrices</div>
+              </div>
+
+              <div class="dash-metric-card">
+                <div class="dash-metric-label">TOKEN EFFICIENCY</div>
+                <div class="dash-metric-val">
+                  <span class="dash-metric-num" style="color: var(--emerald);">-96.8%</span>
+                </div>
+                <div class="dash-metric-sub">~1,400 tokens vs 150,000 raw source read</div>
+              </div>
+
+              <div class="dash-metric-card">
+                <div class="dash-metric-label">TRANSACTIONAL BACKUPS</div>
+                <div class="dash-metric-val">
+                  <span class="dash-metric-num">14</span>
+                  <span style="font-size: 13px; color: var(--text-subtle);">snapshots</span>
+                </div>
+                <div class="dash-metric-sub">Byte-accurate rollback ready via anvil undo</div>
+              </div>
+
+              <div class="dash-metric-card">
+                <div class="dash-metric-label">MULTI-AGENT TRACES</div>
+                <div class="dash-metric-val">
+                  <span class="dash-metric-num" style="color: var(--cyan); font-size: 18px;">● 42 Recorded</span>
+                </div>
+                <div class="dash-metric-sub">Step-by-step decision auditing stored in .forge/</div>
+              </div>
+            </div>
+
+            <div class="dash-grid">
+              <div class="dash-pane">
+                <div class="dash-pane-title">
+                  AGENT MODEL BENCHMARK LEADERBOARD
+                  <span>Deterministic Accuracy &amp; Tokens</span>
+                </div>
+
+                <div class="finding-row">
+                  <span class="finding-badge badge-pass">#1 RANK</span>
+                  <div class="finding-text">
+                    <div class="finding-title">Claude 3.7 Sonnet (Anthropic) <span class="finding-loc">99.2/100</span></div>
+                    <div class="finding-desc">Pass rate: 100% · Duration: 820ms · Token usage: 1,380 tokens · 0 retries.</div>
+                  </div>
+                </div>
+
+                <div class="finding-row">
+                  <span class="finding-badge badge-pass">#2 RANK</span>
+                  <div class="finding-text">
+                    <div class="finding-title">Gemini 2.0 Pro (Google) <span class="finding-loc">98.1/100</span></div>
+                    <div class="finding-desc">Pass rate: 98% · Duration: 740ms · Token usage: 1,410 tokens · 1 retry.</div>
+                  </div>
+                </div>
+
+                <div class="finding-row">
+                  <span class="finding-badge badge-pass">#3 RANK</span>
+                  <div class="finding-text">
+                    <div class="finding-title">GPT-4o (OpenAI) <span class="finding-loc">97.8/100</span></div>
+                    <div class="finding-desc">Pass rate: 98% · Duration: 910ms · Token usage: 1,520 tokens · 0 retries.</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="dash-pane">
+                <div class="dash-pane-title">
+                  TRANSACTIONAL RECOVERY &amp; REPLAY
+                  <span>Zero-Loss Rollback Safety</span>
+                </div>
+
+                <div class="risk-card">
+                  <div class="risk-card-head">
+                    <span class="risk-title">Snapshot backup_20261123_112204_789a</span>
+                    <span class="risk-pill risk-pill-low">verified</span>
+                  </div>
+                  <div class="risk-stats">14.2 MB recoverable cache purged · SHA-256 verified</div>
+                  <ul class="risk-bullets">
+                    <li>Rollback command: <code>anvil clean --undo backup_20261123_112204_789a</code></li>
+                    <li>Restores exact byte-level directory tree state</li>
+                  </ul>
+                </div>
+
+                <div class="risk-card">
+                  <div class="risk-card-head">
+                    <span class="risk-title">Human-in-the-Loop Oversight</span>
+                    <span class="risk-pill risk-pill-low">enforced</span>
+                  </div>
+                  <div class="risk-stats">Proposals remain uncommitted until explicit approval</div>
+                  <ul class="risk-bullets">
+                    <li>Isolated approved patch staging before application</li>
+                    <li>Verification history logged to persistent project memory</li>
+                  </ul>
+                </div>
               </div>
             </div>
           </div>
@@ -1984,11 +2497,11 @@
               <span style="font-weight: 600; color: #fff;">Verify commands:</span>
               <span class="dash-cmd-tag">npm run format:check</span>
               <span class="dash-cmd-tag">npm run lint</span>
-              <span class="dash-cmd-tag">npm run typecheck</span>
-              <span class="dash-cmd-tag">npm run test:coverage</span>
-              <span class="dash-cmd-tag">npm run build</span>
+              <span class="dash-cmd-tag">npm test</span>
+              <span class="dash-cmd-tag">node dist/cli.js gate .</span>
+              <span class="dash-cmd-tag">anvil agent-security .</span>
             </div>
-            <div>Conventions: Strict TypeScript · Vitest · 100% Local Gate</div>
+            <div>Unified Ecosystem: ANVIL (Gate) · ECC (Skills) · REA (Reverse Engineering) · FORGE (Benchmarks)</div>
           </div>
         </div>
       </div>
@@ -2655,12 +3168,47 @@
       });
     });
 
+    
+    // Multi-Cockpit Dashboard Tab Switcher
+    const cockpitTabs = document.querySelectorAll('.dash-tab-btn');
+    const cockpitPanels = document.querySelectorAll('.dash-tab-panel');
+
+    cockpitTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const targetId = tab.getAttribute('data-cockpit-tab');
+        cockpitTabs.forEach(t => {
+          t.classList.remove('active');
+          t.setAttribute('aria-selected', 'false');
+        });
+        cockpitPanels.forEach(p => p.classList.remove('active'));
+
+        tab.classList.add('active');
+        tab.setAttribute('aria-selected', 'true');
+        const targetPanel = document.getElementById(targetId);
+        if (targetPanel) {
+          targetPanel.classList.add('active');
+        }
+      });
+    });
+
+    const dashRunGateBtn = document.getElementById('dashRunGateBtn');
+    if (dashRunGateBtn) {
+      dashRunGateBtn.addEventListener('click', () => {
+        dashRunGateBtn.textContent = 'Gate Passed ✓';
+        dashRunGateBtn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+        setTimeout(() => {
+          dashRunGateBtn.textContent = 'Run Gate Check';
+          dashRunGateBtn.style.background = '';
+        }, 2500);
+      });
+    }
+
     // Terminal Showcase Tabs
     const termTabs = document.querySelectorAll('.term-tab-btn');
     const termOutput = document.getElementById('termOutput');
 
     const termSnippets = {
-      gate: `<span class="term-cyan">$ anvil gate . --baseline .anvil/baseline.json</span>
+      gate: `<span class="term-cyan">$ anvil gate .</span>
 <span class="term-dim">ANVIL Engineering Workbench v1.2.0</span>
 <span class="term-dim">Scanning 187 files in workspace [d:\ANVIL]...</span>
 
@@ -2668,7 +3216,7 @@
   <span class="term-green">✓</span> Import hygiene: 0 circular dependency rings found
   <span class="term-green">✓</span> Policy enforcement: strict typecheck & lint rules active
   <span class="term-green">✓</span> Baseline check: 0 unapproved structural violations
-  <span class="term-green">✓</span> Regression guard: 561/561 automated tests verified clean
+  <span class="term-green">✓</span> Regression guard: 588/588 automated tests verified clean
 
 <span class="term-green">▶ GATE PASSED:</span> Score 100/100 (Grade A)
 <span class="term-dim">Summary written to test-action-gate.sarif (0 alerts)</span>`,

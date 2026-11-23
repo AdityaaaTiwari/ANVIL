@@ -113,7 +113,7 @@ Every command and flag listed below is verified and supported in ANVIL v1.2.0:
 | `anvil agent-security [path]` | Audits agent instructions, prompt injection, hidden Unicode, MCP secrets, and permissions | `--global`, `--sarif <file>`, `--json` | **Available** |
 | `anvil doctor [path]` | Verifies environment health (Node, Git, Docker, workspace permissions) | `--fix`, `--json` | **Available** |
 | `anvil mcp [setup\|start]` | Sets up or runs local read-only Model Context Protocol server | `[setup]` | **Available** |
-| `anvil dashboard [path]` | Launches local read-only web dashboard on loopback | `[path]` | **Available** |
+| `anvil dashboard [path]` | Launches unified multi-cockpit dashboard (ANVIL, ECC, REA, FORGE) on loopback | `[path]` | **Available** |
 | `cross-harness handoff` | Synchronize active task state between Cursor and Claude Code | — | *Coming soon* |
 | `GitHub App Service` | Hosted GitHub App for automatic pull request comments & check runs | — | *Coming soon* |
 
