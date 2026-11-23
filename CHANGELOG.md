@@ -5,6 +5,8 @@
 ### Added
 - `anvil install` / `anvil uninstall`: connect ANVIL to Claude Code, Codex, Cursor, VS Code (Copilot), Windsurf, Google Antigravity, Gemini CLI, OpenCode and Claude Desktop in one command. Writes each tool's MCP config in its own format, adds a managed ANVIL section to `AGENTS.md` / `CLAUDE.md` / `GEMINI.md`, keeps every existing setting, supports `--dry-run`, and never rewrites JSON it cannot parse.
 - `anvil agent-security` now understands agent configs instead of only matching lines: Claude Code permissions (`Bash(*)`, `bypassPermissions`, `enableAllProjectMcpServers`) and hooks, MCP servers in every tool's format (plain-text credentials in `env`/`headers`/URLs, plain-HTTP remotes, unpinned `npx`/`uvx` packages), Codex `config.toml` (`danger-full-access`, `approval_policy = "never"`), commands that pipe downloads into a shell or send secrets over the network, prompt injection (worse inside HTML comments) and hidden Unicode. Scans the files of every tool `anvil install` supports; `--global` adds per-user configs; `--sarif PATH` writes SARIF. Rule IDs `ANVIL-AGENT-101`…`112`; matched values are never printed.
+- `anvil install --hooks`: adds a stop hook to Claude Code (`.claude/settings.json`) and Cursor (`.cursor/hooks.json`). When the agent says it is done, `anvil gate --diff` runs on its changes; if it fails, the agent gets the findings and keeps working (Claude: `decision: block`; Cursor: `followup_message`). Loop guards let the agent stop after one follow-up (Claude) or two (Cursor), and the hook never blocks if ANVIL itself errors. The user's own hooks are kept; `anvil uninstall` removes ANVIL's.
+- `anvil hook stop --harness claude|cursor`: the command those hooks run.
 - `anvil gate` now includes the agent configuration scan (opt out with `--skip-agent-config`).
 
 ### Changed
@@ -14,6 +16,11 @@
 - `src/cli.ts` split into one module per command under `src/commands/` (no behavior change).
 
 ### Docs
+- Added Unified Multi-Cockpit Dashboard architecture at `docs/unified-dashboard-architecture.md` and upgraded `public/index.html` with an interactive 5-tab control center spanning Combined Overview, ANVIL Verification, ECC Skills, REA Binary Analysis, and FORGE Benchmarks.
+- Added Everything Claude Code (ECC) Integration Guide at `docs/integrations/ecc.md` detailing lifecycle pairing (`plan -> test -> implement -> verify`), skill security auditing, and stop hook automation.
+- Added REA Reverse-Engineering Integration Guide at `docs/integrations/rea.md` outlining the Clean-Room Reengineering Pipeline combining `morluto/rea` binary analysis with ANVIL CI policy verification.
+- Added agent stop hooks documentation at `docs/agent-hooks.md` covering `anvil install --hooks`, automatic `gate --diff` triggers on agent finish, loop guards, and Claude Code/Cursor hook protocols.
+- Documented `--hooks` flag in `docs/install.md`, `README.md` quick start, and indexed in `docs/README.md`.
 - Added comprehensive AI Agent Security Audit documentation at `docs/agent-security.md` covering structured rule catalog (`ANVIL-AGENT-101`..`112`), heuristic checks (`FORGE-AGENT-001`..`006`), files scanned, `--global`, `--sarif` export, exit codes, and GitHub Actions code scanning workflows.
 - Linked `docs/agent-security.md` across `docs/README.md`, `docs/security-model.md`, and the `README.md` feature matrix.
 - Repositioned ANVIL as the deterministic verification layer for AI coding agents across `README.md`, landing page, manifests, and documentation.

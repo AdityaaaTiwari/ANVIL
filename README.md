@@ -46,11 +46,11 @@ When AI coding agents (Claude Code, Cursor, Codex, Antigravity, OpenCode) genera
 ### 1. Connect ANVIL to your AI tools in one step
 
 ```bash
-# Registers ANVIL MCP server and guidelines in Cursor, Claude Code, VS Code, Antigravity, etc.
-npx -y anvil-engineering-workbench install .
+# Registers ANVIL MCP server, stop hooks, and guidelines in Cursor, Claude Code, VS Code, etc.
+npx -y anvil-engineering-workbench install . --hooks
 ```
 
-*See the [Universal Tool Installer Guide](docs/install.md) for tool-specific targets (`--target`), dry-run preview, and uninstall.*
+*See the [Universal Tool Installer Guide](docs/install.md) and [Agent Stop Hooks Guide](docs/agent-hooks.md) for tool-specific targets (`--target`), dry-run preview, and uninstall.*
 
 ### 2. Run verification gate instantly with npx
 
@@ -113,7 +113,7 @@ Every command and flag listed below is verified and supported in ANVIL v1.2.0:
 | `anvil agent-security [path]` | Audits agent instructions, prompt injection, hidden Unicode, MCP secrets, and permissions | `--global`, `--sarif <file>`, `--json` | **Available** |
 | `anvil doctor [path]` | Verifies environment health (Node, Git, Docker, workspace permissions) | `--fix`, `--json` | **Available** |
 | `anvil mcp [setup\|start]` | Sets up or runs local read-only Model Context Protocol server | `[setup]` | **Available** |
-| `anvil dashboard [path]` | Launches local read-only web dashboard on loopback | `[path]` | **Available** |
+| `anvil dashboard [path]` | Launches unified multi-cockpit dashboard (ANVIL, ECC, REA, FORGE) on loopback | `[path]` | **Available** |
 | `cross-harness handoff` | Synchronize active task state between Cursor and Claude Code | — | *Coming soon* |
 | `GitHub App Service` | Hosted GitHub App for automatic pull request comments & check runs | — | *Coming soon* |
 
@@ -129,12 +129,16 @@ ANVIL acts as the local inspection and verification harness for your agent:
    Codex / Antigravity)                  Secrets, Downstream Tests)
 ```
 
-### Supported Harnesses
+### Supported Harnesses & Ecosystems
 
 - **Claude Code:**
-  Run `anvil mcp setup --client claude`. Claude accesses read-only MCP tools (`anvil_map_architecture`, `anvil_change_risk`, `anvil_inspect_project`) to query repository structure without bloating context windows.
+  Run `anvil install . --hooks --target claude`. Claude accesses read-only MCP tools (`anvil_map_architecture`, `anvil_change_risk`, `anvil_inspect_project`) to query repository structure without bloating context windows, while stop hooks automatically check changes on completion.
 - **Cursor IDE:**
-  Run `anvil mcp setup --client cursor`. Automatically configures `.cursor/mcp.json` so you can call ANVIL tools directly during inline chat.
+  Run `anvil install . --hooks --target cursor`. Automatically configures `.cursor/mcp.json` and `.cursor/hooks.json` so Cursor's agent receives immediate gate feedback before stopping.
+- **ECC (affaan-m/ECC):**
+  Complements ECC's 1,500+ skills and prompt workflows with ANVIL's deterministic verification, blast radius, and agent security scanning. See the [ECC Integration Guide](docs/integrations/ecc.md).
+- **REA (morluto/rea):**
+  Powers an end-to-end reverse-engineering and binary analysis pipeline: use REA for binary/bundle inspection and ANVIL for safe patch verification and CI gating. See the [REA Integration Guide](docs/integrations/rea.md).
 - **Codex & OpenCode:**
   Use standard `AGENTS.md` instructions and run `anvil gate .` to verify changes before committing.
 - **Google Antigravity (AGY):**
