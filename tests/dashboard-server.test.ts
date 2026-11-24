@@ -856,11 +856,25 @@ describe("local dashboard server", () => {
     expect(statusData.cockpits.ecc.totalSkills).toBeGreaterThanOrEqual(1);
     expect(statusData.cockpits.rea.totalAssets).toBe(1);
 
+    const catalogRes = await fetch(`http://127.0.0.1:${address.port}/api/catalog/agents`);
+    expect(catalogRes.status).toBe(200);
+    const catalogData = await catalogRes.json();
+    expect(Array.isArray(catalogData.agents)).toBe(true);
+
+    const scorecardRes = await fetch(`http://127.0.0.1:${address.port}/api/forge/scorecard`);
+    expect(scorecardRes.status).toBe(200);
+    const scorecardData = await scorecardRes.json();
+    expect(scorecardData.percent).toBeDefined();
+
     const page = await fetch(`http://127.0.0.1:${address.port}/`);
     const html = await page.text();
     expect(html).toContain("tab-ecc");
     expect(html).toContain("tab-rea");
     expect(html).toContain("ECC Skills & Rules");
     expect(html).toContain("REA Binary & Clean-Room");
+    expect(html).toContain("tab-forge");
+    expect(html).toContain("tab-github");
+    expect(html).toContain("FORGE Control Center");
+    expect(html).toContain("GitHub App & PR Bot");
   });
 });
