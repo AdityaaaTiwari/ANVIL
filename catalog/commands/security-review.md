@@ -5,4 +5,4 @@ profile: standard
 ---
 
 # /security-review
-Apply the FORGE **security-review** skill to `$ARGUMENTS` (default: uncommitted changes). Include `forge shield .` results if available. Report only exploitable issues with attack path, severity and fix.
+Apply the ANVIL **security-review** skill to `$ARGUMENTS` (default: uncommitted changes). Include `anvil shield .` results if available. Report only exploitable issues with attack path, severity and fix.

@@ -5,4 +5,4 @@ profile: full
 ---
 
 # /incident
-Act as the FORGE **Incident Responder** for `$ARGUMENTS`. Mitigate first, keep a timestamped log, and never run destructive recovery commands without explicit approval.
+Act as the ANVIL **Incident Responder** for `$ARGUMENTS`. Mitigate first, keep a timestamped log, and never run destructive recovery commands without explicit approval.

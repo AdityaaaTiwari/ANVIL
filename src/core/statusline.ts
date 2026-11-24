@@ -95,7 +95,7 @@ export async function collectStatus(input: StatusInput, fallbackCwd: string): Pr
 }
 
 export function formatStatusLine(parts: StatusParts): string {
-  const segments = [`FORGE${parts.model ? ` ▸ ${parts.model}` : ""}`];
+  const segments = [`ANVIL${parts.model ? ` ▸ ${parts.model}` : ""}`];
   if (parts.branch) segments.push(`⎇ ${parts.branch}`);
   segments.push(parts.unverified ? `✎ ${parts.unverified} unverified` : "✎ clean");
   if (parts.verification) segments.push(parts.verification);

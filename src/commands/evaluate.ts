@@ -68,7 +68,7 @@ export async function runEvaluate(_command: string, rest: string[]): Promise<voi
     process.stdout.write("Saved: " + reportPath + "\n");
     if (!report.passed || ("judge" in report && !report.judge.passed)) process.exitCode = 2;
   } catch (error) {
-    process.stderr.write("FORGE evaluation failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
+    process.stderr.write("ANVIL evaluation failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
     process.exitCode = 1;
   }
   return;

@@ -253,10 +253,10 @@ const fmt = (n: number) =>
 
 export function formatCostReport(report: CostReport): string {
   if (!report.sessions)
-    return "No session costs recorded yet. Install hooks with `forge install --hooks`; costs are recorded when a Claude Code session stops.";
+    return "No session costs recorded yet. Install hooks with `anvil install --hooks`; costs are recorded when a Claude Code session stops.";
   const t = report.tokens;
   const lines = [
-    `FORGE cost report — ${report.sessions} session(s)${report.since ? ` since ${report.since.slice(0, 10)}` : ""}`,
+    `ANVIL cost report — ${report.sessions} session(s)${report.since ? ` since ${report.since.slice(0, 10)}` : ""}`,
     "",
     `  tokens   input ${fmt(t.input)} · output ${fmt(t.output)} · cache write ${fmt(t.cacheWrite)} · cache read ${fmt(t.cacheRead)}`,
     `  estimate ${report.estimatedUsd !== undefined ? `$${report.estimatedUsd.toFixed(2)}` : "n/a"}${report.unpricedSessions ? ` (${report.unpricedSessions} session(s) used a model without a rate)` : ""}`,

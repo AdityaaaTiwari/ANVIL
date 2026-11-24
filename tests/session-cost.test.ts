@@ -88,10 +88,10 @@ describe("statusline", () => {
       }),
       root
     );
-    expect(line).toBe("FORGE ▸ Opus │ ✎ clean │ $1.23");
+    expect(line).toBe("ANVIL ▸ Opus │ ✎ clean │ $1.23");
     expect(formatStatusLine({ unverified: 2, blocked: 1, instincts: 3, verification: "✗ test failed" })).toBe(
-      "FORGE │ ✎ 2 unverified │ ✗ test failed │ ⛨ 1 blocked │ ★ 3 instincts"
+      "ANVIL │ ✎ 2 unverified │ ✗ test failed │ ⛨ 1 blocked │ ★ 3 instincts"
     );
-    expect(await renderStatusLine("garbage", root)).toContain("FORGE");
+    expect(await renderStatusLine("garbage", root)).toContain("ANVIL");
   });
 });

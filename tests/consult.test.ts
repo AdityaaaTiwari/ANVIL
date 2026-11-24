@@ -18,7 +18,7 @@ describe("forge consult", () => {
     expect(e2e.map((m) => `${m.kind}:${m.id}`)).toEqual(
       expect.arrayContaining(["skill:e2e-testing", "mcp:playwright"])
     );
-    expect(formatConsult("e2e", e2e)).toContain("forge mcp add playwright");
+    expect(formatConsult("e2e", e2e)).toContain("anvil mcp add playwright");
     expect(await consult("zzqx")).toEqual([]);
     expect(tokenize("How do I write the API?")).toEqual(["api"]);
   });

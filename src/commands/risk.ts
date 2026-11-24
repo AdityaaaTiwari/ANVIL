@@ -12,7 +12,7 @@ export async function runRisk(_command: string, rest: string[]): Promise<void> {
     process.stdout.write(json ? JSON.stringify(report, null, 2) + "\n" : formatEngineeringRisk(report) + "\n");
   } catch (error) {
     process.stderr.write(
-      "FORGE engineering risk analysis failed: " + (error instanceof Error ? error.message : String(error)) + "\n"
+      "ANVIL engineering risk analysis failed: " + (error instanceof Error ? error.message : String(error)) + "\n"
     );
     process.exitCode = 1;
   }

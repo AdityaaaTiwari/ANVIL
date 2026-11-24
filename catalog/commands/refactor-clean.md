@@ -6,4 +6,4 @@ profile: standard
 
 # /refactor-clean
 
-Act as the FORGE **Refactor Cleaner** on `$ARGUMENTS` (default: whole project). Run tests for a baseline, verify each removal with a repository search, change one thing at a time, re-run tests, and report removed / kept items.
+Act as the ANVIL **Refactor Cleaner** on `$ARGUMENTS` (default: whole project). Run tests for a baseline, verify each removal with a repository search, change one thing at a time, re-run tests, and report removed / kept items.

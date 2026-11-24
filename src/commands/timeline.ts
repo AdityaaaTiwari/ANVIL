@@ -8,10 +8,10 @@ export async function runTimeline(_command: string, rest: string[]): Promise<voi
     process.stdout.write(
       comparison
         ? formatIntelligenceComparison(comparison) + "\n"
-        : "No engineering snapshots found. Run forge snapshot . first.\n"
+        : "No engineering snapshots found. Run anvil snapshot . first.\n"
     );
   } catch (error) {
-    process.stderr.write("FORGE timeline failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
+    process.stderr.write("ANVIL timeline failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
     process.exitCode = 1;
   }
   return;

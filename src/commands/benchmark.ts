@@ -31,7 +31,7 @@ export async function runBenchmark(_command: string, rest: string[]): Promise<vo
     const document = await recordBenchmarkTrial(target, createBenchmarkTrial(report, trace));
     process.stdout.write(formatBenchmark(document) + "\n");
   } catch (error) {
-    process.stderr.write("FORGE benchmark failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
+    process.stderr.write("ANVIL benchmark failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
     process.exitCode = 1;
   }
   return;

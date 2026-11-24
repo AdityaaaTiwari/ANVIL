@@ -178,11 +178,11 @@ export function buildLoopPrompt(
   const lines = [
     `Goal: ${goal}`,
     "",
-    "You are running inside a FORGE verified loop. After you finish, FORGE runs these checks itself and decides whether the goal is met:",
+    "You are running inside an ANVIL verified loop. After you finish, ANVIL runs these checks itself and decides whether the goal is met:",
     ...checks.map((c) => `- \`${c}\``),
     "",
     "Rules:",
-    "- Make real changes that satisfy the goal. Do not delete or skip tests, add .only/.skip markers, loosen lint/format/type configs, or edit package.json scripts or CI workflows to make checks pass — FORGE detects this and stops the loop.",
+    "- Make real changes that satisfy the goal. Do not delete or skip tests, add .only/.skip markers, loosen lint/format/type configs, or edit package.json scripts or CI workflows to make checks pass — ANVIL detects this and stops the loop.",
     "- Keep the change focused on the goal; do not commit, push or publish.",
   ];
   if (failing.length) {
@@ -446,7 +446,7 @@ export async function runVerifiedLoop(options: LoopOptions): Promise<LoopRecord>
     }
     if (checkResults.every((c) => c.passed)) {
       record.status = "passed";
-      record.reason = `All ${checks.length} check(s) passed after ${n} iteration(s), verified by FORGE.`;
+      record.reason = `All ${checks.length} check(s) passed after ${n} iteration(s), verified by ANVIL.`;
       break;
     }
     const fingerprint = createHash("sha256")
@@ -509,7 +509,7 @@ export function formatLoop(record: LoopRecord, options: { verbose?: boolean } = 
     "dry-run": "○",
   };
   const lines = [
-    `FORGE loop ${record.id} — ${icon[record.status] ?? ""} ${record.status}`,
+    `ANVIL loop ${record.id} — ${icon[record.status] ?? ""} ${record.status}`,
     `  goal      ${record.goal.split("\n")[0]?.slice(0, 120)}`,
     `  agent     ${record.agentCommand.join(" ")}`,
     `  checks    ${record.checks.join("  ·  ")}`,

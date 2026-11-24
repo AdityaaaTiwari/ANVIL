@@ -112,7 +112,7 @@ export const EXTENDED_RULES: RuleDef[] = [
     severity: "medium",
     category: "permissions",
     title: "All hooks are disabled",
-    recommendation: "Remove `disableAllHooks`; it silently turns off security hooks such as FORGE Guard.",
+    recommendation: "Remove `disableAllHooks`; it silently turns off security hooks such as ANVIL Guard.",
   },
   {
     id: "SHIELD-PERM-013",

@@ -7,7 +7,7 @@ export async function runSnapshot(_command: string, rest: string[]): Promise<voi
     const comparison = await captureIntelligenceSnapshot(target);
     process.stdout.write(formatIntelligenceComparison(comparison) + "\n");
   } catch (error) {
-    process.stderr.write("FORGE snapshot failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
+    process.stderr.write("ANVIL snapshot failed: " + (error instanceof Error ? error.message : String(error)) + "\n");
     process.exitCode = 1;
   }
   return;

@@ -17,6 +17,6 @@ tags: mcp, agents, api
 1. Write the list of agent tasks and the tools that serve them before coding.
 2. Implement with the official SDK, then unit-test each handler.
 3. Exercise the server with the MCP Inspector and one real client; record the end-to-end run.
-4. Publish with a pinned version and document the client config (`forge mcp add` style, env var names only).
+4. Publish with a pinned version and document the client config (`anvil mcp add` style, env var names only).
 
 Use the `mcp-server-development` skill. Report only what you observed; never claim a client connected unless you ran it.

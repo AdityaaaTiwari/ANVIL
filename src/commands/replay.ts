@@ -14,7 +14,7 @@ export async function runReplay(_command: string, rest: string[]): Promise<void>
     process.stdout.write("Created replay " + replay.id + " from " + runId + ".\n");
     process.stdout.write("Saved: " + path.relative(target, saved) + "\n");
     process.stdout.write(
-      "Run `forge resume " + replay.id + " --path " + target + "` when ready to call the configured provider.\n"
+      "Run `anvil resume " + replay.id + " --path " + target + "` when ready to call the configured provider.\n"
     );
   } catch (error) {
     process.stderr.write("Could not create replay: " + (error instanceof Error ? error.message : String(error)) + "\n");

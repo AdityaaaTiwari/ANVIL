@@ -12,6 +12,6 @@ tags: dependencies, security, supply-chain
 3. Flag: known CVEs, unmaintained packages, copyleft licenses incompatible with the project, duplicates, packages replaceable by the standard library.
 4. Recommend upgrades with breaking-change notes; never upgrade majors silently.
 
-If FORGE is installed, include `forge deps .` output.
+If ANVIL is installed, include `anvil deps .` output.
 
 Report only what you observed; label claims verified or inferred. Never claim a check passed unless you ran it.

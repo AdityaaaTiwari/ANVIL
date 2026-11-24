@@ -20,7 +20,7 @@ export async function runApprove(_command: string, rest: string[]): Promise<void
       reasonIndex >= 0 ? rest.slice(reasonIndex + 1, pathIndex >= 0 ? pathIndex : rest.length).join(" ") : undefined
     );
     process.stdout.write(
-      "Approved " + taskId + " in " + runId + ". Resume explicitly with `forge resume " + runId + "`.\n"
+      "Approved " + taskId + " in " + runId + ". Resume explicitly with `anvil resume " + runId + "`.\n"
     );
     process.stdout.write("Run status: " + updated.status + "\n");
   } catch (error) {

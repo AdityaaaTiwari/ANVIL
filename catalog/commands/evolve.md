@@ -4,6 +4,6 @@ profile: standard
 ---
 
 # /evolve
-1. Run `forge evolve` (dry run) and show the generated skill.
+1. Run `anvil evolve` (dry run) and show the generated skill.
 2. If it lists no active instincts, suggest `/instincts` instead and stop.
-3. After the user agrees, run `forge evolve --write` and report which files were created or updated. If a file is reported as `skipped-user-edited`, explain that FORGE kept the user's version.
+3. After the user agrees, run `anvil evolve --write` and report which files were created or updated. If a file is reported as `skipped-user-edited`, explain that FORGE kept the user's version.

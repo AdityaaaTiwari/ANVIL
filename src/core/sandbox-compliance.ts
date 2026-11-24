@@ -27,25 +27,25 @@ export function createSandboxComplianceReport(
         ? "Image reference includes a SHA-256 digest."
         : "Image reference is not digest-pinned.",
     },
-    { id: "network", label: "Network isolation", status: "pass", evidence: "FORGE configures --network=none." },
+    { id: "network", label: "Network isolation", status: "pass", evidence: "ANVIL configures --network=none." },
     {
       id: "read-only-root",
       label: "Read-only container root",
       status: "pass",
-      evidence: "FORGE configures --read-only.",
+      evidence: "ANVIL configures --read-only.",
     },
-    { id: "capabilities", label: "Linux capabilities", status: "pass", evidence: "FORGE configures --cap-drop=ALL." },
+    { id: "capabilities", label: "Linux capabilities", status: "pass", evidence: "ANVIL configures --cap-drop=ALL." },
     {
       id: "no-new-privileges",
       label: "Privilege escalation",
       status: "pass",
-      evidence: "FORGE configures no-new-privileges.",
+      evidence: "ANVIL configures no-new-privileges.",
     },
     {
       id: "resource-limits",
       label: "Resource limits",
       status: "pass",
-      evidence: "FORGE configures memory, CPU and PID limits.",
+      evidence: "ANVIL configures memory, CPU and PID limits.",
     },
     {
       id: "runtime",
@@ -94,6 +94,6 @@ export function formatSandboxComplianceReport(report: SandboxComplianceReport): 
     "",
     ...report.checks.map((check) => "- [" + check.status.toUpperCase() + "] " + check.label + ": " + check.evidence),
     "",
-    "This report describes FORGE-configured controls and observed runtime facts; it is not an independent security audit or guarantee.",
+    "This report describes ANVIL-configured controls and observed runtime facts; it is not an independent security audit or guarantee.",
   ].join("\n");
 }

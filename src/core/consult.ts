@@ -257,7 +257,7 @@ export function consultCatalog(catalog: HarnessCatalog, query: string, options: 
         description: entry.description,
         score: scaled,
         why,
-        install: `forge mcp add ${entry.name}`,
+        install: `anvil mcp add ${entry.name}`,
       });
     }
   }
@@ -276,17 +276,17 @@ export async function consult(
 
 export function formatConsult(query: string, matches: ConsultMatch[]): string {
   if (!matches.length)
-    return `Nothing in the FORGE catalog matches "${query}". Try broader words, or browse with \`forge catalog\` and \`forge mcp catalog\`.`;
+    return `Nothing in the ANVIL catalog matches "${query}". Try broader words, or browse with \`anvil catalog\` and \`anvil mcp catalog\`.`;
   const width = Math.max(...matches.map((m) => `${m.kind}:${m.id}`.length));
-  const lines = [`FORGE consult · "${query}"`, ""];
+  const lines = [`ANVIL consult · "${query}"`, ""];
   for (const m of matches) lines.push(`  ${`${m.kind}:${m.id}`.padEnd(width)}  ${m.description.slice(0, 90)}`);
   const items = matches.filter((m) => m.kind !== "mcp").slice(0, 6);
   const mcp = matches.filter((m) => m.kind === "mcp").slice(0, 3);
   lines.push("", "Add them:");
   if (items.length)
     lines.push(
-      `  forge install --with ${items.map((m) => m.install.replace("forge install --with ", "")).join(",")} --dry-run`
+      `  anvil install --with ${items.map((m) => m.install.replace("anvil install --with ", "")).join(",")} --dry-run`
     );
-  if (mcp.length) lines.push(`  forge mcp add ${mcp.map((m) => m.id).join(" ")}`);
+  if (mcp.length) lines.push(`  anvil mcp add ${mcp.map((m) => m.id).join(" ")}`);
   return lines.join("\n");
 }

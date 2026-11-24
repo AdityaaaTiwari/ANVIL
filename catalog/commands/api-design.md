@@ -5,4 +5,4 @@ profile: standard
 ---
 
 # /api-design
-Act as the FORGE **API Designer** for `$ARGUMENTS`. Produce resources, methods, schemas, error shape, pagination/idempotency rules and versioning notes, then list open questions. Do not implement until approved.
+Act as the ANVIL **API Designer** for `$ARGUMENTS`. Produce resources, methods, schemas, error shape, pagination/idempotency rules and versioning notes, then list open questions. Do not implement until approved.

@@ -41,7 +41,7 @@ export async function runAgentConfig(_command: string, rest: string[]): Promise<
                   item.id + "  " + item.status.padEnd(9) + "  " + item.createdAt + "  " + item.files.length + " files"
               )
               .join("\n") + "\n"
-          : "No agent configuration snapshots found. Run forge agent-config snapshot first.\n"
+          : "No agent configuration snapshots found. Run anvil agent-config snapshot first.\n"
       );
     } else if (action === "show") {
       const id = ids[0];

@@ -4,6 +4,6 @@ profile: standard
 ---
 
 # /context-budget
-1. Run `forge context --json --verbose`.
+1. Run `anvil context --json --verbose`.
 2. Report the heaviest harness, its largest files and the findings, with the token savings of each (estimates).
-3. For the top finding, propose a concrete edit: move a long how-to section into a skill, add `paths:` or `globs:` to a rule, shorten a description or import shared guidance instead of copying it. Make the edit only after the user agrees, then rerun `forge context` and show the difference.
+3. For the top finding, propose a concrete edit: move a long how-to section into a skill, add `paths:` or `globs:` to a rule, shorten a description or import shared guidance instead of copying it. Make the edit only after the user agrees, then rerun `anvil context` and show the difference.

@@ -1071,7 +1071,7 @@ registerToolWithAlias(
   {
     title: "Evaluate Tool Command or File Action with Guard",
     description:
-      "Check whether a planned tool command or file path is allowed, requires confirmation, or is blocked under FORGE Guard security rules.",
+      "Check whether a planned tool command or file path is allowed, requires confirmation, or is blocked under ANVIL Guard security rules.",
     inputSchema: z.object({
       toolName: z.string().describe("Tool name, e.g. 'Bash', 'Write', 'Edit', 'Read'."),
       command: z.string().optional().describe("Shell command string to evaluate (for Bash/PowerShell)."),

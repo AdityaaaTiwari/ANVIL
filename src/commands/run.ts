@@ -137,7 +137,7 @@ export async function runRun(_command: string, rest: string[]): Promise<void> {
     if (completed.status === "failed") process.exitCode = 1;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    process.stderr.write(`FORGE run failed: ${message}\n`);
+    process.stderr.write(`ANVIL run failed: ${message}\n`);
     process.exitCode = 1;
   }
   return;

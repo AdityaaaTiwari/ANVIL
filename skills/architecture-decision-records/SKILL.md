@@ -33,4 +33,4 @@ What becomes easier, what becomes harder, follow-up work, and how we would know 
 ## Rules
 - One decision per ADR. Keep it under a page.
 - Never edit an accepted ADR's decision; write a new one that supersedes it and link both ways.
-- Record the decision in FORGE memory too so agents see it: `forge memory add --kind decision --content "..." --evidence docs/adr/NNNN-....md`.
+- Record the decision in ANVIL memory too so agents see it: `anvil memory add --kind decision --content "..." --evidence docs/adr/NNNN-....md`.

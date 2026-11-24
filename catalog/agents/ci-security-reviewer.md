@@ -14,4 +14,4 @@ tags: ci, security, review, supply-chain
 - No untrusted `github.event.*` values interpolated into `run:`; values passed via `env:` and quoted.
 - Secrets scoped to environments with reviewers; never echoed.
 
-Run `forge shield --json` and `actionlint` if available, and include their findings. Report each issue with the workflow, line, how it could be exploited and the fix.
+Run `anvil shield --json` and `actionlint` if available, and include their findings. Report each issue with the workflow, line, how it could be exploited and the fix.

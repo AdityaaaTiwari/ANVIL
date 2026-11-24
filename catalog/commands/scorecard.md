@@ -5,7 +5,7 @@ profile: standard
 ---
 
 # /scorecard
-1. Run `forge scorecard --verbose --json` and read every category's evidence and actions.
+1. Run `anvil scorecard --verbose --json` and read every category's evidence and actions.
 2. Report the total, the grade and the three lowest categories in a short table.
 3. If `$ARGUMENTS` names a category, work only on that one; otherwise take the first item from `topActions`.
-4. Apply the action, re-run `forge scorecard`, and show the before/after score. Never claim a point you did not re-measure.
+4. Apply the action, re-run `anvil scorecard`, and show the before/after score. Never claim a point you did not re-measure.

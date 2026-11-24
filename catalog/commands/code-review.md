@@ -6,9 +6,9 @@ profile: minimal
 
 # /code-review
 
-Act as the FORGE **Code Reviewer** on `$ARGUMENTS` (default: uncommitted changes from `git diff HEAD`).
+Act as the ANVIL **Code Reviewer** on `$ARGUMENTS` (default: uncommitted changes from `git diff HEAD`).
 
 1. Read the diff and the code it depends on.
 2. Report findings ordered blocker → major → minor → nit, each with file:line, failure scenario and fix.
-3. If the FORGE CLI is available, add evidence from `forge git .` (change risk and suggested tests).
+3. If the ANVIL CLI is available, add evidence from `anvil git .` (change risk and suggested tests).
 4. End with a verdict: approve / approve with fixes / request changes.

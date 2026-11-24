@@ -18,7 +18,7 @@ export function createWorkspaceResolver(workspaceRoot: string): (input?: string)
     const normalized = input.replace(/\\/g, "/");
     const segments = normalized.split("/").filter((part) => part && part !== ".");
     if (segments.some((part) => part === "..")) {
-      throw new Error("Requested project path is outside the configured FORGE workspace.");
+      throw new Error("Requested project path is outside the configured ANVIL workspace.");
     }
     assertWorkspacePathAllowed(segments.join("/"));
     let cursor = workspaceRoot;
@@ -31,7 +31,7 @@ export function createWorkspaceResolver(workspaceRoot: string): (input?: string)
     const candidate = await realpath(target);
     const canonicalRoot = await realpath(workspaceRoot).catch(() => path.resolve(workspaceRoot));
     if (!isInside(canonicalRoot, candidate)) {
-      throw new Error("Requested project path is outside the configured FORGE workspace.");
+      throw new Error("Requested project path is outside the configured ANVIL workspace.");
     }
     const info = await stat(candidate);
     if (!info.isDirectory()) throw new Error("Project path must be a directory.");

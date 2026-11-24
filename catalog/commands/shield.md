@@ -4,4 +4,4 @@ profile: minimal
 ---
 
 # /shield
-Run `forge shield .` (or the `forge_shield_scan` MCP tool). Explain each finding in plain language, propose fixes, and apply only `forge shield . --fix` safe fixes without asking. Permission changes require the user's approval.
+Run `anvil shield .` (or the `forge_shield_scan` MCP tool). Explain each finding in plain language, propose fixes, and apply only `anvil shield . --fix` safe fixes without asking. Permission changes require the user's approval.

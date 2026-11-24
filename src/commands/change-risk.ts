@@ -16,7 +16,7 @@ export async function runChangeRisk(_command: string, rest: string[]): Promise<v
     process.stdout.write(json ? JSON.stringify(report, null, 2) + "\n" : formatChangeIntelligence(report) + "\n");
   } catch (error) {
     process.stderr.write(
-      "FORGE change-risk analysis failed: " + (error instanceof Error ? error.message : String(error)) + "\n"
+      "ANVIL change-risk analysis failed: " + (error instanceof Error ? error.message : String(error)) + "\n"
     );
     process.exitCode = 1;
   }

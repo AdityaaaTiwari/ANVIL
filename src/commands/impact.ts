@@ -16,7 +16,7 @@ export async function runImpact(_command: string, rest: string[]): Promise<void>
     process.stdout.write(json ? JSON.stringify(report, null, 2) + "\n" : formatDependencyImpact(report) + "\n");
   } catch (error) {
     process.stderr.write(
-      "FORGE dependency impact analysis failed: " + (error instanceof Error ? error.message : String(error)) + "\n"
+      "ANVIL dependency impact analysis failed: " + (error instanceof Error ? error.message : String(error)) + "\n"
     );
     process.exitCode = 1;
   }

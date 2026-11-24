@@ -12,7 +12,7 @@ export async function runPatchApprovalCheck(_command: string, rest: string[]): P
     if (!result.valid) process.exitCode = 1;
   } catch (error) {
     process.stderr.write(
-      "FORGE patch approval check failed: " + (error instanceof Error ? error.message : String(error)) + "\n"
+      "ANVIL patch approval check failed: " + (error instanceof Error ? error.message : String(error)) + "\n"
     );
     process.exitCode = 1;
   }

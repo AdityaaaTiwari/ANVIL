@@ -31,7 +31,7 @@ export async function runSkills(_command: string, rest: string[]): Promise<void>
     } else if (rest.includes("--json")) {
       process.stdout.write(JSON.stringify(skills, null, 2) + "\n");
     } else {
-      process.stdout.write("FORGE skill registry (" + skills.length + ")\n\n");
+      process.stdout.write("ANVIL skill registry (" + skills.length + ")\n\n");
       for (const skill of skills)
         process.stdout.write(
           "  " + skill.id.padEnd(24) + " " + skill.name + " [" + skill.source + "]\n    " + skill.description + "\n"

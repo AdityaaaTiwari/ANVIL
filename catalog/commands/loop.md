@@ -1,5 +1,5 @@
 ---
-description: Set up a FORGE verified loop — an agent retries until checks FORGE runs itself pass
+description: Set up a ANVIL verified loop — an agent retries until checks FORGE runs itself pass
 argument-hint: "<goal>"
 profile: standard
 ---
@@ -11,5 +11,5 @@ Prepare a verified loop for `$ARGUMENTS`; do not start it yourself.
 2. Run the checks once and show which fail now. If they all pass, the loop has nothing to do — say so.
 3. Confirm the working tree is clean (`git status`). Suggest a branch such as `forge/loop-<topic>`.
 4. Give the user the exact command to run in their terminal:
-   `forge loop start --goal "<goal>" --check "<check>" [--check "<check>"] --max-iterations 5`
-5. Explain the outcomes: `passed` (FORGE re-ran every check), `failed`, `stalled` (no new changes), and `needs-review` (the agent deleted or skipped tests, or changed configs, scripts or CI — review the diff before trusting anything). Receipts are in `.forge/loops/`; `forge loop status` shows the latest.
+   `anvil loop start --goal "<goal>" --check "<check>" [--check "<check>"] --max-iterations 5`
+5. Explain the outcomes: `passed` (FORGE re-ran every check), `failed`, `stalled` (no new changes), and `needs-review` (the agent deleted or skipped tests, or changed configs, scripts or CI — review the diff before trusting anything). Receipts are in `.forge/loops/`; `anvil loop status` shows the latest.

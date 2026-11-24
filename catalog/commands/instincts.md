@@ -5,9 +5,9 @@ profile: standard
 ---
 
 # /instincts
-1. If `$ARGUMENTS` is `learn` or there are no instincts, run `forge instinct learn` first.
-2. Run `forge instinct list --status candidate --json`.
+1. If `$ARGUMENTS` is `learn` or there are no instincts, run `anvil instinct learn` first.
+2. Run `anvil instinct list --status candidate --json`.
 3. For each candidate, check its evidence against the current code (open the files it names). Mark it as still true, stale or wrong.
 4. Present the candidates as a table: id, rule, confidence and your verdict. Ask the user which to promote.
-5. Promote only what the user approves: `forge instinct promote ID...`. Reject the ones they decline with `forge instinct reject ID...`.
+5. Promote only what the user approves: `anvil instinct promote ID...`. Reject the ones they decline with `anvil instinct reject ID...`.
 Never promote an instinct on your own.

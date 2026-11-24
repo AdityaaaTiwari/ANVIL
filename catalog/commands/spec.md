@@ -5,4 +5,4 @@ profile: standard
 ---
 
 # /spec
-Apply the FORGE **spec-driven-development** skill to `$ARGUMENTS`. Stop after the spec for review.
+Apply the ANVIL **spec-driven-development** skill to `$ARGUMENTS`. Stop after the spec for review.

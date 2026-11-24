@@ -12,7 +12,7 @@ export async function runTrace(_command: string, rest: string[]): Promise<void> 
   }
   try {
     const trace = await loadExecutionTrace(target, runId);
-    process.stdout.write("FORGE execution trace: " + runId + "\n");
+    process.stdout.write("ANVIL execution trace: " + runId + "\n");
     for (const entry of trace.entries)
       process.stdout.write(
         "  " +

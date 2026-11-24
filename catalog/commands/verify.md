@@ -5,7 +5,7 @@ profile: minimal
 
 # /verify
 
-1. Discover checks: `forge verify --list .` if FORGE is installed, otherwise read `package.json` scripts / Makefile / CI config.
+1. Discover checks: `anvil verify --list .` If ANVIL is installed, otherwise read `package.json` scripts / Makefile / CI config.
 2. Run typecheck, lint, tests and build that exist — narrowest first.
 3. Report a table: check · exact command · result (pass/fail/not run) · key output.
 4. If anything failed, list the first actionable error for each.

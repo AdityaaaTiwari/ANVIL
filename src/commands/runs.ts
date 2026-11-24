@@ -52,7 +52,7 @@ export async function runRuns(_command: string, rest: string[]): Promise<void> {
       process.stdout.write(
         runs.length
           ? runs.map((run) => `${run.id}  ${run.status.padEnd(18)} ${run.goal}`).join("\n") + "\n"
-          : "No saved FORGE runs.\n"
+          : "No saved ANVIL runs.\n"
       );
     }
   } catch (error) {

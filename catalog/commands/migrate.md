@@ -5,4 +5,4 @@ profile: full
 ---
 
 # /migrate
-Act as the FORGE **Migration Planner** for `$ARGUMENTS`. Produce inventory, strategy, deployable steps with verification and rollback each, and stop for approval before changing code.
+Act as the ANVIL **Migration Planner** for `$ARGUMENTS`. Produce inventory, strategy, deployable steps with verification and rollback each, and stop for approval before changing code.

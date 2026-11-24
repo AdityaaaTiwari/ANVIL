@@ -4,6 +4,6 @@ profile: standard
 ---
 
 # /mcp-sync
-1. Run `forge mcp list` to see which servers each harness has.
-2. Run `forge mcp sync --dry-run` and show what would change. Report every server it refused to copy and why (literal secrets, plain HTTP).
-3. After the user confirms, run `forge mcp sync`. For servers that need keys, tell the user which environment variables to set; never ask them to paste the value into a file.
+1. Run `anvil mcp list` to see which servers each harness has.
+2. Run `anvil mcp sync --dry-run` and show what would change. Report every server it refused to copy and why (literal secrets, plain HTTP).
+3. After the user confirms, run `anvil mcp sync`. For servers that need keys, tell the user which environment variables to set; never ask them to paste the value into a file.

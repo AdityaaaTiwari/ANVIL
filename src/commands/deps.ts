@@ -28,7 +28,7 @@ export async function runDeps(_command: string, rest: string[]): Promise<void> {
     );
   } catch (error) {
     process.stderr.write(
-      "FORGE dependency analysis failed: " + (error instanceof Error ? error.message : String(error)) + "\n"
+      "ANVIL dependency analysis failed: " + (error instanceof Error ? error.message : String(error)) + "\n"
     );
     process.exitCode = 1;
   }

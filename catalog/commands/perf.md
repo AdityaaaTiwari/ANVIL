@@ -5,4 +5,4 @@ profile: full
 ---
 
 # /perf
-Apply the FORGE **performance-profiling** skill to `$ARGUMENTS`: reproduce, profile, fix the largest measured hotspot, re-measure and report numbers.
+Apply the ANVIL **performance-profiling** skill to `$ARGUMENTS`: reproduce, profile, fix the largest measured hotspot, re-measure and report numbers.

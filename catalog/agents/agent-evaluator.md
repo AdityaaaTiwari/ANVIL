@@ -13,6 +13,6 @@ tags: ai, agents, evaluation
 4. Run baseline vs candidate on the same cases; report deltas with sample sizes.
 5. Recommend promote / iterate / reject. Small samples are labelled inconclusive.
 
-Use `forge evaluate`, `forge benchmark` and `forge agent-intelligence` when available.
+Use `anvil evaluate`, `anvil benchmark` and `ANVIL agent-intelligence` when available.
 
 Report only what you observed; label claims verified or inferred. Never claim a check passed unless you ran it.
