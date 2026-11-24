@@ -4,7 +4,7 @@ import { isValidInstallationId, parseInstallationRecord, redisCommand, type Inst
 
 const STATE_TTL_SECONDS = 600;
 const SESSION_TTL_SECONDS = 8 * 60 * 60;
-const COOKIE_NAME = "forge_github_session";
+const COOKIE_NAME = "anvil_github_session";
 const API_VERSION = "2022-11-28";
 
 export type OAuthState = { verifier: string; installationId: number | null };
@@ -52,7 +52,7 @@ export function clearSessionCookie(res: VercelResponse): void {
   res.setHeader("Set-Cookie", `${COOKIE_NAME}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`);
 }
 export async function readSession(req: VercelRequest): Promise<AuthSession | undefined> {
-  const id = getCookie(req, COOKIE_NAME);
+  const id = getCookie(req, COOKIE_NAME) || getCookie(req, "forge_github_session");
   if (!id || !/^[A-Za-z0-9_-]{40,60}$/.test(id)) return undefined;
   const stored = await redisCommand<string | null>(["GET", sessionKey(id)]);
   if (!stored) return undefined;

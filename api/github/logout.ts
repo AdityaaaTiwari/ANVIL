@@ -9,7 +9,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: "Method not allowed" });
   }
   try {
-    const id = getCookie(req, "forge_github_session");
+    const id = getCookie(req, "anvil_github_session") || getCookie(req, "forge_github_session");
     if (id && /^[A-Za-z0-9_-]{40,60}$/.test(id)) await redisCommand(["DEL", sessionKey(id)]);
     clearSessionCookie(res);
     return res.status(200).json({ signedOut: true });

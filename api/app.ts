@@ -19,8 +19,20 @@ import {
 
 export const config = { api: { bodyParser: false } };
 
-const FORGE_VERSION = "4.0.0";
-const ALLOWED_ORIGIN = "https://forge-ecc.vercel.app";
+const ANVIL_VERSION = "1.3.0";
+
+function isOriginAllowed(origin: string | string[] | undefined, host: string | string[] | undefined): boolean {
+  if (!origin) return true;
+  const o = Array.isArray(origin) ? origin[0] : origin;
+  if (!o) return true;
+  if (process.env.APP_URL && o === process.env.APP_URL) return true;
+  if (host) {
+    const h = Array.isArray(host) ? host[0] : host;
+    if (h && (o === `https://${h}` || o === `http://${h}`)) return true;
+  }
+  if (/^https:\/\/[a-z0-9-]+\.vercel\.app$/i.test(o) || /^http:\/\/localhost(:\d+)?$/.test(o)) return true;
+  return false;
+}
 
 async function readJson(req: VercelRequest): Promise<unknown> {
   const chunks: Buffer[] = [];
@@ -36,7 +48,10 @@ async function readJson(req: VercelRequest): Promise<unknown> {
 
 async function history(fullName: string): Promise<DashboardEvent[]> {
   try {
-    const items = await redisCommand<string[]>(["LRANGE", `forge:repo:${fullName.toLowerCase()}:events`, 0, 24]);
+    let items = await redisCommand<string[]>(["LRANGE", `anvil:repo:${fullName.toLowerCase()}:events`, 0, 24]);
+    if (!items || !items.length) {
+      items = await redisCommand<string[]>(["LRANGE", `forge:repo:${fullName.toLowerCase()}:events`, 0, 24]);
+    }
     return (items ?? []).flatMap((item) => {
       try {
         return [JSON.parse(item) as DashboardEvent];
@@ -87,10 +102,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const allowed = (session.repositories ?? []).find(
         (item) => item.fullName.toLowerCase() === `${target.owner}/${target.repo}`.toLowerCase()
       );
-      if (!allowed) return jsonError(res, 404, "Repository not found in your FORGE installations");
+      if (!allowed) return jsonError(res, 404, "Repository not found in your ANVIL installations");
       const client = await clientFor(allowed.installationId, target.repo);
       const overview = await buildRepoOverview(
-        { client, forgeVersion: FORGE_VERSION, catalogRoot: path.join(process.cwd(), "catalog") },
+        { client, forgeVersion: ANVIL_VERSION, catalogRoot: path.join(process.cwd(), "catalog") },
         target.owner,
         target.repo,
         await history(allowed.fullName)
@@ -100,8 +115,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (op === "action" && req.method === "POST") {
       const origin = req.headers.origin;
-      if ((Array.isArray(origin) ? origin[0] : origin) !== ALLOWED_ORIGIN)
-        return jsonError(res, 403, "Cross-origin request rejected");
+      const host = req.headers.host;
+      if (!isOriginAllowed(origin, host)) return jsonError(res, 403, "Cross-origin request rejected");
       const body = (await readJson(req)) as { name?: unknown; action?: unknown };
       const repoTarget = parseRepoFullName(body.name);
       if (!repoTarget || (body.action !== "analyze" && body.action !== "repair"))
@@ -109,10 +124,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const allowed = (session.repositories ?? []).find(
         (item) => item.fullName.toLowerCase() === `${repoTarget.owner}/${repoTarget.repo}`.toLowerCase()
       );
-      if (!allowed) return jsonError(res, 404, "Repository not found in your FORGE installations");
+      if (!allowed) return jsonError(res, 404, "Repository not found in your ANVIL installations");
       const client = await clientFor(allowed.installationId, repoTarget.repo);
       const result = await runDashboardAction(
-        { client, forgeVersion: FORGE_VERSION, catalogRoot: path.join(process.cwd(), "catalog") },
+        { client, forgeVersion: ANVIL_VERSION, catalogRoot: path.join(process.cwd(), "catalog") },
         repoTarget.owner,
         repoTarget.repo,
         body.action,
@@ -125,10 +140,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         detail: result.upToDate ? "up to date" : `${result.created} new, ${result.updated} updated`,
         ...(result.url ? { url: result.url } : {}),
       };
-      await redisCommand(["LPUSH", `forge:repo:${allowed.fullName.toLowerCase()}:events`, JSON.stringify(event)]).catch(
+      await redisCommand(["LPUSH", `anvil:repo:${allowed.fullName.toLowerCase()}:events`, JSON.stringify(event)]).catch(
         () => undefined
       );
-      await redisCommand(["LTRIM", `forge:repo:${allowed.fullName.toLowerCase()}:events`, 0, 49]).catch(
+      await redisCommand(["LTRIM", `anvil:repo:${allowed.fullName.toLowerCase()}:events`, 0, 49]).catch(
         () => undefined
       );
       return res.status(200).json(result);
