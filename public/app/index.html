@@ -313,7 +313,7 @@ function signedOut() {
       h("div", {}, h("b", {}, "Shield · 60 rules"), h("span", {}, "Agent permissions, hooks, MCP servers, instructions and CI.")),
       h("div", {}, h("b", {}, "Memory and loops"), h("span", {}, "Handoffs, approved instincts and loop receipts your team committed."))),
     h("p", { class: "muted", style: "margin-top:26px;font-size:12px" }, "ANVIL reads repository metadata, manifests, commit subjects and agent configuration files. Source code is not stored.")),
-    h("div", { class: "shot" }, h("div", { class: "frame" }, h("div", { class: "bar2" }, h("i"), h("i"), h("i"), h("span", { style: "margin-left:8px" }, "forge-ecc.vercel.app/app")), h("img", { src: "/assets/dashboard-preview.jpg", alt: "ANVIL Control Center with readiness scorecard, Shield, setup health, PR risk, handoffs, instincts and loop receipts", loading: "lazy", width: "1440", height: "1250" })),
+    h("div", { class: "shot" }, h("div", { class: "frame" }, h("div", { class: "bar2" }, h("i"), h("i"), h("i"), h("span", { style: "margin-left:8px" }, "anvil-workbench.vercel.app/app")), h("img", { src: "/assets/dashboard-preview.jpg", alt: "ANVIL Control Center with readiness scorecard, Shield, setup health, PR risk, handoffs, instincts and loop receipts", loading: "lazy", width: "1440", height: "1250" })),
       h("p", {}, "Control Center preview with sample data. Sign in to see your repositories."))));
 }
 
@@ -374,7 +374,7 @@ function fleet() {
   if (fleetScanning) scanButton.disabled = true;
   ui.main.replaceChildren(
     h("div", { class: "head" }, h("div", {}, h("h1", {}, "Fleet"), h("div", { class: "meta" }, repos.length + " repositories · " + scanned.length + " scanned this session")), h("div", { class: "actions" }, scanButton)),
-    h("p", { class: "section-intro" }, "One view across every repository with the ANVIL app. Scores come from FORGE's deterministic scorecard and Shield; open a repository for evidence and next actions."),
+    h("p", { class: "section-intro" }, "One view across every repository with the ANVIL app. Scores come from ANVIL's deterministic scorecard and Shield; open a repository for evidence and next actions."),
     h("div", { class: "kpis" },
       kpiNumber("Avg. readiness", readiness === undefined ? "—" : readiness + "%", "across scanned repositories", readiness, readiness === undefined ? undefined : tenColor(Math.round(readiness / 10))),
       kpiNumber("Avg. Shield", shieldAvg === undefined ? "—" : shieldAvg, "out of 100", shieldAvg),
@@ -482,7 +482,7 @@ function kpiNumber(title, value, sub, ringValue, ringColor) {
     h("div", {}, h("div", { class: "big" }, value), h("div", { class: "sub" }, sub))));
 }
 function kpiSetup(setup) {
-  const sub = !setup.installed ? "Open a setup PR to add FORGE"
+  const sub = !setup.installed ? "Open a setup PR to add ANVIL"
     : setup.healthy ? "Profile " + setup.state.profile + " · " + setup.state.targets.length + " harnesses" + (setup.state.hooks ? " · Guard on " + ((setup.state.hookTargets || []).length || 1) + " harness" + (((setup.state.hookTargets || []).length || 1) === 1 ? "" : "es") : "")
     : setup.missing.length + " missing · " + setup.outdated.length + " changed · " + setup.added.length + " new";
   return h("div", { class: "card" }, h("h3", {}, "ANVIL setup"), h("div", { class: "kpi" }, h("div", {}, h("div", { class: "setupv" }, setupLabel(setup)), h("div", { class: "sub" }, sub))));
@@ -550,7 +550,7 @@ function mini(tab, icon, color, title, value, detail) {
     h("div", { style: "min-width:0" }, h("div", { class: "t" }, title), h("div", { class: "v" }, value), h("div", { class: "d" }, detail)));
 }
 
-/** Guard, context, MCP and harness coverage at a glance (FORGE 4.0 signals). */
+/** Guard, context, MCP and harness coverage at a glance (ANVIL verification signals). */
 function healthStrip(data) {
   const installed = data.harnesses.filter(x => x.installed);
   const guardable = installed.filter(x => x.capabilities.hooks === "native");
@@ -618,7 +618,7 @@ function scorecardTab(data) {
       h("div", { class: "card" }, h("h3", {}, "Categories · " + sc.total + "/" + sc.max + " · grade " + sc.grade), scorecardBars(sc, false)),
       h("div", { class: "stack" },
         h("div", { class: "card" }, h("h3", {}, "Top actions"), sc.topActions.length ? h("ol", { class: "actions-list" }, sc.topActions.map(a => h("li", {}, mdText(a)))) : h("p", { class: "muted" }, "Nothing urgent.")),
-        h("div", { class: "card" }, h("h3", {}, "Run it locally"), h("p", { class: "muted", style: "margin:0;font-size:13px" }, "Local runs also see uncommitted files and runtime hooks."), copyCmd("forge scorecard --verbose"), copyCmd("forge scorecard --min 75   # CI gate")))),
+        h("div", { class: "card" }, h("h3", {}, "Run it locally"), h("p", { class: "muted", style: "margin:0;font-size:13px" }, "Local runs also see uncommitted files and runtime hooks."), copyCmd("anvil scorecard --verbose"), copyCmd("anvil scorecard --min 75   # CI gate")))),
   ];
 }
 
@@ -682,14 +682,14 @@ function instinctsTab(data) {
   };
   render();
   return [
-    h("p", { class: "section-intro" }, "Behaviours FORGE learned from this repository. Only active instincts, approved by a person, are injected into agent sessions and compiled into the forge-learned skill."),
+    h("p", { class: "section-intro" }, "Behaviours ANVIL learned from this repository. Only active instincts, approved by a person, are injected into agent sessions and compiled into the anvil-learned skill."),
     h("div", { class: "toolbar" }, seg), h("div", { class: "card" }, body),
   ];
 }
 
 function loopsTab(data) {
   if (!data.loops.length) return [h("div", { class: "card" }, h("h3", {}, "Verified loops"),
-    h("p", { class: "muted" }, "No loop receipts committed. anvil loop runs an agent until checks FORGE runs itself pass, and stops with needs-review if the agent deletes or skips tests or loosens configs."),
+    h("p", { class: "muted" }, "No loop receipts committed. anvil loop runs an agent until checks ANVIL runs itself pass, and stops with needs-review if the agent deletes or skips tests or loosens configs."),
     copyCmd("anvil loop start --goal \"make the login tests pass\" --check \"npm test\""), copyCmd("git add .anvil/loops/"))];
   return [
     h("p", { class: "section-intro" }, "Receipts from anvil loop. Pass or fail is decided by ANVIL re-running every check, never by the agent's own report."),
@@ -723,7 +723,7 @@ function contextTab(data) {
       h("div", { class: "stack" },
         h("div", { class: "card" }, h("h3", {}, "Findings" + (saving ? " · up to ≈" + fmtTok(saving) + " tokens per session to save" : "")),
           cx.findings.length ? h("ul", { class: "plain ev" }, cx.findings.map(f => h("li", { class: f.severity === "high" ? "todo" : "" }, h("span", { class: "chip sev-" + f.severity }, f.severity), " ", mdText(f.message), h("div", { class: "muted", style: "font-size:12.5px;margin-top:3px" }, "→ " + f.fix)))) : h("p", { class: "muted" }, "No context waste found.")),
-        h("div", { class: "card" }, h("h3", {}, "Run it locally"), h("p", { class: "muted", style: "margin:0;font-size:13px" }, "Local runs also see uncommitted files and @imports."), copyCmd("forge context --verbose"), copyCmd("forge context --max 8000   # CI gate")))),
+        h("div", { class: "card" }, h("h3", {}, "Run it locally"), h("p", { class: "muted", style: "margin:0;font-size:13px" }, "Local runs also see uncommitted files and @imports."), copyCmd("anvil context --verbose"), copyCmd("anvil context --max 8000   # CI gate")))),
   ];
 }
 
@@ -743,7 +743,7 @@ function harnessesTab(data) {
   const guarded = data.harnesses.filter(x => x.guarded).length;
   const guardable = data.harnesses.filter(x => x.installed && !x.guarded && x.capabilities.hooks === "native");
   return [
-    h("p", { class: "section-intro" }, installed + " of " + data.harnesses.length + " harnesses installed · ANVIL Guard live in " + guarded + ". Capability labels are FORGE's tested integration level, not everything the tool supports."),
+    h("p", { class: "section-intro" }, installed + " of " + data.harnesses.length + " harnesses installed · ANVIL Guard live in " + guarded + ". Capability labels are ANVIL's tested integration level, not everything the tool supports."),
     guardable.length ? h("div", { class: "banner" }, "ANVIL Guard can run inside " + guardable.map(x => x.name).join(", ") + " too: dangerous commands, secret reads and unverified stops get blocked natively.", copyCmd("anvil install --hooks")) : null,
     uncovered.length ? h("div", { class: "banner" }, "This repo uses " + uncovered.map(x => x.name).join(", ") + " but ANVIL isn't installed for " + (uncovered.length === 1 ? "it" : "them") + ".", copyCmd("anvil install --target " + [...new Set([...(data.setup.state ? data.setup.state.targets : []), ...uncovered.map(x => x.target)])].join(","))) : null,
     h("div", { class: "hgrid" }, data.harnesses.map(x => h("div", { class: "hcard" + (x.installed ? " on" : "") },
@@ -872,7 +872,7 @@ function route() {
     if (!repos.length) {
       setNav("fleet");
       ui.main.replaceChildren(h("div", { class: "empty" }, h("h1", {}, "No repositories yet"),
-        h("p", {}, session.reauthRequired ? "Sign in again so FORGE can load the repositories you can access." : "Install the FORGE GitHub App on a repository, then sign in again to refresh this list."),
+        h("p", {}, session.reauthRequired ? "Sign in again so ANVIL can load the repositories you can access." : "Install the ANVIL GitHub App on a repository, then sign in again to refresh this list."),
         h("div", { class: "actions" }, h("a", { class: "btn primary", href: "/api/github/install" }, "Install the GitHub App"), h("a", { class: "btn", href: "/api/github/login" }, "Sign in again"))));
       return;
     }
