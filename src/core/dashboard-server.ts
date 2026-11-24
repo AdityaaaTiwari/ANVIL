@@ -400,7 +400,7 @@ body{
   <button class="tab-btn" data-tab="tab-gate">🛡️ Policy & Gate</button>
   <button class="tab-btn" data-tab="tab-ecc">🧠 ECC Skills & Rules</button>
   <button class="tab-btn" data-tab="tab-rea">🔬 REA Binary & Clean-Room</button>
-  <button class="tab-btn" data-tab="tab-forge">⚡ FORGE Control Center</button>
+  <button class="tab-btn" data-tab="tab-forge">⚡ ANVIL Control Center</button>
   <button class="tab-btn" data-tab="tab-github">🐙 GitHub App & PR Bot</button>
   <button class="tab-btn" data-tab="tab-cleaner">⚡ Self-Healing & Security</button>
   <button class="tab-btn" data-tab="tab-agents">🤖 Agents & Workflow Studio</button>
@@ -1306,7 +1306,7 @@ body{
 <!-- ==================== TAB: FORGE CONTROL CENTER ==================== -->
 <div id="tab-forge" class="tab-pane">
   <section class="hero">
-    <div class="eyebrow">FORGE 4.0 CONTROL CENTER / 10</div>
+    <div class="eyebrow">ANVIL CONTROL CENTER / 10</div>
     <h1>The Verified Layer for Coding Agents</h1>
     <p>Harness readiness scorecard, verified loop execution telemetry, Shield v3 guard rules, and anti-tamper proof receipts.</p>
   </section>

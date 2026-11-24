@@ -874,7 +874,7 @@ describe("local dashboard server", () => {
     expect(html).toContain("REA Binary & Clean-Room");
     expect(html).toContain("tab-forge");
     expect(html).toContain("tab-github");
-    expect(html).toContain("FORGE Control Center");
+    expect(html).toContain("ANVIL Control Center");
     expect(html).toContain("GitHub App & PR Bot");
   });
 });

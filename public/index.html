@@ -1977,9 +1977,9 @@
       <nav class="nav-links">
         <a href="#how-it-works">How It Works</a>
         <a href="#dashboard">Live Cockpit</a>
-        <a href="#ecc-toolkit">ECC Toolkit</a>
-        <a href="#rea-intelligence">REA Reverse Eng</a>
-        <a href="#forge-control">FORGE Control</a>
+        <a href="#agent-toolkit">Agent Toolkit</a>
+        <a href="#binary-intel">Binary Intelligence</a>
+        <a href="#control-center">Control Center</a>
         <a href="#github-app">GitHub App</a>
         <a href="#terminal">CLI</a>
         <a href="#quickstart">Quick Start</a>
@@ -2220,13 +2220,13 @@
               <span class="tab-dot dot-anvil"></span> 🛡️ ANVIL Verification
             </button>
             <button class="dash-tab-btn" data-cockpit-tab="tab-ecc" role="tab" aria-selected="false">
-              <span class="tab-dot dot-ecc"></span> 🧠 ECC Agentic Toolkit
+              <span class="tab-dot dot-ecc"></span> 🧠 Agent Toolkit
             </button>
             <button class="dash-tab-btn" data-cockpit-tab="tab-rea" role="tab" aria-selected="false">
-              <span class="tab-dot dot-rea"></span> 🔬 REA Binary Intelligence
+              <span class="tab-dot dot-rea"></span> 🔬 Binary Intelligence
             </button>
             <button class="dash-tab-btn" data-cockpit-tab="tab-forge" role="tab" aria-selected="false">
-              <span class="tab-dot dot-forge"></span> ⚡ FORGE 4.0 Control Center
+              <span class="tab-dot dot-forge"></span> ⚡ Control Center
             </button>
             <button class="dash-tab-btn" data-cockpit-tab="tab-github" role="tab" aria-selected="false">
               <span class="tab-dot dot-github"></span> 🐙 GitHub App &amp; PR Bot
@@ -2247,7 +2247,7 @@
               </div>
 
               <div class="dash-metric-card">
-                <div class="dash-metric-label">ACTIVE AGENT SKILLS (ECC)</div>
+                <div class="dash-metric-label">ACTIVE AGENT SKILLS</div>
                 <div class="dash-metric-val">
                   <span class="dash-metric-num" style="color: #a855f7;">1,542</span>
                   <span style="font-size: 13px; color: var(--text-subtle);">rules</span>
@@ -2256,7 +2256,7 @@
               </div>
 
               <div class="dash-metric-card">
-                <div class="dash-metric-label">DECOMPILED TARGETS (REA)</div>
+                <div class="dash-metric-label">DECOMPILED TARGETS</div>
                 <div class="dash-metric-val">
                   <span class="dash-metric-num" style="color: var(--emerald);">4</span>
                   <span style="font-size: 13px; color: var(--text-subtle);">modules</span>
@@ -2292,7 +2292,7 @@
                 <div class="finding-row">
                   <span class="finding-badge badge-pass" style="background: rgba(168, 85, 247, 0.15); color: #c084fc; border-color: rgba(168, 85, 247, 0.3);">SYNCED</span>
                   <div class="finding-text">
-                    <div class="finding-title">affaan-m/ECC Skills &amp; Behavioral Guardrails <span class="finding-loc">ECC-KNOWLEDGE</span></div>
+                    <div class="finding-title">ANVIL Agent Skills &amp; Behavioral Guardrails <span class="finding-loc">ANVIL-SKILLS</span></div>
                     <div class="finding-desc">Development lifecycle enforced: plan ➔ test ➔ implement ➔ review ➔ verify. 0 prompt injection risks.</div>
                   </div>
                 </div>
@@ -2300,7 +2300,7 @@
                 <div class="finding-row">
                   <span class="finding-badge badge-pass" style="background: rgba(52, 211, 153, 0.15); color: var(--emerald); border-color: rgba(52, 211, 153, 0.3);">READY</span>
                   <div class="finding-text">
-                    <div class="finding-title">morluto/rea Reverse-Engineering MCP Engine <span class="finding-loc">REA-BINARY</span></div>
+                    <div class="finding-title">ANVIL Binary Reverse-Engineering Engine <span class="finding-loc">ANVIL-BINARY</span></div>
                     <div class="finding-desc">Binary disassembler &amp; source map recovery bridge active. Emits structured behavioral evidence.</div>
                   </div>
                 </div>
@@ -2308,7 +2308,7 @@
                 <div class="finding-row">
                   <span class="finding-badge badge-pass" style="background: rgba(249, 115, 22, 0.15); color: var(--amber); border-color: rgba(249, 115, 22, 0.3);">RECORDED</span>
                   <div class="finding-text">
-                    <div class="finding-title">ansh44233/FORGE Multi-Agent Execution Traces <span class="finding-loc">FORGE-TRACE</span></div>
+                    <div class="finding-title">ANVIL Multi-Agent Execution Traces <span class="finding-loc">ANVIL-TRACE</span></div>
                     <div class="finding-desc">Historical evaluation matrix and regression traces synced. 98.4% agent candidate benchmark pass rate.</div>
                   </div>
                 </div>
@@ -2322,7 +2322,7 @@
 
                 <div class="risk-card">
                   <div class="risk-card-head">
-                    <span class="risk-title">Step 1: Black-Box Analysis (REA)</span>
+                    <span class="risk-title">Step 1: Black-Box Binary Analysis</span>
                     <span class="risk-pill risk-pill-low">evidence ready</span>
                   </div>
                   <div class="risk-stats">Target: libauth_native.dll · 128 symbols extracted</div>
@@ -2334,7 +2334,7 @@
 
                 <div class="risk-card">
                   <div class="risk-card-head">
-                    <span class="risk-title">Step 2: Clean Reimplementation (ECC)</span>
+                    <span class="risk-title">Step 2: Clean Re-engineering</span>
                     <span class="risk-pill risk-pill-low">in progress</span>
                   </div>
                   <div class="risk-stats">Skill: ts-crypto-best-practices · Next.js 15 route</div>
@@ -2471,11 +2471,11 @@
             </div>
           </div>
 
-          <!-- TAB 3: ECC AGENTIC TOOLKIT (ecc.tools style) -->
+          <!-- TAB 3: ANVIL AGENT TOOLKIT -->
           <div class="dash-tab-panel" id="tab-ecc" role="tabpanel">
             <div class="dash-top-metrics">
               <div class="dash-metric-card">
-                <div class="dash-metric-label">ECC SKILLS CATALOG</div>
+                <div class="dash-metric-label">AGENT SKILLS CATALOG</div>
                 <div class="dash-metric-val">
                   <span class="dash-metric-num" style="color: #a855f7;">1,542</span>
                   <span class="dash-grade-badge" style="background: rgba(168, 85, 247, 0.15); color: #c084fc; border-color: rgba(168, 85, 247, 0.4);">CURATED</span>
@@ -2598,7 +2598,7 @@
                   <div class="catalog-item-desc">Enforces TS 5.8 strict typing, discriminated unions, zero-any policy, branded primitive types, and optimal type narrowing idioms.</div>
                 </div>
                 <div class="catalog-item-actions">
-                  <span style="font-size: 11px; color: var(--text-subtle);">ECC Skill</span>
+                  <span style="font-size: 11px; color: var(--text-subtle);">ANVIL Skill</span>
                   <button class="catalog-copy-btn" data-copy="anvil skill add typescript-expert">Install Skill</button>
                 </div>
               </div>
@@ -2613,7 +2613,7 @@
                   <div class="catalog-item-desc">Guarantees strict server/client boundary segregation, React 19 hook safety, streaming metadata, and zero hydration mismatch layouts.</div>
                 </div>
                 <div class="catalog-item-actions">
-                  <span style="font-size: 11px; color: var(--text-subtle);">ECC Skill</span>
+                  <span style="font-size: 11px; color: var(--text-subtle);">ANVIL Skill</span>
                   <button class="catalog-copy-btn" data-copy="anvil skill add nextjs-expert">Install Skill</button>
                 </div>
               </div>
@@ -2628,7 +2628,7 @@
                   <div class="catalog-item-desc">Zero-unsafe verification, Send/Sync soundness checking, lifetime parameter optimization, and seamless Tokio async concurrency patterns.</div>
                 </div>
                 <div class="catalog-item-actions">
-                  <span style="font-size: 11px; color: var(--text-subtle);">ECC Skill</span>
+                  <span style="font-size: 11px; color: var(--text-subtle);">ANVIL Skill</span>
                   <button class="catalog-copy-btn" data-copy="anvil skill add rust-systems">Install Skill</button>
                 </div>
               </div>
@@ -2710,7 +2710,7 @@
             </div>
           </div>
 
-          <!-- TAB 4: REA BINARY INTELLIGENCE (rea.tools style) -->
+          <!-- TAB 4: ANVIL BINARY INTELLIGENCE -->
           <div class="dash-tab-panel" id="tab-rea" role="tabpanel">
             <div class="dash-top-metrics">
               <div class="dash-metric-card">
@@ -2753,7 +2753,7 @@
             <div class="dash-pane" style="margin-bottom: 20px;">
               <div class="dash-pane-title">
                 59 BINARY FORMAT SPECIFICATIONS &amp; DISASSEMBLY PARSERS
-                <span>rea.tools Knowledge Base</span>
+                <span>ANVIL Binary Knowledge Base</span>
               </div>
               <p style="font-size: 12.5px; color: var(--text-muted); margin-bottom: 12px;">
                 ANVIL reverse-engineering engine parses compiled formats into deterministic symbol maps, control-flow graphs, and protocol behavioral ledgers without executing closed-source binaries.
@@ -2871,7 +2871,7 @@
             </div>
           </div>
 
-          <!-- TAB 5: FORGE 4.0 CONTROL CENTER (forge-ecc.vercel.app/app style) -->
+          <!-- TAB 5: ANVIL CONTROL CENTER -->
           <div class="dash-tab-panel" id="tab-forge" role="tabpanel">
             <div class="dash-top-metrics">
               <div class="dash-metric-card">
@@ -2913,7 +2913,7 @@
             <!-- Harness Scorecard Breakdown -->
             <div class="dash-pane" style="margin-bottom: 20px;">
               <div class="dash-pane-title">
-                FORGE 4.0 HARNESS READINESS SCORECARD
+                ANVIL HARNESS READINESS SCORECARD
                 <span>Grade A (95/100) · 0 Blind Spots</span>
               </div>
               <div class="scorecard-categories">
@@ -3180,7 +3180,7 @@ jobs:
               <span class="dash-cmd-tag">node dist/cli.js gate .</span>
               <span class="dash-cmd-tag">anvil agent-security .</span>
             </div>
-            <div>Unified Ecosystem: ANVIL (Gate) · ECC (Agentic Toolkit) · REA (Binary Intelligence) · FORGE (Control Center) · GitHub App (PR Bot)</div>
+            <div>Unified Engineering Workbench: Verification Gate · Agent Toolkit · Binary Intelligence · Control Center · Automated PR Bot</div>
           </div>
         </div>
       </div>
@@ -3189,12 +3189,12 @@ jobs:
     <!-- ========================================================
          DEEP-DIVE 1: ECC AGENTIC TOOLKIT (ecc.tools style)
          ======================================================== -->
-    <section class="section" id="ecc-toolkit">
+    <section class="section" id="agent-toolkit">
       <div class="wrap">
-        <div class="section-eyebrow" style="color: #a855f7;">THE #1 AGENTIC ENGINEERING TOOLKIT</div>
+        <div class="section-eyebrow" style="color: #a855f7;">ANVIL AGENTIC TOOLKIT</div>
         <h2 class="section-title">88 Specialist Agents. <span class="gradient-text" style="background: linear-gradient(135deg, #c084fc 0%, #38bdf8 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">348 Domain Skills. 113 Commands.</span></h2>
         <p class="section-lead">
-          Inspired by <code>ecc.tools</code>, ANVIL bundles the entire Everything Claude Code intelligence framework into an offline, local-first engine with deterministic guardrails.
+          ANVIL bundles a comprehensive specialist agent intelligence framework into an offline, local-first workbench with deterministic guardrails.
         </p>
 
         <div class="bento-grid">
@@ -3231,12 +3231,12 @@ jobs:
     <!-- ========================================================
          DEEP-DIVE 2: REA BINARY INTELLIGENCE (rea.tools style)
          ======================================================== -->
-    <section class="section" id="rea-intelligence" style="background: rgba(0, 0, 0, 0.2);">
+    <section class="section" id="binary-intel" style="background: rgba(0, 0, 0, 0.2);">
       <div class="wrap">
-        <div class="section-eyebrow" style="color: var(--emerald);">REVERSE ENGINEERING FOR YOUR CODING AGENT</div>
+        <div class="section-eyebrow" style="color: var(--emerald);">ANVIL BINARY INTELLIGENCE &amp; REVERSE ENGINEERING</div>
         <h2 class="section-title">59 Binary Format Specs. <span class="gradient-text" style="background: linear-gradient(135deg, #34d399 0%, #38bdf8 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Disassembly Bridges. Clean-Room Protocol.</span></h2>
         <p class="section-lead">
-          Inspired by <code>rea.tools</code>, ANVIL allows coding agents to reverse engineer closed-source dependencies, native binaries, and minified bundles into clean, safe reimplementations.
+          ANVIL enables coding agents to reverse engineer closed-source dependencies, native binaries, and minified bundles into clean, safe reimplementations.
         </p>
 
         <div class="bento-grid">
@@ -3273,12 +3273,12 @@ jobs:
     <!-- ========================================================
          DEEP-DIVE 3: FORGE 4.0 CONTROL CENTER (forge-ecc.vercel.app style)
          ======================================================== -->
-    <section class="section" id="forge-control">
+    <section class="section" id="control-center">
       <div class="wrap">
-        <div class="section-eyebrow" style="color: var(--amber);">THE VERIFIED LAYER FOR CODING AGENTS</div>
+        <div class="section-eyebrow" style="color: var(--amber);">ANVIL VERIFICATION LAYER &amp; CONTROL CENTER</div>
         <h2 class="section-title">Verified Loop. <span class="gradient-text" style="background: linear-gradient(135deg, #f97316 0%, #eab308 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Anti-Tamper Receipts. 95/100 Grade A Scorecard.</span></h2>
         <p class="section-lead">
-          Inspired by <code>forge-ecc.vercel.app</code>, ANVIL provides the rigorous verification layer that evaluates code correctness, audits blast radius, and generates cryptographic receipts.
+          ANVIL provides the rigorous verification layer that evaluates code correctness, audits blast radius, and generates cryptographic receipts.
         </p>
 
         <div class="bento-grid">
@@ -3313,7 +3313,7 @@ jobs:
     </section>
 
     <!-- ========================================================
-         DEEP-DIVE 4: GITHUB APP & PR BOT (github.com/apps/forge-workbench style)
+         DEEP-DIVE 4: GITHUB APP & PR BOT
          ======================================================== -->
     <section class="section" id="github-app" style="background: rgba(0, 0, 0, 0.2);">
       <div class="wrap">
