@@ -49,10 +49,24 @@ export type HarnessTarget =
   | "claude-desktop"
   | "vscode"
   | "antigravity";
-/** Installer targets are derived from the versioned capability manifest. */
-export const HARNESS_TARGETS: readonly HarnessTarget[] = HARNESS_CAPABILITIES.map((item) => item.target);
+/** Installer targets are derived from the versioned capability manifest plus platform adapters. */
+export const HARNESS_TARGETS: readonly HarnessTarget[] = [
+  ...HARNESS_CAPABILITIES.map((item) => item.target),
+  "vscode",
+  "antigravity",
+  "claude-desktop",
+];
 /** Targets installed when none are requested; harnesses detected in the project are added by the CLI. */
-export const DEFAULT_TARGETS: readonly HarnessTarget[] = ["claude", "cursor", "codex", "opencode", "gemini"];
+export const DEFAULT_TARGETS: readonly HarnessTarget[] = [
+  "claude",
+  "codex",
+  "cursor",
+  "vscode",
+  "windsurf",
+  "antigravity",
+  "gemini",
+  "opencode",
+];
 
 /** Project markers that show a harness is in use, so `forge install` can include it automatically. */
 const TARGET_MARKERS: Array<[HarnessTarget, string[]]> = [
@@ -84,7 +98,7 @@ function normalizeHarnessTargets(targets: readonly string[]): HarnessTarget[] {
   const supported = new Set<string>(HARNESS_TARGETS);
   const aliases: Record<string, HarnessTarget> = {
     "claude-code": "claude",
-    copilot: "copilot",
+    copilot: "vscode",
     "gemini-cli": "gemini",
     "google-antigravity": "antigravity",
   };
@@ -225,8 +239,7 @@ export function sha256(content: string): string {
 }
 
 export function parseTargets(value: string | undefined): HarnessTarget[] {
-  if (!value || value === "all") return [...HARNESS_TARGETS];
-  if (value === "default") return [...DEFAULT_TARGETS];
+  if (!value || value === "all" || value === "default") return [...DEFAULT_TARGETS];
   const targets = value
     .split(",")
     .map((item) => item.trim().toLowerCase())
@@ -1906,7 +1919,10 @@ async function planJsonEntries(
   if (Object.keys(sub).length) next[key] = sub;
   else delete next[key];
   const allRemoving = Object.values(entries).every((v) => v === undefined);
-  if (allRemoving && Object.keys(next).length === 0)
+  const remainingKeys = Object.keys(next).filter(
+    (k) => !(k in fileDefaults) || JSON.stringify(next[k]) !== JSON.stringify(fileDefaults[k])
+  );
+  if (allRemoving && remainingKeys.length === 0)
     return { target, path: file, scope, action: "remove", content: "", deleteFile: true };
   const content = JSON.stringify(next, null, 2) + "\n";
   const action: FileAction = existing === undefined ? "create" : allRemoving ? "remove" : "update";
@@ -1939,7 +1955,7 @@ async function planBlock(
     if (block === undefined) return { target, path: file, scope, action: "unchanged" };
     return { target, path: file, scope, action: "create", content: block + "\n" };
   }
-  const pattern = new RegExp(`^[ \t]*${escapeRegExp(startMarker)}[\s\S]*?^[ \t]*${escapeRegExp(endMarker)}\n?`, "m");
+  const pattern = new RegExp(`^[ \t]*${escapeRegExp(startMarker)}[\\s\\S]*?^[ \t]*${escapeRegExp(endMarker)}\\n?`, "m");
   const match = existing.match(pattern);
   if (match) {
     if (block === undefined) {

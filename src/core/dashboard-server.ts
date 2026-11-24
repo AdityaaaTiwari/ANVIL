@@ -380,7 +380,7 @@ body{
     <div class="mark">A.</div>
     <div>
       <strong>ANVIL</strong>
-      <small>THE AI ENGINEERING WORKBENCH · v1.2.0</small>
+      <small>THE AI ENGINEERING WORKBENCH · v1.3.0</small>
     </div>
   </div>
   <div class="header-actions">
@@ -530,7 +530,7 @@ body{
     <div class="section-head">
       <h2>Model Context Protocol (MCP) & AI Harness</h2>
       <div class="actions">
-        <span class="pill pill-emerald">MCP READY (v1.2.0)</span>
+        <span class="pill pill-emerald">MCP READY (v1.3.0)</span>
         <span class="pill pill-cyan">ZERO-CLOUD</span>
       </div>
     </div>
@@ -707,10 +707,10 @@ body{
   </section>
 </div>
 
-<!-- ==================== TAB 2: SELF-HEALING, CLEANER & SECURITY (v1.2.0) ==================== -->
+<!-- ==================== TAB 2: SELF-HEALING, CLEANER & SECURITY (v1.3.0) ==================== -->
 <div id="tab-cleaner" class="tab-pane">
   <section class="hero">
-    <div class="eyebrow">ANVIL v1.2.0 SELF-HEALING & SECURITY ENGINE</div>
+    <div class="eyebrow">ANVIL v1.3.0 SELF-HEALING & SECURITY ENGINE</div>
     <h1>Zero-Fear Workspace Cleaner & Rollback</h1>
     <p>Automatically eliminates junk clutter and fixes unused imports across TypeScript, JavaScript and Python with deterministic self-healing rollback verification.</p>
   </section>
@@ -1301,7 +1301,7 @@ body{
 </div>
 
 <footer class="footer">
-  <span>ANVIL v1.2.0 · THE AI ENGINEERING WORKBENCH</span>
+  <span>ANVIL v1.3.0 · THE AI ENGINEERING WORKBENCH</span>
   <span>Read-only local dashboard · Telemetry stays on your machine</span>
 </footer>
 
@@ -3568,7 +3568,7 @@ export async function startDashboard(options: DashboardOptions): Promise<Dashboa
           cockpits: {
             combined: {
               ready: true,
-              version: "1.2.0",
+              version: "1.3.0",
               status: "operational",
             },
             anvil: {

@@ -2,7 +2,13 @@
 
 ## Unreleased
 
+## 1.3.0 — FORGE 4.0 Engines, ECC Catalog Ingestion, AI Agent Security Audit & Universal Harness Installer (November 2026)
+
 ### Added
+- Integrated all FORGE 4.0 engines into ANVIL: `consult`, `agent-race`, `verified-loop`, `forge-shield`, `shield-extended`, `harness-scorecard`, `instincts`, `session-cost`, `statusline`, `guard-report`, `hook-adapters`, and `mcp-sync`.
+- 10 new CLI commands: `anvil scorecard`, `anvil consult`, `anvil context`, `anvil status`, `anvil instincts`, `anvil cost`, `anvil race`, `anvil loop`, `anvil shield`, `anvil harnesses`.
+- 4 new MCP tools: `anvil_scorecard`, `anvil_consult`, `anvil_context_budget`, `anvil_guard_check`.
+- Ingested ECC catalog: 395 specialist skills in `catalog/skills/`, 88 agent definitions in `catalog/agents/`, 122 workflow commands in `catalog/commands/`, 14 language rules in `catalog/rules/`.
 - `anvil install` / `anvil uninstall`: connect ANVIL to Claude Code, Codex, Cursor, VS Code (Copilot), Windsurf, Google Antigravity, Gemini CLI, OpenCode and Claude Desktop in one command. Writes each tool's MCP config in its own format, adds a managed ANVIL section to `AGENTS.md` / `CLAUDE.md` / `GEMINI.md`, keeps every existing setting, supports `--dry-run`, and never rewrites JSON it cannot parse.
 - `anvil agent-security` now understands agent configs instead of only matching lines: Claude Code permissions (`Bash(*)`, `bypassPermissions`, `enableAllProjectMcpServers`) and hooks, MCP servers in every tool's format (plain-text credentials in `env`/`headers`/URLs, plain-HTTP remotes, unpinned `npx`/`uvx` packages), Codex `config.toml` (`danger-full-access`, `approval_policy = "never"`), commands that pipe downloads into a shell or send secrets over the network, prompt injection (worse inside HTML comments) and hidden Unicode. Scans the files of every tool `anvil install` supports; `--global` adds per-user configs; `--sarif PATH` writes SARIF. Rule IDs `ANVIL-AGENT-101`…`112`; matched values are never printed.
 - `anvil install --hooks`: adds a stop hook to Claude Code (`.claude/settings.json`) and Cursor (`.cursor/hooks.json`). When the agent says it is done, `anvil gate --diff` runs on its changes; if it fails, the agent gets the findings and keeps working (Claude: `decision: block`; Cursor: `followup_message`). Loop guards let the agent stop after one follow-up (Claude) or two (Cursor), and the hook never blocks if ANVIL itself errors. The user's own hooks are kept; `anvil uninstall` removes ANVIL's.
