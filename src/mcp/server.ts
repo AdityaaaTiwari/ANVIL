@@ -28,6 +28,10 @@ import { analyzeDependencyImpact } from "../core/dependency-impact.js";
 import { runDoctorChecks } from "../core/doctor.js";
 import { cleanProject } from "../core/project-cleaner.js";
 import { analyzeReaIntelligence } from "../core/rea-intelligence.js";
+import { buildScorecard } from "../core/harness-scorecard.js";
+import { consult } from "../core/consult.js";
+import { analyzeContext } from "../core/context-budget.js";
+import { evaluateToolUse } from "../core/harness-hooks.js";
 
 const WORKSPACE_ROOT = await realpath(process.env.ANVIL_WORKSPACE ?? process.env.FORGE_WORKSPACE ?? process.cwd());
 
@@ -931,6 +935,169 @@ registerToolWithAlias(
         });
       }
       return result(report, { compact: false });
+    } catch (error) {
+      return failure(error);
+    }
+  }
+);
+
+registerToolWithAlias(
+  "anvil_scorecard",
+  {
+    title: "Check Harness Readiness Scorecard",
+    description:
+      "Check repository readiness score (0-10) across harness installation, runtime guards, quality gates, project memory, continuous learning, and CI integration. Deterministic, local evaluation.",
+    inputSchema: z.object({
+      projectPath: z
+        .string()
+        .optional()
+        .describe("Workspace-relative directory. Defaults to the configured workspace root."),
+      detail: z
+        .boolean()
+        .optional()
+        .default(false)
+        .describe("When false (default), returns category scores and actions. Pass true for full evidence."),
+    }),
+  },
+  async ({ projectPath, detail }) => {
+    try {
+      const root = await resolveWorkspace(projectPath);
+      const card = await buildScorecard({ projectPath: root, forgeVersion: resolveVersion() });
+      if (!detail) {
+        return result(
+          {
+            project: card.project,
+            total: card.total,
+            max: card.max,
+            percent: card.percent,
+            categories: card.categories.map((c) => ({
+              id: c.id,
+              title: c.title,
+              score: `${c.score}/${c.max}`,
+              topAction: c.actions[0] ?? "none",
+            })),
+          },
+          { compact: true, hint: "Pass detail: true to view full scorecard evidence per category." }
+        );
+      }
+      return result(card, { compact: false });
+    } catch (error) {
+      return failure(error);
+    }
+  }
+);
+
+registerToolWithAlias(
+  "anvil_consult",
+  {
+    title: "Consult Engineering Catalog",
+    description:
+      "Find specialist agents, skills, workflow commands, stack rules, and MCP servers tailored to a task or query. Deterministic ranking.",
+    inputSchema: z.object({
+      query: z.string().describe("Task description, e.g. 'security review of auth code' or 'e2e tests in browser'."),
+      limit: z.number().optional().default(10).describe("Maximum matches to return (default: 10)."),
+    }),
+  },
+  async ({ query, limit }) => {
+    try {
+      const matches = await consult(query, { limit });
+      return result(
+        {
+          query,
+          matchCount: matches.length,
+          matches: matches.map((m) => ({
+            kind: m.kind,
+            id: m.id,
+            name: m.name,
+            score: m.score,
+            description: m.description,
+            why: m.why,
+            install: m.install,
+          })),
+        },
+        { compact: true }
+      );
+    } catch (error) {
+      return failure(error);
+    }
+  }
+);
+
+registerToolWithAlias(
+  "anvil_context_budget",
+  {
+    title: "Context Window Budget & Compaction",
+    description: "Analyze project context consumption, component token sizes, and strategic compaction opportunities.",
+    inputSchema: z.object({
+      projectPath: z
+        .string()
+        .optional()
+        .describe("Workspace-relative directory. Defaults to the configured workspace root."),
+      detail: z.boolean().optional().default(false).describe("Pass true for full component breakdown."),
+    }),
+  },
+  async ({ projectPath, detail }) => {
+    try {
+      const root = await resolveWorkspace(projectPath);
+      const report = await analyzeContext(root);
+      if (!detail) {
+        return result(
+          {
+            root: report.root,
+            grade: report.grade,
+            worstTokenCount: report.worst,
+            harnessCount: report.harnesses.length,
+            harnesses: report.harnesses.map((h) => ({
+              harness: h.harness,
+              tokens: h.tokens,
+              mcpServers: h.mcpServers,
+              itemCount: h.items.length,
+            })),
+            findingsCount: report.findings.length,
+            findings: report.findings,
+          },
+          { compact: true, hint: "Pass detail: true for full breakdown of every workspace component." }
+        );
+      }
+      return result(report, { compact: false });
+    } catch (error) {
+      return failure(error);
+    }
+  }
+);
+
+registerToolWithAlias(
+  "anvil_guard_check",
+  {
+    title: "Evaluate Tool Command or File Action with Guard",
+    description:
+      "Check whether a planned tool command or file path is allowed, requires confirmation, or is blocked under FORGE Guard security rules.",
+    inputSchema: z.object({
+      toolName: z.string().describe("Tool name, e.g. 'Bash', 'Write', 'Edit', 'Read'."),
+      command: z.string().optional().describe("Shell command string to evaluate (for Bash/PowerShell)."),
+      filePath: z.string().optional().describe("Target file path to evaluate (for Read/Write/Edit)."),
+      projectPath: z
+        .string()
+        .optional()
+        .describe("Workspace-relative directory. Defaults to the configured workspace root."),
+    }),
+  },
+  async ({ toolName, command, filePath, projectPath }) => {
+    try {
+      const root = await resolveWorkspace(projectPath);
+      const toolInput: Record<string, unknown> = {};
+      if (command) toolInput.command = command;
+      if (filePath) toolInput.file_path = filePath;
+      const verdict = evaluateToolUse(root, toolName, toolInput);
+      return result(
+        {
+          toolName,
+          decision: verdict.decision,
+          ruleId: verdict.ruleId ?? "none",
+          reason: verdict.reason ?? "Allowed by default.",
+        },
+        { compact: true }
+      );
     } catch (error) {
       return failure(error);
     }

@@ -1,15 +1,18 @@
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { randomUUID } from "node:crypto";
+import { homedir } from "node:os";
 import path from "node:path";
 
-export type ProjectMemoryKind = "decision" | "architecture" | "constraint" | "preference" | "fact";
+export type ProjectMemoryKind =
+  "decision" | "architecture" | "constraint" | "preference" | "fact" | "handoff" | "lesson";
 
 export interface ProjectMemoryEntry {
   id: string;
   kind: ProjectMemoryKind;
   content: string;
   tags: string[];
+  evidence?: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -21,7 +24,15 @@ interface MemoryDocument {
 
 const MAX_ENTRIES = 500;
 const MAX_FILE_BYTES = 2 * 1024 * 1024;
-const MEMORY_KINDS = new Set<ProjectMemoryKind>(["decision", "architecture", "constraint", "preference", "fact"]);
+const MEMORY_KINDS = new Set<ProjectMemoryKind>([
+  "decision",
+  "architecture",
+  "constraint",
+  "preference",
+  "fact",
+  "handoff",
+  "lesson",
+]);
 const MAX_CONTENT_LENGTH = 4000;
 const SECRET_PATTERN = /(?:api[_-]?key|secret|password|access[_-]?token)\s*[:=]\s*\S+/i;
 
@@ -150,10 +161,15 @@ function validateContent(content: string): string {
   return value;
 }
 
-export async function addProjectMemory(
-  projectPath: string,
-  input: { kind: ProjectMemoryKind; content: string; tags?: string[] }
-): Promise<ProjectMemoryEntry> {
+export interface ProjectMemoryInput {
+  kind: ProjectMemoryKind;
+  content: string;
+  tags?: string[];
+  source?: string;
+  evidence?: string[];
+}
+
+export async function addProjectMemory(projectPath: string, input: ProjectMemoryInput): Promise<ProjectMemoryEntry> {
   if (!input || !MEMORY_KINDS.has(input.kind)) throw new Error("Memory kind is not supported.");
   if (
     input.tags !== undefined &&
@@ -172,6 +188,7 @@ export async function addProjectMemory(
       kind: input.kind,
       content,
       tags: [...new Set((input.tags ?? []).map((tag) => tag.trim().toLowerCase()).filter(Boolean))].slice(0, 12),
+      ...(input.evidence?.length ? { evidence: input.evidence } : {}),
       createdAt: now,
       updatedAt: now,
     };
@@ -239,4 +256,62 @@ export async function buildProjectMemoryContext(
     includedIds,
     estimatedTokens: Math.ceil(chars / 4),
   };
+}
+
+export function globalMemoryRoot(): string {
+  return path.resolve(process.env.ANVIL_HOME ?? process.env.FORGE_HOME ?? homedir());
+}
+
+export interface MemorySearchHit {
+  entry: ProjectMemoryEntry;
+  score: number;
+  layer: "project" | "global";
+}
+
+export async function searchMemory(
+  projectPath: string,
+  query: string,
+  options: { limit?: number; includeGlobal?: boolean; kinds?: ProjectMemoryKind[] } = {}
+): Promise<MemorySearchHit[]> {
+  const limit = Math.max(1, Math.min(100, Math.floor(options.limit ?? 10)));
+  const entries = await listProjectMemory(projectPath);
+  const terms = new Set(
+    query
+      .toLowerCase()
+      .split(/[^a-z0-9_-]+/)
+      .filter(Boolean)
+  );
+  const hits: MemorySearchHit[] = entries
+    .filter((entry) => !options.kinds?.length || options.kinds.includes(entry.kind))
+    .map((entry) => {
+      const haystack = (entry.content + " " + entry.tags.join(" ")).toLowerCase();
+      const score = terms.size ? [...terms].reduce((sum, term) => sum + (haystack.includes(term) ? 1 : 0), 0) : 1;
+      return { entry, score, layer: "project" as const };
+    })
+    .filter((hit) => hit.score > 0);
+
+  if (options.includeGlobal) {
+    const globalRoot = globalMemoryRoot();
+    if (path.resolve(projectPath) !== globalRoot) {
+      const globalEntries = await listProjectMemory(globalRoot);
+      const globalHits = globalEntries
+        .filter((entry) => !options.kinds?.length || options.kinds.includes(entry.kind))
+        .map((entry) => {
+          const haystack = (entry.content + " " + entry.tags.join(" ")).toLowerCase();
+          const score = terms.size
+            ? [...terms].reduce((sum, term) => sum + (haystack.includes(term) ? 0.85 : 0), 0)
+            : 0.85;
+          return { entry, score, layer: "global" as const };
+        })
+        .filter((hit) => hit.score > 0);
+      hits.push(...globalHits);
+    }
+  }
+
+  return hits.sort((a, b) => b.score - a.score || b.entry.updatedAt.localeCompare(a.entry.updatedAt)).slice(0, limit);
+}
+
+export async function latestHandoff(projectPath: string): Promise<ProjectMemoryEntry | undefined> {
+  const entries = await listProjectMemory(projectPath);
+  return entries.find((entry) => entry.kind === "handoff");
 }

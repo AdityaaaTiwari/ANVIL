@@ -98,6 +98,18 @@ Commands:
   hook stop --harness claude|cursor  Agent stop hook: gate the agent's changes (installed by anvil install --hooks)
   rea [path]       Inspect binary assets, bundles, WASM, and enforce clean-room compliance
   doctor [path]    Run environment health checks; add --fix to auto-scaffold config
+  scorecard [path] Check harness readiness (0-10) across install, guards, quality, memory, CI
+  consult QUERY    Find matching skills, agents, commands, rules, and MCP servers
+  context [path]   Estimate context budget and token consumption
+  status [path]    Summarize harness install, guard, context and MCP health
+  statusline [path] Output compact ANSI statusline for terminal and IDEs
+  instinct <learn|list|add|promote|reject> Continuous learning habits from git and session history
+  evolve [path]    Compile active learned instincts into workspace skills
+  cost [path]      Report session and daily token spend and USD estimates
+  race <run|list>  Competitive multi-agent race across isolated Git worktrees
+  loop [path]      Autonomous self-healing verification loop
+  shield [path]    Static security audit running 60 Shield rules across all harnesses
+  harnesses        List capability matrix of all 10 supported AI harnesses
   dashboard [path] Start the local read-only web dashboard
   version          Print the installed version
   help             Show this help message

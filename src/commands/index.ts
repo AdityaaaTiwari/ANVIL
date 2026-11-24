@@ -68,6 +68,16 @@ import { runQuality } from "./quality.js";
 import { runInspect } from "./inspect.js";
 import { runDoctor } from "./doctor.js";
 import { runRea } from "./rea.js";
+import { runScorecard } from "./scorecard.js";
+import { runConsult } from "./consult.js";
+import { runContext } from "./context.js";
+import { runStatus } from "./status.js";
+import { runInstincts } from "./instincts.js";
+import { runCost } from "./cost.js";
+import { runRaceCommand } from "./race.js";
+import { runLoopCommand } from "./loop.js";
+import { runShieldCommand } from "./shield.js";
+import { runHarnesses } from "./harnesses.js";
 
 export type CommandHandler = (command: string, rest: string[]) => Promise<void>;
 
@@ -76,6 +86,21 @@ export const COMMANDS: ReadonlyMap<string, CommandHandler> = new Map<string, Com
   ["install", runInstall],
   ["uninstall", runInstall],
   ["rea", runRea],
+  ["scorecard", runScorecard],
+  ["harness-audit", runScorecard],
+  ["consult", runConsult],
+  ["context", runContext],
+  ["status", runStatus],
+  ["statusline", runStatus],
+  ["instinct", runInstincts],
+  ["instincts", runInstincts],
+  ["evolve", runInstincts],
+  ["cost", runCost],
+  ["cost-report", runCost],
+  ["race", runRaceCommand],
+  ["loop", runLoopCommand],
+  ["shield", runShieldCommand],
+  ["harnesses", runHarnesses],
   ["evals", runEvals],
   ["agent-release", runAgentRelease],
   ["agent-config", runAgentConfig],
