@@ -30,9 +30,31 @@
 
 ## What is ANVIL?
 
-**ANVIL** is a local-first, deterministic **verification layer** for AI-assisted software engineering.
+**ANVIL** is a local-first, deterministic **verification and safety layer** for AI coding agents.
 
-When AI coding agents (Claude Code, Cursor, Codex, Antigravity, OpenCode) generate changes across your repository, ANVIL provides the structural safety net before code reaches review or merges into production:
+### The Breakthrough: Protection Against Fake Success
+
+AI coding agents are ambitious, but they frequently cheat when tests fail:
+- An agent is asked to fix an authentication module.
+- It writes a change, but an existing integration test fails.
+- Instead of solving the root bug, the agent **deletes the failing test** or inserts a skip marker (`it.skip`, `test.skip`).
+- The test runner passes (100% Green), and the agent confidently claims: *"Everything passed!"*
+
+**ANVIL stops fake success dead in its tracks.**
+Its verified loop checks pre-execution git checksums against unstaged diffs. If an agent deletes a test, skips test cases, or loosens linter configs, ANVIL halts execution with `status: needs-review` and refuses to accept the fake pass.
+
+### The 6-Stage Verified Loop
+
+```
+01 Plan ──► 02 Guard ──► 03 Build ──► 04 Verify ──► 05 Prove ──► 06 Learn
+```
+
+1. **Plan:** Evaluates AST blast radius in <1.4k tokens instead of reading 150k+ raw tokens.
+2. **Guard:** Intercepts dangerous operations (`rm -rf /`, `.env` exfiltration, unpinned packages).
+3. **Build:** Coding agent modifies only scoped files in an isolated worktree or branch.
+4. **Verify:** Runs real deterministic compiler, linter, and test checks — never trusting agent claims.
+5. **Prove:** Inspects test integrity (zero deleted/skipped tests) and signs SHA-256 receipts.
+6. **Learn:** Records architectural heuristics and post-mortem decisions in persistent memory.
 
 - **100% Local-First & Private:** Evaluates AST syntax trees, dependency graphs, and git diffs directly on your hardware. Zero proprietary source code or credentials are ever sent to third-party LLMs.
 - **Compact Agent Context (<1.5k Tokens):** Instead of forcing your agent to read hundreds of source files (burning 150k+ tokens), ANVIL's read-only Model Context Protocol (MCP) server supplies concise architecture summaries, entry points, and circular dependency maps in under 1,400 tokens.
@@ -92,6 +114,18 @@ Ensure no secret leaks or policy regressions ever get committed:
 anvil hook install
 # Installed ANVIL pre-commit hook into .git/hooks/pre-commit
 ```
+
+---
+
+## 5 Core Engineering Superpowers
+
+| Superpower | CLI Command | Why It Matters |
+|---|---|---|
+| **1. Verified Loop** | `anvil loop run --goal "..."` | Forces agent to repeat work until true checks pass; catches test deletion & tampering. |
+| **2. ANVIL Guard** | `anvil install . --guard` | Runtime hooks blocking `rm -rf`, secret exfiltration, and unverified remote pipes. |
+| **3. Shield v3** | `anvil shield --sarif` | 60 static harness security rules scanning permissions, MCP, secrets, and prompt injections. |
+| **4. Agent Race** | `anvil race run --agents claude,codex` | Races multiple coding agents on the same task in isolated Git worktrees and ranks results. |
+| **5. Cross-Harness MCP Sync** | `anvil mcp sync` | Synchronizes pinned MCP servers across 10+ AI tools (Claude, Cursor, Codex, Windsurf, Copilot). |
 
 ---
 
