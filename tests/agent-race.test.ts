@@ -25,7 +25,7 @@ async function repo(): Promise<{ root: string; agents: string }> {
     path.join(root, "tests/sum.test.js"),
     'const sum = require("../sum.js");\nif (sum(2, 3) !== 5) { console.error("expected 5"); process.exit(1); }\n'
   );
-  const git = (...args: string[]) => execFileSync("git", args, { cwd: root, stdio: "ignore" });
+  const git = (...args: string[]) => execFileSync("git", args, { cwd: root, shell: false, stdio: "ignore" });
   git("init", "-q");
   git("config", "user.email", "anvil@example.com");
   git("config", "user.name", "ANVIL test");

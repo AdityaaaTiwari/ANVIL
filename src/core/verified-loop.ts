@@ -104,6 +104,7 @@ function run(
     let timedOut = false;
     let child;
     try {
+      // anvil-disable-next-line ANVIL-R002 -- uses shell: false with argument arrays for git/agent runs; shell: true only for configured check strings
       child = spawn(command, args, {
         cwd: options.cwd,
         shell: options.shell ?? false,

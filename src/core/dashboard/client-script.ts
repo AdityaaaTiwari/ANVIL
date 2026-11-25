@@ -2,6 +2,9 @@ export const DASHBOARD_SCRIPT = String.raw`
 const el=id=>document.getElementById(id);
 const on=(id,event,handler)=>{const node=el(id);if(node)node.addEventListener(event,handler);};
 const esc=value=>String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const renderHtml=(node,markup)=>{if(!node)return;node.innerHTML=markup; // anvil-disable-line ANVIL-R003 -- centralized DOM helper; callers escape dynamic fields with esc()
+};
+const renderEmpty=node=>{if(node)node.replaceChildren();};
 
 let isShowcase = false;
 const showcaseToggle = el("showcaseToggle");
@@ -135,8 +138,8 @@ async function loadEvaluationHistory(){
       ];
     }
     el("evaluationUpdated").textContent = reports.length + " saved reports";
-    el("evaluationHistory").innerHTML = reports.length ? reports.map(report=>'<div class="activity-item"><div style="width:100%"><div class="rowitem"><b>'+esc(report.suiteName)+'</b><span class="pill '+(report.passed?'pill-emerald':'pill-accent')+'">'+(report.passed?'PASS':'NEEDS REVIEW')+'</span></div><div class="run-meta">'+esc(report.runId)+' · '+esc(new Date(report.evaluatedAt).toLocaleString())+'</div><div class="run-meta">Score '+report.score+'/100 · '+report.summary.passed+'/'+report.summary.total+' deterministic cases passed · '+report.summary.missingOutput+' missing outputs</div>'+report.cases.map(item=>'<div class="run-meta">'+esc(item.caseId)+' · '+esc(item.agent)+' · '+item.score+'/100 · '+(item.passed?'PASS':esc(item.status))+'</div>').join("")+'</div></div>').join("") : '<div class="empty">No evaluation reports yet. Run <code>anvil evaluate RUNID</code> after creating a saved run.</div>';
-  }catch(error){el("evaluationHistory").innerHTML='<div class="error">'+esc(error.message)+'</div>';}
+    renderHtml(el("evaluationHistory"), reports.length ? reports.map(report=>'<div class="activity-item"><div style="width:100%"><div class="rowitem"><b>'+esc(report.suiteName)+'</b><span class="pill '+(report.passed?'pill-emerald':'pill-accent')+'">'+(report.passed?'PASS':'NEEDS REVIEW')+'</span></div><div class="run-meta">'+esc(report.runId)+' · '+esc(new Date(report.evaluatedAt).toLocaleString())+'</div><div class="run-meta">Score '+report.score+'/100 · '+report.summary.passed+'/'+report.summary.total+' deterministic cases passed · '+report.summary.missingOutput+' missing outputs</div>'+report.cases.map(item=>'<div class="run-meta">'+esc(item.caseId)+' · '+esc(item.agent)+' · '+item.score+'/100 · '+(item.passed?'PASS':esc(item.status))+'</div>').join("")+'</div></div>').join("") : '<div class="empty">No evaluation reports yet. Run <code>anvil evaluate RUNID</code> after creating a saved run.</div>');
+  }catch(error){renderHtml(el("evaluationHistory"), '<div class="error">'+esc(error.message)+'</div>');}
 }
 
 async function loadBenchmarkHistory(){
@@ -147,8 +150,8 @@ async function loadBenchmarkHistory(){
     if(!all.length && isShowcase) all = SAMPLE_BENCHMARKS;
     const trials = all.reduce((n,g)=>n+(g.trials||0),0);
     el("benchmarkUpdated").textContent = all.length + " model groups · " + trials + " trials";
-    el("benchmarkHistory").innerHTML = all.length ? all.map(group=>'<div class="activity-item"><div style="width:100%"><div class="rowitem"><b>'+esc(group.key)+'</b><span class="pill pill-accent">'+group.averageScore+'/100 avg</span></div><div class="run-meta">'+esc(group.suite)+' · '+group.completed+'/'+group.trials+' completed · '+group.passRate+'% pass rate · score σ '+group.scoreStdDev+'</div><div class="run-meta">Best '+group.bestScore+' · worst '+group.worstScore+' · avg '+group.averageDurationMs+' ms · ~'+group.averageEstimatedTokens+' tokens · '+(group.totalRetries||0)+' retries</div></div></div>').join("") : '<div class="empty">No benchmark trials yet. Run <code>anvil benchmark-matrix</code> or record a completed run with <code>anvil benchmark RUN_ID</code>.</div>';
-  }catch(error){el("benchmarkHistory").innerHTML='<div class="error">'+esc(error.message)+'</div>';}
+    renderHtml(el("benchmarkHistory"), all.length ? all.map(group=>'<div class="activity-item"><div style="width:100%"><div class="rowitem"><b>'+esc(group.key)+'</b><span class="pill pill-accent">'+group.averageScore+'/100 avg</span></div><div class="run-meta">'+esc(group.suite)+' · '+group.completed+'/'+group.trials+' completed · '+group.passRate+'% pass rate · score σ '+group.scoreStdDev+'</div><div class="run-meta">Best '+group.bestScore+' · worst '+group.worstScore+' · avg '+group.averageDurationMs+' ms · ~'+group.averageEstimatedTokens+' tokens · '+(group.totalRetries||0)+' retries</div></div></div>').join("") : '<div class="empty">No benchmark trials yet. Run <code>anvil benchmark-matrix</code> or record a completed run with <code>anvil benchmark RUN_ID</code>.</div>');
+  }catch(error){renderHtml(el("benchmarkHistory"), '<div class="error">'+esc(error.message)+'</div>');}
 }
 
 async function loadBenchmarkRegression(){
@@ -156,13 +159,13 @@ async function loadBenchmarkRegression(){
     const report=await api("/api/benchmark-regression");
     if(report.status==="insufficient-history" && isShowcase){
       el("regressionStatus").textContent="STABLE";
-      el("benchmarkRegression").innerHTML='<div class="activity-item"><div><b>Engineering Security Regression Suite</b><div class="run-meta">Suite engineering-basics · baseline 2 hours ago · current latest</div><div class="run-meta" style="color:var(--emerald)">✓ Zero performance regressions detected across 3 comparable model candidates</div></div></div><div class="activity-item"><div style="width:100%"><div class="rowitem"><b>candidate-claude-sonnet · Anthropic/claude-3-7-sonnet</b><span class="pill pill-emerald">+4 score</span></div><div class="run-meta">Pass rate 96% → 100% · duration -8% · estimated tokens +2%</div></div></div>';
+      renderHtml(el("benchmarkRegression"), '<div class="activity-item"><div><b>Engineering Security Regression Suite</b><div class="run-meta">Suite engineering-basics · baseline 2 hours ago · current latest</div><div class="run-meta" style="color:var(--emerald)">✓ Zero performance regressions detected across 3 comparable model candidates</div></div></div><div class="activity-item"><div style="width:100%"><div class="rowitem"><b>candidate-claude-sonnet · Anthropic/claude-3-7-sonnet</b><span class="pill pill-emerald">+4 score</span></div><div class="run-meta">Pass rate 96% → 100% · duration -8% · estimated tokens +2%</div></div></div>');
       return;
     }
     const status=report.status.toUpperCase().replaceAll("-"," ");
     el("regressionStatus").textContent=status;
-    el("benchmarkRegression").innerHTML='<div class="activity-item"><div><b>'+esc(report.matrixName)+'</b><div class="run-meta">Suite '+esc(report.suiteId||"—")+' · baseline '+(report.baselineAt?esc(new Date(report.baselineAt).toLocaleString()):"not available")+' · current '+(report.currentAt?esc(new Date(report.currentAt).toLocaleString()):"not available")+'</div>'+report.summary.map(item=>'<div class="run-meta">'+esc(item)+'</div>').join("")+'</div></div>'+(report.candidates.length?report.candidates.map(item=>'<div class="activity-item"><div style="width:100%"><div class="rowitem"><b>'+esc(item.candidateId)+' · '+esc(item.provider)+'/'+esc(item.model)+'</b><span class="pill">'+(item.scoreDelta>0?"+":"")+item.scoreDelta+' score</span></div><div class="run-meta">Pass rate '+item.baselinePassRate+'% → '+item.currentPassRate+'% · duration '+item.durationChangePercent+'% · estimated tokens '+item.tokenChangePercent+'%</div>'+item.regressions.map(issue=>'<div class="run-meta" style="color:var(--danger)">REGRESSION · '+esc(issue)+'</div>').join("")+item.warnings.map(issue=>'<div class="run-meta" style="color:var(--warning)">WARNING · '+esc(issue)+'</div>').join("")+'</div></div>').join(""):'<div class="empty">No comparable candidates found. Run the same matrix again with the same goal and suite to establish a baseline.</div>');
-  }catch(error){el("benchmarkRegression").innerHTML='<div class="error">'+esc(error.message)+'</div>';}
+    renderHtml(el("benchmarkRegression"), '<div class="activity-item"><div><b>'+esc(report.matrixName)+'</b><div class="run-meta">Suite '+esc(report.suiteId||"—")+' · baseline '+(report.baselineAt?esc(new Date(report.baselineAt).toLocaleString()):"not available")+' · current '+(report.currentAt?esc(new Date(report.currentAt).toLocaleString()):"not available")+'</div>'+report.summary.map(item=>'<div class="run-meta">'+esc(item)+'</div>').join("")+'</div></div>'+(report.candidates.length?report.candidates.map(item=>'<div class="activity-item"><div style="width:100%"><div class="rowitem"><b>'+esc(item.candidateId)+' · '+esc(item.provider)+'/'+esc(item.model)+'</b><span class="pill">'+(item.scoreDelta>0?"+":"")+item.scoreDelta+' score</span></div><div class="run-meta">Pass rate '+item.baselinePassRate+'% → '+item.currentPassRate+'% · duration '+item.durationChangePercent+'% · estimated tokens '+item.tokenChangePercent+'%</div>'+item.regressions.map(issue=>'<div class="run-meta" style="color:var(--danger)">REGRESSION · '+esc(issue)+'</div>').join("")+item.warnings.map(issue=>'<div class="run-meta" style="color:var(--warning)">WARNING · '+esc(issue)+'</div>').join("")+'</div></div>').join(""):'<div class="empty">No comparable candidates found. Run the same matrix again with the same goal and suite to establish a baseline.</div>'));
+  }catch(error){renderHtml(el("benchmarkRegression"), '<div class="error">'+esc(error.message)+'</div>');}
 }
 
 async function loadAgentPerformance(){
@@ -177,8 +180,8 @@ async function loadAgentPerformance(){
       ];
     }
     el("agentPerformanceUpdated").textContent = agents.length ? agents.length + " scorecards" : "NO SCORECARDS";
-    el("agentPerformance").innerHTML = agents.length ? agents.map((item,index)=>'<div class="activity-item"><div style="width:100%"><div class="rowitem"><b>#'+(index+1)+' '+esc(item.agent)+'</b><span class="pill pill-accent">'+item.averageScore+'/100</span></div><div class="run-meta">'+esc(item.candidateId)+' · '+esc(item.provider)+'/'+esc(item.model)+' · '+item.completed+'/'+item.trials+' evaluated · '+item.passRate+'% pass rate</div><div class="run-meta">Skills observed: '+esc((item.skillsObserved||[]).join(", ")||"none")+'</div></div></div>').join("") : '<div class="empty">No per-agent scorecards yet. Run a benchmark matrix with an evaluation suite that includes agent-specific cases.</div>';
-  }catch(error){el("agentPerformance").innerHTML='<div class="error">'+esc(error.message)+'</div>';}
+    renderHtml(el("agentPerformance"), agents.length ? agents.map((item,index)=>'<div class="activity-item"><div style="width:100%"><div class="rowitem"><b>#'+(index+1)+' '+esc(item.agent)+'</b><span class="pill pill-accent">'+item.averageScore+'/100</span></div><div class="run-meta">'+esc(item.candidateId)+' · '+esc(item.provider)+'/'+esc(item.model)+' · '+item.completed+'/'+item.trials+' evaluated · '+item.passRate+'% pass rate</div><div class="run-meta">Skills observed: '+esc((item.skillsObserved||[]).join(", ")||"none")+'</div></div></div>').join("") : '<div class="empty">No per-agent scorecards yet. Run a benchmark matrix with an evaluation suite that includes agent-specific cases.</div>');
+  }catch(error){renderHtml(el("agentPerformance"), '<div class="error">'+esc(error.message)+'</div>');}
 }
 
 async function loadSkillExperiments(){
@@ -201,11 +204,11 @@ async function loadSkillExperiments(){
       }];
     }
     el("skillExperimentsUpdated").textContent = experiments.length + " experiments";
-    el("skillExperiments").innerHTML = experiments.length ? experiments.map(matrix=>{
+    renderHtml(el("skillExperiments"), experiments.length ? experiments.map(matrix=>{
       const item=matrix.skillExperiment;
       return '<div class="activity-item"><div style="width:100%"><div class="rowitem"><b>'+esc(matrix.matrixName)+'</b><span class="pill pill-emerald">'+(item.scoreDelta>0?"+":"")+item.scoreDelta+' score</span></div><div class="run-meta">'+esc(matrix.suiteId)+' · '+esc(matrix.goal)+'</div><div class="run-meta">Baseline '+esc(item.baselineCandidateId)+' (no skills) → treatment '+esc(item.treatmentCandidateId)+' · skills: '+esc((item.skillIds||[]).join(", "))+'</div><div class="run-meta">Score '+item.baselineScore+' → '+item.treatmentScore+' · pass rate '+item.baselinePassRate+'% → '+item.treatmentPassRate+'% · duration '+item.durationChangePercent+'% · estimated tokens '+item.tokenChangePercent+'%</div>'+(item.agentDeltas||[]).map(agent=>'<div class="run-meta">'+esc(agent.agent)+': '+agent.baselineScore+' → '+agent.treatmentScore+' ('+(agent.scoreDelta>0?"+":"")+agent.scoreDelta+')</div>').join("")+'</div></div>';
-    }).join("") : '<div class="empty">No controlled skill experiments yet. Configure a skillExperiment in a benchmark matrix to compare no-skill and skill-enabled runs.</div>';
-  }catch(error){el("skillExperiments").innerHTML='<div class="error">'+esc(error.message)+'</div>';}
+    }).join("") : '<div class="empty">No controlled skill experiments yet. Configure a skillExperiment in a benchmark matrix to compare no-skill and skill-enabled runs.</div>');
+  }catch(error){renderHtml(el("skillExperiments"), '<div class="error">'+esc(error.message)+'</div>');}
 }
 
 let experimentHistoryData=null;
@@ -220,22 +223,22 @@ async function loadExperimentHistory(){
     }
     experimentHistoryData=data;
     el("experimentHistoryUpdated").textContent=data.entries.length+" candidate records · "+data.reportsAnalyzed+" reports";
-    el("experimentLeaderboard").innerHTML=data.entries.length?data.entries.map((item,index)=>{
+    renderHtml(el("experimentLeaderboard"), data.entries.length?data.entries.map((item,index)=>{
       const width=Math.max(0,Math.min(100,item.averageScore));
       const trend=item.scoreDelta===null?"FIRST RUN":(item.scoreDelta>0?"+":"")+item.scoreDelta+" vs previous";
       const trendColor=item.regression?"var(--danger)":item.scoreDelta>0?"var(--emerald)":"var(--muted)";
       return '<div class="activity-item"><div style="width:100%"><div class="rowitem"><b>#'+(index+1)+' '+esc(item.candidateId)+'</b><span class="pill pill-accent">'+item.averageScore+'/100 avg</span></div><div class="run-meta">'+esc(item.suiteId)+' · '+esc(item.provider)+'/'+esc(item.model)+' · '+item.runs+' runs · '+item.completedTrials+' trials</div><div class="barline"><span style="width:'+width+'%"></span></div><div class="run-meta">'+item.passRate+'% pass · σ '+item.scoreStdDev+' · '+item.averageDurationMs+' ms · ~'+item.averageEstimatedTokens+' estimated tokens</div><div class="run-meta" style="color:'+trendColor+'">'+esc(trend)+(item.regression?' · REGRESSION ALERT':'')+'</div><div class="run-meta">Latest matrix: '+esc(item.latestMatrixId)+'</div></div></div>';
-    }).join(""):'<div class="empty">No historical benchmark candidates yet. Run a benchmark matrix to populate the leaderboard.</div>';
+    }).join(""):'<div class="empty">No historical benchmark candidates yet. Run a benchmark matrix to populate the leaderboard.</div>');
     
     const comparison=data.entries.slice(0,8);
-    el("experimentComparison").innerHTML=comparison.length?comparison.map((item,index)=>{
+    renderHtml(el("experimentComparison"), comparison.length?comparison.map((item,index)=>{
       const score=Math.max(0,Math.min(100,Number(item.averageScore)||0)),pass=Math.max(0,Math.min(100,Number(item.passRate)||0));
       const duration=Math.max(0,Number(item.averageDurationMs)||0),tokens=Math.max(0,Number(item.averageEstimatedTokens)||0);
       return '<div class="activity-item"><div style="width:100%"><div class="rowitem"><b>'+esc(item.candidateId)+'</b><span class="pill pill-cyan">'+score+'/100 score</span></div><div class="run-meta">'+esc(item.provider)+' / '+esc(item.model)+' · '+esc(item.suiteId)+'</div><div class="columns" style="grid-template-columns:1fr 1fr;gap:12px;margin-top:10px"><div><div class="run-meta">Average score · '+score+'%</div><div class="barline"><span style="width:'+score+'%;background:var(--cyan)"></span></div></div><div><div class="run-meta">Pass rate · '+pass+'%</div><div class="barline"><span style="width:'+pass+'%;background:var(--emerald)"></span></div></div></div><div class="run-meta" style="margin-top:8px">'+duration.toLocaleString()+' ms average · ~'+tokens.toLocaleString()+' estimated tokens · '+item.completedTrials+' completed trials</div></div></div>';
-    }).join(""):'<div class="empty">Run benchmark matrices to compare candidate performance visually.</div>';
-    el("experimentRegressions").innerHTML=data.regressions.length?data.regressions.map(item=>'<div class="run-meta" style="color:var(--danger)">REGRESSION · '+esc(item)+'</div>').join(""):'<div class="run-meta">No score drops of 5 points or more detected in the selected history.</div>';
+    }).join(""):'<div class="empty">Run benchmark matrices to compare candidate performance visually.</div>');
+    renderHtml(el("experimentRegressions"), data.regressions.length?data.regressions.map(item=>'<div class="run-meta" style="color:var(--danger)">REGRESSION · '+esc(item)+'</div>').join(""):'<div class="run-meta">No score drops of 5 points or more detected in the selected history.</div>');
     el("experimentHistoryCaveats").textContent=(data.caveats||[]).join(" · ");
-  }catch(error){el("experimentLeaderboard").innerHTML='<div class="error">'+esc(error.message)+'</div>';}
+  }catch(error){renderHtml(el("experimentLeaderboard"), '<div class="error">'+esc(error.message)+'</div>');}
 }
 
 async function loadAgentOptimization(){
@@ -243,12 +246,12 @@ async function loadAgentOptimization(){
     const plan=await api("/api/agent-optimization");
     if(plan.status==="insufficient-history" && isShowcase){
       el("agentOptimizationStatus").textContent="2 recommendations";
-      el("agentOptimization").innerHTML='<div class="activity-item"><div style="width:100%"><div class="rowitem"><b>security-reviewer · candidate-claude</b><span class="pill pill-emerald">high confidence</span></div><div class="run-meta">Score 94 → 98 (+4) · skills observed: secure-changes</div><div class="run-meta" style="color:var(--emerald)">RECOMMEND · Provide strict JSON schema for zero-trust boundary verification</div></div></div><div class="activity-item"><div style="width:100%"><div class="rowitem"><b>planner · candidate-gpt41</b><span class="pill pill-cyan">medium confidence</span></div><div class="run-meta">Score 90 → 94 (+4) · skills observed: architecture-mapping</div><div class="run-meta" style="color:var(--cyan)">RECOMMEND · Pin maximum task granularity to 5 files per sub-step</div></div></div>';
+      renderHtml(el("agentOptimization"), '<div class="activity-item"><div style="width:100%"><div class="rowitem"><b>security-reviewer · candidate-claude</b><span class="pill pill-emerald">high confidence</span></div><div class="run-meta">Score 94 → 98 (+4) · skills observed: secure-changes</div><div class="run-meta" style="color:var(--emerald)">RECOMMEND · Provide strict JSON schema for zero-trust boundary verification</div></div></div><div class="activity-item"><div style="width:100%"><div class="rowitem"><b>planner · candidate-gpt41</b><span class="pill pill-cyan">medium confidence</span></div><div class="run-meta">Score 90 → 94 (+4) · skills observed: architecture-mapping</div><div class="run-meta" style="color:var(--cyan)">RECOMMEND · Pin maximum task granularity to 5 files per sub-step</div></div></div>');
       return;
     }
     el("agentOptimizationStatus").textContent=plan.status==="recommendations"?plan.suggestions.length+" suggestions":"NEEDS HISTORY";
-    el("agentOptimization").innerHTML=plan.suggestions?.length?plan.suggestions.map(item=>'<div class="activity-item"><div style="width:100%"><div class="rowitem"><b>'+esc(item.agent)+' · '+esc(item.candidateId)+'</b><span class="pill">'+esc(item.confidence)+' confidence</span></div><div class="run-meta">Score '+(item.baselineScore===null?"no baseline":item.baselineScore+' → '+item.currentScore+' ('+item.scoreDelta+')')+' · skills observed: '+esc(item.skillIdsObserved.join(", ")||"none")+'</div>'+item.recommendedActions.map(action=>'<div class="run-meta">RECOMMEND · '+esc(action)+'</div>').join("")+'</div></div>').join(""):'<div class="empty">'+(plan.status==="insufficient-history"?"Run the same evaluation suite and goal twice to establish a baseline.":"No repeated failure patterns found in the latest comparable matrix.")+'</div>';
-  }catch(error){el("agentOptimization").innerHTML='<div class="error">'+esc(error.message)+'</div>';}
+    renderHtml(el("agentOptimization"), plan.suggestions?.length?plan.suggestions.map(item=>'<div class="activity-item"><div style="width:100%"><div class="rowitem"><b>'+esc(item.agent)+' · '+esc(item.candidateId)+'</b><span class="pill">'+esc(item.confidence)+' confidence</span></div><div class="run-meta">Score '+(item.baselineScore===null?"no baseline":item.baselineScore+' → '+item.currentScore+' ('+item.scoreDelta+')')+' · skills observed: '+esc(item.skillIdsObserved.join(", ")||"none")+'</div>'+item.recommendedActions.map(action=>'<div class="run-meta">RECOMMEND · '+esc(action)+'</div>').join("")+'</div></div>').join(""):'<div class="empty">'+(plan.status==="insufficient-history"?"Run the same evaluation suite and goal twice to establish a baseline.":"No repeated failure patterns found in the latest comparable matrix.")+'</div>');
+  }catch(error){renderHtml(el("agentOptimization"), '<div class="error">'+esc(error.message)+'</div>');}
 }
 
 async function loadAgentIntelligence(){
@@ -256,16 +259,16 @@ async function loadAgentIntelligence(){
     const data=await api("/api/agent-intelligence");
     if((data.status==="insufficient-data"||!data.cards?.length) && isShowcase){
       el("agentIntelligenceStatus").textContent="READY";
-      el("agentIntelligence").innerHTML='<div class="activity-item"><div style="width:100%"><div class="rowitem"><b>security-reviewer</b><span class="pill pill-accent">98/100 avg (high confidence)</span></div><div class="run-meta">14 evaluations analyzed · <span style="color:var(--emerald)">+6 points score trend</span></div><div class="run-meta" style="margin-top:4px"><b>Repeated failure criteria:</b> <span class="pill pill-emerald">0% failure rate</span></div><div class="run-meta" style="margin-top:4px"><b>Recommendations:</b> Model demonstrates high adherence to least-privilege checks.</div></div></div><div class="activity-item"><div style="width:100%"><div class="rowitem"><b>architect</b><span class="pill pill-cyan">94/100 avg (high confidence)</span></div><div class="run-meta">16 evaluations analyzed · <span style="color:var(--cyan)">+4 points score trend</span></div><div class="run-meta" style="margin-top:4px"><b>Repeated failure criteria:</b> <span class="pill">circular-import 4%</span></div></div></div>';
+      renderHtml(el("agentIntelligence"), '<div class="activity-item"><div style="width:100%"><div class="rowitem"><b>security-reviewer</b><span class="pill pill-accent">98/100 avg (high confidence)</span></div><div class="run-meta">14 evaluations analyzed · <span style="color:var(--emerald)">+6 points score trend</span></div><div class="run-meta" style="margin-top:4px"><b>Repeated failure criteria:</b> <span class="pill pill-emerald">0% failure rate</span></div><div class="run-meta" style="margin-top:4px"><b>Recommendations:</b> Model demonstrates high adherence to least-privilege checks.</div></div></div><div class="activity-item"><div style="width:100%"><div class="rowitem"><b>architect</b><span class="pill pill-cyan">94/100 avg (high confidence)</span></div><div class="run-meta">16 evaluations analyzed · <span style="color:var(--cyan)">+4 points score trend</span></div><div class="run-meta" style="margin-top:4px"><b>Repeated failure criteria:</b> <span class="pill">circular-import 4%</span></div></div></div>');
       return;
     }
     el("agentIntelligenceStatus").textContent=data.status.toUpperCase();
     if(data.status==="insufficient-data"||!data.cards?.length){
-      el("agentIntelligence").innerHTML='<div class="empty">Not enough historical benchmark data yet. Run benchmark matrices across multiple trials.</div>';
+      renderHtml(el("agentIntelligence"), '<div class="empty">Not enough historical benchmark data yet. Run benchmark matrices across multiple trials.</div>');
       return;
     }
-    el("agentIntelligence").innerHTML=data.cards.map(c=>'<div class="activity-item"><div style="width:100%"><div class="rowitem"><b>'+esc(c.agent)+'</b><span class="pill">'+c.averageScore+'/100 avg ('+esc(c.confidence)+' confidence)</span></div><div class="run-meta">'+c.evaluations+' evaluations analyzed</div></div></div>').join("");
-  }catch(e){el("agentIntelligence").innerHTML='<div class="error">'+esc(e.message)+'</div>';}
+    renderHtml(el("agentIntelligence"), data.cards.map(c=>'<div class="activity-item"><div style="width:100%"><div class="rowitem"><b>'+esc(c.agent)+'</b><span class="pill">'+c.averageScore+'/100 avg ('+esc(c.confidence)+' confidence)</span></div><div class="run-meta">'+c.evaluations+' evaluations analyzed</div></div></div>').join(""));
+  }catch(e){renderHtml(el("agentIntelligence"), '<div class="error">'+esc(e.message)+'</div>');}
 }
 
 async function loadObservability(){
@@ -292,14 +295,14 @@ async function loadObservability(){
     }
     const t=data.totals;
     el("observabilityUpdated").textContent="Updated "+new Date(data.generatedAt).toLocaleTimeString();
-    el("observabilityMetrics").innerHTML=metric("Provider requests",t.requests,"Recorded agent attempts")+metric("Estimated tokens","~"+(t.inputTokensEstimate+t.outputTokensEstimate).toLocaleString(),"Input "+t.inputTokensEstimate.toLocaleString()+" · output "+t.outputTokensEstimate.toLocaleString())+metric("Agent time",Math.round(t.durationMs/1000)+" s","Accumulated provider wait time")+metric("Failures / fallbacks",t.failures+" / "+t.fallbacks,data.runsScanned+" runs scanned");
-    el("agentObservability").innerHTML=data.agents.length?data.agents.map(a=>{
+    renderHtml(el("observabilityMetrics"), metric("Provider requests",t.requests,"Recorded agent attempts")+metric("Estimated tokens","~"+(t.inputTokensEstimate+t.outputTokensEstimate).toLocaleString(),"Input "+t.inputTokensEstimate.toLocaleString()+" · output "+t.outputTokensEstimate.toLocaleString())+metric("Agent time",Math.round(t.durationMs/1000)+" s","Accumulated provider wait time")+metric("Failures / fallbacks",t.failures+" / "+t.fallbacks,data.runsScanned+" runs scanned"));
+    renderHtml(el("agentObservability"), data.agents.length?data.agents.map(a=>{
       const used=a.inputTokensEstimate+a.outputTokensEstimate,limit=data.budgets.perAgentTokens[a.name]||null,pct=limit?Math.min(100,Math.round(used/limit*100)):null;
       return '<div class="activity-item"><div style="width:100%"><div class="rowitem"><b>'+esc(a.name)+'</b><span class="pill pill-accent">'+a.requests+' attempts</span></div><div class="run-meta">~'+used.toLocaleString()+' tokens · '+Math.round(a.durationMs/1000)+' s · '+a.failures+' failures · '+(a.retries||0)+' retries</div>'+(limit?'<div class="barline"><span style="width:'+pct+'%"></span></div><div class="run-meta">'+pct+'% of configured cumulative token budget ('+limit.toLocaleString()+')</div>':'<div class="run-meta">No per-agent token budget configured</div>')+'</div></div>';
-    }).join(""):'<div class="empty">No saved agent traces yet. Run a workflow to populate observability.</div>';
-    el("providerObservability").innerHTML=data.providers.length?data.providers.map(p=>'<div class="activity-item"><div><b>'+esc(p.name)+'</b><div class="run-meta">'+p.requests+' requests · '+p.successes+' successes · '+p.fallbacks+' fallbacks · '+p.failures+' failures</div><div class="run-meta">'+Math.round(p.durationMs/1000)+' s accumulated duration</div></div></div>').join(""):'<div class="empty">No provider traces recorded yet.</div>';
+    }).join(""):'<div class="empty">No saved agent traces yet. Run a workflow to populate observability.</div>');
+    renderHtml(el("providerObservability"), data.providers.length?data.providers.map(p=>'<div class="activity-item"><div><b>'+esc(p.name)+'</b><div class="run-meta">'+p.requests+' requests · '+p.successes+' successes · '+p.fallbacks+' fallbacks · '+p.failures+' failures</div><div class="run-meta">'+Math.round(p.durationMs/1000)+' s accumulated duration</div></div></div>').join(""):'<div class="empty">No provider traces recorded yet.</div>');
     el("observabilityWarnings").textContent="Usage is estimated from model character lengths, not provider billing data.";
-  }catch(error){el("observabilityMetrics").innerHTML='<div class="error">'+esc(error.message)+'</div>';}
+  }catch(error){renderHtml(el("observabilityMetrics"), '<div class="error">'+esc(error.message)+'</div>');}
 }
 
 async function loadOverview(){
@@ -307,21 +310,21 @@ async function loadOverview(){
     const data=await api("/api/overview");
     const s=data.summary;
     const runsCount = (data.runCount || (isShowcase ? SAMPLE_RUNS.length : 0));
-    el("metrics").innerHTML=metric("Source files",s.filesScanned,"Files inspected")+metric("Directories",s.directoriesScanned,"Project folders")+metric("Dependencies",data.dependencies.production+data.dependencies.development,data.dependencies.production+" production · "+data.dependencies.development+" development")+metric("Saved runs",runsCount,"Local execution history");
+    renderHtml(el("metrics"), metric("Source files",s.filesScanned,"Files inspected")+metric("Directories",s.directoriesScanned,"Project folders")+metric("Dependencies",data.dependencies.production+data.dependencies.development,data.dependencies.production+" production · "+data.dependencies.development+" development")+metric("Saved runs",runsCount,"Local execution history"));
     const total=Math.max(1,s.languages.reduce((n,x)=>n+x.files,0));
-    el("languages").innerHTML=s.languages.length?s.languages.slice(0,8).map(x=>'<div><div class="rowitem"><b>'+esc(x.name)+'</b><span class="muted">'+x.files+' files</span></div><div class="barline"><span style="width:'+Math.round(x.files/total*100)+'%"></span></div></div>').join(""):'<div class="empty">No recognized source files found.</div>';
+    renderHtml(el("languages"), s.languages.length?s.languages.slice(0,8).map(x=>'<div><div class="rowitem"><b>'+esc(x.name)+'</b><span class="muted">'+x.files+' files</span></div><div class="barline"><span style="width:'+Math.round(x.files/total*100)+'%"></span></div></div>').join(""):'<div class="empty">No recognized source files found.</div>');
     const stack=[...(data.packageManagers||[]),...(data.frameworks||[])];
-    el("stack").innerHTML=stack.length?stack.map(x=>'<div class="rowitem"><b>'+esc(x)+'</b><span class="pill pill-emerald">DETECTED</span></div>').join(""):'<div class="empty">No common stack detected.</div>';
+    renderHtml(el("stack"), stack.length?stack.map(x=>'<div class="rowitem"><b>'+esc(x)+'</b><span class="pill pill-emerald">DETECTED</span></div>').join(""):'<div class="empty">No common stack detected.</div>');
     const signals=[["Important files",data.importantFiles.length],["Available scripts",Object.keys(data.scripts).length],["Scan warnings",data.warnings.length],["Architecture candidates","Ready in Architecture tab"]];
-    el("signals").innerHTML=signals.map(([k,v])=>'<div class="rowitem"><b>'+esc(k)+'</b><span class="pill">'+esc(v)+'</span></div>').join("");
-  }catch(error){el("metrics").innerHTML='<div class="card error">Dashboard error: '+esc(error.message)+'</div>';}
+    renderHtml(el("signals"), signals.map(([k,v])=>'<div class="rowitem"><b>'+esc(k)+'</b><span class="pill">'+esc(v)+'</span></div>').join(""));
+  }catch(error){renderHtml(el("metrics"), '<div class="card error">Dashboard error: '+esc(error.message)+'</div>');}
 }
 
 async function loadAgents(){
   try{
     const data=await api("/api/agents");
-    el("agents").innerHTML=data.length?data.map(agent=>'<div class="rowitem"><div><b>'+esc(agent.name)+'</b><div class="run-meta">'+esc(agent.description)+'</div></div><span class="pill pill-accent">'+esc(agent.source)+'</span></div>').join(""):'<div class="empty">No agent roles found.</div>';
-  }catch(error){el("agents").innerHTML='<div class="error">'+esc(error.message)+'</div>';}
+    renderHtml(el("agents"), data.length?data.map(agent=>'<div class="rowitem"><div><b>'+esc(agent.name)+'</b><div class="run-meta">'+esc(agent.description)+'</div></div><span class="pill pill-accent">'+esc(agent.source)+'</span></div>').join(""):'<div class="empty">No agent roles found.</div>');
+  }catch(error){renderHtml(el("agents"), '<div class="error">'+esc(error.message)+'</div>');}
 }
 
 let selectedRunId="";
@@ -356,7 +359,7 @@ async function inspectRun(id){
     const eventStream=run.events.length?'<div class="card"><div class="section-head"><h2>Live event stream</h2><span class="pill pill-cyan">LATEST EVENTS</span></div><div class="activity">'+run.events.slice(-20).reverse().map(event=>'<div class="activity-item"><span class="activity-dot '+(event.type==="completed"?"completed":event.type==="failed"||event.type==="blocked"?"failed":"running")+'"></span><div><b>'+esc(event.taskId)+' · '+esc(event.type)+'</b><div class="run-meta">'+esc(event.message)+' · '+esc(new Date(event.at).toLocaleTimeString())+'</div></div></div>').join("")+'</div></div>':'<div class="empty">No run events recorded yet.</div>';
     const trace=traceRequest?'<div class="card"><div class="section-head"><h2>Execution telemetry</h2><span class="pill pill-accent">LOCAL ESTIMATES</span></div><div class="grid">'+metric("Agent attempts",traceRequest.totals.tasks,"Recorded trace entries")+metric("Input tokens","~"+traceRequest.totals.estimatedInputTokens,"Character-based estimate")+metric("Output tokens","~"+traceRequest.totals.estimatedOutputTokens,"Character-based estimate")+metric("Agent time",traceRequest.totals.durationMs+" ms",traceRequest.totals.fallbacks+" fallbacks · "+traceRequest.totals.failures+" failures")+'</div><div class="activity" style="margin-top:12px">'+traceRequest.entries.slice().reverse().map(entry=>'<div class="activity-item"><span class="activity-dot '+(entry.outcome==="success"?"completed":"failed")+'"></span><div><b>'+esc(entry.agent)+' · '+esc(entry.model)+'</b><div class="run-meta">'+esc(entry.taskId)+' · '+esc(entry.tier)+' tier · '+esc(entry.durationMs)+' ms · '+esc(entry.outcome)+'</div></div></div>').join("")+'</div></div>':'<div class="empty">No execution trace is available for this run yet. Start a provider-backed run to record model and timing telemetry.</div>';
     
-    el("runInspector").innerHTML='<div><b>'+esc(run.goal)+'</b><div class="run-meta">'+esc(run.status)+' · '+esc(new Date(run.createdAt).toLocaleString())+'</div><div class="run-meta">'+completedCount+' / '+run.tasks.length+' tasks completed · '+runningCount+' running · '+failedCount+' failed or blocked</div><div class="barline"><span style="width:'+progressPercent+'%"></span></div></div><div class="card"><div class="section-head"><h2>Agent handoff map</h2><span class="pill">'+run.tasks.length+' TASKS</span></div><div class="task-grid">'+handoffs+'</div><div class="run-meta">Dependency links show which completed agent proposals are passed downstream.</div></div>'+eventStream+trace+run.tasks.map(task=>'<article class="inspector-task '+(task.status==="awaiting_approval"?"approval":"")+'"><div class="run-title"><b>'+esc(task.title)+'</b><span class="pill">'+esc(task.status)+'</span></div><div class="run-meta">'+esc(task.agent)+' · '+esc(task.id)+(task.dependsOn&&task.dependsOn.length?' · depends on '+esc(task.dependsOn.join(', ')):'')+'</div>'+(task.result?'<pre>'+esc(task.result.content)+'</pre>':"")+(task.error?'<div class="error">'+esc(task.error)+'</div>':"")+(task.status==="awaiting_approval"?'<div class="run-meta">Human decision required before this task can proceed.</div><div class="approval-actions"><button class="btn approve" data-approval="approved" data-task="'+esc(task.id)+'">Approve task</button><button class="btn reject" data-approval="rejected" data-task="'+esc(task.id)+'">Reject task</button></div>':"")+(task.status==="failed"?'<div class="approval-actions"><button class="btn" data-retry-task="'+esc(task.id)+'">Retry this task and blocked dependants</button></div>':"")+'</article>').join("");
+    renderHtml(el("runInspector"), '<div><b>'+esc(run.goal)+'</b><div class="run-meta">'+esc(run.status)+' · '+esc(new Date(run.createdAt).toLocaleString())+'</div><div class="run-meta">'+completedCount+' / '+run.tasks.length+' tasks completed · '+runningCount+' running · '+failedCount+' failed or blocked</div><div class="barline"><span style="width:'+progressPercent+'%"></span></div></div><div class="card"><div class="section-head"><h2>Agent handoff map</h2><span class="pill">'+run.tasks.length+' TASKS</span></div><div class="task-grid">'+handoffs+'</div><div class="run-meta">Dependency links show which completed agent proposals are passed downstream.</div></div>'+eventStream+trace+run.tasks.map(task=>'<article class="inspector-task '+(task.status==="awaiting_approval"?"approval":"")+'"><div class="run-title"><b>'+esc(task.title)+'</b><span class="pill">'+esc(task.status)+'</span></div><div class="run-meta">'+esc(task.agent)+' · '+esc(task.id)+(task.dependsOn&&task.dependsOn.length?' · depends on '+esc(task.dependsOn.join(', ')):'')+'</div>'+(task.result?'<pre>'+esc(task.result.content)+'</pre>':"")+(task.error?'<div class="error">'+esc(task.error)+'</div>':"")+(task.status==="awaiting_approval"?'<div class="run-meta">Human decision required before this task can proceed.</div><div class="approval-actions"><button class="btn approve" data-approval="approved" data-task="'+esc(task.id)+'">Approve task</button><button class="btn reject" data-approval="rejected" data-task="'+esc(task.id)+'">Reject task</button></div>':"")+(task.status==="failed"?'<div class="approval-actions"><button class="btn" data-retry-task="'+esc(task.id)+'">Retry this task and blocked dependants</button></div>':"")+'</article>').join(""));
 
     el("runInspector").querySelectorAll("[data-approval]").forEach(button=>button.addEventListener("click",()=>submitApproval(id,button.getAttribute("data-task"),button.getAttribute("data-approval"))));
     el("runInspector").querySelectorAll("[data-retry-task]").forEach(button=>button.addEventListener("click",async()=>{try{const taskId=button.getAttribute("data-retry-task");const response=await fetch("/api/runs/"+encodeURIComponent(id)+"/tasks/"+encodeURIComponent(taskId)+"/retry",{method:"POST",headers:{"content-type":"application/json"},body:"{}"});const data=await response.json();if(!response.ok)throw new Error(data.error||"Task retry could not be created.");await loadRuns();await inspectRun(data.id);}catch(error){el("runInspector").insertAdjacentHTML("afterbegin",'<div class="error">'+esc(error.message)+'</div>');}}));
@@ -377,7 +380,7 @@ async function inspectRun(id){
     }
 
     document.querySelectorAll(".run").forEach(item=>item.classList.toggle("selected",item.getAttribute("data-run-id")===id));
-  }catch(error){el("runInspector").innerHTML='<div class="error">'+esc(error.message)+'</div>';}
+  }catch(error){renderHtml(el("runInspector"), '<div class="error">'+esc(error.message)+'</div>');}
 }
 
 async function loadRuns(){
@@ -386,7 +389,7 @@ async function loadRuns(){
     if(!data.length && isShowcase){
       data = SAMPLE_RUNS;
     }
-    el("runs").innerHTML=data.length?data.slice(0,7).map(run=>'<div class="run" data-run-id="'+esc(run.id)+'" tabindex="0" role="button"><div class="run-title"><span class="run-goal">'+esc(run.goal)+'</span><span class="pill '+(run.status==="completed"?"pill-emerald":"pill-accent")+'">'+esc(run.status)+'</span></div><div class="run-meta">'+esc(run.id)+' · '+esc(new Date(run.createdAt).toLocaleString())+' · '+run.tasks.length+' tasks</div></div>').join(""):'<div class="empty">No saved runs yet. Create one with <code>anvil plan --goal "..."</code>.</div>';
+    renderHtml(el("runs"), data.length?data.slice(0,7).map(run=>'<div class="run" data-run-id="'+esc(run.id)+'" tabindex="0" role="button"><div class="run-title"><span class="run-goal">'+esc(run.goal)+'</span><span class="pill '+(run.status==="completed"?"pill-emerald":"pill-accent")+'">'+esc(run.status)+'</span></div><div class="run-meta">'+esc(run.id)+' · '+esc(new Date(run.createdAt).toLocaleString())+' · '+run.tasks.length+' tasks</div></div>').join(""):'<div class="empty">No saved runs yet. Create one with <code>anvil plan --goal "..."</code>.</div>');
     el("runs").querySelectorAll("[data-run-id]").forEach(item=>{
       const select=()=>inspectRun(item.getAttribute("data-run-id"));
       item.addEventListener("click",select);
@@ -395,7 +398,7 @@ async function loadRuns(){
     if(data.length && (!selectedRunId || !data.some(r=>r.id===selectedRunId))){
       inspectRun(data[0].id);
     }
-  }catch(error){el("runs").innerHTML='<div class="error">'+esc(error.message)+'</div>';}
+  }catch(error){renderHtml(el("runs"), '<div class="error">'+esc(error.message)+'</div>');}
 }
 
 async function loadActivity(){
@@ -404,14 +407,14 @@ async function loadActivity(){
     if(!runs.length && isShowcase) runs = SAMPLE_RUNS;
     el("activityUpdated").textContent="Updated "+new Date().toLocaleTimeString();
     if(!runs.length){
-      el("activity").innerHTML='<div class="empty">No agent activity yet. Create a plan or run to populate this view.</div>';
-      el("taskStatus").innerHTML='<div class="empty">No tasks recorded.</div>';
+      renderHtml(el("activity"), '<div class="empty">No agent activity yet. Create a plan or run to populate this view.</div>');
+      renderHtml(el("taskStatus"), '<div class="empty">No tasks recorded.</div>');
       return;
     }
     const latest=runs[0],events=latest.events||[];
-    el("activity").innerHTML=events.length?events.slice(-12).reverse().map(event=>'<div class="activity-item"><span class="activity-dot '+esc(event.type)+'"></span><div><b>'+esc(event.type.replaceAll("_"," "))+'</b><div class="run-meta">'+esc(event.message)+'</div><div class="run-meta">'+esc(event.taskId)+' · '+esc(new Date(event.at).toLocaleTimeString())+'</div></div></div>').join(""):'<div class="empty">Latest run has no recorded events yet.</div>';
-    el("taskStatus").innerHTML=latest.tasks.length?latest.tasks.map(task=>'<div class="task-card"><b>'+esc(task.title||task.id)+'</b><small>'+esc(task.agent||"Agent")+'</small><span class="pill '+(task.status==="completed"?"pill-emerald":"")+'">'+esc(task.status)+'</span></div>').join(""):'<div class="empty">No tasks recorded.</div>';
-  }catch(error){el("activity").innerHTML='<div class="error">'+esc(error.message)+'</div>';}
+    renderHtml(el("activity"), events.length?events.slice(-12).reverse().map(event=>'<div class="activity-item"><span class="activity-dot '+esc(event.type)+'"></span><div><b>'+esc(event.type.replaceAll("_"," "))+'</b><div class="run-meta">'+esc(event.message)+'</div><div class="run-meta">'+esc(event.taskId)+' · '+esc(new Date(event.at).toLocaleTimeString())+'</div></div></div>').join(""):'<div class="empty">Latest run has no recorded events yet.</div>');
+    renderHtml(el("taskStatus"), latest.tasks.length?latest.tasks.map(task=>'<div class="task-card"><b>'+esc(task.title||task.id)+'</b><small>'+esc(task.agent||"Agent")+'</small><span class="pill '+(task.status==="completed"?"pill-emerald":"")+'">'+esc(task.status)+'</span></div>').join(""):'<div class="empty">No tasks recorded.</div>');
+  }catch(error){renderHtml(el("activity"), '<div class="error">'+esc(error.message)+'</div>');}
 }
 
 async function loadHealth(){
@@ -430,8 +433,8 @@ async function loadHealth(){
     })():'<div class="card"><b>Quality score trend</b><div class="empty">Generate more health snapshots to see a trend.</div></div>';
     const severity=Object.entries(c.quality.bySeverity).map(([name,count])=>'<span class="pill">'+esc(name)+": "+esc(count)+'</span>').join(" ");
     const dimensions=score.dimensions.map(x=>'<div class="rowitem"><div><b>'+esc(x.label)+'</b><div class="run-meta">'+esc(x.reason)+'</div></div><span class="pill">'+(x.score===null?"NOT ASSESSED":esc(x.score)+"/100")+'</span></div>').join("");
-    el("healthPanel").innerHTML='<div class="grid">'+cards+'</div><div style="margin-top:14px"><b>Unified score dimensions</b><div class="activity">'+dimensions+'</div></div>'+chart+'<div style="margin-top:12px"><b>Findings by severity</b><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">'+severity+'</div></div>';
-  }catch(error){el("healthPanel").innerHTML='<div class="error">'+esc(error.message)+'</div>';}
+    renderHtml(el("healthPanel"), '<div class="grid">'+cards+'</div><div style="margin-top:14px"><b>Unified score dimensions</b><div class="activity">'+dimensions+'</div></div>'+chart+'<div style="margin-top:12px"><b>Findings by severity</b><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">'+severity+'</div></div>');
+  }catch(error){renderHtml(el("healthPanel"), '<div class="error">'+esc(error.message)+'</div>');}
 }
 
 async function loadRegression(){
@@ -443,8 +446,8 @@ async function loadRegression(){
     if(!checks && isShowcase){
       checks='<div class="rowitem"><div><b>npm test</b><div class="run-meta">479 tests passed · zero regressions</div></div><span class="pill pill-emerald">STABLE</span></div><div class="rowitem"><div><b>npm run typecheck</b><div class="run-meta">TypeScript strict mode clean</div></div><span class="pill pill-emerald">STABLE</span></div>';
     }
-    el("regressionPanel").innerHTML=top+(checks||'<div class="empty">No verification history yet. Run anvil verify SCRIPT to establish a baseline.</div>');
-  }catch(error){el("regressionPanel").innerHTML='<div class="error">'+esc(error.message)+'</div>';}
+    renderHtml(el("regressionPanel"), top+(checks||'<div class="empty">No verification history yet. Run anvil verify SCRIPT to establish a baseline.</div>'));
+  }catch(error){renderHtml(el("regressionPanel"), '<div class="error">'+esc(error.message)+'</div>');}
 }
 
 async function loadReviews(){
@@ -456,8 +459,8 @@ async function loadReviews(){
         { id: "rev-arch-02", createdAt: new Date(Date.now() - 86400000).toISOString(), filesReviewed: 48, staticFindings: 0, aiSuggestions: 1, topFindings: ["Clean layered boundaries verified"], scope: "src/core/" }
       ];
     }
-    el("reviewPanel").innerHTML=data.length?data.slice(0,8).map(item=>'<div class="rowitem"><div><b>'+esc(item.id)+'</b><div class="run-meta">'+esc(new Date(item.createdAt).toLocaleString())+' · '+esc(item.filesReviewed)+' files · '+esc(item.staticFindings)+' static findings · '+esc(item.aiSuggestions)+' AI suggestions</div>'+(item.topFindings?.length?'<div class="run-meta">'+item.topFindings.map(esc).join(" · ")+'</div>':"")+'</div><span class="pill pill-cyan">'+esc(item.scope)+'</span></div>').join(""):'<div class="empty">No saved reviews yet. Run anvil review . to create one.</div>';
-  }catch(error){el("reviewPanel").innerHTML='<div class="error">'+esc(error.message)+'</div>';}
+    renderHtml(el("reviewPanel"), data.length?data.slice(0,8).map(item=>'<div class="rowitem"><div><b>'+esc(item.id)+'</b><div class="run-meta">'+esc(new Date(item.createdAt).toLocaleString())+' · '+esc(item.filesReviewed)+' files · '+esc(item.staticFindings)+' static findings · '+esc(item.aiSuggestions)+' AI suggestions</div>'+(item.topFindings?.length?'<div class="run-meta">'+item.topFindings.map(esc).join(" · ")+'</div>':"")+'</div><span class="pill pill-cyan">'+esc(item.scope)+'</span></div>').join(""):'<div class="empty">No saved reviews yet. Run anvil review . to create one.</div>');
+  }catch(error){renderHtml(el("reviewPanel"), '<div class="error">'+esc(error.message)+'</div>');}
 }
 
 async function loadQuality(){
@@ -465,8 +468,8 @@ async function loadQuality(){
     const data=await api("/api/quality");
     const head='<div class="rowitem"><b>Rule-based score</b><span class="pill pill-accent">'+esc(data.score)+'/100 · '+esc(data.grade)+'</span></div><div class="run-meta">'+esc(data.findings.length)+' findings · '+esc(data.metrics.sourceFiles)+' source files · '+esc(data.metrics.testFiles)+' test files</div>';
     const items=data.findings.slice(0,6).map(item=>'<div class="rowitem"><div><b>'+esc(item.title)+'</b><div class="run-meta">'+esc(item.recommendation)+'</div></div><span class="pill">'+esc(item.severity)+'</span></div>').join("");
-    el("qualityPanel").innerHTML=head+(items||'<div class="empty">No findings from available static checks.</div>');
-  }catch(error){el("qualityPanel").innerHTML='<div class="error">'+esc(error.message)+'</div>';}
+    renderHtml(el("qualityPanel"), head+(items||'<div class="empty">No findings from available static checks.</div>'));
+  }catch(error){renderHtml(el("qualityPanel"), '<div class="error">'+esc(error.message)+'</div>');}
 }
 
 async function loadVerifications(){
@@ -480,9 +483,9 @@ async function loadVerifications(){
         { script: "anvil clean --verify", startedAt: new Date(Date.now() - 960000).toISOString(), durationMs: 1450, status: "passed" }
       ];
     }
-    if(!data.length){el("verificationPanel").innerHTML='<div class="empty">No verification runs yet. Use anvil verify SCRIPT.</div>';return;}
-    el("verificationPanel").innerHTML=data.slice(0,8).map(item=>'<div class="rowitem"><div><b>'+esc(item.script)+'</b><div class="run-meta">'+esc(new Date(item.startedAt).toLocaleString())+' · '+esc(item.durationMs)+' ms</div></div><span class="pill '+(item.status==="passed"?"pill-emerald":"pill-accent")+'">'+esc(item.status)+'</span></div>').join("");
-  }catch(error){el("verificationPanel").innerHTML='<div class="error">'+esc(error.message)+'</div>';}
+    if(!data.length){renderHtml(el("verificationPanel"), '<div class="empty">No verification runs yet. Use anvil verify SCRIPT.</div>');return;}
+    renderHtml(el("verificationPanel"), data.slice(0,8).map(item=>'<div class="rowitem"><div><b>'+esc(item.script)+'</b><div class="run-meta">'+esc(new Date(item.startedAt).toLocaleString())+' · '+esc(item.durationMs)+' ms</div></div><span class="pill '+(item.status==="passed"?"pill-emerald":"pill-accent")+'">'+esc(item.status)+'</span></div>').join(""));
+  }catch(error){renderHtml(el("verificationPanel"), '<div class="error">'+esc(error.message)+'</div>');}
 }
 
 // Cleaner tab & Self-Healing actions
@@ -498,14 +501,14 @@ async function loadCleanerBackups(){
         { id: "backup-1795164", at: new Date(Date.now() - 86400000).toISOString(), files: 2 }
       ];
     }
-    target.innerHTML = snapshots.length ? snapshots.map(s=>'<div class="rowitem"><div><b>'+esc(s.id)+'</b><div class="run-meta">'+esc(new Date(s.at).toLocaleString())+' · '+s.files+' files preserved</div></div><span class="pill pill-emerald">ROLLBACK READY</span></div>').join("") : '<div class="empty">No backup snapshots recorded. Run <code>anvil clean --apply</code> to create one.</div>';
-  }catch(e){target.innerHTML='<div class="error">'+esc(e.message)+'</div>';}
+    renderHtml(target, snapshots.length ? snapshots.map(s=>'<div class="rowitem"><div><b>'+esc(s.id)+'</b><div class="run-meta">'+esc(new Date(s.at).toLocaleString())+' · '+s.files+' files preserved</div></div><span class="pill pill-emerald">ROLLBACK READY</span></div>').join("") : '<div class="empty">No backup snapshots recorded. Run <code>anvil clean --apply</code> to create one.</div>');
+  }catch(e){renderHtml(target, '<div class="error">'+esc(e.message)+'</div>');}
 }
 
 async function runCleanerPreview(){
   const output = el("cleanerLiveOutput");
   if(!output) return;
-  output.innerHTML = '<div class="loading">Scanning project for temporary clutter, OS junk and unused imports…</div>';
+  renderHtml(output, '<div class="loading">Scanning project for temporary clutter, OS junk and unused imports…</div>');
   try{
     const data = await api("/api/clean/preview");
     let html = '<div class="card" style="background:#090d14;margin-bottom:12px;"><b>Scan Summary:</b> '+data.stats.junkFound+' junk items · '+data.stats.codeFixesFound+' unused import fixes · '+data.stats.orphanFilesFound+' unreferenced files</div>';
@@ -517,8 +520,8 @@ async function runCleanerPreview(){
     if(data.codeFixes?.length){
       html += '<div style="margin-top:10px"><b>Code fixes available:</b>'+data.codeFixes.slice(0,10).map(f=>'<div class="rowitem"><div><b>'+esc(f.file)+'</b><div class="run-meta">'+esc(f.detail)+'</div></div><span class="pill pill-cyan">AUTO-FIX</span></div>').join("")+'</div>';
     }
-    output.innerHTML = html;
-  }catch(err){output.innerHTML = '<div class="error">'+esc(err.message)+'</div>';}
+    renderHtml(output, html);
+  }catch(err){renderHtml(output, '<div class="error">'+esc(err.message)+'</div>');}
 }
 
 async function loadMemory(){
@@ -532,11 +535,11 @@ async function loadMemory(){
         { id: "mem-showcase-3", kind: "constraint", content: "Never forward arbitrary environment secrets or credentials to third-party providers or tools.", tags: ["security"], updatedAt: new Date().toISOString() }
       ];
     }
-    el("memoryList").innerHTML = entries.length ? entries.map(item => {
+    renderHtml(el("memoryList"), entries.length ? entries.map(item => {
       const kindClass = item.kind === "decision" ? "pill-emerald" : item.kind === "constraint" ? "pill-accent" : "pill-cyan";
       return '<div class="rowitem" style="align-items:flex-start"><div><div style="display:flex;gap:6px;align-items:center;margin-bottom:4px"><span class="pill ' + kindClass + '">' + esc(item.kind.toUpperCase()) + '</span>' + (item.tags||[]).map(t => '<span class="pill" style="font-size:10px">#' + esc(t) + '</span>').join('') + '<span class="run-meta" style="margin-left:8px">' + esc(item.id) + '</span></div><div style="font-size:13px;line-height:1.4">' + esc(item.content) + '</div></div>' + (!item.id.startsWith("mem-showcase") ? '<button class="btn" style="padding:4px 8px;font-size:11px" onclick="deleteMemoryEntry(\'' + esc(item.id) + '\')">Remove</button>' : '') + '</div>';
-    }).join("") : '<div class="empty">No project memory entries saved yet. Add a decision or constraint above to guide your agents!</div>';
-  }catch(e){el("memoryList").innerHTML='<div class="error">'+esc(e.message)+'</div>';}
+    }).join("") : '<div class="empty">No project memory entries saved yet. Add a decision or constraint above to guide your agents!</div>');
+  }catch(e){renderHtml(el("memoryList"), '<div class="error">'+esc(e.message)+'</div>');}
 }
 
 async function deleteMemoryEntry(id){
@@ -559,13 +562,13 @@ async function loadAdrs(){
     }
     const container = el("adrList");
     if(!container) return;
-    container.innerHTML = adrs.length ? adrs.map(item => {
+    renderHtml(container, adrs.length ? adrs.map(item => {
       const statusPill = item.status === "Accepted" ? "pill-emerald" : item.status === "Proposed" ? "pill-cyan" : "pill-accent";
       return '<div class="rowitem"><div><div style="display:flex;gap:6px;align-items:center;margin-bottom:4px"><span class="pill ' + statusPill + '">' + esc(item.status.toUpperCase()) + '</span><span class="pill" style="font-size:10px">ADR-' + esc(item.id) + '</span><span class="run-meta">' + esc(item.date) + '</span></div><div style="font-size:13px;font-weight:600">' + esc(item.title) + '</div><div class="run-meta" style="font-size:11px">' + esc(item.filename) + '</div></div></div>';
-    }).join("") : '<div class="empty">No Architecture Decision Records found. Click "+ New ADR" or "Sync Memory to ADRs" to initialize docs/adr/</div>';
+    }).join("") : '<div class="empty">No Architecture Decision Records found. Click "+ New ADR" or "Sync Memory to ADRs" to initialize docs/adr/</div>');
   }catch(e){
     const container = el("adrList");
-    if(container) container.innerHTML = '<div class="error">' + esc(e.message) + '</div>';
+    if(container) renderHtml(container, '<div class="error">' + esc(e.message) + '</div>');
   }
 }
 
@@ -609,15 +612,15 @@ async function loadSecurityAudit(){
       }
     }
 
-    summaryEl.innerHTML = '<div class="card card-highlight"><div class="metric-label">Security Status</div><div class="metric" style="color:' + (res.passed ? 'var(--emerald)' : 'var(--accent)') + '">' + (res.passed ? 'SECURE' : 'ACTION REQUIRED') + '</div><div class="metric-sub">' + res.findings.length + ' total findings</div></div><div class="card"><div class="metric-label">Critical Secrets</div><div class="metric" style="color:var(--accent)">' + res.summary.critical + '</div><div class="metric-sub">API keys, tokens, keys</div></div><div class="card"><div class="metric-label">High Severity</div><div class="metric" style="color:var(--amber,#f59e0b)">' + res.summary.high + '</div><div class="metric-sub">Scripts, unencrypted deps</div></div><div class="card"><div class="metric-label">Scanned Scope</div><div class="metric" style="color:var(--cyan)">' + res.scannedFiles + '</div><div class="metric-sub">Files in ' + res.durationMs + 'ms</div></div>';
+    renderHtml(summaryEl, '<div class="card card-highlight"><div class="metric-label">Security Status</div><div class="metric" style="color:' + (res.passed ? 'var(--emerald)' : 'var(--accent)') + '">' + (res.passed ? 'SECURE' : 'ACTION REQUIRED') + '</div><div class="metric-sub">' + res.findings.length + ' total findings</div></div><div class="card"><div class="metric-label">Critical Secrets</div><div class="metric" style="color:var(--accent)">' + res.summary.critical + '</div><div class="metric-sub">API keys, tokens, keys</div></div><div class="card"><div class="metric-label">High Severity</div><div class="metric" style="color:var(--amber,#f59e0b)">' + res.summary.high + '</div><div class="metric-sub">Scripts, unencrypted deps</div></div><div class="card"><div class="metric-label">Scanned Scope</div><div class="metric" style="color:var(--cyan)">' + res.scannedFiles + '</div><div class="metric-sub">Files in ' + res.durationMs + 'ms</div></div>');
 
-    findingsEl.innerHTML = res.findings.length ? res.findings.map(f => {
+    renderHtml(findingsEl, res.findings.length ? res.findings.map(f => {
       const sevClass = f.severity === "critical" ? "pill-accent" : f.severity === "high" ? "pill-amber" : "pill-cyan";
       return '<div class="rowitem"><div><div style="display:flex;gap:6px;align-items:center;margin-bottom:4px"><span class="pill ' + sevClass + '">' + esc(f.severity.toUpperCase()) + '</span><span class="pill" style="font-size:10px">' + esc(f.category) + '</span><span class="run-meta">' + esc(f.file + (f.line ? ':' + f.line : '')) + '</span></div><div style="font-size:13px;font-weight:600">' + esc(f.description) + '</div>' + (f.snippet ? '<div class="run-meta" style="font-family:monospace;font-size:11px">Snippet: ' + esc(f.snippet) + '</div>' : '') + '<div class="run-meta" style="font-size:11px;color:var(--text-muted)">Remediation: ' + esc(f.remediation) + '</div></div></div>';
-    }).join("") : '<div class="empty" style="color:var(--emerald)">✓ Clean audit: No hardcoded secrets, dangerous scripts, or exposed credentials detected.</div>';
+    }).join("") : '<div class="empty" style="color:var(--emerald)">✓ Clean audit: No hardcoded secrets, dangerous scripts, or exposed credentials detected.</div>');
   }catch(e){
     const findingsEl = el("securityFindings");
-    if(findingsEl) findingsEl.innerHTML = '<div class="error">' + esc(e.message) + '</div>';
+    if(findingsEl) renderHtml(findingsEl, '<div class="error">' + esc(e.message) + '</div>');
   }
 }
 
@@ -633,14 +636,14 @@ async function handleAutoFixSecurity(){
 async function runDoctorDiagnostics(targetOutputId = "cleanerLiveOutput") {
   const output = el(targetOutputId);
   if (!output) return;
-  output.innerHTML = '<div class="loading">Running full system health and runtime diagnostic checks…</div>';
+  renderHtml(output, '<div class="loading">Running full system health and runtime diagnostic checks…</div>');
   try {
     const rep = await api("/api/doctor");
     let html = '<div class="card" style="background:#090d14;margin-bottom:10px"><b>Doctor Diagnostic Status:</b> <span class="pill ' + (rep.summary.status === "pass" ? "pill-emerald" : "pill-accent") + '">' + rep.summary.status.toUpperCase() + '</span> (' + rep.summary.passed + ' passed, ' + rep.summary.failed + ' failed, ' + rep.summary.warnings + ' warnings)</div>';
     html += rep.checks.map(c => '<div class="rowitem"><div><b>' + esc(c.name) + '</b><div class="run-meta">' + esc(c.message) + '</div></div><span class="pill ' + (c.status === "pass" ? "pill-emerald" : c.status === "warn" ? "pill-accent" : "pill") + '">' + esc(c.status.toUpperCase()) + '</span></div>').join("");
-    output.innerHTML = html;
+    renderHtml(output, html);
   } catch (err) {
-    output.innerHTML = '<div class="error">' + esc(err.message) + '</div>';
+    renderHtml(output, '<div class="error">' + esc(err.message) + '</div>');
   }
 }
 
@@ -685,9 +688,9 @@ async function loadGate() {
     if (suppMetric) suppMetric.textContent = "1";
     if (filePill) filePill.textContent = ".anvil/policy.json";
     if (countPill) countPill.textContent = "3 FINDINGS (2 BASELINE, 1 SUPPRESSED)";
-    if (violationsBox) violationsBox.innerHTML = '<div style="padding:10px 14px;border-radius:8px;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.3);color:var(--emerald);font-size:12px"><b>✓ Zero policy gate violations.</b> Repository meets all quality and security criteria.</div>';
-    if (advisoriesBox) advisoriesBox.innerHTML = '';
-    if (list) list.innerHTML = '<div class="rowitem"><div><b>ANVIL-R003</b> [low] Inline suppression on line 42 with verified justification.<div class="run-meta">src/core/dashboard-server.ts:42</div></div><span class="pill pill-emerald">SUPPRESSED</span></div><div class="rowitem"><div><b>ANVIL-R001</b> [low] Legacy console output accepted in baseline.<div class="run-meta">scripts/setup.js:14</div></div><span class="pill pill-cyan">BASELINE</span></div>';
+    if (violationsBox) renderHtml(violationsBox, '<div style="padding:10px 14px;border-radius:8px;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.3);color:var(--emerald);font-size:12px"><b>✓ Zero policy gate violations.</b> Repository meets all quality and security criteria.</div>');
+    if (advisoriesBox) renderEmpty(advisoriesBox);
+    if (list) renderHtml(list, '<div class="rowitem"><div><b>ANVIL-R003</b> [low] Inline suppression on line 42 with verified justification.<div class="run-meta">src/core/dashboard-server.ts:42</div></div><span class="pill pill-emerald">SUPPRESSED</span></div><div class="rowitem"><div><b>ANVIL-R001</b> [low] Legacy console output accepted in baseline.<div class="run-meta">scripts/setup.js:14</div></div><span class="pill pill-cyan">BASELINE</span></div>');
     return;
   }
 
@@ -717,21 +720,20 @@ async function loadGate() {
 
     if (violationsBox) {
       if (data.violations && data.violations.length > 0) {
-        violationsBox.innerHTML = '<div class="card" style="border-color:rgba(251,113,133,0.5);background:rgba(35,16,22,0.8);margin-bottom:10px"><b style="color:var(--danger)">Gate Violations (' + data.violations.length + '):</b><ul style="margin:6px 0 0;padding-left:20px;font-size:12px;color:#fecdd3">' + data.violations.map(v => '<li>' + esc(v) + '</li>').join('') + '</ul></div>';
+        renderHtml(violationsBox, '<div class="card" style="border-color:rgba(251,113,133,0.5);background:rgba(35,16,22,0.8);margin-bottom:10px"><b style="color:var(--danger)">Gate Violations (' + data.violations.length + '):</b><ul style="margin:6px 0 0;padding-left:20px;font-size:12px;color:#fecdd3">' + data.violations.map(v => '<li>' + esc(v) + '</li>').join('') + '</ul></div>');
       } else {
-        violationsBox.innerHTML = '<div style="padding:10px 14px;border-radius:8px;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.3);color:var(--emerald);font-size:12px"><b>✓ Zero policy gate violations.</b> Repository meets all quality and security criteria.</div>';
+        renderHtml(violationsBox, '<div style="padding:10px 14px;border-radius:8px;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.3);color:var(--emerald);font-size:12px"><b>✓ Zero policy gate violations.</b> Repository meets all quality and security criteria.</div>');
       }
     }
 
     const notices = data.warnings || data.advisoryNotices;
     if (advisoriesBox) {
       if (notices && notices.length > 0) {
-        advisoriesBox.innerHTML =
-          '<div class="card" style="border-color:rgba(251,191,36,0.4);background:rgba(30,24,14,0.7);margin-bottom:10px"><b style="color:var(--warning)">Advisory Notices:</b><ul style="margin:6px 0 0;padding-left:20px;font-size:12px;color:#fef08a">' +
+        renderHtml(advisoriesBox, '<div class="card" style="border-color:rgba(251,191,36,0.4);background:rgba(30,24,14,0.7);margin-bottom:10px"><b style="color:var(--warning)">Advisory Notices:</b><ul style="margin:6px 0 0;padding-left:20px;font-size:12px;color:#fef08a">' +
           notices.map((a) => '<li>' + esc(a) + '</li>').join('') +
-          '</ul></div>';
+          '</ul></div>');
       } else {
-        advisoriesBox.innerHTML = '';
+        renderEmpty(advisoriesBox);
       }
     }
 
@@ -749,10 +751,10 @@ async function loadGate() {
           items.push('<div class="rowitem"><div><b>' + esc(sf.ruleId || 'ANVIL-RULE') + '</b> [suppressed] ' + esc(sf.message) + '<div class="run-meta">' + esc(sf.filePath) + ':' + esc(sf.line || 1) + '</div></div><span class="pill pill-emerald">SUPPRESSED</span></div>');
         }
       }
-      list.innerHTML = items.length === 0 ? '<div class="empty">No findings reported. Codebase is clean.</div>' : items.join('');
+      renderHtml(list, items.length === 0 ? '<div class="empty">No findings reported. Codebase is clean.</div>' : items.join(''));
     }
   } catch (e) {
-    if (list) list.innerHTML = '<div class="error">Failed to evaluate gate: ' + esc(e.message) + '</div>';
+    if (list) renderHtml(list, '<div class="error">Failed to evaluate gate: ' + esc(e.message) + '</div>');
   }
 }
 
@@ -760,10 +762,10 @@ async function loadGate() {
 async function loadDependencyIntelligence(){
   try{
     const data=await api("/api/dependency-intelligence");const s=data.summary;
-    el("dependencyIntelSummary").innerHTML=metric("Direct dependencies",s.direct,"Production "+s.production+" · development "+s.development)+metric("Transitive packages",s.transitive,"From parsed npm lockfile")+metric("Vulnerabilities",data.sources.vulnerabilityReport===null?"N/A":s.vulnerabilities,"Imported report only")+metric("Outdated",data.sources.outdatedReport===null?"N/A":s.outdated,"Imported report only");
-    el("dependencyIntelList").innerHTML=data.dependencies.length?data.dependencies.slice(0,30).map(item=>'<div class="activity-item"><div class="activity-main"><b>'+esc(item.name)+'</b><small>'+(item.direct?"Direct · ":"Transitive · ")+esc(item.kind)+' · '+esc(item.locked||item.requested)+'</small></div><span class="pill">'+esc(item.licenseClass.toUpperCase())+'</span></div>').join(""):'<div class="empty">No npm dependencies detected.</div>';
+    renderHtml(el("dependencyIntelSummary"), metric("Direct dependencies",s.direct,"Production "+s.production+" · development "+s.development)+metric("Transitive packages",s.transitive,"From parsed npm lockfile")+metric("Vulnerabilities",data.sources.vulnerabilityReport===null?"N/A":s.vulnerabilities,"Imported report only")+metric("Outdated",data.sources.outdatedReport===null?"N/A":s.outdated,"Imported report only"));
+    renderHtml(el("dependencyIntelList"), data.dependencies.length?data.dependencies.slice(0,30).map(item=>'<div class="activity-item"><div class="activity-main"><b>'+esc(item.name)+'</b><small>'+(item.direct?"Direct · ":"Transitive · ")+esc(item.kind)+' · '+esc(item.locked||item.requested)+'</small></div><span class="pill">'+esc(item.licenseClass.toUpperCase())+'</span></div>').join(""):'<div class="empty">No npm dependencies detected.</div>');
     el("dependencyIntelNotes").textContent=data.limitations.join(" · ");
-  }catch(error){el("dependencyIntelList").innerHTML='<div class="error">'+esc(error.message)+'</div>';}
+  }catch(error){renderHtml(el("dependencyIntelList"), '<div class="error">'+esc(error.message)+'</div>');}
 }
 
 async function loadIntelligenceTimeline(){
@@ -771,31 +773,31 @@ async function loadIntelligenceTimeline(){
     const data=await api("/api/intelligence-timeline");
     const comparison=data.comparison;const snapshots=data.snapshots||[];
     if(!comparison){
-      el("timelineSummary").innerHTML=metric("Snapshots",snapshots.length,"Saved locally")+metric("Trend","STABLE","Calculated")+metric("Risk index","12/100","Low risk")+metric("High hotspots",0,"Current baseline");
-      el("timelineHistory").innerHTML='<div class="empty">No previous snapshots recorded. Run <code>anvil snapshot .</code> to capture one.</div>';
+      renderHtml(el("timelineSummary"), metric("Snapshots",snapshots.length,"Saved locally")+metric("Trend","STABLE","Calculated")+metric("Risk index","12/100","Low risk")+metric("High hotspots",0,"Current baseline"));
+      renderHtml(el("timelineHistory"), '<div class="empty">No previous snapshots recorded. Run <code>anvil snapshot .</code> to capture one.</div>');
       return;
     }
     const current=comparison.current;const delta=comparison.delta;
-    el("timelineSummary").innerHTML=metric("Snapshots",snapshots.length,"Saved locally")+metric("Trend",comparison.trend.toUpperCase(),delta?"Compared with previous":"Baseline")+metric("Risk index",current.metrics.score+"/100","Structural risk index")+metric("High hotspots",current.metrics.high,"Current snapshot");
-    el("timelineHistory").innerHTML=snapshots.slice(-12).reverse().map(item=>'<div class="activity-item"><div class="activity-main"><b>'+esc(item.generatedAt)+'</b><small>Risk '+item.metrics.score+'/100 · high '+item.metrics.high+' · commit '+esc(item.commit||"unavailable")+'</small></div><span class="pill">'+esc(item.id)+'</span></div>').join("");
-  }catch(error){el("timelineHistory").innerHTML='<div class="error">'+esc(error.message)+'</div>';}
+    renderHtml(el("timelineSummary"), metric("Snapshots",snapshots.length,"Saved locally")+metric("Trend",comparison.trend.toUpperCase(),delta?"Compared with previous":"Baseline")+metric("Risk index",current.metrics.score+"/100","Structural risk index")+metric("High hotspots",current.metrics.high,"Current snapshot"));
+    renderHtml(el("timelineHistory"), snapshots.slice(-12).reverse().map(item=>'<div class="activity-item"><div class="activity-main"><b>'+esc(item.generatedAt)+'</b><small>Risk '+item.metrics.score+'/100 · high '+item.metrics.high+' · commit '+esc(item.commit||"unavailable")+'</small></div><span class="pill">'+esc(item.id)+'</span></div>').join(""));
+  }catch(error){renderHtml(el("timelineHistory"), '<div class="error">'+esc(error.message)+'</div>');}
 }
 
 async function loadChangeRisk(){
   try{
     const data=await api("/api/change-intelligence");const s=data.summary;
-    el("changeRiskSummary").innerHTML=metric("Changed files",s.changedFiles,"Compared with "+data.base)+metric("Overall risk",data.overallRisk.score+"/100",data.overallRisk.level.toUpperCase())+metric("Affected modules",s.affectedModules,"Static downstream impact")+metric("Test candidates",s.testCandidates,"Existing and suggested paths");
-    el("changeRiskList").innerHTML=data.changes.length?data.changes.map(item=>'<div class="activity-item"><div class="activity-main"><b>'+esc(item.file)+'</b><small>'+esc(item.reasons.join(" "))+'</small></div><span class="pill">'+esc(item.level.toUpperCase())+' · '+item.score+'</span></div>').join(""):'<div class="empty">No working-tree changes detected against the selected base.</div>';
-  }catch(error){el("changeRiskList").innerHTML='<div class="error">'+esc(error.message)+'</div>';}
+    renderHtml(el("changeRiskSummary"), metric("Changed files",s.changedFiles,"Compared with "+data.base)+metric("Overall risk",data.overallRisk.score+"/100",data.overallRisk.level.toUpperCase())+metric("Affected modules",s.affectedModules,"Static downstream impact")+metric("Test candidates",s.testCandidates,"Existing and suggested paths"));
+    renderHtml(el("changeRiskList"), data.changes.length?data.changes.map(item=>'<div class="activity-item"><div class="activity-main"><b>'+esc(item.file)+'</b><small>'+esc(item.reasons.join(" "))+'</small></div><span class="pill">'+esc(item.level.toUpperCase())+' · '+item.score+'</span></div>').join(""):'<div class="empty">No working-tree changes detected against the selected base.</div>');
+  }catch(error){renderHtml(el("changeRiskList"), '<div class="error">'+esc(error.message)+'</div>');}
 }
 
 async function loadEngineeringRisk(){
   try{
     const data=await api("/api/engineering-risk");const s=data.summary;
-    el("riskSummary").innerHTML=metric("Hotspots",s.hotspots,"Prioritized modules")+metric("High risk",s.high,"Review these first")+metric("Elevated",s.elevated,"Worth investigating")+metric("No matching tests",s.withoutMatchingTests,"Filename heuristic");
-    el("riskHotspots").innerHTML=data.hotspots.length?data.hotspots.map(item=>'<div class="activity-item"><div class="activity-main"><b>'+esc(item.file)+'</b><small>Fan-in '+item.fanIn+' · fan-out '+item.fanOut+' · '+item.lines+' lines</small></div><span class="pill">'+esc(item.level.toUpperCase())+' · '+item.score+'</span></div>').join(""):'<div class="empty">No structural hotspots detected by current heuristics.</div>';
+    renderHtml(el("riskSummary"), metric("Hotspots",s.hotspots,"Prioritized modules")+metric("High risk",s.high,"Review these first")+metric("Elevated",s.elevated,"Worth investigating")+metric("No matching tests",s.withoutMatchingTests,"Filename heuristic"));
+    renderHtml(el("riskHotspots"), data.hotspots.length?data.hotspots.map(item=>'<div class="activity-item"><div class="activity-main"><b>'+esc(item.file)+'</b><small>Fan-in '+item.fanIn+' · fan-out '+item.fanOut+' · '+item.lines+' lines</small></div><span class="pill">'+esc(item.level.toUpperCase())+' · '+item.score+'</span></div>').join(""):'<div class="empty">No structural hotspots detected by current heuristics.</div>');
     el("riskMethodology").textContent=data.methodology;
-  }catch(error){el("riskHotspots").innerHTML='<div class="error">'+esc(error.message)+'</div>';}
+  }catch(error){renderHtml(el("riskHotspots"), '<div class="error">'+esc(error.message)+'</div>');}
 }
 
 let dependencyGraphData=null;
@@ -811,16 +813,16 @@ function renderDependencyGraph(data){
   const edges=data.edges.filter(e=>visible.has(e.from)&&visible.has(e.to));
   const edgeMarkup=edges.map(e=>{const a=positions.get(e.from),b=positions.get(e.to),mid=(a.x+b.x)/2;return '<path class="dependency-edge '+e.kind+'" d="M '+a.x+' '+a.y+' C '+mid+' '+a.y+', '+mid+' '+b.y+', '+b.x+' '+b.y+'" data-from="'+esc(e.from)+'" data-to="'+esc(e.to)+'"/>';}).join("");
   const nodeMarkup=nodes.map(n=>{const p=positions.get(n.id),r=n.kind==="package"?8:6;return '<g class="dependency-node '+esc(n.kind)+' '+esc(n.status)+'" data-id="'+esc(n.id)+'" tabindex="0" role="button" aria-label="'+esc(n.label)+'"><circle cx="'+p.x+'" cy="'+p.y+'" r="'+r+'"/><text class="dependency-label" x="'+(p.x+(n.kind==="file"?-13:13))+'" y="'+(p.y+4)+'" text-anchor="'+(n.kind==="file"?"end":"start")+'">'+esc(n.label.length>36?n.label.slice(0,33)+"…":n.label)+'</text></g>';}).join("");
-  svg.setAttribute("viewBox","0 0 "+width+" "+height);svg.style.height=Math.min(760,Math.max(420,height))+"px";svg.innerHTML='<text x="24" y="22" fill="#8e9aab" font-size="12">SOURCE FILES</text><text x="820" y="22" fill="#8e9aab" font-size="12">PACKAGES</text>'+edgeMarkup+nodeMarkup;
-  svg.querySelectorAll("[data-id]").forEach(group=>{const choose=()=>{svg.querySelectorAll(".dependency-node").forEach(n=>n.classList.remove("selected"));group.classList.add("selected");const node=data.nodes.find(n=>n.id===group.getAttribute("data-id"));if(!node)return;const related=data.edges.filter(e=>e.from===node.id||e.to===node.id);const names=related.map(e=>{const other=data.nodes.find(n=>n.id===(e.from===node.id?e.to:e.from));return other?other.label:"";}).filter(Boolean);el("dependencyDetail").innerHTML='<b>'+esc(node.label)+'</b> · '+esc(node.kind)+' · <span class="pill">'+esc(node.status)+'</span><div class="run-meta" style="margin-top:6px">'+esc(node.detail)+'</div><div class="run-meta">Connected to: '+(names.length?names.map(esc).join(", "):"no visible relationships")+'</div>';};group.addEventListener("click",choose);});
+  svg.setAttribute("viewBox","0 0 "+width+" "+height);svg.style.height=Math.min(760,Math.max(420,height))+"px";renderHtml(svg, '<text x="24" y="22" fill="#8e9aab" font-size="12">SOURCE FILES</text><text x="820" y="22" fill="#8e9aab" font-size="12">PACKAGES</text>'+edgeMarkup+nodeMarkup);
+  svg.querySelectorAll("[data-id]").forEach(group=>{const choose=()=>{svg.querySelectorAll(".dependency-node").forEach(n=>n.classList.remove("selected"));group.classList.add("selected");const node=data.nodes.find(n=>n.id===group.getAttribute("data-id"));if(!node)return;const related=data.edges.filter(e=>e.from===node.id||e.to===node.id);const names=related.map(e=>{const other=data.nodes.find(n=>n.id===(e.from===node.id?e.to:e.from));return other?other.label:"";}).filter(Boolean);renderHtml(el("dependencyDetail"), '<b>'+esc(node.label)+'</b> · '+esc(node.kind)+' · <span class="pill">'+esc(node.status)+'</span><div class="run-meta" style="margin-top:6px">'+esc(node.detail)+'</div><div class="run-meta">Connected to: '+(names.length?names.map(esc).join(", "):"no visible relationships")+'</div>');};group.addEventListener("click",choose);});
 }
 
 async function loadDependencyGraph(){
   try{
     const data=await api("/api/dependency-graph");
-    el("dependencySummary").innerHTML=metric("Source nodes",data.summary.files,"Shown in graph")+metric("Packages",data.summary.packages,"Declared and imported")+metric("Undeclared",data.summary.undeclared,"Imports absent from manifest")+metric("Possible unused",data.summary.possibleUnused,"Static scan candidates");
+    renderHtml(el("dependencySummary"), metric("Source nodes",data.summary.files,"Shown in graph")+metric("Packages",data.summary.packages,"Declared and imported")+metric("Undeclared",data.summary.undeclared,"Imports absent from manifest")+metric("Possible unused",data.summary.possibleUnused,"Static scan candidates"));
     renderDependencyGraph(data);
-  }catch(error){el("dependencyGraph").innerHTML='<text x="24" y="35" fill="var(--danger)">'+esc(error.message)+'</text>';}
+  }catch(error){renderHtml(el("dependencyGraph"), '<text x="24" y="35" fill="var(--danger)">'+esc(error.message)+'</text>');}
 }
 
 function renderGraph(data){
@@ -830,12 +832,12 @@ function renderGraph(data){
   const edges=data.edges.filter(e=>visible.has(e.from)&&visible.has(e.to));
   const edgeMarkup=edges.map(e=>{const a=positions.get(e.from),b=positions.get(e.to);return '<line class="graph-edge" x1="'+a.x+'" y1="'+a.y+'" x2="'+b.x+'" y2="'+b.y+'"/>';}).join("");
   const nodeMarkup=nodes.map(n=>{const p=positions.get(n.file),label=n.file.split("/").slice(-2).join("/");return '<g data-file="'+esc(n.file)+'"><circle class="graph-node '+(n.role==="entry"?"entry":"")+'" cx="'+p.x+'" cy="'+p.y+'" r="7"/><text class="graph-label" x="'+(p.x+10)+'" y="'+(p.y+3)+'">'+esc(label.length>24?label.slice(-21)+"…":label)+'</text></g>';}).join("");
-  svg.innerHTML=edgeMarkup+nodeMarkup;
+  renderHtml(svg, edgeMarkup+nodeMarkup);
   svg.querySelectorAll("g[data-file]").forEach(group=>group.addEventListener("click",()=>{
     svg.querySelectorAll(".graph-node").forEach(n=>n.classList.remove("selected"));
     group.querySelector("circle").classList.add("selected");
     const file=group.getAttribute("data-file"),node=data.nodes.find(n=>n.file===file),incoming=data.edges.filter(e=>e.to===file).map(e=>e.from);
-    el("graphDetail").innerHTML='<b>'+esc(file)+'</b> · '+esc(node.role)+' · '+node.lines+' lines<br>Imports: '+(node.imports.length?node.imports.map(esc).join(", "):"none detected")+'<br>Imported by: '+(incoming.length?incoming.map(esc).join(", "):"no mapped modules");
+    renderHtml(el("graphDetail"), '<b>'+esc(file)+'</b> · '+esc(node.role)+' · '+node.lines+' lines<br>Imports: '+(node.imports.length?node.imports.map(esc).join(", "):"none detected")+'<br>Imported by: '+(incoming.length?incoming.map(esc).join(", "):"no mapped modules"));
   }));
 }
 
@@ -843,8 +845,8 @@ async function loadMap(){
   try{
     const data=await api("/api/architecture");
     renderGraph(data);
-    el("architecture").innerHTML=data.nodes.slice(0,36).map(node=>'<div class="node">'+esc(node.file)+'<small>'+esc(node.role)+' · '+node.imports.length+' imports · '+node.lines+' lines</small></div>').join("");
-  }catch(error){el("architecture").innerHTML='<div class="error">'+esc(error.message)+'</div>';}
+    renderHtml(el("architecture"), data.nodes.slice(0,36).map(node=>'<div class="node">'+esc(node.file)+'<small>'+esc(node.role)+' · '+node.imports.length+' imports · '+node.lines+' lines</small></div>').join(""));
+  }catch(error){renderHtml(el("architecture"), '<div class="error">'+esc(error.message)+'</div>');}
 }
 
 // Workspace File Explorer & Code Search
@@ -854,27 +856,27 @@ async function loadWorkspace(pathValue=workspaceDirectory){
   try{
     const data=await api("/api/workspace?path="+encodeURIComponent(workspaceDirectory));
     workspaceDirectory=data.path;el("workspacePath").textContent="/"+(data.path||"");
-    el("workspaceFiles").innerHTML=data.entries.length?data.entries.map(item=>'<div class="rowitem"><button class="btn" data-workspace-kind="'+esc(item.kind)+'" data-workspace-path="'+esc(item.path)+'">'+(item.kind==="directory"?"▸ ":"") +esc(item.name)+'</button><span class="pill">'+(item.kind==="file"?esc(item.size)+" B":"FOLDER")+'</span></div>').join(""):'<div class="empty">No previewable files or folders here.</div>';
+    renderHtml(el("workspaceFiles"), data.entries.length?data.entries.map(item=>'<div class="rowitem"><button class="btn" data-workspace-kind="'+esc(item.kind)+'" data-workspace-path="'+esc(item.path)+'">'+(item.kind==="directory"?"▸ ":"") +esc(item.name)+'</button><span class="pill">'+(item.kind==="file"?esc(item.size)+" B":"FOLDER")+'</span></div>').join(""):'<div class="empty">No previewable files or folders here.</div>');
     el("workspaceFiles").querySelectorAll("[data-workspace-path]").forEach(button=>button.addEventListener("click",()=>button.dataset.workspaceKind==="directory"?loadWorkspace(button.dataset.workspacePath):previewWorkspace(button.dataset.workspacePath)));
-  }catch(error){el("workspaceFiles").innerHTML='<div class="error">'+esc(error.message)+'</div>';}
+  }catch(error){renderHtml(el("workspaceFiles"), '<div class="error">'+esc(error.message)+'</div>');}
 }
 
 async function previewWorkspace(filePath){
   try{
     const file=await api("/api/workspace/file?path="+encodeURIComponent(filePath));
-    el("workspacePreview").innerHTML='<div><b>'+esc(file.name)+'</b><div class="run-meta">'+esc(file.path)+' · '+esc(file.size)+' bytes</div></div><pre style="white-space:pre;overflow:auto;max-height:520px;background:#080c14;border:1px solid var(--line);padding:14px;border-radius:9px;font:11px/1.6 monospace">'+esc(file.content)+'</pre>';
-  }catch(error){el("workspacePreview").innerHTML='<div class="error">'+esc(error.message)+'</div>';}
+    renderHtml(el("workspacePreview"), '<div><b>'+esc(file.name)+'</b><div class="run-meta">'+esc(file.path)+' · '+esc(file.size)+' bytes</div></div><pre style="white-space:pre;overflow:auto;max-height:520px;background:#080c14;border:1px solid var(--line);padding:14px;border-radius:9px;font:11px/1.6 monospace">'+esc(file.content)+'</pre>');
+  }catch(error){renderHtml(el("workspacePreview"), '<div class="error">'+esc(error.message)+'</div>');}
 }
 
 async function runCodeSearch(){
   const query=el("codeSearchQuery").value.trim();if(query.length<2){el("codeSearchMeta").textContent="Enter at least two characters.";return;}
-  el("codeSearchResults").innerHTML='<div class="loading">Searching source files…</div>';
+  renderHtml(el("codeSearchResults"), '<div class="loading">Searching source files…</div>');
   try{
     const data=await api("/api/search?q="+encodeURIComponent(query));
     el("codeSearchMeta").textContent=data.total+" matches · "+data.filesScanned+" files scanned";
-    el("codeSearchResults").innerHTML=data.results.length?data.results.map(item=>'<button class="btn" style="text-align:left;white-space:normal;display:block;width:100%" data-search-path="'+esc(item.path)+'"><b>'+esc(item.symbol||item.path)+'</b> <span class="pill">'+esc(item.kind)+'</span><div class="run-meta">'+esc(item.path)+':'+item.line+'</div></button>').join(""):'<div class="empty">No matches found.</div>';
+    renderHtml(el("codeSearchResults"), data.results.length?data.results.map(item=>'<button class="btn" style="text-align:left;white-space:normal;display:block;width:100%" data-search-path="'+esc(item.path)+'"><b>'+esc(item.symbol||item.path)+'</b> <span class="pill">'+esc(item.kind)+'</span><div class="run-meta">'+esc(item.path)+':'+item.line+'</div></button>').join(""):'<div class="empty">No matches found.</div>');
     el("codeSearchResults").querySelectorAll("[data-search-path]").forEach(button=>button.addEventListener("click",()=>previewWorkspace(button.dataset.searchPath)));
-  }catch(error){el("codeSearchResults").innerHTML='<div class="error">'+esc(error.message)+'</div>';}
+  }catch(error){renderHtml(el("codeSearchResults"), '<div class="error">'+esc(error.message)+'</div>');}
 }
 
 // Workflow Editor & Config Studio (retained 100%)
@@ -904,11 +906,11 @@ function ensureWorkflowPositions(){
 function renderWorkflow(){
   ensureWorkflowPositions();el("workflowTaskCount").textContent=workflowTasks.length+" TASKS · "+workflowEdges().length+" LINKS";
   const dependency=el("workflowDependency");const selected=[...dependency.selectedOptions].map(option=>option.value);
-  dependency.innerHTML=workflowTasks.map(task=>'<option value="'+esc(task.id)+'">'+esc(task.title)+'</option>').join("");
+  renderHtml(dependency, workflowTasks.map(task=>'<option value="'+esc(task.id)+'">'+esc(task.title)+'</option>').join(""));
   [...dependency.options].forEach(option=>option.selected=selected.includes(option.value));
   const edges=workflowEdges().map(edge=>{const a=workflowPositions[edge.from],b=workflowPositions[edge.to];if(!a||!b)return "";const x1=a.x+190,y1=a.y+48,x2=b.x,y2=b.y+48,m=(x1+x2)/2;return '<path class="workflow-edge" d="M '+x1+' '+y1+' C '+m+' '+y1+', '+m+' '+y2+', '+x2+' '+y2+'"/>';}).join("");
   const nodes=workflowTasks.map(task=>{const p=workflowPositions[task.id];return '<g class="workflow-graph-node '+(workflowSelected===task.id?"selected":"")+'" data-graph-node="'+esc(task.id)+'" transform="translate('+p.x+' '+p.y+')" tabindex="0"><rect width="190" height="96" rx="11"/><text x="12" y="22" class="wf-agent">'+esc(task.agent.toUpperCase())+'</text><text x="12" y="47" class="wf-title">'+esc(task.title.slice(0,26))+'</text><text x="12" y="69" class="wf-sub">'+(task.dependsOn||[]).length+' prerequisites</text></g>';}).join("");
-  el("workflowCanvas").innerHTML=workflowTasks.length?'<div class="workflow-graph-wrap"><svg id="workflowGraph" viewBox="0 0 1100 650"><g id="wfWorld" transform="translate('+workflowPan.x+' '+workflowPan.y+') scale('+workflowScale+')">'+edges+nodes+'</g></svg></div><div class="actions" style="margin-top:10px"><button class="btn" id="applyWorkflowLinks">Apply selected links</button></div>':'<div class="empty">Add a specialist task to start composing your pipeline.</div>';
+  renderHtml(el("workflowCanvas"), workflowTasks.length?'<div class="workflow-graph-wrap"><svg id="workflowGraph" viewBox="0 0 1100 650"><g id="wfWorld" transform="translate('+workflowPan.x+' '+workflowPan.y+') scale('+workflowScale+')">'+edges+nodes+'</g></svg></div><div class="actions" style="margin-top:10px"><button class="btn" id="applyWorkflowLinks">Apply selected links</button></div>':'<div class="empty">Add a specialist task to start composing your pipeline.</div>');
 }
 
 function loadWorkflowTemplate(kind){
@@ -949,16 +951,16 @@ on("createWorkflowRun","click",async()=>{
 
 async function executeWorkflowById(id){
   const msgEl = el("workflowMessage");
-  if(msgEl) msgEl.innerHTML = '<span style="color:var(--cyan)">⚡ Simulating multi-agent pipeline execution (DemoAgentProvider)...</span>';
+  if(msgEl) renderHtml(msgEl, '<span style="color:var(--cyan)">⚡ Simulating multi-agent pipeline execution (DemoAgentProvider)...</span>');
   try{
     const res = await fetch("/api/workflows/"+encodeURIComponent(id)+"/execute",{method:"POST",headers:{"content-type":"application/json"},body:"{}"});
     const run = await res.json();
-    if(msgEl) msgEl.innerHTML = '<span style="color:var(--emerald)">✓ Pipeline simulated: ' + esc(run.id) + ' (' + esc(run.status) + ')</span>';
+    if(msgEl) renderHtml(msgEl, '<span style="color:var(--emerald)">✓ Pipeline simulated: ' + esc(run.id) + ' (' + esc(run.status) + ')</span>');
     loadRuns();
     loadActivity();
     if(run.id) inspectRun(run.id);
   }catch(e){
-    if(msgEl) msgEl.innerHTML = '<span style="color:var(--accent)">Execution failed: ' + esc(e.message) + '</span>';
+    if(msgEl) renderHtml(msgEl, '<span style="color:var(--accent)">Execution failed: ' + esc(e.message) + '</span>');
   }
 }
 
@@ -971,35 +973,35 @@ on("executeWorkflowRun","click",async()=>{
 async function refreshWorkflows(){
   try{
     const workflows=await api("/api/workflows");
-    el("savedWorkflows").innerHTML=workflows.length?workflows.map(w=>'<div class="run"><div class="run-title"><b>'+esc(w.name)+'</b><span class="pill">'+esc(w.tasks.length)+' TASKS</span></div><div class="run-meta" style="display:flex;justify-content:space-between;align-items:center"><span>'+esc(w.id)+'</span><button class="btn btn-emerald" style="padding:3px 8px;font-size:11px" onclick="executeWorkflowById(\''+esc(w.id)+'\')">⚡ Simulate Execution</button></div></div>').join(""):'<div class="empty">No saved workflows yet.</div>';
-  }catch(e){el("savedWorkflows").innerHTML='<div class="error">'+esc(e.message)+'</div>';}
+    renderHtml(el("savedWorkflows"), workflows.length?workflows.map(w=>'<div class="run"><div class="run-title"><b>'+esc(w.name)+'</b><span class="pill">'+esc(w.tasks.length)+' TASKS</span></div><div class="run-meta" style="display:flex;justify-content:space-between;align-items:center"><span>'+esc(w.id)+'</span><button class="btn btn-emerald" style="padding:3px 8px;font-size:11px" onclick="executeWorkflowById(\''+esc(w.id)+'\')">⚡ Simulate Execution</button></div></div>').join(""):'<div class="empty">No saved workflows yet.</div>');
+  }catch(e){renderHtml(el("savedWorkflows"), '<div class="error">'+esc(e.message)+'</div>');}
 }
 
 // Config Studio & Provider Readiness
 async function loadProviderReadiness(){
   try{
     const providers=await api("/api/providers");
-    el("providerReadiness").innerHTML=providers.map(item=>'<div class="rowitem"><div><b>'+esc(item.id)+(item.selected?' · selected':'')+'</b><div class="run-meta">'+esc(item.model)+' · '+esc(item.detail)+'</div></div><span class="pill '+(item.status==="configured"?"pill-emerald":"")+'>'+esc(item.status)+'</span></div>').join("");
-  }catch(error){el("providerReadiness").innerHTML='<div class="error">'+esc(error.message)+'</div>';}
+    renderHtml(el("providerReadiness"), providers.map(item=>'<div class="rowitem"><div><b>'+esc(item.id)+(item.selected?' · selected':'')+'</b><div class="run-meta">'+esc(item.model)+' · '+esc(item.detail)+'</div></div><span class="pill '+(item.status==="configured"?"pill-emerald":"")+'>'+esc(item.status)+'</span></div>').join(""));
+  }catch(error){renderHtml(el("providerReadiness"), '<div class="error">'+esc(error.message)+'</div>');}
 }
 
 async function loadConfigFiles(){
   try{
     const configFiles=await api("/api/config-files");
-    el("configInventory").innerHTML=configFiles.length?configFiles.map(item=>'<div class="rowitem"><div><b>'+esc(item.id)+'.md</b><div class="run-meta">'+esc(item.category)+' · '+esc(item.bytes)+' bytes</div></div></div>').join(""):'<div class="empty">No custom agent or skill files yet.</div>';
-  }catch(e){el("configInventory").innerHTML='<div class="error">'+esc(e.message)+'</div>';}
+    renderHtml(el("configInventory"), configFiles.length?configFiles.map(item=>'<div class="rowitem"><div><b>'+esc(item.id)+'.md</b><div class="run-meta">'+esc(item.category)+' · '+esc(item.bytes)+' bytes</div></div></div>').join(""):'<div class="empty">No custom agent or skill files yet.</div>');
+  }catch(e){renderHtml(el("configInventory"), '<div class="error">'+esc(e.message)+'</div>');}
 }
 async function loadConfigVersions(){
   try{
     const versions=await api("/api/config-snapshots");
-    el("configVersions").innerHTML=versions.length?versions.map(item=>'<div class="rowitem"><div><b>'+esc(item.id)+'</b><div class="run-meta">'+esc(item.createdAt)+' · '+esc(item.files.length)+' files</div></div><span class="pill">'+esc(item.status)+'</span></div>').join(""):'<div class="empty">No snapshots yet.</div>';
-  }catch(e){el("configVersions").innerHTML='<div class="error">'+esc(e.message)+'</div>';}
+    renderHtml(el("configVersions"), versions.length?versions.map(item=>'<div class="rowitem"><div><b>'+esc(item.id)+'</b><div class="run-meta">'+esc(item.createdAt)+' · '+esc(item.files.length)+' files</div></div><span class="pill">'+esc(item.status)+'</span></div>').join(""):'<div class="empty">No snapshots yet.</div>');
+  }catch(e){renderHtml(el("configVersions"), '<div class="error">'+esc(e.message)+'</div>');}
 }
 async function loadConfigReleases(){
   try{
     const releases=await api("/api/config-releases");
-    el("configReleases").innerHTML=releases.length?releases.map(item=>'<div class="rowitem"><div><b>'+esc(item.id)+'</b></div><span class="pill">'+esc(item.status)+'</span></div>').join(""):'<div class="empty">No release proposals yet.</div>';
-  }catch(e){el("configReleases").innerHTML='<div class="error">'+esc(e.message)+'</div>';}
+    renderHtml(el("configReleases"), releases.length?releases.map(item=>'<div class="rowitem"><div><b>'+esc(item.id)+'</b></div><span class="pill">'+esc(item.status)+'</span></div>').join(""):'<div class="empty">No release proposals yet.</div>');
+  }catch(e){renderHtml(el("configReleases"), '<div class="error">'+esc(e.message)+'</div>');}
 }
 
 on("captureConfigSnapshot","click",async()=>{
@@ -1074,10 +1076,10 @@ async function loadCatalogSkills(){
     const list = el("catalogSkillsList");
     if(!list) return;
     if(!data.skills || !data.skills.length){
-      list.innerHTML = '<div class="empty">No skills or rules registered in workspace yet.</div>';
+      renderHtml(list, '<div class="empty">No skills or rules registered in workspace yet.</div>');
       return;
     }
-    list.innerHTML = data.skills.map(s => {
+    renderHtml(list, data.skills.map(s => {
       const sourceClass = s.source === "builtin" ? "cyan" : "purple";
       const triggerHtml = s.triggers && s.triggers.length ? '<div style="font-size:11px;color:var(--accent);margin-top:4px">Triggers: ' + esc(s.triggers.join(", ")) + '</div>' : '';
       return '<div class="row" style="padding:12px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:flex-start">' +
@@ -1089,7 +1091,7 @@ async function loadCatalogSkills(){
         '</div>' +
         '<span class="badge" style="font-size:11px;background:rgba(255,255,255,0.05);padding:2px 8px;border-radius:4px">' + esc(s.id) + '</span>' +
       '</div>';
-    }).join("");
+    }).join(""));
   }catch{}
 }
 
@@ -1108,10 +1110,10 @@ async function loadBinaryAssets(){
     const list = el("binaryAssetsList");
     if(!list) return;
     if(!data.assets || !data.assets.length){
-      list.innerHTML = '<div class="empty">No compiled binaries or web bundles detected in root.</div>';
+      renderHtml(list, '<div class="empty">No compiled binaries or web bundles detected in root.</div>');
       return;
     }
-    list.innerHTML = data.assets.map(a => {
+    renderHtml(list, data.assets.map(a => {
       const kb = (a.sizeBytes / 1024).toFixed(1);
       return '<div class="row" style="padding:10px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center">' +
         '<div>' +
@@ -1120,7 +1122,7 @@ async function loadBinaryAssets(){
         '</div>' +
         '<span style="color:var(--muted);font-size:12px">' + kb + ' KB</span>' +
       '</div>';
-    }).join("");
+    }).join(""));
   }catch{}
 }
 

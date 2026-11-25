@@ -50,6 +50,8 @@ jobs:
         run: npm run test:coverage
       - name: Build
         run: npm run build
+      - name: Run ANVIL Shield
+        run: node dist/cli.js shield .
       - name: Test ANVIL GitHub Action
         uses: ./
         with:

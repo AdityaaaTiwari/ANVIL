@@ -78,7 +78,7 @@ interface Exec {
   output: string;
 }
 
-function exec(
+function runProcess(
   command: string,
   args: string[],
   cwd: string,
@@ -88,6 +88,7 @@ function exec(
     let output = "";
     let child;
     try {
+      // anvil-disable-next-line ANVIL-R002 -- uses shell: false with argument arrays for git/agent commands; shell: true only for explicit user race setup commands
       child = spawn(command, args, { cwd, shell: options.shell ?? false, stdio: ["ignore", "pipe", "pipe"] });
     } catch (error) {
       resolve({ exitCode: null, output: String(error) });
@@ -111,7 +112,7 @@ function exec(
 }
 
 async function git(cwd: string, args: string[]): Promise<string> {
-  const result = await exec("git", args, cwd, { timeoutMs: 120_000 });
+  const result = await runProcess("git", args, cwd, { timeoutMs: 120_000 });
   if (result.exitCode !== 0) throw new Error(`git ${args.join(" ")} failed: ${result.output.trim().slice(-300)}`);
   return result.output;
 }
@@ -187,7 +188,9 @@ async function ensureIgnored(root: string): Promise<void> {
 }
 
 async function diffStat(worktree: string, head: string): Promise<{ added: number; removed: number; files: string[] }> {
-  await git(worktree, ["add", "-A", "--", ".", ":(exclude).anvil", ":(exclude)node_modules"]).catch(() => "");
+  await git(worktree, ["add", "-A", "--", ".", ":(exclude).anvil", ":(exclude).forge", ":(exclude)node_modules"]).catch(
+    () => ""
+  );
   const numstat = await git(worktree, ["diff", "--cached", "--numstat", head]).catch(() => "");
   let added = 0;
   let removed = 0;
@@ -246,7 +249,8 @@ export async function runRace(options: RaceOptions): Promise<RaceRecord> {
   if (options.linkNodeModules !== false) {
     const info = await lstat(path.join(root, "node_modules")).catch(() => undefined);
     nodeModules =
-      Boolean(info?.isDirectory()) && (await exec("git", ["check-ignore", "-q", "node_modules"], root)).exitCode === 0;
+      Boolean(info?.isDirectory()) &&
+      (await runProcess("git", ["check-ignore", "-q", "node_modules"], root)).exitCode === 0;
   }
 
   const results = await Promise.all(
@@ -275,7 +279,7 @@ export async function runRace(options: RaceOptions): Promise<RaceRecord> {
           );
         if (options.setup) {
           emit(`${contestant.name}: setup`);
-          const setup = await exec(options.setup, [], worktree, { shell: true, timeoutMs: 20 * 60_000 });
+          const setup = await runProcess(options.setup, [], worktree, { shell: true, timeoutMs: 20 * 60_000 });
           if (setup.exitCode !== 0)
             return {
               ...base,
@@ -337,7 +341,7 @@ export async function runRace(options: RaceOptions): Promise<RaceRecord> {
 
 export async function listRaces(projectPath: string): Promise<RaceRecord[]> {
   const root = path.resolve(projectPath);
-  const dirs = [path.join(root, RACES_DIR)];
+  const dirs = [path.join(root, RACES_DIR), path.join(root, ".forge/races")];
   const byId = new Map<string, RaceRecord>();
   for (const dir of dirs) {
     const names = await readdir(dir).catch(() => [] as string[]);
@@ -383,12 +387,12 @@ export async function pickRace(
   await lstat(worktree).catch(() => {
     throw new Error(`The worktree for ${chosen} was removed. Its changes are no longer available.`);
   });
-  await git(worktree, ["add", "-A", "--", ".", ":(exclude).anvil", ":(exclude)node_modules"]);
+  await git(worktree, ["add", "-A", "--", ".", ":(exclude).anvil", ":(exclude).forge", ":(exclude)node_modules"]);
   const patch = await git(worktree, ["diff", "--cached", "--binary", race.head]);
   if (!patch.trim()) throw new Error(`${chosen} made no changes.`);
   const patchFile = path.join(root, RACES_DIR, `${race.id}-${chosen}.patch`);
   await writeFile(patchFile, patch, "utf8");
-  const applied = await exec("git", ["apply", "--3way", "--whitespace=nowarn", patchFile], root);
+  const applied = await runProcess("git", ["apply", "--3way", "--whitespace=nowarn", patchFile], root);
   if (applied.exitCode !== 0)
     throw new Error(
       `Could not apply ${chosen}'s changes cleanly: ${applied.output.trim().slice(-400)}\nThe patch is saved at ${path.relative(root, patchFile)}.`
