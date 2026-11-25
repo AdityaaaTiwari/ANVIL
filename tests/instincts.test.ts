@@ -2,6 +2,7 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
+import { trySymlink } from "./test-helpers.js";
 import {
   activeInstincts,
   addManualInstinct,
@@ -158,5 +159,68 @@ describe("instinct hooks", () => {
       (output.json as { hookSpecificOutput?: { additionalContext?: string } }).hookSpecificOutput?.additionalContext ??
       "";
     expect(context).toContain("When editing src/**: run the unit tests");
+  });
+
+  it("handles workspace aliases while blocking symlink escapes outside the project", async () => {
+    const parent = await project();
+    const realRoot = path.join(parent, "Real-Project");
+    const outside = path.join(parent, "outside");
+    const aliasRoot = path.join(parent, "alias-project");
+    const escapeLink = path.join(realRoot, "escape");
+    const linkType = process.platform === "win32" ? "junction" : "dir";
+    await mkdir(path.join(realRoot, "src"), { recursive: true });
+    await mkdir(outside, { recursive: true });
+
+    process.env.ANVIL_HOME = await project();
+    if (process.platform === "win32") {
+      await runHarnessHook(
+        "post-edit",
+        JSON.stringify({
+          cwd: realRoot,
+          session_id: "s-case",
+          tool_name: "Edit",
+          tool_input: { file_path: path.join(realRoot.toLowerCase(), "src/case-alias.ts") },
+        })
+      );
+      const caseEdits = JSON.parse(await readFile(path.join(realRoot, ".anvil/session/edits.json"), "utf8")) as {
+        files: string[];
+      };
+      expect(caseEdits.files).toContain("src/case-alias.ts");
+    }
+
+    const linkedAlias = await trySymlink(realRoot, aliasRoot, linkType);
+    const linkedEscape = await trySymlink(outside, escapeLink, linkType);
+    if (!linkedAlias || !linkedEscape) return;
+
+    await runHarnessHook(
+      "post-edit",
+      JSON.stringify({
+        cwd: realRoot,
+        session_id: "s-alias",
+        tool_name: "Edit",
+        tool_input: { file_path: path.join(aliasRoot, "src/nested/new-file.ts") },
+      })
+    );
+    const edits = JSON.parse(await readFile(path.join(realRoot, ".anvil/session/edits.json"), "utf8")) as {
+      files: string[];
+    };
+    expect(edits.files).toContain("src/nested/new-file.ts");
+
+    const blocked = await runHarnessHook(
+      "pre-tool",
+      JSON.stringify({
+        cwd: aliasRoot,
+        tool_name: "Write",
+        tool_input: { file_path: path.join(escapeLink, "pwn.txt") },
+      })
+    );
+    expect(
+      (blocked.json as { hookSpecificOutput?: { permissionDecision?: string; permissionDecisionReason?: string } })
+        ?.hookSpecificOutput?.permissionDecision
+    ).toBe("ask");
+    expect(
+      (blocked.json as { hookSpecificOutput?: { permissionDecisionReason?: string } })?.hookSpecificOutput
+        ?.permissionDecisionReason
+    ).toContain("GUARD-WRITE-OUTSIDE");
   });
 });

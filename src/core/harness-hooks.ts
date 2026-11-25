@@ -1,4 +1,5 @@
-import { appendFile, lstat, mkdir, readFile, realpath, rename, rm, writeFile } from "node:fs/promises";
+import { realpathSync } from "node:fs";
+import { appendFile, lstat, mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { randomBytes } from "node:crypto";
 import path from "node:path";
 import { runShield } from "./anvil-shield.js";
@@ -212,9 +213,32 @@ const AGENT_CONFIG =
 export const QUALITY_CONFIG =
   /(?:^|\/)(?:\.eslintrc(?:\.[\w]+)?|eslint\.config\.[cm]?[jt]s|\.prettierrc(?:\.[\w]+)?|prettier\.config\.[cm]?js|biome\.jsonc?|\.stylelintrc(?:\.[\w]+)?|ruff\.toml|\.ruff\.toml|\.flake8|\.pylintrc|mypy\.ini|\.golangci\.ya?ml|rustfmt\.toml|\.rustfmt\.toml|clippy\.toml|\.rubocop\.yml|\.editorconfig)$/;
 
+const resolveNativePath = typeof realpathSync.native === "function" ? realpathSync.native : realpathSync;
+
+function canonicalPathSync(target: string): string {
+  let current = path.resolve(target);
+  const tail: string[] = [];
+  while (true) {
+    try {
+      const resolved = resolveNativePath(current);
+      return tail.length ? path.join(resolved, ...tail.reverse()) : resolved;
+    } catch (error) {
+      const code =
+        error && typeof error === "object" && "code" in error ? (error as { code?: string }).code : undefined;
+      if (code !== "ENOENT" && code !== "ENOTDIR") return path.resolve(target);
+      const parent = path.dirname(current);
+      if (parent === current) return path.resolve(target);
+      tail.push(path.basename(current));
+      current = parent;
+    }
+  }
+}
+
 function relativeInside(root: string, filePath: string): string | undefined {
-  const absolute = path.resolve(root, filePath);
-  const relative = path.relative(root, absolute);
+  const resolvedRoot = canonicalPathSync(root);
+  const candidate = path.isAbsolute(filePath) ? filePath : path.resolve(resolvedRoot, filePath);
+  const absolute = canonicalPathSync(candidate);
+  const relative = path.relative(resolvedRoot, absolute);
   if (relative === "" || relative.startsWith("..") || path.isAbsolute(relative)) return undefined;
   return relative.split(path.sep).join("/");
 }
@@ -441,13 +465,9 @@ async function logGuard(root: string, entry: Record<string, unknown>): Promise<v
 // Event handlers
 // ---------------------------------------------------------------------------
 
-async function projectRoot(input: HookInput, fallback: string): Promise<string> {
+function projectRoot(input: HookInput, fallback: string): string {
   const candidate = path.resolve(input.cwd && typeof input.cwd === "string" ? input.cwd : fallback);
-  try {
-    return await realpath(candidate);
-  } catch {
-    return candidate;
-  }
+  return canonicalPathSync(candidate);
 }
 
 async function preTool(root: string, input: HookInput, config: HarnessHookConfig, now: Date): Promise<HookOutput> {
@@ -676,7 +696,7 @@ export async function runHarnessHook(
   } catch {
     return { exitCode: 0 };
   }
-  const root = await projectRoot(input, options.cwd ?? process.cwd());
+  const root = projectRoot(input, options.cwd ?? process.cwd());
   const now = (options.now ?? (() => new Date()))();
   let config: HarnessHookConfig;
   try {
