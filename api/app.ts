@@ -19,7 +19,7 @@ import {
 
 export const config = { api: { bodyParser: false } };
 
-const ANVIL_VERSION = "1.3.0";
+const ANVIL_VERSION = "1.4.0";
 
 function isOriginAllowed(origin: string | string[] | undefined, host: string | string[] | undefined): boolean {
   if (!origin) return true;

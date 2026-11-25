@@ -12,7 +12,7 @@ export function resolvePackageVersion(): string {
   } catch {
     /* ignore and use fallback */
   }
-  return "1.3.0";
+  return "1.4.0";
 }
 
 export function findPositionalArgs(args: readonly string[], valueFlags: ReadonlySet<string> = new Set()): string[] {

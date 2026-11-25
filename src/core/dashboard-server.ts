@@ -8,7 +8,7 @@ import { handleDashboardGet } from "./dashboard/routes-get.js";
 import { handleDashboardPost } from "./dashboard/routes-post.js";
 import { attachDashboardHeartbeat, broadcastEvent } from "./dashboard/sse.js";
 
-const FALLBACK_DASHBOARD_VERSION = "v1.3.0";
+const FALLBACK_DASHBOARD_VERSION = "v1.4.0";
 
 function resolveDashboardVersion(): string {
   const candidates = [

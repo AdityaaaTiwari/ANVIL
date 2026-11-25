@@ -1,6 +1,6 @@
 # ANVIL Changelog
 
-## Unreleased
+## 1.4.0 — Native Consolidation, Self-Contained Catalog & Cross-Platform CI Hardening (November 2026)
 
 ### Changed
 - **Native ANVIL Consolidation (Phase 1 – Phase 3):**
@@ -8,6 +8,9 @@
   - **Phase 3 (Self-Contained Native Catalog & Binary Engine):** Pruned third-party ECC and REA asset dumps (`catalog/rea/`, `catalog/hooks/`, `catalog/contexts/`, `catalog/mcp-configs/`, `catalog/workflows/`, bloated `catalog/` packs, `skills/rea-*`, `skills/reverse-engineer-anything`, `docs/integrations/ecc.md`, `docs/integrations/rea.md`, and `scripts/run-rea-bridge-tests.*`) down to ANVIL's compact native catalog (`49` agents, `76` catalog skills, `34` commands, `26` rule sets) and `51` workspace skills; replaced `src/core/rea-intelligence.ts` + `src/commands/rea.ts` with native TypeScript [`src/core/binary-intelligence.ts`](src/core/binary-intelligence.ts) (`analyzeBinaryIntelligence`, magic-byte header classification for PE/ELF/Mach-O/WASM/Archives/SQLite, and `ANVIL-BIN-001`..`003` provenance checks) + [`src/commands/binary.ts`](src/commands/binary.ts).
   - **Self-Gate & CI Hardening:** Centralized dashboard DOM rendering in [`src/core/dashboard/client-script.ts`](src/core/dashboard/client-script.ts) (`renderHtml` / `renderEmpty`, resolving 125 `ANVIL-R003` findings), hardened process spawning in `src/core/agent-race.ts`, `src/core/verified-loop.ts`, and tests (`ANVIL-R002`), and added `anvil shield .` verification to `.github/workflows/ci.yml` so `anvil gate .` passes with `0` critical/high/medium findings.
 - **Modularized Core Subsystems:** Split `src/core/dashboard-server.ts` into `src/core/dashboard/` (`http-helpers.ts`, `sse.ts`, `styles.ts`, `page.ts`, `client-script.ts`, `routes-get.ts`, `routes-post.ts`) and split `src/core/harness-installer.ts` into `src/core/harness-installer/` (`types.ts`, `transactions.ts`, `renderers.ts`, `lifecycle.ts`, `mcp-planner.ts`) with full public barrel exports preserved.
+
+### Fixed
+- **Cross-Platform Harness Hook Canonicalization & Container Test Discovery:** Added ancestor-walking native path canonicalization (`canonicalPathSync` via `realpathSync.native`) in [`src/core/harness-hooks.ts`](src/core/harness-hooks.ts) so Windows 8.3 short paths (`RUNNER~1`) and macOS `/var` symlinks align inside `relativeInside()` and `projectRoot()` while blocking symlink escapes outside the project; enabled `tests/container-sandbox.integration.test.ts` in [`vitest.config.ts`](vitest.config.ts) when `ANVIL_DOCKER_IMAGE` is set.
 
 ## 1.3.0 — FORGE 4.0 Engines, ECC Catalog Ingestion, AI Agent Security Audit & Universal Harness Installer (November 2026)
 

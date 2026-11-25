@@ -20,7 +20,7 @@ ANVIL is an open-source, local-first verification harness and Model Context Prot
 npx -y anvil-engineering-workbench install .
 
 # Run one-shot gate check (no install needed)
-npx -y anvil-engineering-workbench@1.3.0 gate
+npx -y anvil-engineering-workbench@1.4.0 gate
 
 # Install globally
 npm install -g anvil-engineering-workbench

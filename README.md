@@ -95,14 +95,14 @@ npm install --global anvil-engineering-workbench
 *Or install directly from the verified GitHub release:*
 
 ```bash
-npm install --global git+https://github.com/anvil-workbench/ANVIL.git#v1.3.0
+npm install --global git+https://github.com/anvil-workbench/ANVIL.git#v1.4.0
 ```
 
 Verify your installation:
 
 ```bash
 anvil --version
-# anvil 1.3.0
+# anvil 1.4.0
 ```
 
 ### 4. Install 1-Command Pre-Commit Hook
@@ -130,7 +130,7 @@ anvil hook install
 
 ## Feature Overview
 
-Every command and flag listed below is verified and supported in ANVIL v1.3.0:
+Every command and flag listed below is verified and supported in ANVIL v1.4.0:
 
 | Command | Description | Verified Flags | Status |
 |---|---|---|---|
@@ -218,9 +218,9 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run ANVIL Quality & Security Gate
-        uses: anvil-workbench/ANVIL@v1.3.0
+        uses: anvil-workbench/ANVIL@v1.4.0
         with:
-          version: v1.3.0
+          version: v1.4.0
           operation: gate
           project-path: .
           baseline-file: .anvil/baseline.json

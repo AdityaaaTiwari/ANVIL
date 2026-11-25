@@ -8,6 +8,7 @@ Only the latest minor release line receives security updates. We strongly encour
 
 | Version | Supported | Release Date |
 |:-------:|:---------:|:------------:|
+| 1.4.x   | ✅ Yes     | November 2026 |
 | 1.3.x   | ✅ Yes     | November 2026 |
 | 1.2.x   | ✅ Yes     | November 2026 |
 | 1.1.x   | ❌ No      | Superseded by 1.2.x |

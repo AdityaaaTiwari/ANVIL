@@ -391,7 +391,7 @@ export async function installHarness(options: InstallOptions): Promise<InstallRe
 
   const conflicts = changes.filter((change) => change.action === "conflict").length;
   if (!dryRun) {
-    const version = options.anvilVersion ?? "1.3.0";
+    const version = options.anvilVersion ?? "1.4.0";
     const state: InstallState = {
       schemaVersion: STATE_SCHEMA_VERSION,
       anvilVersion: version,
@@ -572,7 +572,7 @@ export async function doctorHarness(options: {
   anvilVersion?: string;
   catalog?: HarnessCatalog;
 }): Promise<DoctorReport> {
-  const currentVersion = options.anvilVersion ?? "1.3.0";
+  const currentVersion = options.anvilVersion ?? "1.4.0";
   const root = await realpath(path.resolve(options.projectPath));
   const state = await loadInstallState(root);
   const summary: Record<DoctorStatus, number> = { ok: 0, missing: 0, modified: 0, outdated: 0 };
