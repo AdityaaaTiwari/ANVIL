@@ -1,6 +1,32 @@
 // Helpers shared by several CLI commands.
 import { spawn } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { getAnvilEnv } from "../core/env-compat.js";
+
+export function resolvePackageVersion(): string {
+  try {
+    const pkgUrl = new URL("../../package.json", import.meta.url);
+    const raw = readFileSync(pkgUrl, "utf8");
+    const parsed = JSON.parse(raw) as { version?: unknown };
+    if (typeof parsed.version === "string" && parsed.version.trim()) return parsed.version;
+  } catch {
+    /* ignore and use fallback */
+  }
+  return "1.3.0";
+}
+
+export function findPositionalArgs(args: readonly string[], valueFlags: ReadonlySet<string> = new Set()): string[] {
+  const positional: string[] = [];
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i]!;
+    if (arg.startsWith("-")) {
+      if (valueFlags.has(arg) && i + 1 < args.length) i++;
+      continue;
+    }
+    positional.push(arg);
+  }
+  return positional;
+}
 
 export function runSandboxProbe(args: string[]): Promise<string> {
   return new Promise((resolve, reject) => {

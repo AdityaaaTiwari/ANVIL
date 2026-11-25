@@ -5,7 +5,8 @@ import {
   formatShieldReport,
   runShield,
   toSarif,
-} from "../core/forge-shield.js";
+} from "../core/anvil-shield.js";
+import { resolvePackageVersion } from "./shared.js";
 
 export async function runShieldCommand(_command: string, args: string[]): Promise<void> {
   if (args.includes("--help") || args.includes("-h")) {
@@ -28,7 +29,7 @@ export async function runShieldCommand(_command: string, args: string[]): Promis
   if (isJson) {
     process.stdout.write(JSON.stringify(report, null, 2) + "\n");
   } else if (isSarif) {
-    process.stdout.write(JSON.stringify(toSarif(report, "4.0.0"), null, 2) + "\n");
+    process.stdout.write(JSON.stringify(toSarif(report, resolvePackageVersion()), null, 2) + "\n");
   } else if (isMarkdown) {
     process.stdout.write(formatShieldMarkdown(report) + "\n");
   } else {

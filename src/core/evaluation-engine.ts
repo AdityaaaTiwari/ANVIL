@@ -1,6 +1,7 @@
 import { mkdir, readFile, readdir, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import type { RunRecord } from "./orchestrator.js";
+import { anvilWorkspacePath, listWorkspaceStatePaths, resolveWorkspaceStatePath } from "./workspace-paths.js";
 
 export interface EvaluationCriterion {
   id: string;
@@ -111,17 +112,23 @@ function validateSuite(value: unknown, file: string): EvaluationSuite {
   return suite;
 }
 export async function loadEvaluationSuites(projectPath: string): Promise<EvaluationSuite[]> {
-  const directory = path.join(path.resolve(projectPath), ".forge", "evals");
-  let files: string[];
-  try {
-    files = (await readdir(directory)).filter((file) => file.endsWith(".json")).sort();
-  } catch (error) {
-    if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") return [];
-    throw error;
-  }
+  const seen = new Set<string>();
   const suites: EvaluationSuite[] = [];
-  for (const file of files)
-    suites.push(validateSuite(JSON.parse(await readFile(path.join(directory, file), "utf8")), file));
+  for (const directory of listWorkspaceStatePaths(projectPath, "evals")) {
+    let files: string[];
+    try {
+      files = (await readdir(directory)).filter((file) => file.endsWith(".json")).sort();
+    } catch (error) {
+      if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") continue;
+      throw error;
+    }
+    for (const file of files) {
+      const suite = validateSuite(JSON.parse(await readFile(path.join(directory, file), "utf8")), file);
+      if (seen.has(suite.id)) continue;
+      seen.add(suite.id);
+      suites.push(suite);
+    }
+  }
   return suites;
 }
 function wordCount(text: string): number {
@@ -208,7 +215,7 @@ export function evaluateRun(run: RunRecord, suite: EvaluationSuite): EvaluationR
   };
 }
 export async function saveEvaluationReport(projectPath: string, report: EvaluationReport): Promise<string> {
-  const directory = path.join(path.resolve(projectPath), ".forge", "evaluations");
+  const directory = anvilWorkspacePath(projectPath, "evaluations");
   await mkdir(directory, { recursive: true, mode: 0o700 });
   const destination = path.join(directory, `${report.runId}-${report.suiteId}.json`);
   const temporary = `${destination}.${process.pid}.tmp`;
@@ -218,7 +225,7 @@ export async function saveEvaluationReport(projectPath: string, report: Evaluati
 }
 export function formatEvaluationReport(report: EvaluationReport): string {
   const lines = [
-    `FORGE evaluation: ${report.suiteName} (${report.suiteId})`,
+    `ANVIL evaluation: ${report.suiteName} (${report.suiteId})`,
     `Run: ${report.runId}`,
     `Score: ${report.score}/100 · ${report.passed ? "PASS" : "NEEDS REVIEW"}`,
     `Cases: ${report.summary.passed}/${report.summary.total} passed · ${report.summary.missingOutput} missing output`,
@@ -241,27 +248,32 @@ export function formatEvaluationReport(report: EvaluationReport): string {
 export async function listEvaluationReports(
   projectPath: string
 ): Promise<Array<EvaluationReport | JudgedEvaluationReport>> {
-  const directory = path.join(path.resolve(projectPath), ".forge", "evaluations");
-  let files: string[];
-  try {
-    files = (await readdir(directory))
-      .filter((file) => file.endsWith(".json"))
-      .sort()
-      .reverse();
-  } catch (error) {
-    if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") return [];
-    throw error;
-  }
+  const seen = new Set<string>();
   const reports: Array<EvaluationReport | JudgedEvaluationReport> = [];
-  for (const file of files.slice(0, 100)) {
-    const value: unknown = JSON.parse(await readFile(path.join(directory, file), "utf8"));
-    if (
-      value &&
-      typeof value === "object" &&
-      (value as EvaluationReport).version === 1 &&
-      Array.isArray((value as EvaluationReport).cases)
-    )
-      reports.push("judge" in value ? (value as JudgedEvaluationReport) : (value as EvaluationReport));
+  for (const directory of listWorkspaceStatePaths(projectPath, "evaluations")) {
+    let files: string[];
+    try {
+      files = (await readdir(directory))
+        .filter((file) => file.endsWith(".json"))
+        .sort()
+        .reverse();
+    } catch (error) {
+      if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") continue;
+      throw error;
+    }
+    for (const file of files.slice(0, 100)) {
+      if (seen.has(file)) continue;
+      seen.add(file);
+      const value: unknown = JSON.parse(await readFile(path.join(directory, file), "utf8"));
+      if (
+        value &&
+        typeof value === "object" &&
+        (value as EvaluationReport).version === 1 &&
+        Array.isArray((value as EvaluationReport).cases)
+      ) {
+        reports.push("judge" in value ? (value as JudgedEvaluationReport) : (value as EvaluationReport));
+      }
+    }
   }
   return reports;
 }
@@ -404,10 +416,12 @@ export async function loadEvaluationReport(
   runId: string,
   suiteId?: string
 ): Promise<EvaluationReport | JudgedEvaluationReport> {
-  if (!/^forge-[a-z0-9-]{1,80}$/.test(runId) || runId.includes("..")) throw new Error("Invalid FORGE run identifier.");
+  if (!/^(?:anvil|forge)-[a-z0-9-]{1,80}$/.test(runId) || runId.includes("..")) {
+    throw new Error("Invalid ANVIL run identifier.");
+  }
   if (suiteId && !SAFE_ID.test(suiteId)) throw new Error("Invalid evaluation suite identifier.");
   if (suiteId) {
-    const file = path.join(path.resolve(projectPath), ".forge", "evaluations", runId + "-" + suiteId + ".json");
+    const file = resolveWorkspaceStatePath(projectPath, "evaluations", runId + "-" + suiteId + ".json");
     const value: unknown = JSON.parse(await readFile(file, "utf8"));
     if (
       !value ||
@@ -425,7 +439,7 @@ export async function loadEvaluationReport(
     throw new Error(
       matches.length
         ? "Multiple evaluation reports exist for this run; specify --suite SUITE_ID."
-        : "No evaluation report found for run " + runId + ". Run forge evaluate first."
+        : "No evaluation report found for run " + runId + ". Run anvil evaluate first."
     );
   return matches[0]!;
 }

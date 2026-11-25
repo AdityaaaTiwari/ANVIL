@@ -2,6 +2,7 @@ import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import path from "node:path";
 import type { AgentTrace } from "./model-router.js";
+import { anvilWorkspacePath, resolveWorkspaceStatePath } from "./workspace-paths.js";
 
 export interface ExecutionTraceDocument {
   version: 1;
@@ -93,7 +94,7 @@ async function withTraceWriteLock<T>(directory: string, runId: string, action: (
   } catch (error) {
     if (error && typeof error === "object" && "code" in error && error.code === "EEXIST") {
       throw new Error(
-        "Execution trace is being updated by another or interrupted FORGE process. Inspect " +
+        "Execution trace is being updated by another or interrupted ANVIL process. Inspect " +
           lock +
           " before manual recovery."
       );
@@ -128,8 +129,10 @@ export async function saveExecutionTrace(
   runId: string,
   entries: readonly AgentTrace[]
 ): Promise<string> {
-  if (!/^forge-[a-z0-9-]{1,80}$/.test(runId) || runId.includes("..")) throw new Error("Invalid FORGE run identifier.");
-  const directory = path.join(path.resolve(projectPath), ".forge", "traces");
+  if (!/^(?:anvil|forge)-[a-z0-9-]{1,80}$/.test(runId) || runId.includes("..")) {
+    throw new Error("Invalid ANVIL run identifier.");
+  }
+  const directory = anvilWorkspacePath(projectPath, "traces");
   if (!Array.isArray(entries) || entries.some((entry) => !isValidTraceEntry(entry))) {
     throw new Error("Execution trace contains an invalid agent entry.");
   }
@@ -204,8 +207,10 @@ export async function saveExecutionTrace(
 }
 
 export async function loadExecutionTrace(projectPath: string, runId: string): Promise<ExecutionTraceDocument> {
-  if (!/^forge-[a-z0-9-]{1,80}$/.test(runId) || runId.includes("..")) throw new Error("Invalid FORGE run identifier.");
-  const file = path.join(path.resolve(projectPath), ".forge", "traces", runId + ".json");
+  if (!/^(?:anvil|forge)-[a-z0-9-]{1,80}$/.test(runId) || runId.includes("..")) {
+    throw new Error("Invalid ANVIL run identifier.");
+  }
+  const file = resolveWorkspaceStatePath(projectPath, "traces", runId + ".json");
   const parsed: unknown = JSON.parse(await readFile(file, "utf8"));
   if (
     !parsed ||

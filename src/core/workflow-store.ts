@@ -2,6 +2,7 @@ import { mkdir, readFile, readdir, rename, rm, writeFile } from "node:fs/promise
 import { randomUUID } from "node:crypto";
 import path from "node:path";
 import { createRun, type AgentTask, type RunRecord } from "./orchestrator.js";
+import { anvilWorkspacePath, listWorkspaceStatePaths, resolveWorkspaceStatePath } from "./workspace-paths.js";
 
 export interface WorkflowDefinition {
   id: string;
@@ -75,7 +76,7 @@ function validateWorkflow(input: unknown): asserts input is Omit<WorkflowDefinit
 }
 
 function directory(projectPath: string): string {
-  return path.join(path.resolve(projectPath), ".forge", "workflows");
+  return anvilWorkspacePath(projectPath, "workflows");
 }
 
 export async function saveWorkflow(projectPath: string, input: unknown): Promise<WorkflowDefinition> {
@@ -101,29 +102,35 @@ export async function saveWorkflow(projectPath: string, input: unknown): Promise
 
 export async function loadWorkflow(projectPath: string, id: string): Promise<WorkflowDefinition> {
   if (!ID_PATTERN.test(id)) throw new Error("Invalid workflow identifier.");
-  const value: unknown = JSON.parse(await readFile(path.join(directory(projectPath), id + ".json"), "utf8"));
+  const value: unknown = JSON.parse(
+    await readFile(resolveWorkspaceStatePath(projectPath, "workflows", id + ".json"), "utf8")
+  );
   validateWorkflow(value);
   if (value.id !== id) throw new Error("Stored workflow identifier does not match its filename.");
   return value as WorkflowDefinition;
 }
 
 export async function listWorkflows(projectPath: string): Promise<WorkflowDefinition[]> {
-  let entries;
-  try {
-    entries = await readdir(directory(projectPath), { withFileTypes: true });
-  } catch (error) {
-    if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") return [];
-    throw error;
-  }
+  const seen = new Set<string>();
   const workflows: WorkflowDefinition[] = [];
-  for (const entry of entries) {
-    if (!entry.isFile() || !entry.name.endsWith(".json")) continue;
-    const id = entry.name.slice(0, -5);
-    if (!ID_PATTERN.test(id)) continue;
+  for (const folder of listWorkspaceStatePaths(projectPath, "workflows")) {
+    let entries;
     try {
-      workflows.push(await loadWorkflow(projectPath, id));
-    } catch {
-      /* Ignore malformed local definitions. */
+      entries = await readdir(folder, { withFileTypes: true });
+    } catch (error) {
+      if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") continue;
+      throw error;
+    }
+    for (const entry of entries) {
+      if (!entry.isFile() || !entry.name.endsWith(".json")) continue;
+      const id = entry.name.slice(0, -5);
+      if (!ID_PATTERN.test(id) || seen.has(id)) continue;
+      seen.add(id);
+      try {
+        workflows.push(await loadWorkflow(projectPath, id));
+      } catch {
+        /* Ignore malformed local definitions. */
+      }
     }
   }
   return workflows.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));

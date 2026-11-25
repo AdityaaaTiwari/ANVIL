@@ -46,7 +46,7 @@ describe("harness scorecard", () => {
     expect(card.categories.find((c) => c.id === "install")?.score).toBe(0);
     expect(card.grade).toBe("F");
     expect(card.topActions.length).toBeGreaterThan(0);
-    expect(card.topActions.some((a) => /forge install/.test(a))).toBe(true);
+    expect(card.topActions.some((a) => /anvil install/.test(a))).toBe(true);
   });
 
   it("is deterministic and rewards a well-prepared repository", async () => {
@@ -54,7 +54,7 @@ describe("harness scorecard", () => {
       "package.json": pkg,
       "README.md": "# demo\n",
       ".github/workflows/ci.yml":
-        "jobs:\n  test:\n    steps:\n      - run: npm test\n      - run: npx forge shield .\n",
+        "jobs:\n  test:\n    steps:\n      - run: npm test\n      - run: npx anvil shield .\n",
       ".github/dependabot.yml": "version: 2\n",
     });
     await installHarness({ projectPath: root, forgeVersion: "test", targets: ["claude", "codex"], hooks: true });
@@ -73,11 +73,11 @@ describe("harness scorecard", () => {
     expect(score("memory")).toBe(10);
     expect(score("ci")).toBe(10);
     expect(first.percent).toBeGreaterThan(75);
-    expect(formatScorecard(first)).toContain("FORGE harness scorecard");
+    expect(formatScorecard(first)).toContain("ANVIL harness scorecard");
     expect(formatScorecardMarkdown(first)).toContain("| Runtime guards | 10/10 |");
   });
 
-  it("flags harnesses the repo uses but FORGE does not cover", async () => {
+  it("flags harnesses the repo uses but ANVIL does not cover", async () => {
     const root = await project({ "package.json": pkg, ".windsurf/rules/team.md": "x" });
     await installHarness({ projectPath: root, forgeVersion: "test", targets: ["claude"] });
     const coverage = (await buildScorecard({ projectPath: root, forgeVersion: "test", now })).categories.find(

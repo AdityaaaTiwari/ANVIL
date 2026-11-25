@@ -5,7 +5,7 @@ import {
   WORKSPACE_AGENT_TOOLS,
   type WorkspaceAgentToolName,
 } from "./workspace-tool-broker.js";
-import type { ForgePermissionPolicy } from "./permission-policy.js";
+import type { AnvilPermissionPolicy } from "./permission-policy.js";
 
 export interface OpenAICompatibleOptions {
   apiKey: string;
@@ -14,7 +14,7 @@ export interface OpenAICompatibleOptions {
   timeoutMs?: number;
   providerName?: string;
   workspacePath?: string;
-  permissionPolicy?: ForgePermissionPolicy;
+  permissionPolicy?: AnvilPermissionPolicy;
   maxToolCalls?: number;
 }
 
@@ -184,7 +184,7 @@ export class OpenAICompatibleProvider implements AgentProvider {
               {
                 onAudit: (event) => {
                   process.stderr.write(
-                    JSON.stringify({ type: "forge-tool-audit", ...event }) + String.fromCharCode(10)
+                    JSON.stringify({ type: "anvil-tool-audit", ...event }) + String.fromCharCode(10)
                   );
                 },
               }

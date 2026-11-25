@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import path from "node:path";
 import type { EvaluationReport, JudgedEvaluationReport } from "./evaluation-engine.js";
 import type { ExecutionTraceDocument } from "./execution-trace.js";
+import { anvilWorkspacePath, listWorkspaceStatePaths, resolveWorkspaceStatePath } from "./workspace-paths.js";
 
 export interface BenchmarkTrial {
   runId: string;
@@ -132,12 +133,13 @@ export function createBenchmarkTrial(
 }
 
 export async function recordBenchmarkTrial(projectPath: string, trial: BenchmarkTrial): Promise<BenchmarkDocument> {
-  const directory = path.join(path.resolve(projectPath), ".forge", "benchmarks");
+  const directory = anvilWorkspacePath(projectPath, "benchmarks");
   await mkdir(directory, { recursive: true, mode: 0o700 });
   const destination = path.join(directory, trial.suiteId + ".json");
+  const existingSource = resolveWorkspaceStatePath(projectPath, "benchmarks", trial.suiteId + ".json");
   let trials: BenchmarkTrial[] = [];
   try {
-    const previous: unknown = JSON.parse(await readFile(destination, "utf8"));
+    const previous: unknown = JSON.parse(await readFile(existingSource, "utf8"));
     if (
       !previous ||
       typeof previous !== "object" ||
@@ -173,7 +175,7 @@ export async function recordBenchmarkTrial(projectPath: string, trial: Benchmark
 
 export async function loadBenchmark(projectPath: string, suiteId: string): Promise<BenchmarkDocument> {
   if (!/^[a-z0-9][a-z0-9-]{1,47}$/.test(suiteId)) throw new Error("Invalid benchmark suite identifier.");
-  const file = path.join(path.resolve(projectPath), ".forge", "benchmarks", suiteId + ".json");
+  const file = resolveWorkspaceStatePath(projectPath, "benchmarks", suiteId + ".json");
   const value: unknown = JSON.parse(await readFile(file, "utf8"));
   if (
     !value ||
@@ -187,20 +189,24 @@ export async function loadBenchmark(projectPath: string, suiteId: string): Promi
 }
 
 export async function listBenchmarks(projectPath: string): Promise<BenchmarkDocument[]> {
-  const directory = path.join(path.resolve(projectPath), ".forge", "benchmarks");
-  let files: string[];
-  try {
-    files = (await readdir(directory)).filter((file) => file.endsWith(".json")).sort();
-  } catch (error) {
-    if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") return [];
-    throw error;
-  }
+  const seen = new Set<string>();
   const documents: BenchmarkDocument[] = [];
-  for (const file of files.slice(0, 100)) {
-    const id = file.slice(0, -5);
-    documents.push(await loadBenchmark(projectPath, id));
+  for (const directory of listWorkspaceStatePaths(projectPath, "benchmarks")) {
+    let files: string[];
+    try {
+      files = (await readdir(directory)).filter((file) => file.endsWith(".json")).sort();
+    } catch (error) {
+      if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") continue;
+      throw error;
+    }
+    for (const file of files.slice(0, 100)) {
+      const id = file.slice(0, -5);
+      if (seen.has(id)) continue;
+      seen.add(id);
+      documents.push(await loadBenchmark(projectPath, id));
+    }
   }
-  return documents;
+  return documents.sort((a, b) => a.suiteId.localeCompare(b.suiteId));
 }
 
 export function formatBenchmark(document: BenchmarkDocument): string {

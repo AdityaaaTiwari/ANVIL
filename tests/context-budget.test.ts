@@ -6,7 +6,7 @@ import { analyzeContext, estimateTokens, formatContextReport } from "../src/core
 
 const directories: string[] = [];
 async function project(files: Record<string, string>): Promise<string> {
-  const directory = await mkdtemp(path.join(os.tmpdir(), "forge-ctx-"));
+  const directory = await mkdtemp(path.join(os.tmpdir(), "anvil-ctx-"));
   directories.push(directory);
   for (const [name, content] of Object.entries(files)) {
     await mkdir(path.dirname(path.join(directory, name)), { recursive: true });
@@ -19,7 +19,7 @@ afterEach(async () => {
 });
 const para = (word: string) => `${word} `.repeat(40).trim();
 
-describe("forge context", () => {
+describe("anvil context", () => {
   it("measures what each harness loads and flags the heavy parts", async () => {
     const shared = `${para("alpha")}\n\n${para("beta")}\n\n${para("gamma")}\n\n${para("delta")}`;
     const root = await project({

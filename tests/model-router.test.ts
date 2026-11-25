@@ -234,7 +234,7 @@ describe("task-aware model routing", () => {
         task: { id: "large", agent: "planner", title: "Large", prompt: "This prompt is deliberately too large" },
         completedDependencies: [],
       })
-    ).rejects.toThrow("FORGE budget exceeded");
+    ).rejects.toThrow("ANVIL budget exceeded");
     expect(calls).toBe(0);
     expect(router.traces).toHaveLength(1);
     expect(router.traces[0]).toMatchObject({
@@ -290,7 +290,7 @@ describe("task-aware model routing", () => {
         task: { id: "large", agent: "planner", title: "Large", prompt: "This prompt is deliberately too large" },
         completedDependencies: [],
       })
-    ).rejects.toThrow("FORGE budget exceeded");
+    ).rejects.toThrow("ANVIL budget exceeded");
     expect(calls).toBe(0);
   });
 

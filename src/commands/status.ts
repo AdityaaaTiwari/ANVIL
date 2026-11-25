@@ -1,6 +1,7 @@
 import path from "node:path";
-import { forgeStatus, formatStatus } from "../core/forge-status.js";
+import { anvilStatus, formatStatus } from "../core/anvil-status.js";
 import { renderStatusLine } from "../core/statusline.js";
+import { resolvePackageVersion } from "./shared.js";
 
 export async function runStatus(command: string, args: string[]): Promise<void> {
   if (args.includes("--help") || args.includes("-h")) {
@@ -15,7 +16,7 @@ export async function runStatus(command: string, args: string[]): Promise<void> 
   }
 
   const isJson = args.includes("--json");
-  const report = await forgeStatus(projectPath, "4.0.0");
+  const report = await anvilStatus(projectPath, resolvePackageVersion());
   if (isJson) {
     process.stdout.write(JSON.stringify(report, null, 2) + "\n");
   } else {

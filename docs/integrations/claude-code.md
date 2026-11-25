@@ -23,17 +23,17 @@ The command registers a local stdio MCP server. Claude Code may ask you to appro
 
 ## 3. Verify the connection
 
-In Claude Code, use `/mcp` to inspect configured MCP servers. The ANVIL server exposes these read-only tools:
+In Claude Code, use `/mcp` to inspect configured MCP servers. The ANVIL server exposes canonical `anvil_*` read-only tools (legacy `forge_*` aliases are also registered when `ANVIL_FORGE_ALIASES=1` is set):
 
-- `forge_inspect_project` / `anvil_inspect_project`
-- `forge_map_architecture` / `anvil_map_architecture`
-- `forge_search_code` / `anvil_search_code`
-- `forge_quality_audit` / `anvil_quality_audit`
-- `forge_git_intelligence` / `anvil_git_intelligence`
-- `forge_list_agents` / `anvil_list_agents`
-- `forge_create_review_plan` / `anvil_create_review_plan`
-- `forge_doctor` / `anvil_doctor`
-- `forge_clean_preview` / `anvil_clean_preview`
+- `anvil_inspect_project`
+- `anvil_map_architecture`
+- `anvil_search_code`
+- `anvil_quality_audit`
+- `anvil_git_intelligence`
+- `anvil_list_agents`
+- `anvil_create_review_plan`
+- `anvil_doctor`
+- `anvil_clean_preview`
 
 Ask Claude to inspect the project with `anvil_inspect_project` and map its architecture with `anvil_map_architecture`.
 

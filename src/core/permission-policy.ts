@@ -1,20 +1,24 @@
 import { constants } from "node:fs";
 import { lstat, open, realpath } from "node:fs/promises";
 import path from "node:path";
+import { ANVIL_STATE_DIR, LEGACY_FORGE_STATE_DIR } from "./workspace-paths.js";
 
-export interface ForgePermissionPolicy {
+export interface AnvilPermissionPolicy {
   version: 1;
   mode: "proposal-only" | "restricted";
   allowedTools: string[];
 }
 
-export const DEFAULT_PERMISSION_POLICY: ForgePermissionPolicy = {
+/** @deprecated Use `AnvilPermissionPolicy`. */
+export type ForgePermissionPolicy = AnvilPermissionPolicy;
+
+export const DEFAULT_PERMISSION_POLICY: AnvilPermissionPolicy = {
   version: 1,
   mode: "proposal-only",
   allowedTools: [],
 };
 
-export function validatePermissionPolicy(value: unknown): ForgePermissionPolicy {
+export function validatePermissionPolicy(value: unknown): AnvilPermissionPolicy {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     throw new Error("Permission policy must be a JSON object.");
   }
@@ -42,66 +46,75 @@ function isMissing(error: unknown): boolean {
 }
 
 /** Loads declarative policy. Missing files resolve to the safe proposal-only default. */
-export async function loadPermissionPolicy(projectPath: string): Promise<ForgePermissionPolicy> {
+export async function loadPermissionPolicy(projectPath: string): Promise<AnvilPermissionPolicy> {
   const root = await realpath(path.resolve(projectPath));
-  const directory = path.join(root, ".forge");
-  const file = path.join(directory, "permissions.json");
-  try {
-    const directoryInfo = await lstat(directory);
-    if (directoryInfo.isSymbolicLink() || !directoryInfo.isDirectory()) {
-      throw new Error("The .forge policy directory must be a real directory inside the project.");
-    }
-    const fileInfo = await lstat(file).catch(() => null);
-    if (fileInfo && (fileInfo.isSymbolicLink() || !fileInfo.isFile())) {
-      throw new Error("The .forge/permissions.json policy file must be a regular file, not a symbolic link.");
-    }
-    // Bound policy parsing and reject a final-component symlink swap at open time.
-    let handle;
+  for (const stateDirName of [ANVIL_STATE_DIR, LEGACY_FORGE_STATE_DIR]) {
+    const directory = path.join(root, stateDirName);
+    const file = path.join(directory, "permissions.json");
     try {
-      handle = await open(file, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0));
-    } catch (error) {
-      if (error && typeof error === "object" && "code" in error && error.code === "ELOOP") {
-        throw new Error("The .forge/permissions.json policy file must be a regular file, not a symbolic link.");
+      const directoryInfo = await lstat(directory);
+      if (directoryInfo.isSymbolicLink() || !directoryInfo.isDirectory()) {
+        throw new Error(`The ${stateDirName} policy directory must be a real directory inside the project.`);
       }
+      const fileInfo = await lstat(file).catch(() => null);
+      if (fileInfo && (fileInfo.isSymbolicLink() || !fileInfo.isFile())) {
+        throw new Error(
+          `The ${stateDirName}/permissions.json policy file must be a regular file, not a symbolic link.`
+        );
+      }
+      // Bound policy parsing and reject a final-component symlink swap at open time.
+      let handle;
+      try {
+        handle = await open(file, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0));
+      } catch (error) {
+        if (error && typeof error === "object" && "code" in error && error.code === "ELOOP") {
+          throw new Error(
+            `The ${stateDirName}/permissions.json policy file must be a regular file, not a symbolic link.`
+          );
+        }
+        throw error;
+      }
+      try {
+        const info = await handle.stat();
+        if (!info.isFile()) {
+          throw new Error(
+            `The ${stateDirName}/permissions.json policy file must be a regular file, not a symbolic link.`
+          );
+        }
+        if (info.size > 16 * 1024) {
+          throw new Error(`The ${stateDirName}/permissions.json policy file exceeds the 16 KiB limit.`);
+        }
+        const actualFile = await realpath(file);
+        const relative = path.relative(root, actualFile);
+        if (relative.startsWith(".." + path.sep) || relative === ".." || path.isAbsolute(relative)) {
+          throw new Error("The permission policy file must stay inside the project.");
+        }
+        return validatePermissionPolicy(JSON.parse(await handle.readFile({ encoding: "utf8" })));
+      } finally {
+        await handle.close();
+      }
+    } catch (error) {
+      if (isMissing(error)) continue;
       throw error;
     }
-    try {
-      const info = await handle.stat();
-      if (!info.isFile()) {
-        throw new Error("The .forge/permissions.json policy file must be a regular file, not a symbolic link.");
-      }
-      if (info.size > 16 * 1024) {
-        throw new Error("The .forge/permissions.json policy file exceeds the 16 KiB limit.");
-      }
-      const actualFile = await realpath(file);
-      const relative = path.relative(root, actualFile);
-      if (relative.startsWith(".." + path.sep) || relative === ".." || path.isAbsolute(relative)) {
-        throw new Error("The permission policy file must stay inside the project.");
-      }
-      return validatePermissionPolicy(JSON.parse(await handle.readFile({ encoding: "utf8" })));
-    } finally {
-      await handle.close();
-    }
-  } catch (error) {
-    if (isMissing(error)) return { ...DEFAULT_PERMISSION_POLICY, allowedTools: [] };
-    throw error;
   }
+  return { ...DEFAULT_PERMISSION_POLICY, allowedTools: [] };
 }
 
 /** Fail closed until a concrete, audited tool executor is registered. */
-export function assertProposalOnlyPolicy(policy: ForgePermissionPolicy, context = "FORGE run"): void {
+export function assertProposalOnlyPolicy(policy: AnvilPermissionPolicy, context = "ANVIL run"): void {
   if (policy.mode !== "proposal-only" || policy.allowedTools.length !== 0) {
     throw new Error(
-      `${context} cannot execute with the configured permission policy. This FORGE build supports proposal-only agents and has no registered tool executor; set mode to "proposal-only" and allowedTools to [].`
+      `${context} cannot execute with the configured permission policy. This ANVIL build supports proposal-only agents and has no registered tool executor; set mode to "proposal-only" and allowedTools to [].`
     );
   }
 }
 
 /** Allows only the audited read-only workspace tools for native OpenAI tool calling. */
 export function assertSupportedAgentPolicy(
-  policy: ForgePermissionPolicy,
+  policy: AnvilPermissionPolicy,
   provider: string,
-  context = "FORGE run"
+  context = "ANVIL run"
 ): void {
   if (policy.mode === "proposal-only" && policy.allowedTools.length === 0) return;
   const supported = new Set(["list-files", "read-file", "search-code"]);

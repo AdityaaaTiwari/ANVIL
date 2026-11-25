@@ -2,7 +2,7 @@ import { loadHarnessCatalog, type CatalogItem, type CatalogKind, type HarnessCat
 import { MCP_CATALOG, type McpCatalogEntry } from "./mcp-sync.js";
 
 /**
- * `forge consult "<what you are doing>"`: find the agents, skills, commands,
+ * `anvil consult "<what you are doing>"`: find the agents, skills, commands,
  * rules and MCP servers that fit a task, with the exact command to add them.
  * Ranking is deterministic keyword scoring over ids, names, tags, descriptions
  * and headings, plus a small synonym table. No model call, no network.
@@ -235,7 +235,7 @@ export function consultCatalog(catalog: HarnessCatalog, query: string, options: 
       description: item.description,
       score: Math.round(adjusted * 10) / 10,
       why,
-      install: `forge install --with ${itemKey(item)}`,
+      install: `anvil install --with ${itemKey(item)}`,
     });
   }
   if (!options.kinds || options.kinds.includes("mcp")) {

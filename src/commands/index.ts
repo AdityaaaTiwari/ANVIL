@@ -84,6 +84,7 @@ export type CommandHandler = (command: string, rest: string[]) => Promise<void>;
 export const COMMANDS: ReadonlyMap<string, CommandHandler> = new Map<string, CommandHandler>([
   ["init", runInit],
   ["install", runInstall],
+  ["repair", runInstall],
   ["uninstall", runInstall],
   ["rea", runRea],
   ["scorecard", runScorecard],

@@ -4,10 +4,10 @@ import { parseFrontmatter } from "./harness-catalog.js";
 import { mcpServers } from "./shield-extended.js";
 
 /**
- * `forge context`: what every session pays before the first prompt.
+ * `anvil context`: what every session pays before the first prompt.
  *
  * Instruction files, always-on rules, skill and agent descriptions and MCP
- * servers are loaded into every session of a harness. FORGE measures them per
+ * servers are loaded into every session of a harness. ANVIL measures them per
  * harness, estimates tokens (about 4 characters per token; an estimate, not a
  * tokenizer count), and points at the specific files to trim.
  */
@@ -212,7 +212,7 @@ export async function analyzeContext(projectPath: string): Promise<ContextReport
         id: "CTX-SKILL-SPRAWL",
         file: ".claude/skills",
         message: `${skills.items.length} skills are indexed in every session.`,
-        fix: "Remove skills for stacks this repo does not use (`forge install` only installs detected stacks).",
+        fix: "Remove skills for stacks this repo does not use (`anvil install` only installs detected stacks).",
         savings: Math.round(skills.items.reduce((s, i) => s + i.tokens, 0) / 2),
       });
     const servers = Object.keys(mcpServers(jsonOf(await readText(path.join(root, ".mcp.json")))));
@@ -293,7 +293,7 @@ export async function analyzeContext(projectPath: string): Promise<ContextReport
         severity: "medium",
         id: "CTX-MCP-MANY",
         message: `${h.harness} has ${h.mcpServers} MCP servers; their tool definitions load into every session.`,
-        fix: "Disable servers you do not use in this repo (`forge mcp remove NAME --target " + h.harness + "`).",
+        fix: "Disable servers you do not use in this repo (`anvil mcp remove NAME --target " + h.harness + "`).",
       });
   }
 
@@ -335,7 +335,7 @@ export async function analyzeContext(projectPath: string): Promise<ContextReport
 export function formatContextReport(report: ContextReport, options: { verbose?: boolean } = {}): string {
   const used = report.harnesses.filter((h) => h.tokens > 0 || h.mcpServers > 0);
   const lines = [
-    `FORGE context budget · grade ${report.grade} · heaviest harness ≈ ${report.worst.toLocaleString("en-US")} tokens before your first prompt`,
+    `ANVIL context budget · grade ${report.grade} · heaviest harness ≈ ${report.worst.toLocaleString("en-US")} tokens before your first prompt`,
     "",
   ];
   if (!used.length) lines.push("  No agent instructions, rules, skills or MCP servers found.");

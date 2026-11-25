@@ -11,7 +11,7 @@ import {
   type RemoteDoctor,
 } from "./app-handlers.js";
 import { assessPullRequestRisk, type PullRequestRisk } from "./pr-risk.js";
-import type { ShieldReport } from "../core/forge-shield.js";
+import type { ShieldReport } from "../core/anvil-shield.js";
 import type { GitHubClient } from "./github-client.js";
 import { HARNESS_CAPABILITIES, type CapabilitySupport } from "../core/harness-capabilities.js";
 import type { DoctorReport } from "../core/harness-installer.js";
@@ -20,7 +20,7 @@ import { analyzeContext, type ContextReport } from "../core/context-budget.js";
 import { mcpMatrix, type McpMatrixRow } from "../core/mcp-sync.js";
 
 /**
- * Data for the hosted FORGE dashboard (forge-ecc.vercel.app/app).
+ * Data for the hosted ANVIL dashboard.
  * Every function takes an installation client already scoped to one repository.
  */
 
@@ -90,7 +90,7 @@ export async function remoteContext(
   ref: string,
   entries: TreeEntry[]
 ): Promise<{ context: ContextCard; mcp: McpMatrixRow[] }> {
-  const root = await mkdtemp(path.join(os.tmpdir(), "forge-context-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "anvil-context-"));
   try {
     const candidates = entries
       .filter((e) => e.type === "blob" && (e.size ?? 0) <= 256 * 1024 && CONTEXT_FILE.test(e.path))
@@ -328,18 +328,19 @@ export function parseLoopCard(raw: string | undefined): LoopCard | undefined {
 
 /** Files the scorecard reads for content; everything else only needs to exist. */
 const SCORECARD_CONTENT =
-  /^(?:package\.json|pyproject\.toml|\.claude\/settings\.json|\.forge\/memory\.json|\.forge\/instincts\.json|\.github\/workflows\/[^/]+\.ya?ml)$/;
+  /^(?:package\.json|pyproject\.toml|\.claude\/settings\.json|\.(?:anvil|forge)\/memory\.json|\.(?:anvil|forge)\/instincts\.json|\.github\/workflows\/[^/]+\.ya?ml)$/;
 const SCORECARD_EXISTS =
-  /^(?:[^/]+|\.github\/(?:dependabot\.yml|renovate\.json|copilot-instructions\.md)|\.(?:claude|agents)\/skills\/forge-(?:project|learned)\/SKILL\.md|\.(?:windsurf|kiro|zed|cursor|codex|opencode|gemini|clinerules)\/[^/]+)$/;
+  /^(?:[^/]+|\.github\/(?:dependabot\.yml|renovate\.json|copilot-instructions\.md)|\.(?:claude|agents)\/skills\/(?:anvil|forge)-(?:project|learned)\/SKILL\.md|\.(?:windsurf|kiro|zed|cursor|codex|opencode|gemini|clinerules)\/[^/]+)$/;
 
-export function doctorFromRemote(setup: RemoteDoctor, forgeVersion: string): DoctorReport {
+export function doctorFromRemote(setup: RemoteDoctor, anvilVersion: string): DoctorReport {
+  const installedVersion = setup.state?.anvilVersion ?? setup.state?.forgeVersion;
   return {
     installed: setup.installed,
     healthy: setup.healthy,
-    currentVersion: forgeVersion,
+    currentVersion: anvilVersion,
     ...(setup.state
       ? {
-          forgeVersion: setup.state.forgeVersion,
+          ...(installedVersion ? { anvilVersion: installedVersion, forgeVersion: installedVersion } : {}),
           profile: setup.state.profile,
           targets: setup.state.targets,
           ...(setup.state.languages ? { languages: setup.state.languages } : {}),
@@ -365,7 +366,7 @@ async function remoteScorecard(
   shield: ShieldReport,
   now: () => Date
 ): Promise<Scorecard> {
-  const root = await mkdtemp(path.join(os.tmpdir(), "forge-score-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "anvil-score-"));
   try {
     const blobs = entries.filter((e) => e.type === "blob" && (e.size ?? 0) <= 512 * 1024);
     const content = blobs.filter((e) => SCORECARD_CONTENT.test(e.path)).slice(0, 40);
@@ -383,7 +384,7 @@ async function remoteScorecard(
     };
     for (const e of present) await write(e.path, "");
     for (const [file, body] of texts) if (typeof body === "string") await write(file, body);
-    return await buildScorecard({ projectPath: root, forgeVersion: doctor.currentVersion, now, doctor, shield });
+    return await buildScorecard({ projectPath: root, anvilVersion: doctor.currentVersion, now, doctor, shield });
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -410,7 +411,7 @@ export async function buildRepoOverview(
   const files = data.entries
     .filter((entry) => entry.type === "blob")
     .map((entry) => entry.path)
-    .filter((file) => !/^\.forge\/|(?:^|\/)forge-[\w.-]+(?:\/SKILL)?\.(?:md|mdc|toml)$/.test(file));
+    .filter((file) => !/^\.(?:anvil|forge)\/|(?:^|\/)(?:anvil|forge)-[\w.-]+(?:\/SKILL)?\.(?:md|mdc|toml)$/.test(file));
   const profile = analyzeRepository({
     name: `${owner}/${repo}`,
     files,
@@ -422,8 +423,9 @@ export async function buildRepoOverview(
     blobPaths.has(file)
       ? client.getFileText(owner, repo, file, ref).catch(() => undefined)
       : Promise.resolve(undefined);
+  const readFirst = async (primary: string, fallback: string) => (await read(primary)) ?? (await read(fallback));
   const loopFiles = [...blobPaths]
-    .filter((file) => /^\.forge\/loops\/loop-[\w-]+\.json$/.test(file))
+    .filter((file) => /^\.(?:anvil|forge)\/loops\/loop-[\w-]+\.json$/.test(file))
     .sort()
     .reverse()
     .slice(0, 8);
@@ -433,8 +435,8 @@ export async function buildRepoOverview(
     client
       .request<PullSummary[]>("GET", `${client.repo(owner, repo)}/pulls?state=open&per_page=6&sort=updated`)
       .catch(() => [] as PullSummary[]),
-    read(".forge/memory.json"),
-    read(".forge/instincts.json"),
+    readFirst(".anvil/memory.json", ".forge/memory.json"),
+    readFirst(".anvil/instincts.json", ".forge/instincts.json"),
     Promise.all(loopFiles.map(read)),
   ]);
   const now = context.now ?? (() => new Date());
@@ -445,7 +447,7 @@ export async function buildRepoOverview(
       repo,
       ref,
       data.entries,
-      doctorFromRemote(setup, context.forgeVersion),
+      doctorFromRemote(setup, context.anvilVersion ?? context.forgeVersion ?? "0.0.0"),
       shield,
       now
     ).catch(() => undefined),
@@ -496,8 +498,14 @@ export async function buildRepoOverview(
           },
         }
       : {}),
-    memory: { committed: blobPaths.has(".forge/memory.json"), entries: parseMemoryCards(memoryRaw) },
-    instincts: { committed: blobPaths.has(".forge/instincts.json"), items: parseInstinctCards(instinctsRaw) },
+    memory: {
+      committed: blobPaths.has(".anvil/memory.json") || blobPaths.has(".forge/memory.json"),
+      entries: parseMemoryCards(memoryRaw),
+    },
+    instincts: {
+      committed: blobPaths.has(".anvil/instincts.json") || blobPaths.has(".forge/instincts.json"),
+      items: parseInstinctCards(instinctsRaw),
+    },
     loops: loopRaws.map(parseLoopCard).filter((l): l is LoopCard => Boolean(l)),
     harnesses: harnessCoverage([...blobPaths], setup.state?.targets ?? [], setup.state?.hookTargets ?? []),
     ...(contextBudget ? { context: contextBudget.context, mcp: contextBudget.mcp } : {}),
@@ -515,7 +523,7 @@ export async function runDashboardAction(
 ): Promise<{ url?: string; upToDate: boolean; created: number; updated: number; shieldScore: number }> {
   const permission = await context.client.getCollaboratorPermission(owner, repo, login);
   if (!["admin", "maintain", "write"].includes(permission))
-    throw new Error("You need write access to this repository to open FORGE pull requests.");
+    throw new Error("You need write access to this repository to open ANVIL pull requests.");
   const outcome = await runRemoteSetup(context, owner, repo, action);
   return {
     ...(outcome.pull ? { url: outcome.pull.html_url } : {}),

@@ -1,6 +1,12 @@
 import { createHash, randomUUID } from "node:crypto";
-import { mkdir, readFile, readdir, rename, rm, writeFile, realpath } from "node:fs/promises";
+import { lstat, mkdir, readFile, readdir, rename, rm, writeFile, realpath } from "node:fs/promises";
 import path from "node:path";
+import {
+  ANVIL_STATE_DIR,
+  LEGACY_FORGE_STATE_DIR,
+  anvilWorkspacePath,
+  listWorkspaceStatePaths,
+} from "./workspace-paths.js";
 
 export interface AgentConfigFile {
   path: string;
@@ -28,7 +34,7 @@ const MAX_FILE_BYTES = 128 * 1024;
 const MAX_FILES = 100;
 
 function rootDir(projectPath: string): string {
-  return path.join(path.resolve(projectPath), ".forge", "config-versions");
+  return anvilWorkspacePath(projectPath, "config-versions");
 }
 function digest(content: string): string {
   return createHash("sha256").update(content, "utf8").digest("hex");
@@ -89,70 +95,77 @@ export async function captureAgentConfigVersion(
   input: { createdBy?: string; note?: string } = {}
 ): Promise<AgentConfigVersion> {
   const root = path.resolve(projectPath);
+  const realRoot = await realpath(root);
   const files: AgentConfigFile[] = [];
+  const seenRelative = new Set<string>();
   let agentMarkdownFileCount = 0;
-  for (const directory of ["agents", "skills"]) {
-    const forgeDirectory = path.join(root, ".forge");
-    const absolute = path.join(forgeDirectory, directory);
-    let entries;
-    try {
-      const realRoot = await realpath(root);
-      const realForge = await realpath(forgeDirectory);
-      const realDirectory = await realpath(absolute);
-      if (realForge !== path.join(realRoot, ".forge") || realDirectory !== path.join(realForge, directory))
-        throw new Error("Agent configuration directories must not be symbolic links.");
-      entries = await readdir(absolute, { withFileTypes: true });
-    } catch (error) {
-      if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") continue;
-      throw error;
+
+  for (const stateDirName of [ANVIL_STATE_DIR, LEGACY_FORGE_STATE_DIR]) {
+    const stateDirectory = path.join(root, stateDirName);
+    for (const directory of ["agents", "skills"]) {
+      const absolute = path.join(stateDirectory, directory);
+      let entries;
+      try {
+        const realState = await realpath(stateDirectory);
+        const realDirectory = await realpath(absolute);
+        if (realState !== path.join(realRoot, stateDirName) || realDirectory !== path.join(realState, directory)) {
+          throw new Error("Agent configuration directories must not be symbolic links.");
+        }
+        entries = await readdir(absolute, { withFileTypes: true });
+      } catch (error) {
+        if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") continue;
+        throw error;
+      }
+      for (const entry of entries) {
+        if (!entry.isFile() || !entry.name.endsWith(".md")) continue;
+        const relative = directory + "/" + entry.name;
+        if (!validateRelativePath(relative) || seenRelative.has(relative)) continue;
+        const content = await readFile(path.join(absolute, entry.name), "utf8");
+        if (Buffer.byteLength(content, "utf8") > MAX_FILE_BYTES) {
+          throw new Error("Configuration file exceeds 128 KiB: " + relative);
+        }
+        seenRelative.add(relative);
+        files.push({ path: relative, sha256: digest(content), content });
+        agentMarkdownFileCount += 1;
+        if (files.length > MAX_FILES) throw new Error("Agent configuration snapshot exceeds 100 files.");
+      }
     }
-    for (const entry of entries) {
-      if (!entry.isFile() || !entry.name.endsWith(".md")) continue;
-      const relative = directory + "/" + entry.name;
-      if (!validateRelativePath(relative)) continue;
-      const content = await readFile(path.join(absolute, entry.name), "utf8");
-      if (Buffer.byteLength(content, "utf8") > MAX_FILE_BYTES)
-        throw new Error("Configuration file exceeds 128 KiB: " + relative);
-      files.push({ path: relative, sha256: digest(content), content });
-      agentMarkdownFileCount += 1;
-      if (files.length > MAX_FILES) throw new Error("Agent configuration snapshot exceeds 100 files.");
+  }
+
+  const readOptionalPolicy = async (fileName: "hooks.json" | "permissions.json", defaultContent: string) => {
+    for (const stateDirName of [ANVIL_STATE_DIR, LEGACY_FORGE_STATE_DIR]) {
+      const policyFile = path.join(root, stateDirName, fileName);
+      try {
+        const info = await lstat(policyFile);
+        if (info.isSymbolicLink() || !info.isFile()) {
+          throw new Error(`The ${stateDirName}/${fileName} policy file must be a regular file, not a symbolic link.`);
+        }
+        const content = await readFile(policyFile, "utf8");
+        if (Buffer.byteLength(content, "utf8") > MAX_FILE_BYTES) {
+          throw new Error(`Configuration file exceeds 128 KiB: ${fileName}`);
+        }
+        files.push({ path: fileName, sha256: digest(content), content });
+        if (files.length > MAX_FILES) throw new Error("Agent configuration snapshot exceeds 100 files.");
+        return;
+      } catch (error) {
+        if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") continue;
+        throw error;
+      }
     }
-  }
-  const hooksFile = path.join(root, ".forge", "hooks.json");
-  try {
-    const info = await (await import("node:fs/promises")).lstat(hooksFile);
-    if (info.isSymbolicLink() || !info.isFile())
-      throw new Error("The .forge/hooks.json policy file must be a regular file, not a symbolic link.");
-    const content = await readFile(hooksFile, "utf8");
-    if (Buffer.byteLength(content, "utf8") > MAX_FILE_BYTES)
-      throw new Error("Configuration file exceeds 128 KiB: hooks.json");
-    files.push({ path: "hooks.json", sha256: digest(content), content });
+    files.push({ path: fileName, sha256: digest(defaultContent), content: defaultContent });
     if (files.length > MAX_FILES) throw new Error("Agent configuration snapshot exceeds 100 files.");
-  } catch (error) {
-    if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") {
-      const content = "[]\n";
-      files.push({ path: "hooks.json", sha256: digest(content), content });
-    } else throw error;
-  }
-  const permissionsFile = path.join(root, ".forge", "permissions.json");
-  try {
-    const info = await (await import("node:fs/promises")).lstat(permissionsFile);
-    if (info.isSymbolicLink() || !info.isFile())
-      throw new Error("The .forge/permissions.json policy file must be a regular file, not a symbolic link.");
-    const content = await readFile(permissionsFile, "utf8");
-    if (Buffer.byteLength(content, "utf8") > MAX_FILE_BYTES)
-      throw new Error("Configuration file exceeds 128 KiB: permissions.json");
-    files.push({ path: "permissions.json", sha256: digest(content), content });
-    if (files.length > MAX_FILES) throw new Error("Agent configuration snapshot exceeds 100 files.");
-  } catch (error) {
-    if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") {
-      const content = JSON.stringify({ version: 1, mode: "proposal-only", allowedTools: [] }) + "\n";
-      files.push({ path: "permissions.json", sha256: digest(content), content });
-    } else throw error;
-  }
+  };
+
+  await readOptionalPolicy("hooks.json", "[]\n");
+  await readOptionalPolicy(
+    "permissions.json",
+    JSON.stringify({ version: 1, mode: "proposal-only", allowedTools: [] }) + "\n"
+  );
+
   files.sort((a, b) => a.path.localeCompare(b.path));
-  if (agentMarkdownFileCount === 0)
-    throw new Error("No workspace agent or skill Markdown files found under .forge/agents or .forge/skills.");
+  if (agentMarkdownFileCount === 0) {
+    throw new Error("No workspace agent or skill Markdown files found under .anvil/agents or .anvil/skills.");
+  }
   const version: AgentConfigVersion = {
     version: 1,
     id: "cfg-" + randomUUID().replace(/-/g, "").slice(0, 12),
@@ -168,24 +181,39 @@ export async function captureAgentConfigVersion(
   return version;
 }
 export async function listAgentConfigVersions(projectPath: string): Promise<AgentConfigVersion[]> {
-  const directory = rootDir(projectPath);
-  let entries;
-  try {
-    entries = await readdir(directory, { withFileTypes: true });
-  } catch (error) {
-    if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") return [];
-    throw error;
+  const seen = new Map<string, AgentConfigVersion>();
+  for (const directory of listWorkspaceStatePaths(projectPath, "config-versions")) {
+    let entries;
+    try {
+      entries = await readdir(directory, { withFileTypes: true });
+    } catch (error) {
+      if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") continue;
+      throw error;
+    }
+    for (const entry of entries) {
+      if (!entry.isFile() || !SAFE_ID.test(entry.name.replace(/\.json$/, "")) || !entry.name.endsWith(".json"))
+        continue;
+      const version = validateVersion(JSON.parse(await readFile(path.join(directory, entry.name), "utf8")));
+      if (!seen.has(version.id)) seen.set(version.id, version);
+    }
   }
-  const versions: AgentConfigVersion[] = [];
-  for (const entry of entries) {
-    if (!entry.isFile() || !SAFE_ID.test(entry.name.replace(/\.json$/, "")) || !entry.name.endsWith(".json")) continue;
-    versions.push(validateVersion(JSON.parse(await readFile(path.join(directory, entry.name), "utf8"))));
-  }
-  return versions.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  return [...seen.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 export async function loadAgentConfigVersion(projectPath: string, id: string): Promise<AgentConfigVersion> {
   if (!SAFE_ID.test(id)) throw new Error("Invalid configuration version ID.");
-  return validateVersion(JSON.parse(await readFile(path.join(rootDir(projectPath), id + ".json"), "utf8")));
+  let lastError: unknown;
+  for (const directory of listWorkspaceStatePaths(projectPath, "config-versions")) {
+    try {
+      return validateVersion(JSON.parse(await readFile(path.join(directory, id + ".json"), "utf8")));
+    } catch (error) {
+      if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") {
+        lastError = error;
+        continue;
+      }
+      throw error;
+    }
+  }
+  throw lastError;
 }
 /** @deprecated Configuration approval must flow through a benchmark-gated release. */
 export async function approveAgentConfigVersion(
@@ -233,10 +261,7 @@ export async function materializeAgentConfigVersion(
     for (const file of version.files) {
       if (!validateRelativePath(file.path) || file.sha256 !== digest(file.content))
         throw new Error("Snapshot integrity check failed during materialization.");
-      const target =
-        file.path === "hooks.json" || file.path === "permissions.json"
-          ? path.join(root, ".forge", file.path)
-          : path.join(root, ".forge", file.path);
+      const target = anvilWorkspacePath(root, file.path);
       await mkdir(path.dirname(target), { recursive: true, mode: 0o700 });
       await writeFile(target, file.content, { encoding: "utf8", flag: "wx", mode: 0o600 });
     }

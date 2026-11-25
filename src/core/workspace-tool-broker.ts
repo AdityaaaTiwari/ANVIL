@@ -1,6 +1,6 @@
 import { listWorkspaceDirectory, readWorkspaceFile } from "./workspace-browser.js";
 import { searchWorkspace } from "./code-search.js";
-import type { ForgePermissionPolicy } from "./permission-policy.js";
+import type { AnvilPermissionPolicy } from "./permission-policy.js";
 
 export const WORKSPACE_AGENT_TOOLS = [
   { name: "list-files", description: "List safe project files and directories under the workspace." },
@@ -41,7 +41,7 @@ function optionalPath(input: Record<string, unknown>): string {
  */
 export async function executeWorkspaceAgentTool(
   projectPath: string,
-  policy: ForgePermissionPolicy,
+  policy: AnvilPermissionPolicy,
   toolName: string,
   rawInput: unknown,
   options: WorkspaceToolBrokerOptions = {}

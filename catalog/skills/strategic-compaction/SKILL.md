@@ -17,13 +17,13 @@ Use in long agent sessions, or when an agent starts forgetting decisions or repe
 In the middle of an edit or a debugging run, where file paths, variable names and partial state still matter.
 
 ## Before compacting
-Write a handoff: the goal, decisions and why, files changed, the current check status and the next step. `forge memory handoff` saves it, and FORGE's pre-compact hook saves one automatically when files changed.
+Write a handoff: the goal, decisions and why, files changed, the current check status and the next step. `anvil memory handoff` saves it, and ANVIL's pre-compact hook saves one automatically when files changed.
 
 ## Clear instead of compact
 Start a fresh session (`/clear`) between unrelated tasks. Carrying an old task's context costs tokens and confuses the agent.
 
 ## Keep context small from the start
-- Measure what loads every session with `forge context`, and trim the heaviest files.
+- Measure what loads every session with `anvil context`, and trim the heaviest files.
 - Put procedures in skills that load on demand, not in always-on instruction files.
 - Disable MCP servers this repo does not use.
 

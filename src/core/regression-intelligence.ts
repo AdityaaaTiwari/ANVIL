@@ -94,7 +94,7 @@ export async function generateRegressionReport(inputPath: string, base = "HEAD")
   const suggestedTests = git?.suggestedTests ?? [];
   if (!history.length)
     warnings.push(
-      "No saved verification runs exist yet. Run selected checks with 'forge verify SCRIPT' to establish a baseline."
+      "No saved verification runs exist yet. Run selected checks with 'anvil verify SCRIPT' to establish a baseline."
     );
   if (history.length === 500) warnings.push("Only the latest 500 verification records were considered.");
   const summary = {

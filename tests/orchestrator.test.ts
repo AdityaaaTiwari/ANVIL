@@ -142,7 +142,7 @@ describe("FORGE orchestration engine", () => {
       name: "budget-test",
       async complete(request) {
         started.push(request.task.id);
-        if (request.task.id === "first") throw new Error("FORGE budget exceeded: run token limit reached.");
+        if (request.task.id === "first") throw new Error("ANVIL budget exceeded: run token limit reached.");
         return { provider: "budget-test", content: "done" };
       },
     };

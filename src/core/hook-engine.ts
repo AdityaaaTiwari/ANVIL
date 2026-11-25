@@ -1,11 +1,11 @@
 import { readFile } from "node:fs/promises";
-import path from "node:path";
 import type { AgentTask } from "./orchestrator.js";
+import { resolveWorkspaceStatePath } from "./workspace-paths.js";
 
 export type HookEvent = "before-agent";
 export type HookAction = "require-approval" | "append-context" | "block-task";
 
-export interface ForgeHook {
+export interface AnvilHook {
   id: string;
   event: HookEvent;
   action: HookAction;
@@ -13,6 +13,9 @@ export interface ForgeHook {
   message: string;
   enabled?: boolean;
 }
+
+/** @deprecated Use `AnvilHook`. */
+export type ForgeHook = AnvilHook;
 
 export interface HookResult {
   task: AgentTask;
@@ -24,12 +27,12 @@ export interface HookResult {
 
 const ID = /^[a-z0-9][a-z0-9-]{0,63}$/;
 
-function validateHooks(value: unknown): ForgeHook[] {
+function validateHooks(value: unknown): AnvilHook[] {
   if (!Array.isArray(value)) throw new Error("Hook configuration must be a JSON array.");
   const ids = new Set<string>();
   return value.map((item, index) => {
     if (!item || typeof item !== "object" || Array.isArray(item)) throw new Error(`Hook ${index} must be an object.`);
-    const hook = item as Partial<ForgeHook>;
+    const hook = item as Partial<AnvilHook>;
     if (typeof hook.id !== "string" || !ID.test(hook.id)) throw new Error(`Hook ${index} has an invalid id.`);
     if (ids.has(hook.id)) throw new Error(`Hook ${hook.id} is duplicated.`);
     ids.add(hook.id);
@@ -54,12 +57,12 @@ function validateHooks(value: unknown): ForgeHook[] {
         hook.match.contains.some((term) => typeof term !== "string" || !term.trim()))
     )
       throw new Error(`Hook ${hook.id} has invalid text filters.`);
-    return hook as ForgeHook;
+    return hook as AnvilHook;
   });
 }
 
-export async function loadHooks(projectPath: string): Promise<ForgeHook[]> {
-  const file = path.join(path.resolve(projectPath), ".forge", "hooks.json");
+export async function loadHooks(projectPath: string): Promise<AnvilHook[]> {
+  const file = resolveWorkspaceStatePath(projectPath, "hooks.json");
   try {
     return validateHooks(JSON.parse(await readFile(file, "utf8")));
   } catch (error) {
@@ -68,7 +71,7 @@ export async function loadHooks(projectPath: string): Promise<ForgeHook[]> {
   }
 }
 
-export function applyBeforeAgentHooks(task: AgentTask, hooks: readonly ForgeHook[]): HookResult {
+export function applyBeforeAgentHooks(task: AgentTask, hooks: readonly AnvilHook[]): HookResult {
   const context: string[] = [];
   const triggered: string[] = [];
   let blockedReason: string | undefined;

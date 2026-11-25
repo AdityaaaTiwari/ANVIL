@@ -57,7 +57,7 @@ describe("instinct mining", () => {
   it("learns from repeated guard denials and repeated verification failures", () => {
     expect(
       mineGuard([{ rule: "GUARD-RM-ROOT" }, { rule: "GUARD-RM-ROOT" }, { rule: "GUARD-ONCE" }]).map((c) => c.trigger)
-    ).toEqual(["about to run a command matching FORGE Guard GUARD-RM-ROOT"]);
+    ).toEqual(["about to run a command matching ANVIL Guard GUARD-RM-ROOT"]);
     const rows = [1, 2].map(() => ({
       kind: "verify",
       script: "test",
@@ -114,7 +114,7 @@ describe("instinct store", () => {
     expect(result.added[0]).toMatchObject({ status: "candidate", source: "import" });
     expect(result.added[0]!.confidence).toBeLessThanOrEqual(0.6);
     expect((await loadInstincts(target)).find((i) => i.trigger === "editing api/**")?.status).toBe("active");
-    await expect(importInstincts(target, { tool: "other" })).rejects.toThrow(/Not a FORGE instinct export/);
+    await expect(importInstincts(target, { tool: "other" })).rejects.toThrow(/Not an ANVIL instinct export/);
   });
 
   it("evolves active instincts into a skill and will not clobber a hand-written one", async () => {
@@ -123,14 +123,14 @@ describe("instinct store", () => {
     const dry = await evolveInstincts(root);
     expect(dry.files.map((f) => f.action)).toEqual(["create", "create"]);
     await evolveInstincts(root, { write: true });
-    const skill = await readFile(path.join(root, ".claude/skills/forge-learned/SKILL.md"), "utf8");
-    expect(skill).toContain("name: forge-learned");
+    const skill = await readFile(path.join(root, ".claude/skills/anvil-learned/SKILL.md"), "utf8");
+    expect(skill).toContain("name: anvil-learned");
     expect(skill).toContain("**When editing api/**:** update the OpenAPI spec");
     expect((await evolveInstincts(root, { write: true })).files.map((f) => f.action)).toEqual([
       "unchanged",
       "unchanged",
     ]);
-    await writeFile(path.join(root, ".agents/skills/forge-learned/SKILL.md"), "# mine\n");
+    await writeFile(path.join(root, ".agents/skills/anvil-learned/SKILL.md"), "# mine\n");
     expect((await evolveInstincts(root)).files[1]?.action).toBe("skipped-user-edited");
   });
 });
@@ -149,7 +149,7 @@ describe("instinct hooks", () => {
         tool_input: { file_path: path.join(root, "src/a.ts") },
       })
     );
-    const log = await readFile(path.join(root, ".forge/session/observations.jsonl"), "utf8");
+    const log = await readFile(path.join(root, ".anvil/session/observations.jsonl"), "utf8");
     expect(log).toContain('"kind":"edit"');
     expect(log).toContain('"file":"src/a.ts"');
     await addManualInstinct(root, "editing src/**", "run the unit tests");

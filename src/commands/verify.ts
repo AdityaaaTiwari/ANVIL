@@ -26,7 +26,7 @@ export async function runVerify(command: string, rest: string[]): Promise<void> 
     await saveVerification(target, result);
     process.stdout.write(`${formatVerificationResult(result)}\n\n${formatVerificationComparison(comparison)}\n`);
     process.stdout.write(
-      `\nSaved verification history: ${path.relative(target, path.join(target, ".forge", "verifications", result.id + ".json"))}\n`
+      `\nSaved verification history: ${path.relative(target, path.join(target, ".anvil", "verifications", result.id + ".json"))}\n`
     );
     if (result.status !== "passed") process.exitCode = 1;
   } catch (error) {

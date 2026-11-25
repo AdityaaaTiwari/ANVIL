@@ -13,21 +13,21 @@ import { fingerprintAgentConfig } from "../src/core/benchmark-matrix.js";
 
 const roots: string[] = [];
 async function setup() {
-  const root = await mkdtemp(path.join(os.tmpdir(), "forge-release-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "anvil-release-"));
   roots.push(root);
-  await mkdir(path.join(root, ".forge", "agents"), { recursive: true });
-  await writeFile(path.join(root, ".forge", "agents", "planner.md"), "# Planner\nPlan.\n");
+  await mkdir(path.join(root, ".anvil", "agents"), { recursive: true });
+  await writeFile(path.join(root, ".anvil", "agents", "planner.md"), "# Planner\nPlan.\n");
   const baseline = await captureAgentConfigVersion(root);
   const approvedBaseline = { ...baseline, status: "approved" as const, approvedBy: "owner" };
   await writeFile(
-    path.join(root, ".forge", "config-versions", baseline.id + ".json"),
+    path.join(root, ".anvil", "config-versions", baseline.id + ".json"),
     JSON.stringify(approvedBaseline)
   );
   await writeFile(
-    path.join(root, ".forge", "config-versions", "approved.json"),
+    path.join(root, ".anvil", "config-versions", "approved.json"),
     JSON.stringify({ version: 1, activeApprovedVersionId: baseline.id })
   );
-  await writeFile(path.join(root, ".forge", "agents", "planner.md"), "# Planner\nPlan with evidence.\n");
+  await writeFile(path.join(root, ".anvil", "agents", "planner.md"), "# Planner\nPlan with evidence.\n");
   const candidate = await captureAgentConfigVersion(root);
   const regression: BenchmarkRegressionReport = {
     status: "release-ready",
@@ -65,7 +65,7 @@ describe("agent config release pipeline", () => {
     expect(await listAgentConfigReleases(root)).toHaveLength(1);
     const approved = await decideAgentConfigRelease(root, pending.id, "maintainer", "approve");
     expect(approved.status).toBe("approved");
-    const pointer = JSON.parse(await readFile(path.join(root, ".forge", "config-versions", "approved.json"), "utf8"));
+    const pointer = JSON.parse(await readFile(path.join(root, ".anvil", "config-versions", "approved.json"), "utf8"));
     expect(pointer.activeApprovedVersionId).toBe(candidate.id);
     expect(pointer.releaseId).toBe(pending.id);
   });

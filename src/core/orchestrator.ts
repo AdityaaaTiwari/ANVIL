@@ -120,7 +120,7 @@ export function createRun(goal: string, tasks: readonly AgentTask[]): RunRecord 
 
   const now = timestamp();
   return {
-    id: `forge-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`,
+    id: `anvil-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`,
     goal,
     createdAt: now,
     updatedAt: now,
@@ -293,7 +293,9 @@ export async function advanceRun(
       })
     );
     const budgetExceeded = batchResults.some(
-      (outcome) => "error" in outcome && outcome.error.startsWith("FORGE budget exceeded:")
+      (outcome) =>
+        "error" in outcome &&
+        (outcome.error.startsWith("ANVIL budget exceeded:") || outcome.error.startsWith("FORGE budget exceeded:"))
     );
     if (budgetExceeded) {
       for (const record of next.tasks) {
@@ -347,7 +349,7 @@ export async function advanceRun(
 
 /** Deterministic provider for tests, demos, and offline integration checks. */
 export class DemoAgentProvider implements AgentProvider {
-  readonly name = "forge-demo";
+  readonly name = "anvil-demo";
 
   async complete(request: AgentRequest): Promise<AgentResponse> {
     return {

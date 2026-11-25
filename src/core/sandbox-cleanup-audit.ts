@@ -1,5 +1,6 @@
 import path from "node:path";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { anvilWorkspacePath, resolveWorkspaceStatePath } from "./workspace-paths.js";
 
 export interface SandboxCleanupAuditEntry {
   id: string;
@@ -13,17 +14,19 @@ const MAX_ENTRIES = 200;
 const FILE_NAME = "sandbox-cleanup-history.json";
 
 export async function appendSandboxCleanupAudit(projectRoot: string, entry: SandboxCleanupAuditEntry): Promise<void> {
-  const directory = path.join(projectRoot, ".forge");
-  const file = path.join(directory, FILE_NAME);
-  await mkdir(directory, { recursive: true, mode: 0o700 });
+  const file = anvilWorkspacePath(projectRoot, FILE_NAME);
+  await mkdir(path.dirname(file), { recursive: true, mode: 0o700 });
   let entries: SandboxCleanupAuditEntry[] = [];
-  try {
-    const raw = await readFile(file, "utf8");
-    const parsed: unknown = JSON.parse(raw);
-    if (!Array.isArray(parsed)) throw new Error("Invalid sandbox cleanup audit history.");
-    entries = parsed as SandboxCleanupAuditEntry[];
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+  for (const candidate of [file, resolveWorkspaceStatePath(projectRoot, FILE_NAME)]) {
+    try {
+      const raw = await readFile(candidate, "utf8");
+      const parsed: unknown = JSON.parse(raw);
+      if (!Array.isArray(parsed)) throw new Error("Invalid sandbox cleanup audit history.");
+      entries = parsed as SandboxCleanupAuditEntry[];
+      break;
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+    }
   }
   entries.push(entry);
   await writeFile(file, JSON.stringify(entries.slice(-MAX_ENTRIES), null, 2) + "\n", {
@@ -33,7 +36,7 @@ export async function appendSandboxCleanupAudit(projectRoot: string, entry: Sand
 }
 
 export async function readSandboxCleanupAudit(projectRoot: string): Promise<SandboxCleanupAuditEntry[]> {
-  const file = path.join(projectRoot, ".forge", FILE_NAME);
+  const file = resolveWorkspaceStatePath(projectRoot, FILE_NAME);
   try {
     const raw = await readFile(file, "utf8");
     const parsed: unknown = JSON.parse(raw);

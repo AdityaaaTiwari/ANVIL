@@ -1,5 +1,6 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { anvilWorkspacePath } from "./workspace-paths.js";
 
 export interface StarterFile {
   path: string;
@@ -156,7 +157,7 @@ Never convert a skipped check into a passing result.
 
 export const starterFiles: StarterFile[] = [
   {
-    path: "forge.json",
+    path: "anvil.json",
     content:
       JSON.stringify(
         {
@@ -266,7 +267,7 @@ export async function initializeProject(inputPath: string): Promise<{ created: s
   const skipped: string[] = [];
 
   for (const file of starterFiles) {
-    const destination = path.join(root, ".forge", file.path);
+    const destination = anvilWorkspacePath(root, file.path);
     try {
       await mkdir(path.dirname(destination), { recursive: true });
       await writeFile(destination, file.content, { encoding: "utf8", flag: "wx" });

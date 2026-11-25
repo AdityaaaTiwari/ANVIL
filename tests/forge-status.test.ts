@@ -17,7 +17,7 @@ describe("forge status", () => {
     directories.push(root);
     const empty = await forgeStatus(root, "test");
     expect(empty.install.installed).toBe(false);
-    expect(empty.next[0]).toBe("forge install . --hooks");
+    expect(empty.next[0]).toBe("anvil install . --hooks");
 
     await writeFile(path.join(root, "package.json"), "{}");
     await installHarness({
@@ -40,7 +40,7 @@ describe("forge status", () => {
     expect(status.guard.missing).toEqual([]);
     expect(status.guard.lastDay).toBe(1);
     expect(status.mcp).toEqual({ servers: 1, gaps: 1 });
-    expect(status.next).toContain("forge mcp sync   # some MCP servers are missing in some tools");
+    expect(status.next).toContain("anvil mcp sync   # some MCP servers are missing in some tools");
     expect(formatStatus(status)).toContain("live in claude, cursor, codex");
   });
 });

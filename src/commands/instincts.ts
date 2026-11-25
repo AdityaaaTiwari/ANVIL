@@ -12,6 +12,9 @@ import {
   setInstinctStatus,
   type InstinctStatus,
 } from "../core/instincts.js";
+import { findPositionalArgs } from "./shared.js";
+
+const VALUE_FLAGS = new Set(["--status", "--trigger", "--action", "--path"]);
 
 export async function runInstincts(command: string, args: string[]): Promise<void> {
   if (command === "evolve") {
@@ -19,7 +22,8 @@ export async function runInstincts(command: string, args: string[]): Promise<voi
     const isForce = args.includes("--force");
     const isGlobal = args.includes("--global");
     const isJson = args.includes("--json");
-    const projectPath = path.resolve(args.find((a) => !a.startsWith("-")) ?? ".");
+    const positional = findPositionalArgs(args, VALUE_FLAGS);
+    const projectPath = path.resolve(positional[0] ?? ".");
     const result = await evolveInstincts(projectPath, { write: isWrite, force: isForce, includeGlobal: isGlobal });
     if (isJson) {
       process.stdout.write(JSON.stringify(result, null, 2) + "\n");
@@ -37,7 +41,13 @@ export async function runInstincts(command: string, args: string[]): Promise<voi
     return;
   }
 
-  const projectPath = path.resolve(rest.find((a) => !a.startsWith("-") && !/^inst-[a-f0-9]{10}$/.test(a)) ?? ".");
+  const positional = findPositionalArgs(rest, VALUE_FLAGS);
+  const pathIdx = rest.indexOf("--path");
+  const candidatePath =
+    pathIdx !== -1 && rest[pathIdx + 1]
+      ? rest[pathIdx + 1]
+      : positional.find((a) => !/^inst-[a-f0-9]{10}$/.test(a) && !(action === "import" && a.endsWith(".json")));
+  const projectPath = path.resolve(candidatePath ?? ".");
   const isGlobal = rest.includes("--global");
   const isDryRun = rest.includes("--dry-run");
   const isJson = rest.includes("--json");

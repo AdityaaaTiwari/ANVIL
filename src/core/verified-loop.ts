@@ -8,17 +8,17 @@ import { activeInstincts, formatInstinctContext } from "./instincts.js";
 /**
  * Verified agent loop.
  *
- * FORGE runs a coding agent non-interactively, then runs the user's checks
+ * ANVIL runs a coding agent non-interactively, then runs the user's checks
  * itself. It repeats until every check passes, the iteration budget is spent
- * or the agent stalls. Success is decided by FORGE's own check runs, never by
- * what the agent says. Every iteration leaves a receipt in .forge/loops/.
+ * or the agent stalls. Success is decided by ANVIL's own check runs, never by
+ * what the agent says. Every iteration leaves a receipt in .anvil/loops/.
  *
  * Integrity gate: if the agent deletes tests, adds skip/only markers, loosens
  * lint/format configs, edits package.json scripts or CI workflows, the loop
  * stops with `needs-review` instead of counting a pass.
  */
 
-export const LOOPS_DIR = ".forge/loops";
+export const LOOPS_DIR = ".anvil/loops";
 export const LOOP_SCHEMA_VERSION = 1 as const;
 
 export type LoopAgent = "claude" | "codex" | "gemini" | "opencode" | "command";
@@ -70,7 +70,7 @@ export interface LoopOptions {
   goal: string;
   checks: string[];
   agent?: LoopAgent;
-  /** For agent "command": argv; the prompt is passed on stdin and in FORGE_LOOP_PROMPT. */
+  /** For agent "command": argv; the prompt is passed on stdin and in ANVIL_LOOP_PROMPT (and legacy FORGE_LOOP_PROMPT). */
   agentCommand?: string[];
   /** Extra arguments appended to the built-in agent command. */
   agentArgs?: string[];
@@ -227,7 +227,7 @@ const SKIP_MARKER =
   /\b(?:it|test|describe|context)\.(?:skip|only|todo)\s*\(|\bx(?:it|describe|test)\s*\(|\bf(?:it|describe)\s*\(|@pytest\.mark\.(?:skip|xfail)|\bpytest\.skip\s*\(|\bt\.Skip(?:Now|f)?\s*\(|#\[ignore\]|@Disabled\b|@Ignore\b|\bunittest\.skip/;
 
 /** Files that are allowed to change silently. Everything else is part of the agent's diff. */
-const IGNORED = /^(?:\.forge\/|node_modules\/|dist\/|build\/|coverage\/|\.next\/|target\/)/;
+const IGNORED = /^(?:\.anvil\/|\.forge\/|node_modules\/|dist\/|build\/|coverage\/|\.next\/|target\/)/;
 
 async function changedFiles(root: string): Promise<Array<{ status: string; file: string }>> {
   const out = await git(root, ["status", "--porcelain=v1", "-z", "--untracked-files=all"]);
@@ -346,7 +346,7 @@ export async function runVerifiedLoop(options: LoopOptions): Promise<LoopRecord>
   const goal = options.goal.trim();
   if (!goal || goal.length > 4000) throw new Error("--goal must be 1-4000 characters.");
   const checks = options.checks.map((c) => c.trim()).filter(Boolean);
-  if (!checks.length) throw new Error("Give at least one --check command; FORGE decides success by running it.");
+  if (!checks.length) throw new Error("Give at least one --check command; ANVIL decides success by running it.");
   if (checks.length > 10) throw new Error("At most 10 checks.");
   const agent = options.agent ?? "claude";
   if (!LOOP_AGENTS.includes(agent)) throw new Error(`Unknown agent "${agent}". Use ${LOOP_AGENTS.join(", ")}.`);
@@ -417,7 +417,14 @@ export async function runVerifiedLoop(options: LoopOptions): Promise<LoopRecord>
       cwd: root,
       timeoutMs: agentTimeoutMs,
       ...(call.input !== undefined ? { input: call.input } : {}),
-      env: { FORGE_LOOP_ID: record.id, FORGE_LOOP_ITERATION: String(n), FORGE_LOOP_PROMPT: prompt },
+      env: {
+        ANVIL_LOOP_ID: record.id,
+        ANVIL_LOOP_ITERATION: String(n),
+        ANVIL_LOOP_PROMPT: prompt,
+        FORGE_LOOP_ID: record.id,
+        FORGE_LOOP_ITERATION: String(n),
+        FORGE_LOOP_PROMPT: prompt,
+      },
     });
     if (result.exitCode === null && !result.timedOut && /ENOENT/.test(result.output)) {
       record.status = "error";
@@ -474,23 +481,28 @@ export async function runVerifiedLoop(options: LoopOptions): Promise<LoopRecord>
 }
 
 export async function listLoops(projectPath: string): Promise<LoopRecord[]> {
-  const dir = path.join(path.resolve(projectPath), LOOPS_DIR);
-  let names: string[] = [];
-  try {
-    names = (await readdir(dir)).filter((n) => /^loop-[\w-]+\.json$/.test(n));
-  } catch {
-    return [];
-  }
-  const records: LoopRecord[] = [];
-  for (const name of names) {
+  const root = path.resolve(projectPath);
+  const dirs = [path.join(root, LOOPS_DIR), path.join(root, ".forge/loops")];
+  const byId = new Map<string, LoopRecord>();
+  for (const dir of dirs) {
+    let names: string[] = [];
     try {
-      const parsed = JSON.parse(await readFile(path.join(dir, name), "utf8")) as LoopRecord;
-      if (parsed.schemaVersion === LOOP_SCHEMA_VERSION && typeof parsed.id === "string") records.push(parsed);
+      names = (await readdir(dir)).filter((n) => /^loop-[\w-]+\.json$/.test(n));
     } catch {
-      /* skip unreadable receipts */
+      continue;
+    }
+    for (const name of names) {
+      try {
+        const parsed = JSON.parse(await readFile(path.join(dir, name), "utf8")) as LoopRecord;
+        if (parsed.schemaVersion === LOOP_SCHEMA_VERSION && typeof parsed.id === "string" && !byId.has(parsed.id)) {
+          byId.set(parsed.id, parsed);
+        }
+      } catch {
+        /* skip unreadable receipts */
+      }
     }
   }
-  return records.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  return [...byId.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
 export async function readLoop(projectPath: string, id?: string): Promise<LoopRecord | undefined> {

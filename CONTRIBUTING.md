@@ -19,9 +19,11 @@ To maintain code stability and security:
 3. **Run Checks Locally:** Ensure all checks pass before submitting:
    ```bash
    npm ci
-   npm run typecheck
-   npm test
+   npm run format:check
+   npm run lint
    npm run build
+   npm test
+   npm run test:rea
    ```
 4. **Commit Clearly:** Write concise, clear commit messages describing your changes.
 5. **Open a Pull Request:** Submit your PR against the `main` branch of the upstream repository. Complete the PR template checklist.

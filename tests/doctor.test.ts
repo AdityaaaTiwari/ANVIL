@@ -10,7 +10,7 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
-describe("FORGE doctor diagnostics", () => {
+describe("ANVIL doctor diagnostics", () => {
   it("runs system health checks and returns a valid DoctorReport structure", async () => {
     const report = await runDoctorChecks();
     expect(report).toBeDefined();
@@ -60,21 +60,21 @@ describe("FORGE doctor diagnostics", () => {
     expect(geminiCheck?.status).toBe("warn");
   });
 
-  it("checks workspace path existence and .forge directory presence", async () => {
-    const tmp = await mkdtemp(path.join(os.tmpdir(), "forge-doc-test-"));
+  it("checks workspace path existence and .anvil directory presence", async () => {
+    const tmp = await mkdtemp(path.join(os.tmpdir(), "anvil-doc-test-"));
     try {
-      // First: without .forge
+      // First: without .anvil
       const report1 = await runDoctorChecks(tmp);
       const wsCheck1 = report1.checks.find((c) => c.name === "Project workspace");
-      const forgeCheck1 = report1.checks.find((c) => c.name === "FORGE configuration");
+      const configCheck1 = report1.checks.find((c) => c.name === "ANVIL configuration");
       expect(wsCheck1?.status).toBe("ok");
-      expect(forgeCheck1?.status).toBe("warn");
+      expect(configCheck1?.status).toBe("warn");
 
-      // Second: with .forge
-      await mkdir(path.join(tmp, ".forge"));
+      // Second: with .anvil
+      await mkdir(path.join(tmp, ".anvil"));
       const report2 = await runDoctorChecks(tmp);
-      const forgeCheck2 = report2.checks.find((c) => c.name === "FORGE configuration");
-      expect(forgeCheck2?.status).toBe("ok");
+      const configCheck2 = report2.checks.find((c) => c.name === "ANVIL configuration");
+      expect(configCheck2?.status).toBe("ok");
     } finally {
       await safeRm(tmp);
     }
@@ -100,7 +100,7 @@ describe("FORGE doctor diagnostics", () => {
     };
 
     const text = formatDoctorReport(mockReport);
-    expect(text).toContain("ANVIL / FORGE Doctor — System Health Check");
+    expect(text).toContain("ANVIL Doctor — System Health Check");
     expect(text).toContain("[OK]   Node.js runtime");
     expect(text).toContain("Overall Status: HEALTHY");
   });

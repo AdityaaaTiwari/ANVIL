@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import path from "node:path";
 import type { CodeReviewReport } from "./code-review.js";
 import type { AIReviewResult } from "./ai-code-review.js";
+import { anvilWorkspacePath, listWorkspaceStatePaths, resolveWorkspaceStatePath } from "./workspace-paths.js";
 export interface ReviewRecord {
   id: string;
   createdAt: string;
@@ -11,7 +12,7 @@ export interface ReviewRecord {
 }
 const ID = /^review-[a-f0-9-]{20,40}$/;
 function directory(root: string) {
-  return path.join(path.resolve(root), ".forge", "reviews");
+  return anvilWorkspacePath(root, "reviews");
 }
 function validateId(id: string) {
   if (!ID.test(id) || id.includes("..")) throw new Error("Invalid review identifier.");
@@ -34,28 +35,32 @@ export async function saveReview(root: string, report: CodeReviewReport, ai?: AI
 }
 export async function loadReview(root: string, id: string): Promise<ReviewRecord> {
   validateId(id);
-  const parsed: unknown = JSON.parse(await readFile(path.join(directory(root), id + ".json"), "utf8"));
+  const parsed: unknown = JSON.parse(await readFile(resolveWorkspaceStatePath(root, "reviews", id + ".json"), "utf8"));
   if (!parsed || typeof parsed !== "object" || !("id" in parsed) || parsed.id !== id || !("report" in parsed))
     throw new Error("Stored review has an invalid format.");
   return parsed as ReviewRecord;
 }
 export async function listReviews(root: string): Promise<ReviewRecord[]> {
-  let entries;
-  try {
-    entries = await readdir(directory(root), { withFileTypes: true });
-  } catch (error) {
-    if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") return [];
-    throw error;
-  }
+  const seen = new Set<string>();
   const records: ReviewRecord[] = [];
-  for (const entry of entries) {
-    if (!entry.isFile() || !entry.name.endsWith(".json")) continue;
-    const id = entry.name.slice(0, -5);
-    if (!ID.test(id)) continue;
+  for (const dir of listWorkspaceStatePaths(root, "reviews")) {
+    let entries;
     try {
-      records.push(await loadReview(root, id));
-    } catch {
-      /* Ignore invalid records. */
+      entries = await readdir(dir, { withFileTypes: true });
+    } catch (error) {
+      if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") continue;
+      throw error;
+    }
+    for (const entry of entries) {
+      if (!entry.isFile() || !entry.name.endsWith(".json")) continue;
+      const id = entry.name.slice(0, -5);
+      if (!ID.test(id) || seen.has(id)) continue;
+      seen.add(id);
+      try {
+        records.push(await loadReview(root, id));
+      } catch {
+        /* Ignore invalid records. */
+      }
     }
   }
   return records.sort((a, b) => b.createdAt.localeCompare(a.createdAt));

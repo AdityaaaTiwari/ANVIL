@@ -22,7 +22,7 @@ Use when building a multi-step agent workflow (coding, research, ops) or when an
 - Bound everything: iterations, time, tokens, files touched.
 - Checkpoints before risky actions (git commit or a stash), so a bad step can be rolled back.
 - Human approval for irreversible actions: deploys, deletes, payments, messages to people.
-- Decide success by running checks yourself (`forge loop`), never by the agent's summary.
+- Decide success by running checks yourself (`anvil loop`), never by the agent's summary.
 
 ## Failure handling
 - Detect stalls (no new diff, same error twice) and stop rather than burn budget.

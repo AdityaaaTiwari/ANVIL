@@ -2,7 +2,7 @@ import { lstat, readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { detectProjectLanguages } from "./harness-catalog.js";
 import { detectHarnessTargets, doctorHarness, type DoctorReport } from "./harness-installer.js";
-import { runShield, type ShieldReport } from "./forge-shield.js";
+import { runShield, type ShieldReport } from "./anvil-shield.js";
 import { listProjectMemory, type ProjectMemoryEntry } from "./project-memory.js";
 
 /**
@@ -30,7 +30,7 @@ export interface ScorecardCategory {
 
 export interface Scorecard {
   schemaVersion: typeof SCORECARD_SCHEMA_VERSION;
-  tool: "forge-scorecard";
+  tool: "anvil-scorecard";
   generatedAt: string;
   project: string;
   total: number;
@@ -43,7 +43,9 @@ export interface Scorecard {
 
 export interface ScorecardOptions {
   projectPath: string;
-  forgeVersion: string;
+  anvilVersion?: string;
+  /** @deprecated Legacy alias accepted for backwards compatibility. */
+  forgeVersion?: string;
   now?: () => Date;
   /** Injected for tests; computed from disk when absent. */
   doctor?: DoctorReport;
@@ -121,7 +123,10 @@ export async function buildScorecard(options: ScorecardOptions): Promise<Scoreca
   const now = options.now ?? (() => new Date());
   const doctor =
     options.doctor ??
-    (await doctorHarness({ projectPath: root, forgeVersion: options.forgeVersion }).catch(() => undefined));
+    (await doctorHarness({
+      projectPath: root,
+      anvilVersion: options.anvilVersion ?? options.forgeVersion ?? "0.0.0",
+    }).catch(() => undefined));
   const shield = options.shield ?? (await runShield(root, { now }));
   const pkgText = await readText(path.join(root, "package.json"));
   let scripts: Record<string, string> = {};
@@ -144,27 +149,27 @@ export async function buildScorecard(options: ScorecardOptions): Promise<Scoreca
     c.check(
       installed,
       4,
-      `FORGE harness installed (${doctor?.targets?.join(", ") ?? "?"})`,
-      "Run `forge install` to add agents, skills, commands and rules."
+      `ANVIL harness installed (${doctor?.targets?.join(", ") ?? "?"})`,
+      "Run `anvil install --profile standard` to add agents, skills, commands and rules."
     );
     if (installed && doctor) {
       c.check(
         doctor.summary.missing === 0,
         2,
         "no missing harness files",
-        `Run \`forge repair\` to restore ${doctor.summary.missing} missing file(s).`
+        `Run \`anvil repair\` to restore ${doctor.summary.missing} missing file(s).`
       );
       c.check(
         doctor.summary.outdated === 0,
         2,
-        "harness matches this FORGE version",
-        `Run \`forge repair\` to update ${doctor.summary.outdated} outdated file(s).`
+        "harness matches this ANVIL version",
+        `Run \`anvil repair\` to update ${doctor.summary.outdated} outdated file(s).`
       );
       c.check(
         doctor.summary.modified === 0,
         1,
         "no hand-edited managed files",
-        `Review ${doctor.summary.modified} locally edited FORGE file(s) with \`forge doctor\`.`
+        `Review ${doctor.summary.modified} locally edited ANVIL file(s) with \`anvil doctor\`.`
       );
       c.check(
         doctor.profile !== "minimal",
@@ -190,15 +195,15 @@ export async function buildScorecard(options: ScorecardOptions): Promise<Scoreca
         4,
         `${installedTargets.size} harness target(s) installed`,
         used.size
-          ? `Install FORGE for the harnesses this repo uses: \`forge install --target ${[...used].sort().join(",")}\`.`
-          : "Run `forge install` to cover Claude Code, Cursor, Codex, OpenCode and Gemini."
+          ? `Install ANVIL for the harnesses this repo uses: \`anvil install --profile standard --target ${[...used].sort().join(",")}\`.`
+          : "Run `anvil install --profile standard` to cover Claude Code, Cursor, Codex, OpenCode and Gemini."
       )
     ) {
       c.check(
         uncovered.length === 0,
         4,
         used.size ? `every harness in use is covered (${[...used].sort().join(", ")})` : "no other harnesses detected",
-        `Add the harnesses this repo already uses: \`forge install --target ${[...new Set([...installedTargets, ...uncovered])].join(",")}\`.`
+        `Add the harnesses this repo already uses: \`anvil install --profile standard --target ${[...new Set([...installedTargets, ...uncovered])].join(",")}\`.`
       );
       c.check(
         installedTargets.size >= 2,
@@ -217,7 +222,7 @@ export async function buildScorecard(options: ScorecardOptions): Promise<Scoreca
       shield.summary.critical === 0,
       4,
       "no critical Shield findings",
-      `Fix ${shield.summary.critical} critical Shield finding(s): \`forge shield\`.`
+      `Fix ${shield.summary.critical} critical Shield finding(s): \`anvil shield\`.`
     );
     c.check(
       shield.summary.high === 0,
@@ -229,7 +234,7 @@ export async function buildScorecard(options: ScorecardOptions): Promise<Scoreca
       shield.summary.medium === 0,
       2,
       "no medium Shield findings",
-      `Review ${shield.summary.medium} medium Shield finding(s); \`forge shield --fix\` repairs the fixable ones.`
+      `Review ${shield.summary.medium} medium Shield finding(s); \`anvil shield --fix\` repairs the fixable ones.`
     );
     c.check(
       shield.summary.low === 0,
@@ -244,7 +249,7 @@ export async function buildScorecard(options: ScorecardOptions): Promise<Scoreca
   {
     const c = new Category("guards", "Runtime guards");
     const settingsText = (await readText(path.join(root, ".claude", "settings.json"))) ?? "";
-    // Native hook configs written by `forge install --hooks` for Cursor, Codex and Gemini CLI.
+    // Native hook configs written by `anvil install --hooks` for Cursor, Codex and Gemini CLI.
     const nativeText = (
       await Promise.all(
         [".cursor/hooks.json", ".codex/hooks.json", ".gemini/settings.json"].map((file) =>
@@ -274,15 +279,15 @@ export async function buildScorecard(options: ScorecardOptions): Promise<Scoreca
       c.check(
         Boolean(doctor?.hooks) || preTool,
         4,
-        guardedIn.length ? `FORGE runtime hooks installed (${guardedIn.join(", ")})` : "FORGE runtime hooks installed",
-        "Enable runtime guards: `forge install --hooks` (Claude Code, Cursor, Codex and Gemini CLI: blocks destructive commands, requires verification, denies .env reads)."
+        guardedIn.length ? `ANVIL runtime hooks installed (${guardedIn.join(", ")})` : "ANVIL runtime hooks installed",
+        "Enable runtime guards: `anvil install --hooks` (Claude Code, Cursor, Codex and Gemini CLI: blocks destructive commands, requires verification, denies .env reads)."
       )
     ) {
       c.check(
         preTool,
         2,
         "pre-tool guard blocks destructive commands",
-        "Add the pre-tool guard hook (`forge install --hooks`)."
+        "Add the pre-tool guard hook (`anvil install --hooks`)."
       );
       c.check(
         stopGate,
@@ -295,7 +300,7 @@ export async function buildScorecard(options: ScorecardOptions): Promise<Scoreca
       secretReads,
       2,
       "agents are denied reading .env files",
-      "Deny secret reads (`forge install --hooks` adds them for Claude Code, and Guard covers file reads in Cursor and Gemini CLI)."
+      "Deny secret reads (`anvil install --hooks` adds them for Claude Code, and Guard covers file reads in Cursor and Gemini CLI)."
     );
     categories.push(c.done());
   }
@@ -357,11 +362,13 @@ export async function buildScorecard(options: ScorecardOptions): Promise<Scoreca
       "Add an AGENTS.md or CLAUDE.md describing how to work in this repo."
     );
     c.check(
-      (await exists(path.join(root, ".claude", "skills", "forge-project", "SKILL.md"))) ||
+      (await exists(path.join(root, ".claude", "skills", "anvil-project", "SKILL.md"))) ||
+        (await exists(path.join(root, ".agents", "skills", "anvil-project", "SKILL.md"))) ||
+        (await exists(path.join(root, ".claude", "skills", "forge-project", "SKILL.md"))) ||
         (await exists(path.join(root, ".agents", "skills", "forge-project", "SKILL.md"))),
       3,
       "project skill generated from the codebase",
-      "Run `forge analyze --write` to generate a project skill from the repo."
+      "Run `anvil inspect` or open a setup PR to generate a project skill from the repo."
     );
     const languages = await detectProjectLanguages(root).catch(() => [] as string[]);
     const installedLanguages = new Set(doctor?.languages ?? []);
@@ -371,8 +378,8 @@ export async function buildScorecard(options: ScorecardOptions): Promise<Scoreca
       2,
       `language rules installed for ${languages.join(", ") || "detected stack"}`,
       missing.length
-        ? `Install rules for ${missing.join(", ")}: \`forge install --lang ${languages.join(",")}\`.`
-        : "Install language rules with `forge install`."
+        ? `Install rules for ${missing.join(", ")}: \`anvil install --profile standard\`.`
+        : "Install language rules with `anvil install --profile standard`."
     );
     c.check(
       await exists(path.join(root, "README.md")),
@@ -391,7 +398,7 @@ export async function buildScorecard(options: ScorecardOptions): Promise<Scoreca
       memory.length > 0,
       3,
       `${memory.length} project memory entr${memory.length === 1 ? "y" : "ies"}`,
-      'Record a first decision: `forge memory add --kind decision --content "..."`.'
+      'Record a first decision: `anvil memory add --kind decision --content "..."`.'
     );
     c.check(
       kinds.has("decision") || kinds.has("architecture"),
@@ -403,13 +410,13 @@ export async function buildScorecard(options: ScorecardOptions): Promise<Scoreca
       kinds.has("constraint") || kinds.has("preference"),
       2,
       "constraints or preferences recorded",
-      'Record constraints: `forge memory add --kind constraint --content "Node 20 only"`.'
+      'Record constraints: `anvil memory add --kind constraint --content "Node 22 only"`.'
     );
     c.check(
       kinds.has("handoff"),
       2,
       "a session handoff exists",
-      "End sessions with `forge memory handoff` (the stop hook does this automatically)."
+      "End sessions with `anvil memory add --kind handoff` (the stop hook does this automatically)."
     );
     c.check(
       memory.some((e) => (e.evidence?.length ?? 0) > 0),
@@ -426,7 +433,11 @@ export async function buildScorecard(options: ScorecardOptions): Promise<Scoreca
     const lessons = memory.filter((e) => e.kind === "lesson").length;
     let instincts: Array<{ status?: string; confidence?: number }> = [];
     try {
-      const parsed = JSON.parse((await readText(path.join(root, ".forge", "instincts.json"))) ?? "{}") as {
+      const instinctText =
+        (await readText(path.join(root, ".anvil", "instincts.json"))) ??
+        (await readText(path.join(root, ".forge", "instincts.json"))) ??
+        "{}";
+      const parsed = JSON.parse(instinctText) as {
         instincts?: unknown;
       };
       if (Array.isArray(parsed.instincts)) instincts = parsed.instincts as typeof instincts;
@@ -438,26 +449,28 @@ export async function buildScorecard(options: ScorecardOptions): Promise<Scoreca
       lessons > 0,
       3,
       `${lessons} lesson(s) recorded`,
-      'Record what a session learned: `forge memory add --kind lesson --content "..."`.'
+      'Record what a session learned: `anvil memory add --kind lesson --content "..."`.'
     );
     c.check(
       instincts.length > 0,
       3,
       `${instincts.length} instinct(s) captured`,
-      "Capture learned behaviour: `forge instinct learn` (or enable hooks to observe sessions)."
+      "Capture learned behaviour: `anvil instinct learn` (or enable hooks to observe sessions)."
     );
     c.check(
       active.length > 0,
       2,
       `${active.length} instinct(s) promoted to active`,
-      "Review candidates and promote the good ones: `forge instinct promote ID`."
+      "Review candidates and promote the good ones: `anvil instinct promote ID`."
     );
     c.check(
-      (await exists(path.join(root, ".claude", "skills", "forge-learned"))) ||
+      (await exists(path.join(root, ".claude", "skills", "anvil-learned"))) ||
+        (await exists(path.join(root, ".agents", "skills", "anvil-learned"))) ||
+        (await exists(path.join(root, ".claude", "skills", "forge-learned"))) ||
         (await exists(path.join(root, ".agents", "skills", "forge-learned"))),
       2,
       "learned skill generated",
-      "Turn active instincts into a skill: `forge evolve --write`."
+      "Turn active instincts into a skill: `anvil evolve --write`."
     );
     categories.push(c.done());
   }
@@ -478,10 +491,12 @@ export async function buildScorecard(options: ScorecardOptions): Promise<Scoreca
       "Run the test suite in CI."
     );
     c.check(
-      /forge(?:-engineering-workbench)?[^\n]*shield|ansh44233\/FORGE-ECC|forge shield/i.test(workflowText),
+      /(?:anvil|forge)(?:-engineering-workbench)?[^\n]*(?:shield|gate)|anvil-workbench\/ANVIL|ansh44233\/FORGE-ECC|(?:anvil|forge) shield/i.test(
+        workflowText
+      ),
       2,
-      "FORGE Shield runs in CI",
-      "Add the FORGE Shield action to CI (see README → GitHub Action)."
+      "ANVIL Shield runs in CI",
+      "Add the ANVIL action / Shield step to CI (see README → GitHub Action)."
     );
     c.check(
       (await exists(path.join(root, ".github", "dependabot.yml"))) ||
@@ -507,7 +522,7 @@ export async function buildScorecard(options: ScorecardOptions): Promise<Scoreca
   ].slice(0, 5);
   return {
     schemaVersion: SCORECARD_SCHEMA_VERSION,
-    tool: "forge-scorecard",
+    tool: "anvil-scorecard",
     generatedAt: now().toISOString(),
     project: root,
     total,
@@ -524,7 +539,7 @@ function bar(score: number): string {
 }
 
 export function formatScorecard(card: Scorecard, options: { verbose?: boolean } = {}): string {
-  const lines = [`FORGE harness scorecard — ${card.total}/${card.max} (${card.percent}%, grade ${card.grade})`, ""];
+  const lines = [`ANVIL harness scorecard — ${card.total}/${card.max} (${card.percent}%, grade ${card.grade})`, ""];
   for (const c of card.categories) {
     lines.push(`  ${c.title.padEnd(22)} ${bar(c.score)} ${String(c.score).padStart(2)}/10`);
     if (options.verbose) {
@@ -541,7 +556,7 @@ export function formatScorecard(card: Scorecard, options: { verbose?: boolean } 
 
 export function formatScorecardMarkdown(card: Scorecard): string {
   const lines = [
-    `## FORGE harness scorecard: ${card.total}/${card.max} (grade ${card.grade})`,
+    `## ANVIL harness scorecard: ${card.total}/${card.max} (grade ${card.grade})`,
     "",
     "| Category | Score | Evidence |",
     "|---|---:|---|",

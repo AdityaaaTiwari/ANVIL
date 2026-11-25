@@ -19,10 +19,10 @@ Use when running several agents or experiments at once, or when you need a secon
 - A branch can be checked out in only one worktree at a time.
 
 ## Comparing agents
-`forge race --goal "..." --check "npm test" --agents claude,codex` does this for you. Each agent gets a detached worktree from the same commit, runs FORGE's verified loop, and gets ranked by FORGE's own checks and the integrity gate. `forge race pick` applies the winner with a 3-way merge.
+`anvil race --goal "..." --check "npm test" --agents claude,codex` does this for you. Each agent gets a detached worktree from the same commit, runs ANVIL's verified loop, and gets ranked by ANVIL's own checks and the integrity gate. `anvil race pick` applies the winner with a 3-way merge.
 
 ## Clean up
-Remove worktrees when done (`forge race clean` for races). Stale worktrees keep branches locked and use disk space.
+Remove worktrees when done (`anvil race clean` for races). Stale worktrees keep branches locked and use disk space.
 
 ## Verify
 `git worktree list` shows only what you expect, and the main working tree contains only the changes you picked.

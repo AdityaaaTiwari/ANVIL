@@ -111,3 +111,16 @@ Before declaring the task complete:
 - **Zero Network Transmission:** Both ANVIL and REA local analysis operate entirely on your workstation without transmitting proprietary binaries or source code to third-party services.
 - **Secret Redaction:** ANVIL's secret scanner automatically flags credentials or private keys discovered during decompilation if they appear in source commits.
 - **SARIF Auditing:** Gate reports can be exported to SARIF (`anvil gate --sarif rea-audit.sarif`) to verify compliance in automated pull request pipelines.
+
+---
+
+## 🧪 Python REA Bridge Test Suite
+
+ANVIL bundles and executes the Python bridge unit tests under `catalog/rea/bridges/` alongside TypeScript Vitest tests:
+
+```bash
+npm run test:rea
+```
+
+- Runs `scripts/run-rea-bridge-tests.mjs` -> `scripts/run-rea-bridge-tests.py`, synthesizing in-memory `bridge` packages over `catalog/rea/bridges/` and running all `10` `test_*.py` suites (`103` tests) via stdlib `unittest`.
+- On Linux and macOS CI runners (`.github/workflows/ci.yml`), all `10` suites run with `--require-posix`. On Windows hosts, POSIX-only suites/tests (`pwndbg/test_core_context.py`, `agentenv/test_solve_cleanup.py`, and Unix `os.mkfifo` tests in `native/test_rea_lldb_tracer.py`) are cleanly skipped while portable suites execute normally.

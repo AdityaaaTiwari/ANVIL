@@ -67,12 +67,12 @@ describe("deterministic agent evaluation", () => {
     expect(report.cases[1]?.status).toBe("missing-output");
   });
 
-  it("loads validated suites from .forge/evals", async () => {
-    const root = await mkdtemp(path.join(os.tmpdir(), "forge-evals-"));
+  it("loads validated suites from .anvil/evals", async () => {
+    const root = await mkdtemp(path.join(os.tmpdir(), "anvil-evals-"));
     try {
-      await mkdir(path.join(root, ".forge", "evals"), { recursive: true });
+      await mkdir(path.join(root, ".anvil", "evals"), { recursive: true });
       await writeFile(
-        path.join(root, ".forge", "evals", "baseline.json"),
+        path.join(root, ".anvil", "evals", "baseline.json"),
         JSON.stringify({
           id: "baseline-suite",
           name: "Baseline",

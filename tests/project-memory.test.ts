@@ -16,7 +16,7 @@ describe("local project memory", () => {
     directory = "";
   });
   async function workspace() {
-    directory = await mkdtemp(path.join(os.tmpdir(), "forge-memory-"));
+    directory = await mkdtemp(path.join(os.tmpdir(), "anvil-memory-"));
     return directory;
   }
 
@@ -48,12 +48,12 @@ describe("local project memory", () => {
     await expect(addProjectMemory(root, { kind: "fact", content: "api_key=sk-example-secret" })).rejects.toThrow(
       "appears to contain a credential"
     );
-    await expect(readFile(path.join(root, ".forge", "memory.json"), "utf8")).rejects.toThrow();
+    await expect(readFile(path.join(root, ".anvil", "memory.json"), "utf8")).rejects.toThrow();
   });
 
   it("rejects malformed memory entries instead of trusting parsed JSON", async () => {
     const root = await workspace();
-    const directory = path.join(root, ".forge");
+    const directory = path.join(root, ".anvil");
     const file = path.join(directory, "memory.json");
     const { mkdir, writeFile } = await import("node:fs/promises");
     await mkdir(directory, { recursive: true });
@@ -78,7 +78,7 @@ describe("local project memory", () => {
 
   it("rejects duplicate memory IDs and malformed tags", async () => {
     const root = await workspace();
-    const directory = path.join(root, ".forge");
+    const directory = path.join(root, ".anvil");
     const file = path.join(directory, "memory.json");
     const { mkdir, writeFile } = await import("node:fs/promises");
     await mkdir(directory, { recursive: true });

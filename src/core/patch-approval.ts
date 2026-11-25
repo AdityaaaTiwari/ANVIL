@@ -23,7 +23,7 @@ const DEFAULT_TTL_MS = 24 * 60 * 60 * 1000;
 async function safeApprovalDirectory(root: string): Promise<string> {
   const project = await realpath(path.resolve(root));
   let current = project;
-  for (const part of [".forge", "patch-approvals"]) {
+  for (const part of [".anvil", "patch-approvals"]) {
     current = path.join(current, part);
     try {
       await mkdir(current, { mode: 0o700 });

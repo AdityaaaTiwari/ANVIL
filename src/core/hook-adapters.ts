@@ -71,7 +71,7 @@ interface Translated {
 
 /** Native payload → one or more FORGE hook inputs (apply_patch can touch several files). */
 export function translateInput(harness: NativeHookHarness, event: string, payload: Json): Translated {
-  const base: HookInput = { forge_harness: harness };
+  const base: HookInput = { anvil_harness: harness };
   const cwd =
     str(payload.cwd) ?? (Array.isArray(payload.workspace_roots) ? str(payload.workspace_roots[0]) : undefined);
   if (cwd) base.cwd = cwd;
@@ -170,7 +170,7 @@ function readVerdict(output: HookOutput): Verdict {
   const decision = str(specific.permissionDecision);
   const reason = str(specific.permissionDecisionReason);
   const context = str(specific.additionalContext);
-  const block = json.decision === "block" ? (str(json.reason) ?? "Blocked by FORGE.") : undefined;
+  const block = json.decision === "block" ? (str(json.reason) ?? "Blocked by ANVIL.") : undefined;
   return {
     decision: decision === "deny" || decision === "ask" ? decision : "allow",
     ...(reason ? { reason } : {}),
@@ -198,7 +198,7 @@ function mergeVerdicts(verdicts: Verdict[]): Verdict {
 }
 
 const askAsDeny = (reason: string | undefined) =>
-  `${reason ?? "FORGE Guard needs approval."} This tool cannot pause for approval, so FORGE blocked it: ask the user to confirm explicitly, then let them run it or allow it in .forge/harness-hooks.json.`;
+  `${reason ?? "ANVIL Guard needs approval."} This tool cannot pause for approval, so ANVIL blocked it: ask the user to confirm explicitly, then let them run it or allow it in .anvil/harness-hooks.json.`;
 
 /** FORGE verdict → native response JSON. */
 export function translateOutput(harness: NativeHookHarness, event: string, verdict: Verdict): Json | undefined {
@@ -265,7 +265,7 @@ export function translateOutput(harness: NativeHookHarness, event: string, verdi
   }
 }
 
-/** Run a FORGE hook for a native harness event. Always returns exit code 0 with the native JSON (or none). */
+/** Run an ANVIL hook for a native harness event. Always returns exit code 0 with the native JSON (or none). */
 export async function runNativeHook(
   harness: NativeHookHarness,
   event: string,
@@ -292,7 +292,7 @@ export async function runNativeHook(
 }
 
 // ---------------------------------------------------------------------------
-// Native hook configuration (used by `forge install --hooks`)
+// Native hook configuration (used by `anvil install --hooks`)
 // ---------------------------------------------------------------------------
 
 export const NATIVE_HOOK_FILES: Record<NativeHookHarness, string> = {
@@ -308,8 +308,8 @@ interface NativeEntry {
   timeout: number;
 }
 
-export function nativeHookEntries(harness: NativeHookHarness, hookCommand = "forge"): NativeEntry[] {
-  const base = `${hookCommand.trim() || "forge"} hook --harness ${harness}`;
+export function nativeHookEntries(harness: NativeHookHarness, hookCommand = "anvil"): NativeEntry[] {
+  const base = `${hookCommand.trim() || "anvil"} hook --harness ${harness}`;
   if (harness === "cursor") {
     return [
       { event: "beforeShellExecution", command: `${base} beforeShellExecution`, timeout: 10 },
@@ -416,13 +416,13 @@ export function addNativeHooks(
         ...(entry.matcher ? { matcher: entry.matcher } : {}),
         hooks: [
           {
-            ...(harness === "gemini" ? { name: `forge-${entry.event.toLowerCase()}` } : {}),
+            ...(harness === "gemini" ? { name: `anvil-${entry.event.toLowerCase()}` } : {}),
             type: "command",
             command: entry.command,
             timeout: entry.timeout,
             ...(harness === "gemini"
-              ? { description: "FORGE Guard, verification and memory" }
-              : { statusMessage: "FORGE" }),
+              ? { description: "ANVIL Guard, verification and memory" }
+              : { statusMessage: "ANVIL" }),
           },
         ],
       });

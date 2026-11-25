@@ -4,6 +4,7 @@ import path from "node:path";
 import { loadReview } from "./review-history.js";
 import { consumePatchApproval, loadPatchApproval, verifyPatchApproval } from "./patch-approval.js";
 import { validateReviewPatch } from "./patch-validation.js";
+import { ANVIL_STATE_DIR, resolveWorkspaceStatePath } from "./workspace-paths.js";
 
 export interface PatchStageRecord {
   id: string;
@@ -32,6 +33,7 @@ const SNAPSHOT_MAX_FILES = 20_000;
 const SNAPSHOT_MAX_BYTES = 256 * 1024 * 1024;
 const SNAPSHOT_EXCLUDED_DIRS = new Set([
   ".git",
+  ".anvil",
   ".forge",
   ".next",
   ".turbo",
@@ -211,7 +213,7 @@ export async function stageApprovedPatch(root: string, approvalId: string): Prom
     throw new Error("Source changed after approval; create a new review and approval.");
   const patched = applyUnifiedDiff(source, suggestion.patch, approval.file);
   const id = "patch-stage-" + randomUUID();
-  const stageRoot = path.join(project, ".forge", "patch-workspaces", id);
+  const stageRoot = path.join(project, ANVIL_STATE_DIR, "patch-workspaces", id);
   const workspaceRoot = path.join(stageRoot, "workspace");
   await ensureSafeDirectory(project, workspaceRoot);
   try {
@@ -296,7 +298,7 @@ export async function reviewStagedPatch(root: string, stageId: string): Promise<
     throw new Error("Invalid patch stage identifier.");
   const project = path.resolve(root);
   const projectReal = await realpath(project);
-  const stageRoot = path.join(project, ".forge", "patch-workspaces", stageId);
+  const stageRoot = resolveWorkspaceStatePath(project, "patch-workspaces", stageId);
   const stageReal = await realpath(stageRoot);
   if (!stageReal.startsWith(projectReal + path.sep)) throw new Error("Patch stage resolves outside the project.");
   const manifestPath = path.join(stageRoot, "stage.json");
@@ -366,7 +368,7 @@ export async function promoteStagedPatch(
     throw new Error("Promotion requires the exact staged SHA-256 confirmation.");
   const project = path.resolve(root);
   const projectRealForStage = await realpath(project);
-  const stageRootForStage = path.join(project, ".forge", "patch-workspaces", stageId);
+  const stageRootForStage = resolveWorkspaceStatePath(project, "patch-workspaces", stageId);
   const stageRealForStage = await realpath(stageRootForStage);
   if (!stageRealForStage.startsWith(projectRealForStage + path.sep))
     throw new Error("Promotion stage resolves outside the project.");
@@ -378,7 +380,7 @@ export async function promoteStagedPatch(
   if (reviewed.stagedSha256 !== expectedStagedSha256)
     throw new Error("Promotion confirmation does not match the staged file hash.");
   const projectReal = await realpath(project);
-  const stageRoot = path.join(project, ".forge", "patch-workspaces", stageId);
+  const stageRoot = resolveWorkspaceStatePath(project, "patch-workspaces", stageId);
   const stageReal = await realpath(stageRoot);
   if (!stageReal.startsWith(projectReal + path.sep)) throw new Error("Promotion stage resolves outside the project.");
   const lock = path.join(stageRoot, ".promotion-lock");
@@ -419,8 +421,9 @@ export async function promoteStagedPatch(
     if (stagedInfo.isSymbolicLink() || !stagedInfo.isFile()) throw new Error("Staged target must be a regular file.");
     const staged = await readFile(stagedPath);
     if (sha(staged.toString("utf8")) !== expectedStagedSha256) throw new Error("Staged file changed before promotion.");
+    const stageRelDir = path.relative(projectReal, stageReal).split(path.sep)[0] || ANVIL_STATE_DIR;
     const backupRelative = path.posix.join(
-      ".forge",
+      stageRelDir,
       "patch-workspaces",
       stageId,
       "backup",
@@ -429,7 +432,7 @@ export async function promoteStagedPatch(
     const backup = path.resolve(project, backupRelative);
     await mkdir(path.dirname(backup), { recursive: true, mode: 0o700 });
     await writeFile(backup, current, { flag: "wx", mode: 0o600 });
-    temporary = path.join(path.dirname(target), ".forge-promote-" + randomUUID() + ".tmp");
+    temporary = path.join(path.dirname(target), ".anvil-promote-" + randomUUID() + ".tmp");
     await writeFile(temporary, staged, { flag: "wx", mode: 0o600 });
     const journalPath = path.join(stageRoot, "promotion-journal.json");
     const journal = {
@@ -466,7 +469,7 @@ export async function promoteStagedPatch(
       await rm(journalPath, { force: true });
     } catch (error) {
       await rm(manifestTemp, { force: true }).catch(() => undefined);
-      const rollbackTemp = path.join(path.dirname(target), ".forge-rollback-" + randomUUID() + ".tmp");
+      const rollbackTemp = path.join(path.dirname(target), ".anvil-rollback-" + randomUUID() + ".tmp");
       await writeFile(rollbackTemp, current, { flag: "wx", mode: 0o600 });
       await rename(rollbackTemp, target);
       throw error;
@@ -493,7 +496,7 @@ export async function rollbackStagedPatch(root: string, stageId: string, reviewe
   if (!/^patch-stage-[a-f0-9-]{20,40}$/.test(stageId) || stageId.includes(".."))
     throw new Error("Invalid patch stage identifier.");
   const project = path.resolve(root);
-  const stageRoot = path.join(project, ".forge", "patch-workspaces", stageId);
+  const stageRoot = resolveWorkspaceStatePath(project, "patch-workspaces", stageId);
   const stageReal = await realpath(stageRoot);
   const projectReal = await realpath(project);
   if (!stageReal.startsWith(projectReal + path.sep)) throw new Error("Rollback stage resolves outside the project.");
@@ -531,8 +534,9 @@ export async function rollbackStagedPatch(root: string, stageId: string, reviewe
       if (!parsed || typeof parsed !== "object" || Array.isArray(parsed))
         throw new Error("Promotion journal is malformed.");
       const value = parsed as Record<string, unknown>;
+      const stageStateDir = path.relative(projectReal, stageReal).split(path.sep)[0] || ANVIL_STATE_DIR;
       const expectedBackupPath = path.posix.join(
-        ".forge",
+        stageStateDir,
         "patch-workspaces",
         stageId,
         "backup",
@@ -601,7 +605,7 @@ export async function rollbackStagedPatch(root: string, stageId: string, reviewe
       throw new Error("Promoted file has changed since promotion; refusing to overwrite newer work.");
     if (sha(original.toString("utf8")) !== backupSha256)
       throw new Error("Promotion backup failed integrity verification.");
-    const temp = path.join(path.dirname(target), ".forge-rollback-" + randomUUID() + ".tmp");
+    const temp = path.join(path.dirname(target), ".anvil-rollback-" + randomUUID() + ".tmp");
     await writeFile(temp, original, { flag: "wx", mode: 0o600 });
     await rename(temp, target);
     const updated: PatchStageRecord = { ...manifest };

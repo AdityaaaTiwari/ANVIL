@@ -200,8 +200,8 @@ describe("automated benchmark matrix", () => {
     expect(formatBenchmarkMatrix(report)).toContain("Controlled skill experiment:");
   });
 
-  it("persists matrix reports inside the project's local FORGE state", async () => {
-    const root = await mkdtemp(path.join(os.tmpdir(), "forge-matrix-"));
+  it("persists matrix reports inside the project's local ANVIL state", async () => {
+    const root = await mkdtemp(path.join(os.tmpdir(), "anvil-matrix-"));
     try {
       const report = await executeBenchmarkMatrix(config, async (candidate, repeat) => ({
         runId: candidate.id + "-" + repeat,
@@ -216,7 +216,7 @@ describe("automated benchmark matrix", () => {
       const persisted = JSON.parse(await readFile(saved, "utf8"));
       expect(persisted.suiteId).toBe("engineering-basics");
       expect(persisted.results).toHaveLength(4);
-      expect(saved).toContain(path.join(".forge", "benchmark-matrices"));
+      expect(saved).toContain(path.join(".anvil", "benchmark-matrices"));
     } finally {
       await rm(root, { recursive: true, force: true });
     }

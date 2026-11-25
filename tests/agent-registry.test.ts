@@ -43,8 +43,8 @@ describe("agent registry", () => {
   });
 
   it("loads valid workspace markdown and overrides a built-in definition", async () => {
-    temporaryDirectory = await mkdtemp(path.join(os.tmpdir(), "forge-agents-"));
-    const directory = path.join(temporaryDirectory, ".forge", "agents");
+    temporaryDirectory = await mkdtemp(path.join(os.tmpdir(), "anvil-agents-"));
+    const directory = path.join(temporaryDirectory, ".anvil", "agents");
     await mkdir(directory, { recursive: true });
     await writeFile(path.join(directory, "planner.md"), "# Custom Planner\n\nA workspace-specific planner.\n");
     await writeFile(path.join(directory, "../ignored.txt"), "ignored");
@@ -57,12 +57,12 @@ describe("agent registry", () => {
   });
 
   it("rejects a symlinked agent directory that points outside the project", async () => {
-    temporaryDirectory = await mkdtemp(path.join(os.tmpdir(), "forge-agents-"));
-    const outside = await mkdtemp(path.join(os.tmpdir(), "forge-agent-outside-"));
+    temporaryDirectory = await mkdtemp(path.join(os.tmpdir(), "anvil-agents-"));
+    const outside = await mkdtemp(path.join(os.tmpdir(), "anvil-agent-outside-"));
     try {
       await writeFile(path.join(outside, "planner.md"), "# Leaked Planner\\n\\nOutside instructions.\\n");
-      await mkdir(path.join(temporaryDirectory, ".forge"), { recursive: true });
-      if (!(await trySymlink(outside, path.join(temporaryDirectory, ".forge", "agents"), "dir"))) return;
+      await mkdir(path.join(temporaryDirectory, ".anvil"), { recursive: true });
+      if (!(await trySymlink(outside, path.join(temporaryDirectory, ".anvil", "agents"), "dir"))) return;
       await expect(loadAgentRegistry(temporaryDirectory)).rejects.toThrow(/real directory inside the project/);
     } finally {
       await rm(outside, { recursive: true, force: true });
@@ -70,11 +70,11 @@ describe("agent registry", () => {
   });
 
   it("ignores symlinked agent markdown files", async () => {
-    temporaryDirectory = await mkdtemp(path.join(os.tmpdir(), "forge-agents-"));
-    const outside = await mkdtemp(path.join(os.tmpdir(), "forge-agent-file-"));
+    temporaryDirectory = await mkdtemp(path.join(os.tmpdir(), "anvil-agents-"));
+    const outside = await mkdtemp(path.join(os.tmpdir(), "anvil-agent-file-"));
     try {
       await writeFile(path.join(outside, "external.md"), "# External Agent\\n\\nOutside instructions.\\n");
-      const directory = path.join(temporaryDirectory, ".forge", "agents");
+      const directory = path.join(temporaryDirectory, ".anvil", "agents");
       await mkdir(directory, { recursive: true });
       if (!(await trySymlink(path.join(outside, "external.md"), path.join(directory, "planner.md"), "file"))) return;
       const agents = await loadAgentRegistry(temporaryDirectory);
@@ -85,8 +85,8 @@ describe("agent registry", () => {
   });
 
   it("ignores unsafe agent filenames and non-markdown entries", async () => {
-    temporaryDirectory = await mkdtemp(path.join(os.tmpdir(), "forge-agents-"));
-    const directory = path.join(temporaryDirectory, ".forge", "agents");
+    temporaryDirectory = await mkdtemp(path.join(os.tmpdir(), "anvil-agents-"));
+    const directory = path.join(temporaryDirectory, ".anvil", "agents");
     await mkdir(directory, { recursive: true });
     await writeFile(path.join(directory, "../bad.md"), "# Bad");
     await writeFile(path.join(directory, "bad name.md"), "# Bad");

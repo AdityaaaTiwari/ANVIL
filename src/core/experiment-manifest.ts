@@ -3,6 +3,7 @@ import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { anvilWorkspacePath, resolveWorkspaceStatePath } from "./workspace-paths.js";
 
 const execFileAsync = promisify(execFile);
 export interface ExperimentManifest {
@@ -91,6 +92,13 @@ export async function captureExperimentManifest(input: {
     "TZ",
     "LANG",
     "LC_ALL",
+    "ANVIL_MODEL_RETRY_ATTEMPTS",
+    "ANVIL_MODEL_RETRY_DELAY_MS",
+    "ANVIL_MAX_INPUT_TOKENS_PER_TASK",
+    "ANVIL_MAX_OUTPUT_TOKENS_PER_TASK",
+    "ANVIL_MAX_ESTIMATED_TOKENS_PER_RUN",
+    "ANVIL_MAX_ESTIMATED_TOKENS_PER_AGENT",
+    "ANVIL_MAX_TASK_DURATION_MS",
     "FORGE_MODEL_RETRY_ATTEMPTS",
     "FORGE_MODEL_RETRY_DELAY_MS",
     "FORGE_MAX_INPUT_TOKENS_PER_TASK",
@@ -164,7 +172,7 @@ export function compareExperimentManifests(a: ExperimentManifest, b: ExperimentM
   return { compatible: differences.length === 0, differences };
 }
 export async function saveExperimentManifest(projectPath: string, manifest: ExperimentManifest): Promise<string> {
-  const directory = path.join(path.resolve(projectPath), ".forge", "experiment-manifests");
+  const directory = anvilWorkspacePath(projectPath, "experiment-manifests");
   await mkdir(directory, { recursive: true, mode: 0o700 });
   const destination = path.join(directory, manifest.id + ".json");
   await writeFile(destination, JSON.stringify(manifest, null, 2) + "\n", { encoding: "utf8", flag: "wx", mode: 0o600 });
@@ -173,7 +181,7 @@ export async function saveExperimentManifest(projectPath: string, manifest: Expe
 export async function loadExperimentManifest(projectPath: string, id: string): Promise<ExperimentManifest> {
   if (!/^exp-[a-f0-9]{12}$/.test(id)) throw new Error("Invalid experiment manifest ID.");
   const value: unknown = JSON.parse(
-    await readFile(path.join(path.resolve(projectPath), ".forge", "experiment-manifests", id + ".json"), "utf8")
+    await readFile(resolveWorkspaceStatePath(projectPath, "experiment-manifests", id + ".json"), "utf8")
   );
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Invalid experiment manifest.");
   const item = value as ExperimentManifest;
@@ -194,7 +202,7 @@ export async function loadExperimentManifest(projectPath: string, id: string): P
 }
 export function formatExperimentManifest(item: ExperimentManifest): string {
   return [
-    "FORGE Experiment Manifest " + item.id,
+    "ANVIL Experiment Manifest " + item.id,
     "Fingerprint: sha256:" + item.fingerprint,
     "Git: " +
       (item.source.commit ?? "unavailable") +

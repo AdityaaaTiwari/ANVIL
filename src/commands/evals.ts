@@ -8,7 +8,7 @@ export async function runEvals(_command: string, rest: string[]): Promise<void> 
     process.stdout.write(
       suites.length
         ? suites.map((suite) => suite.id + "  " + suite.name + " · " + suite.cases.length + " cases").join("\n") + "\n"
-        : "No evaluation suites. Add JSON suites under .forge/evals/.\n"
+        : "No evaluation suites. Add JSON suites under .anvil/evals/.\n"
     );
   } catch (error) {
     process.stderr.write(

@@ -140,7 +140,7 @@ export function formatGitIntelligence(report: GitIntelligenceReport): string {
     "## Limitations",
     "- Git diff and untracked-file inspection only; ignored files are excluded.",
     "- Risk labels are heuristics, not security assessments. Suggested tests are candidates, not automatically run.",
-    "- Impact depends on FORGE's static relative-import resolver; aliases and runtime dependencies may be missed.",
+    "- Impact depends on ANVIL's static relative-import resolver; aliases and runtime dependencies may be missed.",
     ...report.warnings.map((w) => "- " + w),
   ].join("\n");
 }

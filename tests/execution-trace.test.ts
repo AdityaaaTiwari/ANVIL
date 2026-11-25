@@ -40,11 +40,11 @@ describe("execution trace persistence", () => {
     expect(stored.providers).toEqual([
       { name: "test", requests: 2, successes: 2, fallbacks: 0, failures: 0, retries: 0, durationMs: 250 },
     ]);
-    expect(file).toContain(path.join(".forge", "traces"));
+    expect(file).toContain(path.join(".anvil", "traces"));
   });
   it("rejects invalid run identifiers", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-trace-"));
-    await expect(loadExecutionTrace(root, "../escape")).rejects.toThrow("Invalid FORGE run identifier");
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-trace-"));
+    await expect(loadExecutionTrace(root, "../escape")).rejects.toThrow("Invalid ANVIL run identifier");
   });
 
   it("rejects competing writers instead of losing trace updates", async () => {
@@ -74,7 +74,7 @@ describe("execution trace persistence", () => {
 
   it("rejects malformed persisted trace entries", async () => {
     root = await mkdtemp(path.join(os.tmpdir(), "forge-trace-invalid-"));
-    const directory = path.join(root, ".forge", "traces");
+    const directory = path.join(root, ".anvil", "traces");
     await import("node:fs/promises").then((fs) => fs.mkdir(directory, { recursive: true }));
     await import("node:fs/promises").then((fs) =>
       fs.writeFile(

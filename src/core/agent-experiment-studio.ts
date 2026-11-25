@@ -41,7 +41,7 @@ export function formatSkillExperimentMatrix(matrix: BenchmarkMatrixConfig): stri
     "Treatment: " + experiment.treatmentCandidateId,
     "  Skills: " + experiment.skillIds.join(", "),
     "",
-    'Next: forge benchmark-matrix <CONFIG_FILE> --suite <SUITE_ID> --goal "<task>"',
+    'Next: anvil benchmark-matrix <CONFIG_FILE> --suite <SUITE_ID> --goal "<task>"',
     "",
     "This scaffold isolates the selected skill set. Agent configuration snapshots are not hydrated by this scaffold; use the active workspace agent files consistently across both candidates.",
   ].join("\n");
@@ -93,7 +93,7 @@ export function formatModelComparisonMatrix(matrix: BenchmarkMatrixConfig): stri
     ),
     "",
     "Total planned trials: " + matrix.candidates.length * matrix.repeats,
-    'Next: forge benchmark-matrix <CONFIG_FILE> --suite <SUITE_ID> --goal "<task>"',
+    'Next: anvil benchmark-matrix <CONFIG_FILE> --suite <SUITE_ID> --goal "<task>"',
     "",
     "Candidates run sequentially against the same suite and goal. For a fair comparison, keep the evaluation suite, workspace, permissions and environment unchanged.",
   ].join("\n");

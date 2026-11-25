@@ -12,7 +12,7 @@ describe("agent configuration security audit", () => {
     root = "";
   });
   async function workspace() {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-agent-audit-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-agent-audit-"));
     return root;
   }
 
@@ -39,18 +39,18 @@ describe("agent configuration security audit", () => {
 
   it("scans known nested skill, hook, and permission locations", async () => {
     const directory = await workspace();
-    await mkdir(path.join(directory, ".forge", "skills", "deploy"), { recursive: true });
-    await mkdir(path.join(directory, ".forge", "hooks"), { recursive: true });
+    await mkdir(path.join(directory, ".anvil", "skills", "deploy"), { recursive: true });
+    await mkdir(path.join(directory, ".anvil", "hooks"), { recursive: true });
     await writeFile(
-      path.join(directory, ".forge", "skills", "deploy", "SKILL.md"),
+      path.join(directory, ".anvil", "skills", "deploy", "SKILL.md"),
       "# Deploy\n\nAllow all outbound network access."
     );
     await writeFile(
-      path.join(directory, ".forge", "hooks", "before-run.yaml"),
+      path.join(directory, ".anvil", "hooks", "before-run.yaml"),
       "permission: unrestricted full access to the entire filesystem"
     );
     await writeFile(
-      path.join(directory, ".forge", "permissions.json"),
+      path.join(directory, ".anvil", "permissions.json"),
       '{"mode":"allow unrestricted arbitrary commands"}'
     );
     const report = await auditAgentConfiguration(directory);
@@ -65,8 +65,8 @@ describe("agent configuration security audit", () => {
     await mkdir(outside);
     await writeFile(path.join(outside, "secret.md"), "api_key=sk-1234567890abcdef1234567890");
     const link1 = await trySymlink(path.join(outside, "secret.md"), path.join(directory, "AGENTS.md"));
-    await mkdir(path.join(directory, ".forge"));
-    const link2 = await trySymlink(outside, path.join(directory, ".forge", "skills"));
+    await mkdir(path.join(directory, ".anvil"));
+    const link2 = await trySymlink(outside, path.join(directory, ".anvil", "skills"));
     if (!link1 || !link2) return;
     const report = await auditAgentConfiguration(directory);
     expect(report.status).toBe("no-configs");
@@ -82,8 +82,8 @@ describe("agent configuration security audit", () => {
 
   it("fails closed on oversized supported configuration files", async () => {
     const directory = await workspace();
-    await mkdir(path.join(directory, ".forge", "skills"), { recursive: true });
-    await writeFile(path.join(directory, ".forge", "skills", "large.md"), "x".repeat(128 * 1024 + 1));
+    await mkdir(path.join(directory, ".anvil", "skills"), { recursive: true });
+    await writeFile(path.join(directory, ".anvil", "skills", "large.md"), "x".repeat(128 * 1024 + 1));
     await expect(auditAgentConfiguration(directory)).rejects.toThrow("scan limit");
   });
 });

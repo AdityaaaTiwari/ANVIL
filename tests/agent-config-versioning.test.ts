@@ -16,14 +16,14 @@ import {
 
 const roots: string[] = [];
 async function project(): Promise<string> {
-  const root = await mkdtemp(path.join(os.tmpdir(), "forge-agent-config-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "anvil-agent-config-"));
   roots.push(root);
-  await mkdir(path.join(root, ".forge", "agents"), { recursive: true });
-  await mkdir(path.join(root, ".forge", "skills"), { recursive: true });
-  await writeFile(path.join(root, ".forge", "agents", "planner.md"), "# Planner\nPlan carefully.\n");
-  await writeFile(path.join(root, ".forge", "skills", "secure-changes.md"), "# Secure changes\nUse least privilege.\n");
+  await mkdir(path.join(root, ".anvil", "agents"), { recursive: true });
+  await mkdir(path.join(root, ".anvil", "skills"), { recursive: true });
+  await writeFile(path.join(root, ".anvil", "agents", "planner.md"), "# Planner\nPlan carefully.\n");
+  await writeFile(path.join(root, ".anvil", "skills", "secure-changes.md"), "# Secure changes\nUse least privilege.\n");
   await writeFile(
-    path.join(root, ".forge", "hooks.json"),
+    path.join(root, ".anvil", "hooks.json"),
     JSON.stringify([
       {
         id: "candidate-policy",
@@ -34,7 +34,7 @@ async function project(): Promise<string> {
     ])
   );
   await writeFile(
-    path.join(root, ".forge", "permissions.json"),
+    path.join(root, ".anvil", "permissions.json"),
     JSON.stringify({ version: 1, mode: "proposal-only", allowedTools: [] })
   );
   return root;
@@ -47,9 +47,9 @@ describe("agent configuration versioning", () => {
   it("captures snapshots and compares changes without bypassing benchmark-gated approval", async () => {
     const root = await project();
     const first = await captureAgentConfigVersion(root, { createdBy: "developer", note: "baseline" });
-    await writeFile(path.join(root, ".forge", "agents", "planner.md"), "# Planner\nPlan with acceptance criteria.\n");
-    await writeFile(path.join(root, ".forge", "skills", "documentation.md"), "# Documentation\nKeep docs current.\n");
-    await unlink(path.join(root, ".forge", "skills", "secure-changes.md"));
+    await writeFile(path.join(root, ".anvil", "agents", "planner.md"), "# Planner\nPlan with acceptance criteria.\n");
+    await writeFile(path.join(root, ".anvil", "skills", "documentation.md"), "# Documentation\nKeep docs current.\n");
+    await unlink(path.join(root, ".anvil", "skills", "secure-changes.md"));
     const second = await captureAgentConfigVersion(root, { note: "candidate update" });
     const diff = compareAgentConfigVersions(first, second);
     expect(diff.changed).toEqual(["agents/planner.md"]);
@@ -58,16 +58,16 @@ describe("agent configuration versioning", () => {
     await expect(approveAgentConfigVersion(root, second.id, "reviewer")).rejects.toThrow(
       "Direct configuration approval is disabled"
     );
-    expect(await readFile(path.join(root, ".forge", "agents", "planner.md"), "utf8")).toContain("acceptance criteria");
+    expect(await readFile(path.join(root, ".anvil", "agents", "planner.md"), "utf8")).toContain("acceptance criteria");
     expect(await listAgentConfigVersions(root)).toHaveLength(2);
     expect((await loadAgentConfigVersion(root, second.id)).status).toBe("candidate");
-    await expect(readFile(path.join(root, ".forge", "config-versions", "approved.json"), "utf8")).rejects.toThrow();
+    await expect(readFile(path.join(root, ".anvil", "config-versions", "approved.json"), "utf8")).rejects.toThrow();
   });
   it("rejects traversal IDs and tampered snapshot contents", async () => {
     const root = await project();
     const version = await captureAgentConfigVersion(root);
     await expect(loadAgentConfigVersion(root, "../escape")).rejects.toThrow("Invalid configuration version ID");
-    const file = path.join(root, ".forge", "config-versions", version.id + ".json");
+    const file = path.join(root, ".anvil", "config-versions", version.id + ".json");
     const parsed = JSON.parse(await readFile(file, "utf8"));
     parsed.files[0].content = "tampered";
     await writeFile(file, JSON.stringify(parsed));
@@ -78,8 +78,8 @@ describe("agent configuration versioning", () => {
     const outside = path.join(root, "outside-agent-configs");
     await mkdir(outside);
     await writeFile(path.join(outside, "external.md"), "# External\\n");
-    await rm(path.join(root, ".forge", "agents"), { recursive: true });
-    if (!(await trySymlink(outside, path.join(root, ".forge", "agents"), "dir"))) return;
+    await rm(path.join(root, ".anvil", "agents"), { recursive: true });
+    if (!(await trySymlink(outside, path.join(root, ".anvil", "agents"), "dir"))) return;
     await expect(captureAgentConfigVersion(root)).rejects.toThrow("must not be symbolic links");
   });
   it("materializes only verified snapshot files into a separate workspace", async () => {
@@ -88,14 +88,14 @@ describe("agent configuration versioning", () => {
     const isolated = path.join(root, "isolated-candidate");
     await mkdir(isolated);
     await materializeAgentConfigVersion(root, version.id, isolated);
-    expect(await readFile(path.join(isolated, ".forge", "agents", "planner.md"), "utf8")).toContain("Plan carefully");
-    expect(await readFile(path.join(isolated, ".forge", "skills", "secure-changes.md"), "utf8")).toContain(
+    expect(await readFile(path.join(isolated, ".anvil", "agents", "planner.md"), "utf8")).toContain("Plan carefully");
+    expect(await readFile(path.join(isolated, ".anvil", "skills", "secure-changes.md"), "utf8")).toContain(
       "least privilege"
     );
-    await expect(readFile(path.join(root, ".forge", "agents", "planner.md"), "utf8")).resolves.toContain(
+    await expect(readFile(path.join(root, ".anvil", "agents", "planner.md"), "utf8")).resolves.toContain(
       "Plan carefully"
     );
-    await expect(readFile(path.join(isolated, ".forge", "hooks.json"), "utf8")).resolves.toContain(
+    await expect(readFile(path.join(isolated, ".anvil", "hooks.json"), "utf8")).resolves.toContain(
       "Snapshot-specific policy guidance."
     );
     await expect(loadHooks(isolated)).resolves.toMatchObject([
@@ -109,7 +109,7 @@ describe("agent configuration versioning", () => {
   });
   it("captures an explicit empty hook policy when the workspace has no hooks file", async () => {
     const root = await project();
-    await unlink(path.join(root, ".forge", "hooks.json"));
+    await unlink(path.join(root, ".anvil", "hooks.json"));
     const version = await captureAgentConfigVersion(root);
     const hooks = version.files.find((file) => file.path === "hooks.json");
     expect(hooks?.content.trim()).toBe("[]");

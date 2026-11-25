@@ -8,12 +8,12 @@ tags: onboarding, research
 
 Use at the start of work in a repository you have not seen, before making changes.
 
-1. **Read the map.** README, CONTRIBUTING, AGENTS.md/CLAUDE.md, the FORGE project skill if present (`forge analyze` creates one), and the top-level directory listing.
+1. **Read the map.** README, CONTRIBUTING, AGENTS.md/CLAUDE.md, the ANVIL project skill if present (`anvil analyze` creates one), and the top-level directory listing.
 2. **Find the commands.** Package scripts, Makefile, CI workflow steps. CI is the most reliable record of how the project is really built and tested.
 3. **Run it.** Install dependencies with the project's tool and run the test suite once. Note anything that fails before you change anything.
 4. **Trace one real path end to end.** Pick a user-facing feature and follow it from the entry point (route, CLI command, UI event) through the layers to storage and back. Write down the files you passed through.
 5. **Learn the conventions** from recent commits (`git log --oneline -30`) and nearby code: naming, error handling, test style, commit messages.
 6. **Find the risky areas.** Auth, payments, migrations, concurrency, and the files that change most often (`git log --format= --name-only | sort | uniq -c | sort -rn | head`).
-7. **Record what you learned** that is not obvious from the code: `forge memory add --kind architecture --content "..." --evidence <files>`.
+7. **Record what you learned** that is not obvious from the code: `anvil memory add --kind architecture --content "..." --evidence <files>`.
 
 Deliver a short summary: how to build and test, the main modules and how a request flows, conventions to follow, and open questions.

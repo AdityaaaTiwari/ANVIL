@@ -161,7 +161,7 @@ export function formatCodebaseAnalysis(report: DeepArchitectureReport): string {
     "",
     "## Limitations",
     "- AST symbol discovery uses the TypeScript parser; it does not perform type checking or resolve symbols across project boundaries.",
-    "- Import edges still come from FORGE's static import resolver. Aliases, generated modules, and runtime-loaded dependencies may be missed.",
+    "- Import edges still come from ANVIL's static import resolver. Aliases, generated modules, and runtime-loaded dependencies may be missed.",
     "- Change impact is a transitive file-import estimate, not a guarantee that every listed file must change.",
     ...(report.warnings.length ? report.warnings.map((w) => "- " + w) : []),
   ].join("\n");

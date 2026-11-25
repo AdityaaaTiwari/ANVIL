@@ -9,7 +9,7 @@ import {
 } from "./harness-hooks.js";
 
 /**
- * `forge guard`: see what FORGE Guard would decide before an agent ever runs
+ * `anvil guard`: see what ANVIL Guard would decide before an agent ever runs
  * the command, and what it has blocked across every harness.
  */
 
@@ -31,12 +31,17 @@ export interface GuardReport {
   recent: GuardEvent[];
 }
 
-const GUARD_LOG = ".forge/session/guard.jsonl";
+const GUARD_LOG = ".anvil/session/guard.jsonl";
 
 export async function readGuardEvents(projectPath: string): Promise<GuardEvent[]> {
   let raw = "";
   try {
-    raw = await readFile(path.join(projectPath, GUARD_LOG), "utf8");
+    raw = await readFile(path.join(projectPath, GUARD_LOG), "utf8").catch(async (error: unknown) => {
+      if ((error as NodeJS.ErrnoException)?.code === "ENOENT") {
+        return readFile(path.join(projectPath, ".forge/session/guard.jsonl"), "utf8");
+      }
+      throw error;
+    });
   } catch {
     return [];
   }
@@ -91,13 +96,13 @@ export function buildGuardReport(events: GuardEvent[], options: { since?: Date; 
 export function formatGuardReport(report: GuardReport): string {
   if (!report.total)
     return (
-      "FORGE Guard has not blocked or questioned anything yet" +
+      "ANVIL Guard has not blocked or questioned anything yet" +
       (report.since ? " in this period" : "") +
-      ".\nInstall the hooks with `forge install --hooks` (Claude Code, Cursor, Codex and Gemini CLI)."
+      ".\nInstall the hooks with `anvil install --hooks` (Claude Code, Cursor, Codex and Gemini CLI)."
     );
   const ruleWidth = Math.min(28, Math.max(...report.recent.map((e) => e.rule.length)));
   const lines = [
-    `FORGE Guard · ${report.total} intervention${report.total === 1 ? "" : "s"} (${report.byDecision.deny} blocked, ${report.byDecision.ask} asked)`,
+    `ANVIL Guard · ${report.total} intervention${report.total === 1 ? "" : "s"} (${report.byDecision.deny} blocked, ${report.byDecision.ask} asked)`,
     "",
     "By harness: " + report.byHarness.map((h) => `${h.harness} ${h.count}`).join(" · "),
     "",

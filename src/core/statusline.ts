@@ -2,11 +2,11 @@ import { readFile, realpath } from "node:fs/promises";
 import path from "node:path";
 
 /**
- * Claude Code status line: `forge statusline` reads the status JSON on stdin
+ * Claude Code status line: `anvil statusline` reads the status JSON on stdin
  * and prints one line. It reads a few small files only (no git or Shield
  * processes), so it is safe to run on every refresh.
  *
- *   FORGE ▸ Opus │ ⎇ feat/x │ ✎ 3 unverified │ ✓ tests passed │ ⛨ 1 blocked │ ★ 4 instincts │ $0.42
+ *   ANVIL ▸ Opus │ ⎇ feat/x │ ✎ 3 unverified │ ✓ tests passed │ ⛨ 1 blocked │ ★ 4 instincts │ $0.42
  */
 
 export interface StatusInput {
@@ -39,7 +39,9 @@ async function branch(root: string): Promise<string | undefined> {
 async function guardBlocks(root: string, session: string | undefined): Promise<number> {
   if (!session) return 0;
   try {
-    const text = await readFile(path.join(root, ".forge/session/guard.jsonl"), "utf8");
+    const text = await readFile(path.join(root, ".anvil/session/guard.jsonl"), "utf8").catch(() =>
+      readFile(path.join(root, ".forge/session/guard.jsonl"), "utf8")
+    );
     return text
       .split("\n")
       .slice(-500)
@@ -65,12 +67,14 @@ export async function collectStatus(input: StatusInput, fallbackCwd: string): Pr
     input.workspace?.project_dir ?? input.workspace?.current_dir ?? input.cwd ?? fallbackCwd
   );
   const root = await realpath(candidate).catch(() => candidate);
-  const edits = await readJson<{ files?: unknown[] }>(path.join(root, ".forge/session/edits.json"));
+  const edits =
+    (await readJson<{ files?: unknown[] }>(path.join(root, ".anvil/session/edits.json"))) ??
+    (await readJson<{ files?: unknown[] }>(path.join(root, ".forge/session/edits.json")));
   const last = await readJson<{ results?: Array<{ script?: string; status?: string }> }>(
-    path.join(root, ".forge/session/last-verification.json")
+    path.join(root, ".anvil/session/last-verification.json")
   );
   const instincts = await readJson<{ instincts?: Array<{ status?: string }> }>(
-    path.join(root, ".forge/instincts.json")
+    path.join(root, ".anvil/instincts.json")
   );
   const results = Array.isArray(last?.results) ? last.results : [];
   const failed = results.find((r) => r.status !== "passed");

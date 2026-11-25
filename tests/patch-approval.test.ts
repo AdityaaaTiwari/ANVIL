@@ -69,7 +69,7 @@ describe("patch approval records", () => {
   it("rejects malformed stored approval records", async () => {
     const review = await fixture();
     const approval = await approveReviewPatch(root, review.id, 1, "reviewer");
-    const file = path.join(root, ".forge", "patch-approvals", approval.id + ".json");
+    const file = path.join(root, ".anvil", "patch-approvals", approval.id + ".json");
     const saved = JSON.parse(await readFile(file, "utf8"));
     saved.expiresAt = "not-a-date";
     await writeFile(file, JSON.stringify(saved));
@@ -78,7 +78,7 @@ describe("patch approval records", () => {
   it("invalidates approval if the target file binding changes", async () => {
     const review = await fixture();
     const approval = await approveReviewPatch(root, review.id, 1, "reviewer");
-    const file = path.join(root, ".forge", "patch-approvals", approval.id + ".json");
+    const file = path.join(root, ".anvil", "patch-approvals", approval.id + ".json");
     const saved = JSON.parse(await readFile(file, "utf8"));
     saved.file = "src/other.ts";
     await writeFile(file, JSON.stringify(saved));
@@ -142,7 +142,7 @@ describe("patch approval records", () => {
   it("rejects expired approvals", async () => {
     const review = await fixture();
     const approval = await approveReviewPatch(root, review.id, 1, "reviewer");
-    const file = path.join(root, ".forge", "patch-approvals", approval.id + ".json");
+    const file = path.join(root, ".anvil", "patch-approvals", approval.id + ".json");
     const saved = JSON.parse(await readFile(file, "utf8"));
     saved.expiresAt = new Date(Date.now() - 1000).toISOString();
     await writeFile(file, JSON.stringify(saved));
@@ -154,7 +154,7 @@ describe("patch approval records", () => {
     const review = await fixture();
     const outside = path.join(root, "outside-approvals");
     await mkdir(outside);
-    if (!(await trySymlink(outside, path.join(root, ".forge", "patch-approvals"), "dir"))) return;
+    if (!(await trySymlink(outside, path.join(root, ".anvil", "patch-approvals"), "dir"))) return;
     await expect(approveReviewPatch(root, review.id, 1, "reviewer")).rejects.toThrow(/must not contain symbolic links/);
   });
   it("rejects blank reviewers and unreasonable expiry", async () => {

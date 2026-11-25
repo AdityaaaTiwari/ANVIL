@@ -8,13 +8,13 @@ import { LOOP_AGENTS, runVerifiedLoop, type LoopAgent, type LoopRecord, type Loo
  * Agent race: the same task, several agents, one verdict.
  *
  * Each contestant gets its own git worktree, created detached from the same
- * HEAD, and runs FORGE's verified loop there. Contestants run in parallel and
- * cannot see each other's changes. FORGE then ranks the results with its own
+ * HEAD, and runs ANVIL's verified loop there. Contestants run in parallel and
+ * cannot see each other's changes. ANVIL then ranks the results with its own
  * check runs and integrity gate, not on anything an agent claims. The winner's diff can be applied to the
- * main working tree with `forge race pick`; nothing touches it before that.
+ * main working tree with `anvil race pick`; nothing touches it before that.
  */
 
-export const RACES_DIR = ".forge/races";
+export const RACES_DIR = ".anvil/races";
 export const RACE_SCHEMA_VERSION = 1 as const;
 
 export interface RaceContestant {
@@ -183,11 +183,13 @@ async function saveRace(root: string, record: RaceRecord): Promise<void> {
 async function ensureIgnored(root: string): Promise<void> {
   const dir = path.join(root, RACES_DIR);
   await mkdir(dir, { recursive: true });
-  await writeFile(path.join(dir, ".gitignore"), "# FORGE race worktrees and receipts are local\n*\n", "utf8");
+  await writeFile(path.join(dir, ".gitignore"), "# ANVIL race worktrees and receipts are local\n*\n", "utf8");
 }
 
 async function diffStat(worktree: string, head: string): Promise<{ added: number; removed: number; files: string[] }> {
-  await git(worktree, ["add", "-A", "--", ".", ":(exclude).forge", ":(exclude)node_modules"]).catch(() => "");
+  await git(worktree, ["add", "-A", "--", ".", ":(exclude).anvil", ":(exclude).forge", ":(exclude)node_modules"]).catch(
+    () => ""
+  );
   const numstat = await git(worktree, ["diff", "--cached", "--numstat", head]).catch(() => "");
   let added = 0;
   let removed = 0;
@@ -209,7 +211,7 @@ export async function runRace(options: RaceOptions): Promise<RaceRecord> {
   const goal = options.goal.trim();
   if (!goal || goal.length > 4000) throw new Error("--goal must be 1-4000 characters.");
   const checks = options.checks.map((c) => c.trim()).filter(Boolean);
-  if (!checks.length) throw new Error("Give at least one --check command; FORGE ranks contestants by running it.");
+  if (!checks.length) throw new Error("Give at least one --check command; ANVIL ranks contestants by running it.");
   if (options.contestants.length < 2)
     throw new Error("A race needs at least two contestants (e.g. --agents claude,codex).");
   if (options.contestants.length > 6) throw new Error("At most 6 contestants.");
@@ -336,17 +338,21 @@ export async function runRace(options: RaceOptions): Promise<RaceRecord> {
 }
 
 export async function listRaces(projectPath: string): Promise<RaceRecord[]> {
-  const dir = path.join(path.resolve(projectPath), RACES_DIR);
-  const names = await readdir(dir).catch(() => [] as string[]);
-  const races: RaceRecord[] = [];
-  for (const name of names.filter((n) => /^race-[\w-]+\.json$/.test(n))) {
-    try {
-      races.push(JSON.parse(await readFile(path.join(dir, name), "utf8")) as RaceRecord);
-    } catch {
-      /* skip */
+  const root = path.resolve(projectPath);
+  const dirs = [path.join(root, RACES_DIR), path.join(root, ".forge/races")];
+  const byId = new Map<string, RaceRecord>();
+  for (const dir of dirs) {
+    const names = await readdir(dir).catch(() => [] as string[]);
+    for (const name of names.filter((n) => /^race-[\w-]+\.json$/.test(n))) {
+      try {
+        const parsed = JSON.parse(await readFile(path.join(dir, name), "utf8")) as RaceRecord;
+        if (parsed?.id && !byId.has(parsed.id)) byId.set(parsed.id, parsed);
+      } catch {
+        /* skip */
+      }
     }
   }
-  return races.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  return [...byId.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
 export async function readRace(projectPath: string, id?: string): Promise<RaceRecord | undefined> {
@@ -363,11 +369,11 @@ export async function pickRace(
   const root = await realpath(path.resolve(projectPath));
   const race = await readRace(root, id);
   if (!race)
-    throw new Error('No race found. Start one with: forge race --goal "..." --check "npm test" --agents claude,codex');
+    throw new Error('No race found. Start one with: anvil race --goal "..." --check "npm test" --agents claude,codex');
   const chosen = name ?? race.winner;
   if (!chosen)
     throw new Error(
-      "No contestant passed, so there is no winner to pick. Name one explicitly after reviewing its worktree: forge race pick " +
+      "No contestant passed, so there is no winner to pick. Name one explicitly after reviewing its worktree: anvil race pick " +
         race.id +
         " <name>"
     );
@@ -375,11 +381,11 @@ export async function pickRace(
   if (!entry) throw new Error(`No contestant "${chosen}" in ${race.id}.`);
   const worktree = path.resolve(root, entry.worktree);
   if (!worktree.startsWith(path.join(root, RACES_DIR) + path.sep))
-    throw new Error("Race worktree path is outside .forge/races.");
+    throw new Error("Race worktree path is outside .anvil/races.");
   await lstat(worktree).catch(() => {
     throw new Error(`The worktree for ${chosen} was removed. Its changes are no longer available.`);
   });
-  await git(worktree, ["add", "-A", "--", ".", ":(exclude).forge", ":(exclude)node_modules"]);
+  await git(worktree, ["add", "-A", "--", ".", ":(exclude).anvil", ":(exclude).forge", ":(exclude)node_modules"]);
   const patch = await git(worktree, ["diff", "--cached", "--binary", race.head]);
   if (!patch.trim()) throw new Error(`${chosen} made no changes.`);
   const patchFile = path.join(root, RACES_DIR, `${race.id}-${chosen}.patch`);
@@ -429,7 +435,7 @@ export function formatRace(race: RaceRecord): string {
   const seconds = (ms: number) => `${Math.round(ms / 1000)}s`;
   const width = Math.max(...race.entries.map((e) => e.name.length), 6);
   const lines = [
-    `FORGE race ${race.id}`,
+    `ANVIL race ${race.id}`,
     `  goal    ${race.goal.split("\n")[0]?.slice(0, 90)}`,
     `  checks  ${race.checks.join(" · ")}`,
     "",
@@ -446,15 +452,15 @@ export function formatRace(race: RaceRecord): string {
   lines.push("");
   if (race.winner)
     lines.push(
-      `Winner: ${race.winner}, verified by FORGE. Review: git -C ${race.entries.find((e) => e.name === race.winner)?.worktree} diff ${race.head.slice(0, 8)}`,
-      `Apply it:  forge race pick ${race.id}`,
-      `Clean up:  forge race clean ${race.id}`
+      `Winner: ${race.winner}, verified by ANVIL. Review: git -C ${race.entries.find((e) => e.name === race.winner)?.worktree} diff ${race.head.slice(0, 8)}`,
+      `Apply it:  anvil race pick ${race.id}`,
+      `Clean up:  anvil race clean ${race.id}`
     );
   else
     lines.push(
-      "No contestant passed every check. Review the worktrees, then `forge race pick " +
+      "No contestant passed every check. Review the worktrees, then `anvil race pick " +
         race.id +
-        " <name>` or `forge race clean " +
+        " <name>` or `anvil race clean " +
         race.id +
         "`."
     );

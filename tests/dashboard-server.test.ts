@@ -223,10 +223,10 @@ describe("local dashboard server", () => {
   });
 
   it("lists, reads and safely saves workspace agent and skill Markdown", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-config-studio-"));
-    await mkdir(path.join(root, ".forge", "agents"), { recursive: true });
-    await mkdir(path.join(root, ".forge", "skills"), { recursive: true });
-    await writeFile(path.join(root, ".forge", "agents", "planner.md"), "# Planner\\nPlan safely.\\n");
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-config-studio-"));
+    await mkdir(path.join(root, ".anvil", "agents"), { recursive: true });
+    await mkdir(path.join(root, ".anvil", "skills"), { recursive: true });
+    await writeFile(path.join(root, ".anvil", "agents", "planner.md"), "# Planner\\nPlan safely.\\n");
     dashboard = await startDashboard({ projectPath: root, port: 0 });
     const address = dashboard.server.address();
     if (!address || typeof address === "string") throw new Error("Dashboard did not bind a TCP port.");
@@ -253,7 +253,7 @@ describe("local dashboard server", () => {
       body: JSON.stringify({ category: "agents", id: "../escape", content: "# Nope" }),
     });
     expect(invalid.status).toBe(500);
-    expect(await readFile(path.join(root, ".forge", "skills", "api-safety.md"), "utf8")).toContain(
+    expect(await readFile(path.join(root, ".anvil", "skills", "api-safety.md"), "utf8")).toContain(
       "Validate every boundary"
     );
     const snapshot = await fetch(base + "/api/config-snapshots", {
@@ -860,6 +860,11 @@ describe("local dashboard server", () => {
     expect(catalogRes.status).toBe(200);
     const catalogData = await catalogRes.json();
     expect(Array.isArray(catalogData.agents)).toBe(true);
+
+    const anvilScorecardRes = await fetch(`http://127.0.0.1:${address.port}/api/anvil/scorecard`);
+    expect(anvilScorecardRes.status).toBe(200);
+    const anvilScorecardData = await anvilScorecardRes.json();
+    expect(anvilScorecardData.percent).toBeDefined();
 
     const scorecardRes = await fetch(`http://127.0.0.1:${address.port}/api/forge/scorecard`);
     expect(scorecardRes.status).toBe(200);

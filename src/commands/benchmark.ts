@@ -22,7 +22,7 @@ export async function runBenchmark(_command: string, rest: string[]): Promise<vo
       process.stdout.write(
         documents.length
           ? documents.map((document) => formatBenchmark(document)).join("\n\n") + "\n"
-          : "No benchmark history. Evaluate and record a run with: forge benchmark RUN_ID --path .\n"
+          : "No benchmark history. Evaluate and record a run with: anvil benchmark RUN_ID --path .\n"
       );
       return;
     }

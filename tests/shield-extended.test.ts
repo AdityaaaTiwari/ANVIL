@@ -2,12 +2,12 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { runShield, SHIELD_RULES } from "../src/core/forge-shield.js";
+import { runShield, SHIELD_RULES } from "../src/core/anvil-shield.js";
 import { EXTENDED_RULES, isGitIgnored } from "../src/core/shield-extended.js";
 
 const directories: string[] = [];
 async function project(files: Record<string, string>, git = true): Promise<string> {
-  const directory = await mkdtemp(path.join(os.tmpdir(), "forge-shield3-"));
+  const directory = await mkdtemp(path.join(os.tmpdir(), "anvil-shield3-"));
   directories.push(directory);
   if (git) await mkdir(path.join(directory, ".git"), { recursive: true });
   for (const [name, content] of Object.entries(files)) {

@@ -168,16 +168,15 @@ export async function runDoctorChecks(projectPath?: string): Promise<DoctorRepor
 
         if (configFound) {
           checks.push({
-            name: "FORGE configuration",
+            name: "ANVIL configuration",
             status: "ok",
-            detail: ".anvil / .forge directory detected.",
+            detail: ".anvil (or legacy .forge) directory detected.",
           });
         } else {
           checks.push({
-            name: "FORGE configuration",
+            name: "ANVIL configuration",
             status: "warn",
-            detail:
-              "No .anvil / .forge directory found. Run 'anvil init' or 'anvil doctor --fix' to configure this project.",
+            detail: "No .anvil directory found. Run 'anvil init' or 'anvil doctor --fix' to configure this project.",
           });
         }
 
@@ -400,7 +399,7 @@ GEMINI_API_KEY=your_gemini_api_key_here
 
 export function formatDoctorReport(report: DoctorReport): string {
   const lines: string[] = [];
-  lines.push("ANVIL / FORGE Doctor — System Health Check");
+  lines.push("ANVIL Doctor — System Health Check");
   lines.push("====================================");
 
   for (const check of report.checks) {

@@ -287,10 +287,10 @@ export async function analyzeDependencies(
   };
   const limitations = [
     audit.value
-      ? "Vulnerability findings are imported from the supplied npm audit JSON report; FORGE does not run npm audit or contact a registry."
+      ? "Vulnerability findings are imported from the supplied npm audit JSON report; ANVIL does not run npm audit or contact a registry."
       : "Vulnerability status is NOT ASSESSED: provide an npm audit JSON report with --audit-report; no network scan is performed.",
     outdated.value
-      ? "Outdated versions are imported from the supplied npm outdated JSON report; FORGE does not contact a package registry."
+      ? "Outdated versions are imported from the supplied npm outdated JSON report; ANVIL does not contact a package registry."
       : "Outdated status is NOT ASSESSED: provide npm outdated JSON with --outdated-report; no registry lookup is performed.",
     "Abandoned-package and maintainer-activity detection is not available in this offline report.",
     "License data comes from lockfile metadata or installed package manifests; missing license metadata is reported as unknown, not assumed permissive.",
@@ -376,7 +376,7 @@ export function formatDependencyIntelligence(report: DependencyIntelligenceRepor
     "## Limitations",
     ...report.limitations.map((item) => "- " + item),
     "",
-    "_FORGE does not execute package-manager commands, install packages, modify manifests, or contact registries during this analysis._",
+    "_ANVIL does not execute package-manager commands, install packages, modify manifests, or contact registries during this analysis._",
   ];
   return lines.join("\n");
 }

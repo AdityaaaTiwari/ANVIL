@@ -19,8 +19,8 @@ import { globalMemoryRoot } from "./project-memory.js";
 
 const execFileAsync = promisify(execFile);
 
-export const INSTINCTS_PATH = ".forge/instincts.json";
-export const OBSERVATIONS_PATH = ".forge/session/observations.jsonl";
+export const INSTINCTS_PATH = ".anvil/instincts.json";
+export const OBSERVATIONS_PATH = ".anvil/session/observations.jsonl";
 const DOCUMENT_VERSION = 1;
 const MAX_INSTINCTS = 300;
 const MAX_TEXT = 400;
@@ -111,13 +111,19 @@ function storeRoot(projectPath: string, scope: InstinctScope): string {
 }
 
 export async function loadInstincts(projectPath: string, scope: InstinctScope = "project"): Promise<Instinct[]> {
-  const file = path.join(storeRoot(projectPath, scope), INSTINCTS_PATH);
+  const baseRoot = storeRoot(projectPath, scope);
+  const file = path.join(baseRoot, INSTINCTS_PATH);
   let raw: Buffer;
   try {
     raw = await readFile(file);
   } catch (error) {
-    if ((error as { code?: string }).code === "ENOENT") return [];
-    throw error;
+    if ((error as { code?: string }).code !== "ENOENT") throw error;
+    try {
+      raw = await readFile(path.join(baseRoot, ".forge/instincts.json"));
+    } catch (fallbackError) {
+      if ((fallbackError as { code?: string }).code === "ENOENT") return [];
+      throw fallbackError;
+    }
   }
   if (raw.byteLength > MAX_FILE_BYTES) throw new Error(`${INSTINCTS_PATH} exceeds the 1 MiB safety limit.`);
   const parsed = JSON.parse(raw.toString("utf8")) as Partial<InstinctDocument>;
@@ -213,7 +219,7 @@ export interface LearnedCandidate {
 }
 
 const NOISE =
-  /(?:^|\/)(?:package-lock\.json|pnpm-lock\.yaml|yarn\.lock|bun\.lockb|Cargo\.lock|go\.sum|poetry\.lock|CHANGELOG\.md|\.forge\/|dist\/|build\/|node_modules\/)/;
+  /(?:^|\/)(?:package-lock\.json|pnpm-lock\.yaml|yarn\.lock|bun\.lockb|Cargo\.lock|go\.sum|poetry\.lock|CHANGELOG\.md|\.anvil\/|\.forge\/|dist\/|build\/|node_modules\/)/;
 
 function domainOf(file: string): string {
   if (/(?:^|\/)(?:tests?|__tests__|spec)\/|\.(?:test|spec)\.[a-z]+$/.test(file)) return "testing";
@@ -319,13 +325,13 @@ export function mineGuard(rows: Record<string, unknown>[]): LearnedCandidate[] {
   for (const [rule, n] of byRule) {
     if (n < 2) continue;
     out.push({
-      trigger: `about to run a command matching FORGE Guard ${rule}`,
-      action: `don't — FORGE Guard stopped this ${n} times; ask the user or find a safer command`,
+      trigger: `about to run a command matching ANVIL Guard ${rule}`,
+      action: `don't — ANVIL Guard stopped this ${n} times; ask the user or find a safer command`,
       domain: "safety",
       source: "guard",
       occurrences: n,
       confidence: confidenceFor(n),
-      evidence: [`.forge/session/guard.jsonl: ${rule} fired ${n} times`],
+      evidence: [`.anvil/session/guard.jsonl: ${rule} fired ${n} times`],
     });
   }
   return out;
@@ -428,7 +434,10 @@ export async function learnInstincts(
   const candidates = [
     ...mineCoChange(commits),
     ...mineCommitConvention(commits),
-    ...mineGuard(await readJsonLines(path.join(root, ".forge/session/guard.jsonl"))),
+    ...mineGuard([
+      ...(await readJsonLines(path.join(root, ".anvil/session/guard.jsonl"))),
+      ...(await readJsonLines(path.join(root, ".forge/session/guard.jsonl"))),
+    ]),
     ...mineVerification(await readJsonLines(path.join(root, OBSERVATIONS_PATH))),
   ];
   const result = mergeCandidates(await loadInstincts(root), candidates, now);
@@ -481,7 +490,7 @@ export async function setInstinctStatus(
   for (const id of ids) {
     const instinct = instincts.find((i) => i.id === id);
     if (!instinct)
-      throw new Error(`No instinct "${id}" in the ${scope} store. List them with \`forge instinct list\`.`);
+      throw new Error(`No instinct "${id}" in the ${scope} store. List them with \`anvil instinct list\`.`);
     if (instinct.status !== status) {
       instinct.status = status;
       instinct.updatedAt = now;
@@ -505,7 +514,7 @@ export async function removeInstinct(
 }
 
 export interface InstinctExport {
-  tool: "forge-instincts";
+  tool: "anvil-instincts";
   version: 1;
   exportedAt: string;
   instincts: Instinct[];
@@ -519,7 +528,7 @@ export async function exportInstincts(
     (i) => !options.status || i.status === options.status
   );
   return {
-    tool: "forge-instincts",
+    tool: "anvil-instincts",
     version: 1,
     exportedAt: (options.now ?? (() => new Date()))().toISOString(),
     instincts,
@@ -533,8 +542,13 @@ export async function importInstincts(
   options: { scope?: InstinctScope; now?: () => Date } = {}
 ): Promise<LearnResult> {
   const body = payload as Partial<InstinctExport> | null;
-  if (!body || body.tool !== "forge-instincts" || body.version !== 1 || !Array.isArray(body.instincts))
-    throw new Error('Not a FORGE instinct export (expected tool "forge-instincts", version 1).');
+  if (
+    !body ||
+    (body.tool !== "anvil-instincts" && body.tool !== "forge-instincts") ||
+    body.version !== 1 ||
+    !Array.isArray(body.instincts)
+  )
+    throw new Error('Not an ANVIL instinct export (expected tool "anvil-instincts", version 1).');
   const now = (options.now ?? (() => new Date()))().toISOString();
   const candidates: LearnedCandidate[] = [];
   for (const raw of body.instincts.slice(0, MAX_INSTINCTS)) {
@@ -592,7 +606,7 @@ export function formatInstinctContext(instincts: Instinct[], limit = 15): string
 
 export function formatInstinctList(instincts: Instinct[]): string {
   if (!instincts.length)
-    return "No instincts yet. Run `forge instinct learn` to mine git history and session observations.";
+    return "No instincts yet. Run `anvil instinct learn` to mine git history and session observations.";
   const order: Record<InstinctStatus, number> = { active: 0, candidate: 1, rejected: 2 };
   const lines: string[] = [];
   for (const i of [...instincts].sort((a, b) => order[a.status] - order[b.status] || b.confidence - a.confidence)) {
@@ -606,14 +620,14 @@ export function formatInstinctList(instincts: Instinct[]): string {
   return lines.join("\n");
 }
 
-export const LEARNED_SKILL_MARKER = "<!-- Generated by `forge evolve` from approved instincts. -->";
+export const LEARNED_SKILL_MARKER = "<!-- Generated by `anvil evolve` from approved instincts. -->";
 
 export function renderLearnedSkill(instincts: Instinct[]): string {
   const byDomain = new Map<string, Instinct[]>();
   for (const i of instincts) byDomain.set(i.domain, [...(byDomain.get(i.domain) ?? []), i]);
   const lines = [
     "---",
-    "name: forge-learned",
+    "name: anvil-learned",
     "description: Project-specific habits learned from this repository's history and approved by the team. Use when editing, testing or committing in this project.",
     "---",
     "",
@@ -621,7 +635,7 @@ export function renderLearnedSkill(instincts: Instinct[]): string {
     "",
     "# Learned project instincts",
     "",
-    "These behaviours were mined from this repository (git history, FORGE Guard and verification results) and approved with `forge instinct promote`. Verify each against the current code before relying on it.",
+    "These behaviours were mined from this repository (git history, ANVIL Guard and verification results) and approved with `anvil instinct promote`. Verify each against the current code before relying on it.",
     "",
   ];
   for (const [domain, items] of [...byDomain].sort(([a], [b]) => a.localeCompare(b))) {
@@ -638,7 +652,7 @@ export interface EvolveResult {
   files: Array<{ path: string; action: "create" | "update" | "unchanged" | "skipped-user-edited" }>;
 }
 
-export const LEARNED_SKILL_PATHS = [".claude/skills/forge-learned/SKILL.md", ".agents/skills/forge-learned/SKILL.md"];
+export const LEARNED_SKILL_PATHS = [".claude/skills/anvil-learned/SKILL.md", ".agents/skills/anvil-learned/SKILL.md"];
 
 /** Compile active instincts into a skill for Claude Code and the shared .agents layout. */
 export async function evolveInstincts(

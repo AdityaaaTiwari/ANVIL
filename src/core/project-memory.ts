@@ -42,9 +42,7 @@ function memoryPath(projectPath: string): string {
   if (existsSync(anvilFile)) return anvilFile;
   const forgeFile = path.join(root, ".forge", "memory.json");
   if (existsSync(forgeFile)) return forgeFile;
-  const anvilDir = path.join(root, ".anvil");
-  if (existsSync(anvilDir)) return anvilFile;
-  return forgeFile;
+  return anvilFile;
 }
 
 async function readDocument(projectPath: string): Promise<MemoryDocument> {
@@ -107,7 +105,7 @@ async function withMemoryWriteLock<T>(projectPath: string, action: () => Promise
   } catch (error) {
     if (error && typeof error === "object" && "code" in error && error.code === "EEXIST") {
       throw new Error(
-        "Project memory is being changed by another or interrupted FORGE process. Inspect .forge/.memory-write.lock before manual recovery."
+        "Project memory is being changed by another or interrupted ANVIL process. Inspect .anvil/.memory-write.lock before manual recovery."
       );
     }
     throw error;

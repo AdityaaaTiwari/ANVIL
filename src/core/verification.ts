@@ -181,7 +181,7 @@ export async function runVerification(
   });
   clearTimeout(timer);
   if (forceKillTimer) clearTimeout(forceKillTimer);
-  if (outcome.error) append(`\nFORGE could not start npm: ${outcome.error}\n`);
+  if (outcome.error) append(`\nANVIL could not start npm: ${outcome.error}\n`);
   const finishedAt = new Date();
   return {
     id: `verify-${startedAt.getTime().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
@@ -255,8 +255,8 @@ export async function installVerificationDependencies(
     if (value.length > remaining) outputTruncated = true;
   };
   const windows = process.platform === "win32";
-  const userConfig = path.join(root, ".forge-npm-user-config");
-  const globalConfig = path.join(root, ".forge-npm-global-config");
+  const userConfig = path.join(root, ".anvil-npm-user-config");
+  const globalConfig = path.join(root, ".anvil-npm-global-config");
   await Promise.all([
     writeFile(userConfig, "", { flag: "wx", mode: 0o600 }),
     writeFile(globalConfig, "", { flag: "wx", mode: 0o600 }),
@@ -326,7 +326,7 @@ export async function installVerificationDependencies(
     child.once("close", (code) => finish({ exitCode: code }));
   });
   if (forceKillTimer) clearTimeout(forceKillTimer);
-  if (outcome.error) append("\nFORGE could not start npm: " + outcome.error + "\n");
+  if (outcome.error) append("\nANVIL could not start npm: " + outcome.error + "\n");
   return {
     status: outcome.error ? "spawn_error" : timedOut ? "timed_out" : outcome.exitCode === 0 ? "passed" : "failed",
     exitCode: outcome.exitCode,

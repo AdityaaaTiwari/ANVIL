@@ -35,7 +35,7 @@ export interface CodeReviewReport {
   warnings: string[];
 }
 const SOURCE = /\.(?:[cm]?[jt]sx?)$/i;
-const SKIP = new Set(["node_modules", ".git", "dist", "build", "coverage", ".next", ".forge"]);
+const SKIP = new Set(["node_modules", ".git", "dist", "build", "coverage", ".next", ".anvil", ".forge"]);
 async function walk(dir: string, root: string, out: string[], depth = 0): Promise<void> {
   if (depth > 12) return;
   const { readdir } = await import("node:fs/promises");

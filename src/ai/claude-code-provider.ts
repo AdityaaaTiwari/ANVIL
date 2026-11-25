@@ -55,7 +55,7 @@ export function parseClaudeCodeOutput(stdout: string): { text: string; sessionId
 
 /**
  * Uses an already-installed and authenticated Claude Code CLI.
- * FORGE does not read or store Anthropic API keys for this integration.
+ * ANVIL does not read or store Anthropic API keys for this integration.
  * Plan mode and denied shell/write tools keep this adapter proposal-only.
  */
 export class ClaudeCodeProvider implements AIProvider {

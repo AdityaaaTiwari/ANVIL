@@ -9,4 +9,4 @@ tags: ci, devops
 - Pin actions by version or SHA; least-privilege `permissions:`; no secrets on untrusted PR events.
 - Cache dependencies by lockfile hash.
 - Deploy from protected branches only, with preview environments and a rollback path.
-- Scan agent configuration in CI: `forge shield . --fail-on high`.
+- Scan agent configuration in CI: `anvil shield . --fail-on high`.

@@ -2,7 +2,7 @@ import { lstat, readFile } from "node:fs/promises";
 import path from "node:path";
 
 /**
- * FORGE Shield v3 rule pack: deeper checks for permissions, hooks, MCP,
+ * ANVIL Shield v3 rule pack: deeper checks for permissions, hooks, MCP,
  * instructions and CI, plus coverage for Copilot, Windsurf, Kiro, Cline,
  * Zed and Codex configuration. Pure functions over file contents, so every
  * finding is reproducible.
@@ -430,7 +430,7 @@ export function scanInstructionsExtended(
         )
       );
     const unsafe = UNSAFE_ADVICE.exec(line);
-    // FORGE's own generated rules mention these flags only to forbid them.
+    // ANVIL's own generated rules mention these flags only to forbid them.
     if (unsafe && !options.generated && !defensive(line, unsafe.index) && !inFence)
       out.push(make("SHIELD-INJ-007", file, index + 1, `The text recommends \`${unsafe[0].trim()}\`.`));
     if (BLOB.test(line))
@@ -545,7 +545,7 @@ export function scanHookCommandExtended(
     npx &&
     npx[1] &&
     !/@(?:\d|[~^]\d)/.test(npx[1].replace(/^@/, "")) &&
-    !/^forge(?:-engineering-workbench)?$/.test(npx[1])
+    !/^(?:anvil|forge)(?:-engineering-workbench)?$/.test(npx[1])
   ) {
     out.push(make("SHIELD-HOOK-008", file, line, `The hook runs \`${npx[1]}\` without a pinned version.`));
   }

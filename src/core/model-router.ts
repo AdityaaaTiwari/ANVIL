@@ -86,7 +86,7 @@ function isRetryableProviderError(error: unknown): boolean {
 }
 
 export class ModelRouter implements AgentProvider {
-  readonly name = "forge-model-router";
+  readonly name = "anvil-model-router";
   readonly traces: AgentTrace[] = [];
   private estimatedTokensUsed = 0;
   private readonly estimatedTokensByAgent = new Map<string, number>();
@@ -191,17 +191,17 @@ export class ModelRouter implements AgentProvider {
     const maxInput = this.options.maxInputTokensPerTask;
     if (maxInput !== undefined && inputTokensEstimate > maxInput)
       rejectBeforeProvider(
-        `FORGE budget exceeded: task input estimate ${inputTokensEstimate} exceeds per-task limit ${maxInput}.`
+        `ANVIL budget exceeded: task input estimate ${inputTokensEstimate} exceeds per-task limit ${maxInput}.`
       );
     const runLimit = this.options.maxEstimatedTokensPerRun;
     const agentLimit = this.options.maxEstimatedTokensPerAgent?.[request.task.agent];
     const agentUsed = this.estimatedTokensByAgent.get(request.task.agent) ?? 0;
     const maxOutput = this.options.maxOutputTokensPerTask;
     if (runLimit !== undefined && this.estimatedTokensUsed + inputTokensEstimate > runLimit)
-      rejectBeforeProvider(`FORGE budget exceeded: run estimate would exceed ${runLimit} tokens before provider call.`);
+      rejectBeforeProvider(`ANVIL budget exceeded: run estimate would exceed ${runLimit} tokens before provider call.`);
     if (agentLimit !== undefined && agentUsed + inputTokensEstimate > agentLimit)
       rejectBeforeProvider(
-        `FORGE budget exceeded: agent ${request.task.agent} estimate would exceed ${agentLimit} tokens before provider call.`
+        `ANVIL budget exceeded: agent ${request.task.agent} estimate would exceed ${agentLimit} tokens before provider call.`
       );
     let provider: AgentProvider;
     try {
@@ -231,7 +231,7 @@ export class ModelRouter implements AgentProvider {
     const durationLimit = this.options.maxTaskDurationMsByAgent?.[request.task.agent] ?? this.options.maxTaskDurationMs;
     const durationError = (): Error =>
       new Error(
-        `FORGE budget exceeded: task duration exceeded ${durationLimit} ms for agent ${request.task.agent}. The provider request may still be running.`
+        `ANVIL budget exceeded: task duration exceeded ${durationLimit} ms for agent ${request.task.agent}. The provider request may still be running.`
       );
     const remainingDuration = (): number | undefined =>
       durationLimit === undefined ? undefined : durationLimit - (Date.now() - start);
@@ -303,7 +303,7 @@ export class ModelRouter implements AgentProvider {
         (this.estimatedTokensByAgent.get(request.task.agent) ?? 0) + outputTokensEstimate
       );
       if (maxOutput !== undefined && outputTokensEstimate > maxOutput) {
-        const message = `FORGE budget exceeded: task output estimate ${outputTokensEstimate} exceeds per-task limit ${maxOutput}.`;
+        const message = `ANVIL budget exceeded: task output estimate ${outputTokensEstimate} exceeds per-task limit ${maxOutput}.`;
         this.recordTrace({
           taskId: request.task.id,
           agent: request.task.agent,
@@ -321,7 +321,7 @@ export class ModelRouter implements AgentProvider {
         throw new Error(message);
       }
       if (agentLimit !== undefined && (this.estimatedTokensByAgent.get(request.task.agent) ?? 0) > agentLimit) {
-        const message = `FORGE budget exceeded: agent ${request.task.agent} estimate would exceed ${agentLimit} tokens after provider response.`;
+        const message = `ANVIL budget exceeded: agent ${request.task.agent} estimate would exceed ${agentLimit} tokens after provider response.`;
         this.recordTrace({
           taskId: request.task.id,
           agent: request.task.agent,
@@ -339,7 +339,7 @@ export class ModelRouter implements AgentProvider {
         throw new Error(message);
       }
       if (runLimit !== undefined && this.estimatedTokensUsed > runLimit) {
-        const message = `FORGE budget exceeded: run estimate would exceed ${runLimit} tokens after provider response.`;
+        const message = `ANVIL budget exceeded: run estimate would exceed ${runLimit} tokens after provider response.`;
         this.recordTrace({
           taskId: request.task.id,
           agent: request.task.agent,
@@ -377,6 +377,7 @@ export class ModelRouter implements AgentProvider {
     } catch (primaryError) {
       const primaryMessage = primaryError instanceof Error ? primaryError.message : String(primaryError);
       if (
+        primaryMessage.startsWith("ANVIL budget exceeded:") ||
         primaryMessage.startsWith("FORGE budget exceeded:") ||
         !isRetryableProviderError(primaryError) ||
         !this.options.fallbackModel ||
@@ -405,13 +406,13 @@ export class ModelRouter implements AgentProvider {
         const fallbackInputEstimate = Math.ceil(inputText.length / 4);
         if (runLimit !== undefined && this.estimatedTokensUsed + fallbackInputEstimate > runLimit) {
           throw new Error(
-            `FORGE budget exceeded: run estimate would exceed ${runLimit} tokens before fallback provider call.`
+            `ANVIL budget exceeded: run estimate would exceed ${runLimit} tokens before fallback provider call.`
           );
         }
         const currentAgentUsage = this.estimatedTokensByAgent.get(request.task.agent) ?? 0;
         if (agentLimit !== undefined && currentAgentUsage + fallbackInputEstimate > agentLimit) {
           throw new Error(
-            `FORGE budget exceeded: agent ${request.task.agent} estimate would exceed ${agentLimit} tokens before fallback provider call.`
+            `ANVIL budget exceeded: agent ${request.task.agent} estimate would exceed ${agentLimit} tokens before fallback provider call.`
           );
         }
         const fallback = this.options.createProvider(this.options.fallbackModel);
@@ -431,15 +432,15 @@ export class ModelRouter implements AgentProvider {
         );
         if (maxOutput !== undefined && fallbackOutputEstimate > maxOutput)
           throw new Error(
-            `FORGE budget exceeded: fallback output estimate ${fallbackOutputEstimate} exceeds per-task limit ${maxOutput}.`
+            `ANVIL budget exceeded: fallback output estimate ${fallbackOutputEstimate} exceeds per-task limit ${maxOutput}.`
           );
         if (agentLimit !== undefined && (this.estimatedTokensByAgent.get(request.task.agent) ?? 0) > agentLimit)
           throw new Error(
-            `FORGE budget exceeded: agent ${request.task.agent} estimate would exceed ${agentLimit} tokens after fallback response.`
+            `ANVIL budget exceeded: agent ${request.task.agent} estimate would exceed ${agentLimit} tokens after fallback response.`
           );
         if (runLimit !== undefined && this.estimatedTokensUsed > runLimit) {
           throw new Error(
-            `FORGE budget exceeded: run estimate would exceed ${runLimit} tokens after fallback response.`
+            `ANVIL budget exceeded: run estimate would exceed ${runLimit} tokens after fallback response.`
           );
         }
         const trace: AgentTrace = {

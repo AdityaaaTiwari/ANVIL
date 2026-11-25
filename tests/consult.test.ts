@@ -10,7 +10,7 @@ afterEach(async () => {
   await Promise.all(directories.splice(0).map((directory) => rm(directory, { recursive: true, force: true })));
 });
 
-describe("forge consult", () => {
+describe("anvil consult", () => {
   it("finds the right components for a task, including MCP servers", async () => {
     const security = await consult("security review of auth code", { limit: 5 });
     expect(security.map((m) => `${m.kind}:${m.id}`)).toContain("agent:security-reviewer");
@@ -35,26 +35,26 @@ describe("forge consult", () => {
   });
 
   it("installs consulted extras and keeps them on reinstall", async () => {
-    const root = await mkdtemp(path.join(os.tmpdir(), "forge-consult-"));
+    const root = await mkdtemp(path.join(os.tmpdir(), "anvil-consult-"));
     directories.push(root);
     await writeFile(path.join(root, "package.json"), "{}");
     await installHarness({
       projectPath: root,
-      forgeVersion: "test",
+      anvilVersion: "test",
       targets: ["claude"],
       profile: "minimal",
       extras: ["skill:django-apps", "agent:security-reviewer"],
     });
     expect(
-      await readFile(path.join(root, ".claude/skills/forge-django-apps/SKILL.md"), "utf8").catch(async () =>
+      await readFile(path.join(root, ".claude/skills/anvil-django-apps/SKILL.md"), "utf8").catch(async () =>
         readFile(path.join(root, ".claude/skills/django-apps/SKILL.md"), "utf8")
       )
     ).toContain("Django");
-    const doctor = await doctorHarness({ projectPath: root, forgeVersion: "test" });
+    const doctor = await doctorHarness({ projectPath: root, anvilVersion: "test" });
     expect(doctor.extras).toEqual(["agent:security-reviewer", "skill:django-apps"]);
     expect(doctor.healthy).toBe(true);
     await expect(
-      installHarness({ projectPath: root, forgeVersion: "test", targets: ["claude"], extras: ["skill:nope"] })
+      installHarness({ projectPath: root, anvilVersion: "test", targets: ["claude"], extras: ["skill:nope"] })
     ).rejects.toThrow("No skill");
   });
 });

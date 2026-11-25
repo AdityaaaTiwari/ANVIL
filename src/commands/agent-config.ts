@@ -65,7 +65,7 @@ export async function runAgentConfig(_command: string, rest: string[]): Promise<
       );
     } else if (action === "approve") {
       throw new Error(
-        "Direct snapshot approval is disabled. Use forge agent-release prepare with a release-ready benchmark matrix, then forge agent-release approve RELEASE_ID --reviewer NAME."
+        "Direct snapshot approval is disabled. Use anvil agent-release prepare with a release-ready benchmark matrix, then anvil agent-release approve RELEASE_ID --reviewer NAME."
       );
     } else throw new Error("Unknown action. Use snapshot, list, show or diff.");
   } catch (error) {

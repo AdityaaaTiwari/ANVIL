@@ -16,7 +16,7 @@ Use whenever code touches credentials, tokens or keys, and whenever a secret may
 ## In code and logs
 - Redact secrets in logs, errors and telemetry. Never log full request headers or connection strings.
 - Do not pass secrets in URLs or tool arguments. They end up in logs and transcripts.
-- Keep `.env` and key files out of agent context: FORGE Guard asks before agents read them, and `forge install --hooks` denies `.env` reads in Claude Code.
+- Keep `.env` and key files out of agent context: ANVIL Guard asks before agents read them, and `anvil install --hooks` denies `.env` reads in Claude Code.
 
 ## Rotation
 Prefer short-lived credentials (OIDC from CI to cloud, workload identity). Rotate long-lived keys on a schedule and immediately when people leave.
@@ -24,7 +24,7 @@ Prefer short-lived credentials (OIDC from CI to cloud, workload identity). Rotat
 ## If a secret leaks
 1. Revoke or rotate it first. Deleting the commit is not enough, because history, forks and caches keep it.
 2. Check the provider's logs for use of the key.
-3. Remove it from history if needed, add a scanner (`forge shield`, gitleaks) to CI, and record what happened.
+3. Remove it from history if needed, add a scanner (`anvil shield`, gitleaks) to CI, and record what happened.
 
 ## Verify
-Run `forge shield` and a secret scanner on the repo, and confirm the app starts with secrets coming only from the environment.
+Run `anvil shield` and a secret scanner on the repo, and confirm the app starts with secrets coming only from the environment.

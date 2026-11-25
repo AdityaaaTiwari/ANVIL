@@ -16,7 +16,7 @@ Use when adding dependencies, updating them, or reviewing a dependency alert.
 ## Install hygiene
 - Commit the lockfile, and install with the frozen mode in CI (`npm ci`, `pnpm install --frozen-lockfile`, `uv sync --locked`).
 - Be wary of install scripts. Consider `--ignore-scripts` where the toolchain allows it.
-- Pin MCP servers and `npx` tools to exact versions (`forge mcp add` does this).
+- Pin MCP servers and `npx` tools to exact versions (`anvil mcp add` does this).
 
 ## Updates
 Update in small, reviewed batches, read changelogs for majors, and let automation (Dependabot, Renovate) open PRs that CI verifies.

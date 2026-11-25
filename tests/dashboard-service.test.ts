@@ -100,7 +100,7 @@ describe("dashboard data", () => {
     expect(parseLoopCard("{}")).toBeUndefined();
   });
 
-  it("reports which harnesses a repo uses and which FORGE covers", () => {
+  it("reports which harnesses a repo uses and which ANVIL covers", () => {
     const cards = harnessCoverage(
       ["CLAUDE.md", ".windsurf/rules/a.md", ".github/copilot-instructions.md", "src/a.ts"],
       ["claude", "cursor"],

@@ -4,9 +4,10 @@ import { randomUUID } from "node:crypto";
 import { mkdir, readFile, readdir, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { analyzeEngineeringRisk, type EngineeringRiskReport } from "./engineering-risk.js";
+import { ANVIL_STATE_DIR, anvilWorkspacePath, listWorkspaceStatePaths } from "./workspace-paths.js";
 
 const exec = promisify(execFile);
-const HISTORY_DIR = path.join(".forge", "intelligence");
+const HISTORY_DIR = path.join(ANVIL_STATE_DIR, "intelligence");
 const MAX_SNAPSHOTS = 100;
 const ID = /^intel-[a-f0-9-]{20,40}$/;
 export interface IntelligenceSnapshot {
@@ -42,7 +43,7 @@ export interface IntelligenceComparison {
   trend: "baseline" | "improved" | "regressed" | "unchanged";
 }
 function directory(root: string): string {
-  return path.join(path.resolve(root), HISTORY_DIR);
+  return anvilWorkspacePath(root, "intelligence");
 }
 function isSnapshot(value: unknown): value is IntelligenceSnapshot {
   if (!value || typeof value !== "object") return false;
@@ -98,21 +99,27 @@ function makeSnapshot(report: EngineeringRiskReport, commit: string | null): Int
   };
 }
 async function loadHistory(root: string): Promise<IntelligenceSnapshot[]> {
-  let entries;
-  try {
-    entries = await readdir(directory(root), { withFileTypes: true });
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
-    throw error;
-  }
+  const seen = new Set<string>();
   const records: IntelligenceSnapshot[] = [];
-  for (const entry of entries) {
-    if (!entry.isFile() || !entry.name.endsWith(".json") || !ID.test(entry.name.slice(0, -5))) continue;
+  for (const dir of listWorkspaceStatePaths(root, "intelligence")) {
+    let entries;
     try {
-      const value: unknown = JSON.parse(await readFile(path.join(directory(root), entry.name), "utf8"));
-      if (isSnapshot(value)) records.push(value);
-    } catch {
-      /* Ignore malformed local history; never execute stored content. */
+      entries = await readdir(dir, { withFileTypes: true });
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") continue;
+      throw error;
+    }
+    for (const entry of entries) {
+      if (!entry.isFile() || !entry.name.endsWith(".json") || !ID.test(entry.name.slice(0, -5))) continue;
+      const id = entry.name.slice(0, -5);
+      if (seen.has(id)) continue;
+      seen.add(id);
+      try {
+        const value: unknown = JSON.parse(await readFile(path.join(dir, entry.name), "utf8"));
+        if (isSnapshot(value)) records.push(value);
+      } catch {
+        /* Ignore malformed local history; never execute stored content. */
+      }
     }
   }
   return records.sort((a, b) => a.generatedAt.localeCompare(b.generatedAt)).slice(-MAX_SNAPSHOTS);
@@ -238,6 +245,6 @@ export function formatIntelligenceComparison(comparison: IntelligenceComparison)
     "## Interpretation",
     "- Trend compares saved static-analysis snapshots only; it is not a continuous monitor or a guarantee of code quality.",
     "- Risk index is an aggregate of the hotspot severity distribution. A lower value is generally preferable, but review individual modules and findings.",
-    "- Snapshots are local to the analyzed project in .forge/intelligence and are not committed or uploaded by FORGE.",
+    "- Snapshots are local to the analyzed project in .anvil/intelligence and are not committed or uploaded by ANVIL.",
   ].join("\n");
 }

@@ -11,7 +11,7 @@ import {
   validatePermissionPolicy,
 } from "../src/core/permission-policy.js";
 
-describe("FORGE permission policy", () => {
+describe("ANVIL permission policy", () => {
   let root = "";
   afterEach(async () => {
     if (root) await rm(root, { recursive: true, force: true });
@@ -24,10 +24,10 @@ describe("FORGE permission policy", () => {
   });
 
   it("loads and validates an explicit policy", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-permissions-"));
-    await mkdir(path.join(root, ".forge"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-permissions-"));
+    await mkdir(path.join(root, ".anvil"));
     await writeFile(
-      path.join(root, ".forge", "permissions.json"),
+      path.join(root, ".anvil", "permissions.json"),
       JSON.stringify({ version: 1, mode: "proposal-only", allowedTools: [] })
     );
     await expect(loadPermissionPolicy(root)).resolves.toEqual(DEFAULT_PERMISSION_POLICY);
@@ -41,15 +41,15 @@ describe("FORGE permission policy", () => {
     ).toThrow(/unsupported fields/);
   });
 
-  it("rejects a symlinked .forge directory", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-permissions-"));
-    const outside = await mkdtemp(path.join(os.tmpdir(), "forge-policy-outside-"));
+  it("rejects a symlinked .anvil directory", async () => {
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-permissions-"));
+    const outside = await mkdtemp(path.join(os.tmpdir(), "anvil-policy-outside-"));
     try {
       await writeFile(
         path.join(outside, "permissions.json"),
         JSON.stringify({ version: 1, mode: "restricted", allowedTools: ["read-file"] })
       );
-      if (!(await trySymlink(outside, path.join(root, ".forge"), "dir"))) return;
+      if (!(await trySymlink(outside, path.join(root, ".anvil"), "dir"))) return;
       await expect(loadPermissionPolicy(root)).rejects.toThrow(/real directory/);
     } finally {
       await rm(outside, { recursive: true, force: true });
@@ -57,10 +57,10 @@ describe("FORGE permission policy", () => {
   });
 
   it("rejects a symlinked permissions file", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-permissions-"));
-    const outside = await mkdtemp(path.join(os.tmpdir(), "forge-policy-file-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-permissions-"));
+    const outside = await mkdtemp(path.join(os.tmpdir(), "anvil-policy-file-"));
     try {
-      await mkdir(path.join(root, ".forge"));
+      await mkdir(path.join(root, ".anvil"));
       await writeFile(
         path.join(outside, "permissions.json"),
         JSON.stringify({ version: 1, mode: "restricted", allowedTools: ["read-file"] })
@@ -68,7 +68,7 @@ describe("FORGE permission policy", () => {
       if (
         !(await trySymlink(
           path.join(outside, "permissions.json"),
-          path.join(root, ".forge", "permissions.json"),
+          path.join(root, ".anvil", "permissions.json"),
           "file"
         ))
       )
@@ -80,16 +80,16 @@ describe("FORGE permission policy", () => {
   });
 
   it("rejects oversized permission policy files before parsing", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-permissions-"));
-    await mkdir(path.join(root, ".forge"));
-    await writeFile(path.join(root, ".forge", "permissions.json"), " ".repeat(16 * 1024 + 1));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-permissions-"));
+    await mkdir(path.join(root, ".anvil"));
+    await writeFile(path.join(root, ".anvil", "permissions.json"), " ".repeat(16 * 1024 + 1));
     await expect(loadPermissionPolicy(root)).rejects.toThrow(/16 KiB limit/);
   });
 
   it("fails closed when a policy file is malformed", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-permissions-"));
-    await mkdir(path.join(root, ".forge"));
-    await writeFile(path.join(root, ".forge", "permissions.json"), "{not-json");
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-permissions-"));
+    await mkdir(path.join(root, ".anvil"));
+    await writeFile(path.join(root, ".anvil", "permissions.json"), "{not-json");
     await expect(loadPermissionPolicy(root)).rejects.toThrow();
   });
   it("allows only OpenAI with explicitly allowlisted read-only tools in restricted mode", () => {

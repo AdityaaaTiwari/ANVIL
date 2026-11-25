@@ -26,4 +26,4 @@ Never interpolate untrusted input (`github.event.issue.title`, branch names, PR 
 Scope secrets to environments with required reviewers for production. Do not echo secrets, and avoid `set -x` in steps that use them.
 
 ## Verify
-Run `forge shield` (it has CI rules for these cases) and `actionlint`. Check that fork PRs cannot reach secrets.
+Run `anvil shield` (it has CI rules for these cases) and `actionlint`. Check that fork PRs cannot reach secrets.

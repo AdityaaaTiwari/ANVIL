@@ -8,28 +8,36 @@ import {
   extractManagedBlock,
   HARNESS_TARGETS,
   INSTALL_STATE_PATH,
+  LEGACY_INSTALL_STATE_PATH,
   parseProfile,
   parseTargets,
   sha256,
+  STATE_SCHEMA_VERSION,
   withBlock,
   type HarnessTarget,
   type InstallState,
 } from "../core/harness-installer.js";
-import { formatShieldMarkdown, runShield, type ShieldFinding, type ShieldReport } from "../core/forge-shield.js";
+import { formatShieldMarkdown, runShield, type ShieldFinding, type ShieldReport } from "../core/anvil-shield.js";
 import { GitHubApiError, type GitHubClient, type TreeEntry } from "./github-client.js";
 import { assessPullRequestRisk, formatRiskMarkdown } from "./pr-risk.js";
 import { analyzeRepository, MANIFEST_FILES, renderProjectSkill, type RepoProfile } from "./repo-analysis.js";
 
 /**
- * FORGE GitHub App event handlers. Transport-agnostic: the Vercel webhook
+ * ANVIL GitHub App event handlers. Transport-agnostic: the Vercel webhook
  * verifies signatures and passes parsed payloads plus an installation client.
  */
 
 export interface AppContext {
   client: GitHubClient;
-  forgeVersion: string;
+  anvilVersion?: string;
+  /** @deprecated Legacy alias accepted for backwards compatibility. */
+  forgeVersion?: string;
   catalogRoot?: string;
   now?: () => Date;
+}
+
+function resolveAppVersion(context: Pick<AppContext, "anvilVersion" | "forgeVersion">): string {
+  return context.anvilVersion ?? context.forgeVersion ?? "0.0.0";
 }
 
 export interface HandlerResult {
@@ -40,24 +48,24 @@ export interface HandlerResult {
 }
 
 const COMMANDS = ["help", "analyze", "setup", "repair", "audit", "doctor", "risk"] as const;
-type ForgeCommand = (typeof COMMANDS)[number];
+type AnvilCommand = (typeof COMMANDS)[number];
 
 export interface ParsedCommand {
-  command: ForgeCommand;
+  command: AnvilCommand;
   options: Map<string, string>;
   flags: Set<string>;
 }
 
-export function parseForgeCommand(body: string): ParsedCommand | undefined {
+export function parseAnvilCommand(body: string): ParsedCommand | undefined {
   const line =
     body
       .split(/\r?\n/)
       .map((item) => item.trim())
       .find((item) => item.length > 0) ?? "";
-  const match = line.match(/^\/forge(?:-ecc)?\s+([a-z-]+)((?:\s+\S+)*)\s*$/i);
+  const match = line.match(/^\/(?:anvil|forge)(?:-ecc)?\s+([a-z-]+)((?:\s+\S+)*)\s*$/i);
   if (!match) return undefined;
   const command = (match[1] ?? "").toLowerCase();
-  if (!COMMANDS.includes(command as ForgeCommand))
+  if (!COMMANDS.includes(command as AnvilCommand))
     return { command: "help", options: new Map(), flags: new Set(["unknown"]) };
   const tokens = (match[2] ?? "").trim().split(/\s+/).filter(Boolean).slice(0, 10);
   const options = new Map<string, string>();
@@ -70,8 +78,11 @@ export function parseForgeCommand(body: string): ParsedCommand | undefined {
       index += 1;
     } else if (/^--[a-z-]+$/.test(token)) flags.add(token.slice(2));
   }
-  return { command: command as ForgeCommand, options, flags };
+  return { command: command as AnvilCommand, options, flags };
 }
+
+/** @deprecated Use `parseAnvilCommand`. */
+export const parseForgeCommand = parseAnvilCommand;
 
 export function gitBlobSha(content: string): string {
   const buffer = Buffer.from(content, "utf8");
@@ -83,10 +94,10 @@ export function gitBlobSha(content: string): string {
 // ---------------------------------------------------------------------------
 
 const SHIELD_PATH =
-  /^(?:AGENTS\.md|CLAUDE\.md|CLAUDE\.local\.md|GEMINI\.md|\.cursorrules|\.windsurfrules|\.clinerules|\.rules|\.mcp\.json|mcp\.json|opencode\.json|\.github\/copilot-instructions\.md|\.claude\/settings(?:\.local)?\.json|\.cursor\/mcp\.json|\.cursor\/hooks\.json|\.codex\/hooks\.json|\.vscode\/(?:mcp|settings)\.json|\.gemini\/settings\.json|\.codex\/config\.toml|\.zed\/settings\.json|\.kiro\/settings\/mcp\.json|\.roo\/mcp\.json|\.windsurf\/mcp\.json|\.forge\/(?:permissions|policy)\.json)$|^(?:\.claude\/(?:agents|commands|skills|hooks|rules)|\.cursor\/(?:rules|commands)|\.opencode|\.gemini\/commands|\.agents\/skills|\.forge\/(?:skills|hooks|harness)|\.github\/(?:workflows|instructions|prompts|agents)|\.windsurf\/(?:rules|workflows)|\.kiro\/steering|\.clinerules|\.roo\/rules)\/.+\.(?:md|mdc|json|ya?ml|toml|sh|js|mjs|cjs|ts|py)$/;
+  /^(?:AGENTS\.md|CLAUDE\.md|CLAUDE\.local\.md|GEMINI\.md|\.cursorrules|\.windsurfrules|\.clinerules|\.rules|\.mcp\.json|mcp\.json|opencode\.json|\.github\/copilot-instructions\.md|\.claude\/settings(?:\.local)?\.json|\.cursor\/mcp\.json|\.cursor\/hooks\.json|\.codex\/hooks\.json|\.vscode\/(?:mcp|settings)\.json|\.gemini\/settings\.json|\.codex\/config\.toml|\.zed\/settings\.json|\.kiro\/settings\/mcp\.json|\.roo\/mcp\.json|\.windsurf\/mcp\.json|\.(?:anvil|forge)\/(?:permissions|policy)\.json)$|^(?:\.claude\/(?:agents|commands|skills|hooks|rules)|\.cursor\/(?:rules|commands)|\.opencode|\.gemini\/commands|\.agents\/skills|\.(?:anvil|forge)\/(?:skills|hooks|harness)|\.github\/(?:workflows|instructions|prompts|agents)|\.windsurf\/(?:rules|workflows)|\.kiro\/steering|\.clinerules|\.roo\/rules)\/.+\.(?:md|mdc|json|ya?ml|toml|sh|js|mjs|cjs|ts|py)$/;
 const MAX_REMOTE_FILES = 200;
 
-/** Highest-risk surfaces first; FORGE-generated catalog copies last. */
+/** Highest-risk surfaces first; ANVIL-generated catalog copies last. */
 function shieldPriority(file: string): number {
   if (
     !file.includes("/") ||
@@ -95,7 +106,7 @@ function shieldPriority(file: string): number {
     return 0;
   if (file.startsWith(".github/workflows/") || /\/hooks\//.test(file)) return 1;
   if (
-    /(?:^|\/)forge-[\w.-]+(?:\/SKILL)?\.(?:md|mdc|toml)$|^\.forge\/harness\/|^\.(?:claude\/(?:commands|rules)|gemini\/commands)\/forge\//.test(
+    /(?:^|\/)(?:anvil|forge)-[\w.-]+(?:\/SKILL)?\.(?:md|mdc|toml)$|^\.(?:anvil|forge)\/harness\/|^\.(?:claude\/(?:commands|rules)|gemini\/commands)\/(?:anvil|forge)\//.test(
       file
     )
   )
@@ -120,7 +131,7 @@ async function withRemoteFiles<T>(
   paths: string[],
   action: (root: string) => Promise<T>
 ): Promise<T> {
-  const root = await mkdtemp(path.join(os.tmpdir(), "forge-remote-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "anvil-remote-"));
   try {
     const contents = await Promise.all(
       paths.map(async (file) => [file, await client.getFileText(owner, repo, file, ref)] as const)
@@ -214,9 +225,9 @@ export async function planRepositorySetup(
   const { client } = context;
   const data = prefetched ?? (await readRepository(client, owner, repo, ref));
   const blobs = new Map(data.entries.filter((entry) => entry.type === "blob").map((entry) => [entry.path, entry.sha]));
-  // Exclude FORGE's own generated files so re-analysis after merging is stable.
+  // Exclude ANVIL's own generated files so re-analysis after merging is stable.
   const ownFiles =
-    /^\.forge\/|(?:^|\/)forge-[\w.-]+(?:\/SKILL)?\.(?:md|mdc|toml)$|(?:^|\/)forge-project\/SKILL\.md$|^\.(?:claude\/(?:commands|rules)|gemini\/commands)\/forge\//;
+    /^\.(?:anvil|forge)\/|(?:^|\/)(?:anvil|forge)-[\w.-]+(?:\/SKILL)?\.(?:md|mdc|toml)$|(?:^|\/)(?:anvil|forge)-project\/SKILL\.md$|^\.(?:claude\/(?:commands|rules)|gemini\/commands)\/(?:anvil|forge)\//;
   const profile = analyzeRepository({
     name: `${owner}/${repo}`,
     files: [...blobs.keys()].filter((file) => !ownFiles.test(file)),
@@ -225,9 +236,14 @@ export async function planRepositorySetup(
   });
 
   let previous: InstallState | undefined;
-  if (blobs.has(INSTALL_STATE_PATH)) {
+  const statePath = blobs.has(INSTALL_STATE_PATH)
+    ? INSTALL_STATE_PATH
+    : blobs.has(LEGACY_INSTALL_STATE_PATH)
+      ? LEGACY_INSTALL_STATE_PATH
+      : undefined;
+  if (statePath) {
     try {
-      previous = JSON.parse((await client.getFileText(owner, repo, INSTALL_STATE_PATH, ref)) ?? "") as InstallState;
+      previous = JSON.parse((await client.getFileText(owner, repo, statePath, ref)) ?? "") as InstallState;
     } catch {
       previous = undefined;
     }
@@ -239,9 +255,10 @@ export async function planRepositorySetup(
       : (["claude", "cursor", "codex"] as HarnessTarget[]));
   const installProfile = requested.profile ?? previous?.profile ?? "standard";
   const catalog: HarnessCatalog = await loadHarnessCatalog(...(context.catalogRoot ? [context.catalogRoot] : []));
+  const appVersion = resolveAppVersion(context);
   const plan = await buildInstallPlan({
     projectPath: os.tmpdir(),
-    forgeVersion: context.forgeVersion,
+    anvilVersion: appVersion,
     catalog,
     targets,
     profile: installProfile,
@@ -273,7 +290,7 @@ export async function planRepositorySetup(
       continue;
     }
     if (previousHashes.has(file.path)) {
-      // FORGE-managed file. Only replace it when it still matches what FORGE wrote.
+      // ANVIL-managed file. Only replace it when it still matches what ANVIL wrote.
       const current = await client.getFileText(owner, repo, file.path, ref);
       if (current !== undefined && sha256(current) === previousHashes.get(file.path)) {
         files.push({ path: file.path, content: file.content });
@@ -306,9 +323,9 @@ export async function planRepositorySetup(
   }
   const skill = renderProjectSkill(profile);
   const skillPaths = [
-    targets.includes("claude") ? ".claude/skills/forge-project/SKILL.md" : undefined,
+    targets.includes("claude") ? ".claude/skills/anvil-project/SKILL.md" : undefined,
     targets.some((t) => t === "codex" || t === "opencode" || t === "gemini")
-      ? ".agents/skills/forge-project/SKILL.md"
+      ? ".agents/skills/anvil-project/SKILL.md"
       : undefined,
   ].filter((v): v is string => Boolean(v));
   for (const skillPath of skillPaths) {
@@ -318,8 +335,8 @@ export async function planRepositorySetup(
   }
   if (files.length) {
     const state: InstallState = {
-      schemaVersion: 1,
-      forgeVersion: context.forgeVersion,
+      schemaVersion: STATE_SCHEMA_VERSION,
+      anvilVersion: appVersion,
       installedAt: (context.now ?? (() => new Date()))().toISOString(),
       profile: installProfile,
       targets,
@@ -335,13 +352,13 @@ export async function planRepositorySetup(
 function setupPullRequestBody(setup: SetupPlan, shield: ShieldReport): string {
   const p = setup.profile;
   return [
-    "## FORGE setup for this repository",
+    "## ANVIL setup for this repository",
     "",
-    "FORGE analyzed the repository's files, manifests and recent commits and generated agent configuration for " +
+    "ANVIL analyzed the repository's files, manifests and recent commits and generated agent configuration for " +
       setup.targets.map((t) => `**${t}**`).join(", ") +
       ` (profile \`${setup.installProfile}\`).`,
     "",
-    "### What FORGE learned",
+    "### What ANVIL learned",
     "",
     `- Languages: ${
       p.languages
@@ -357,13 +374,13 @@ function setupPullRequestBody(setup: SetupPlan, shield: ShieldReport): string {
     "### Files",
     "",
     `- ${setup.created.length} new, ${setup.updated.length} updated${setup.skipped.length ? `, ${setup.skipped.length} kept because they were edited by you` : ""}`,
-    "- `forge-project` skill: repository-specific conventions and verify commands (edit freely)",
-    "- `.forge/install-state.json`: lets `forge doctor` / `forge repair` and `/forge doctor` track these files",
+    "- `anvil-project` skill: repository-specific conventions and verify commands (edit freely)",
+    "- `.anvil/install-state.json`: lets `anvil doctor` / `anvil repair` and `/anvil doctor` track these files",
     "",
     formatShieldMarkdown(shield),
     "",
     "---",
-    "Review the diff, then merge. Comment `/forge repair` later to pull catalog updates without overwriting your edits.",
+    "Review the diff, then merge. Comment `/anvil repair` later to pull catalog updates without overwriting your edits.",
   ].join("\n");
 }
 
@@ -374,7 +391,7 @@ export interface SetupOutcome {
   pull?: { html_url: string; number: number };
 }
 
-/** Analyze the default branch and open (or update) a FORGE setup/repair pull request. */
+/** Analyze the default branch and open (or update) an ANVIL setup/repair pull request. */
 export async function runRemoteSetup(
   context: AppContext,
   owner: string,
@@ -383,6 +400,7 @@ export async function runRemoteSetup(
   requested: { targets?: HarnessTarget[]; profile?: InstallProfile } = {}
 ): Promise<SetupOutcome> {
   const { client } = context;
+  const appVersion = resolveAppVersion(context);
   const repository = await client.getRepository(owner, repo);
   const base = repository.default_branch;
   const data = await readRepository(client, owner, repo, base);
@@ -393,12 +411,12 @@ export async function runRemoteSetup(
     owner,
     repo,
     baseBranch: base,
-    branch: mode === "repair" ? "forge/repair" : "forge/setup",
+    branch: mode === "repair" ? "anvil/repair" : "anvil/setup",
     title:
       mode === "repair"
-        ? "chore(forge): refresh FORGE agent configuration"
-        : "chore(forge): add FORGE agents, skills, rules and project guide",
-    message: `chore(forge): ${mode === "repair" ? "refresh" : "add"} FORGE harness files\n\nGenerated by the FORGE GitHub App (FORGE ${context.forgeVersion}).`,
+        ? "chore(anvil): refresh ANVIL agent configuration"
+        : "chore(anvil): add ANVIL agents, skills, rules and project guide",
+    message: `chore(anvil): ${mode === "repair" ? "refresh" : "add"} ANVIL harness files\n\nGenerated by the ANVIL GitHub App (ANVIL ${appVersion}).`,
     body: setupPullRequestBody(setup, shield),
     files: setup.files,
   });
@@ -408,7 +426,7 @@ export async function runRemoteSetup(
 export interface RemoteDoctor {
   installed: boolean;
   healthy: boolean;
-  state?: Pick<InstallState, "forgeVersion" | "profile" | "targets" | "installedAt"> & {
+  state?: Pick<InstallState, "anvilVersion" | "forgeVersion" | "profile" | "targets" | "installedAt"> & {
     languages?: string[];
     hooks?: boolean;
     hookTargets?: string[];
@@ -425,18 +443,22 @@ export async function computeRemoteDoctor(
   prefetched?: { ref: string; entries: TreeEntry[] }
 ): Promise<RemoteDoctor> {
   const { client } = context;
+  const appVersion = resolveAppVersion(context);
   const ref = prefetched?.ref ?? (await client.getRepository(owner, repo)).default_branch;
   const entries = prefetched?.entries ?? (await client.getTree(owner, repo, ref)).entries;
   const blobs = new Map(entries.filter((entry) => entry.type === "blob").map((entry) => [entry.path, entry.sha]));
-  const rawState = blobs.has(INSTALL_STATE_PATH)
-    ? await client.getFileText(owner, repo, INSTALL_STATE_PATH, ref)
-    : undefined;
+  const statePath = blobs.has(INSTALL_STATE_PATH)
+    ? INSTALL_STATE_PATH
+    : blobs.has(LEGACY_INSTALL_STATE_PATH)
+      ? LEGACY_INSTALL_STATE_PATH
+      : undefined;
+  const rawState = statePath ? await client.getFileText(owner, repo, statePath, ref) : undefined;
   if (!rawState) return { installed: false, healthy: false, missing: [], outdated: [], added: [] };
   const state = JSON.parse(rawState) as InstallState;
   const catalog = await loadHarnessCatalog(...(context.catalogRoot ? [context.catalogRoot] : []));
   const plan = await buildInstallPlan({
     projectPath: os.tmpdir(),
-    forgeVersion: context.forgeVersion,
+    anvilVersion: appVersion,
     catalog,
     profile: state.profile,
     targets: state.targets,
@@ -449,11 +471,12 @@ export async function computeRemoteDoctor(
   const added = plan.files
     .filter((file) => !blobs.has(file.path) && !state.files.some((entry) => entry.path === file.path))
     .map((file) => file.path);
+  const installedVersion = state.anvilVersion ?? state.forgeVersion;
   return {
     installed: true,
     healthy: !missing.length && !outdated.length && !added.length,
     state: {
-      forgeVersion: state.forgeVersion,
+      ...(installedVersion ? { anvilVersion: installedVersion, forgeVersion: installedVersion } : {}),
       profile: state.profile,
       targets: state.targets,
       installedAt: state.installedAt,
@@ -470,9 +493,9 @@ export async function computeRemoteDoctor(
   };
 }
 
-export function formatRemoteDoctor(doctor: RemoteDoctor, forgeVersion: string): string {
+export function formatRemoteDoctor(doctor: RemoteDoctor, anvilVersion: string): string {
   if (!doctor.installed || !doctor.state)
-    return "FORGE is not installed on the default branch yet. Comment `/forge analyze` to open a setup pull request.";
+    return "ANVIL is not installed on the default branch yet. Comment `/anvil analyze` to open a setup pull request.";
   const list = (title: string, items: string[]) =>
     items.length
       ? [
@@ -482,17 +505,18 @@ export function formatRemoteDoctor(doctor: RemoteDoctor, forgeVersion: string): 
           "",
         ]
       : [];
+  const installedVersion = doctor.state.anvilVersion ?? doctor.state.forgeVersion ?? "unknown";
   return [
-    `### FORGE doctor: ${doctor.healthy ? "✅ healthy" : "⚠️ needs attention"}`,
+    `### ANVIL doctor: ${doctor.healthy ? "✅ healthy" : "⚠️ needs attention"}`,
     "",
-    `Installed by FORGE ${doctor.state.forgeVersion} · current ${forgeVersion} · profile \`${doctor.state.profile}\` · targets ${doctor.state.targets.join(", ")}`,
+    `Installed by ANVIL ${installedVersion} · current ${anvilVersion} · profile \`${doctor.state.profile}\` · targets ${doctor.state.targets.join(", ")}`,
     "",
     ...list("Missing", doctor.missing),
     ...list("Different from the current catalog (edited by you, or an update is available)", doctor.outdated),
     ...list("New catalog items", doctor.added),
     doctor.healthy
       ? "Everything matches the current catalog."
-      : "Comment `/forge repair` to restore missing files and apply updates. Files you edited are kept.",
+      : "Comment `/anvil repair` to restore missing files and apply updates. Files you edited are kept.",
   ].join("\n");
 }
 
@@ -513,28 +537,29 @@ interface CommentPayload {
 }
 
 const HELP = [
-  "**FORGE commands** (comment on any issue or pull request):",
+  "**ANVIL commands** (comment on any issue or pull request; legacy `/forge` aliases also supported):",
   "",
   "| Command | What it does |",
   "|---|---|",
-  "| `/forge analyze [--targets claude,cursor,codex,opencode,gemini] [--profile minimal\\|standard\\|full]` | Learn this repo and open a PR with FORGE agents, skills, commands, rules and a repo-specific skill |",
-  "| `/forge repair` | Refresh FORGE files from the latest catalog, keeping your edits |",
-  "| `/forge audit` | FORGE Shield security review of agent settings, hooks, MCP servers, instructions and workflows |",
-  "| `/forge doctor` | Check installed FORGE files for missing or outdated entries |",
-  "| `/forge risk` | (on a PR) explainable change-risk score and suggested reviewers |",
+  "| `/anvil analyze [--targets claude,cursor,codex,opencode,gemini] [--profile minimal\\|standard\\|full]` | Learn this repo and open a PR with ANVIL agents, skills, commands, rules and a repo-specific skill |",
+  "| `/anvil repair` | Refresh ANVIL files from the latest catalog, keeping your edits |",
+  "| `/anvil audit` | ANVIL Shield security review of agent settings, hooks, MCP servers, instructions and workflows |",
+  "| `/anvil doctor` | Check installed ANVIL files for missing or outdated entries |",
+  "| `/anvil risk` | (on a PR) explainable change-risk score and suggested reviewers |",
 ].join("\n");
 
 export async function handleIssueComment(context: AppContext, payload: CommentPayload): Promise<HandlerResult> {
   if (payload.action !== "created") return { handled: false, action: "ignored", detail: "not a new comment" };
   if (payload.sender?.type === "Bot" || payload.comment?.user?.type === "Bot")
     return { handled: false, action: "ignored", detail: "bot comment" };
-  const parsed = parseForgeCommand(payload.comment?.body ?? "");
-  if (!parsed) return { handled: false, action: "ignored", detail: "no /forge command" };
+  const parsed = parseAnvilCommand(payload.comment?.body ?? "");
+  if (!parsed) return { handled: false, action: "ignored", detail: "no /anvil command" };
   const owner = payload.repository?.owner?.login;
   const repo = payload.repository?.name;
   const issue = payload.issue?.number;
   if (!owner || !repo || !issue) return { handled: false, action: "ignored", detail: "incomplete payload" };
   const { client } = context;
+  const appVersion = resolveAppVersion(context);
 
   const login = payload.comment?.user?.login ?? payload.sender?.login ?? "";
   let trusted = TRUSTED_ASSOCIATIONS.has(payload.comment?.author_association ?? "");
@@ -550,7 +575,7 @@ export async function handleIssueComment(context: AppContext, payload: CommentPa
       owner,
       repo,
       issue,
-      `@${login} FORGE commands can only be run by repository collaborators with write access.`
+      `@${login} ANVIL commands can only be run by repository collaborators with write access.`
     );
     return { handled: true, action: "rejected", detail: "insufficient permission" };
   }
@@ -563,7 +588,7 @@ export async function handleIssueComment(context: AppContext, payload: CommentPa
           owner,
           repo,
           issue,
-          (parsed.flags.has("unknown") ? "Unknown FORGE command.\n\n" : "") + HELP
+          (parsed.flags.has("unknown") ? "Unknown ANVIL command.\n\n" : "") + HELP
         );
         return { handled: true, action: "help" };
       }
@@ -576,13 +601,13 @@ export async function handleIssueComment(context: AppContext, payload: CommentPa
           owner,
           repo,
           issue,
-          `${formatShieldMarkdown(report)}\n\n<sub>Scanned \`${ref.slice(0, 12)}\` · ${report.filesScanned} agent configuration files · FORGE ${context.forgeVersion}</sub>`
+          `${formatShieldMarkdown(report)}\n\n<sub>Scanned \`${ref.slice(0, 12)}\` · ${report.filesScanned} agent configuration files · ANVIL ${appVersion}</sub>`
         );
         return { handled: true, action: "audit", detail: `score ${report.score}` };
       }
       case "risk": {
         if (!isPull) {
-          await client.createIssueComment(owner, repo, issue, "`/forge risk` works on pull requests.");
+          await client.createIssueComment(owner, repo, issue, "`/anvil risk` works on pull requests.");
           return { handled: true, action: "risk", detail: "not a pull request" };
         }
         const risk = assessPullRequestRisk(await client.listPullFiles(owner, repo, issue));
@@ -591,7 +616,7 @@ export async function handleIssueComment(context: AppContext, payload: CommentPa
       }
       case "doctor": {
         const doctor = await computeRemoteDoctor(context, owner, repo);
-        await client.createIssueComment(owner, repo, issue, formatRemoteDoctor(doctor, context.forgeVersion));
+        await client.createIssueComment(owner, repo, issue, formatRemoteDoctor(doctor, appVersion));
         return {
           handled: true,
           action: "doctor",
@@ -612,7 +637,7 @@ export async function handleIssueComment(context: AppContext, payload: CommentPa
             owner,
             repo,
             issue,
-            `FORGE is already up to date on \`${outcome.base}\`. Nothing to change.${outcome.setup.skipped.length ? ` (${outcome.setup.skipped.length} file(s) you edited were left alone.)` : ""}`
+            `ANVIL is already up to date on \`${outcome.base}\`. Nothing to change.${outcome.setup.skipped.length ? ` (${outcome.setup.skipped.length} file(s) you edited were left alone.)` : ""}`
           );
           return { handled: true, action: parsed.command, detail: "up to date" };
         }
@@ -628,8 +653,8 @@ export async function handleIssueComment(context: AppContext, payload: CommentPa
   } catch (error) {
     const message =
       error instanceof GitHubApiError && (error.status === 403 || error.status === 404)
-        ? "FORGE does not have permission for this action. A repository admin should grant the FORGE GitHub App **Contents**, **Pull requests**, **Issues** and **Checks** read & write access."
-        : `FORGE could not complete \`/forge ${parsed.command}\`: ${error instanceof Error ? error.message.slice(0, 300) : "unknown error"}`;
+        ? "ANVIL does not have permission for this action. A repository admin should grant the ANVIL GitHub App **Contents**, **Pull requests**, **Issues** and **Checks** read & write access."
+        : `ANVIL could not complete \`/anvil ${parsed.command}\`: ${error instanceof Error ? error.message.slice(0, 300) : "unknown error"}`;
     await client.createIssueComment(owner, repo, issue, message).catch(() => undefined);
     return { handled: true, action: "error", detail: message };
   }
@@ -674,7 +699,7 @@ export function buildCheckRun(
     ? `${blocking.length} high-risk agent configuration issue(s) in this PR`
     : `Risk ${risk.level} (${risk.score}/100) · Shield ${shield.score}/100`;
   return {
-    name: "FORGE",
+    name: "ANVIL",
     head_sha: headSha,
     status: "completed",
     conclusion,

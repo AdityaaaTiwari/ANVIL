@@ -8,9 +8,11 @@ ANVIL is an open-source, local-first verification harness and Model Context Prot
 - **Deterministic Architecture Mapping:** Multi-language import graph across TypeScript, JavaScript, Python, Go, Rust, Java, Kotlin, C/C++, C#, Ruby, PHP; TypeScript AST symbol analysis in <1,400 compact tokens.
 - **Change Risk & Blast Radius:** AST-backed dependency tracing from uncommitted git diffs to downstream impacted modules and recommended test candidates.
 - **Pre-Commit Quality & Security Gate:** Local policy-as-code gate (`anvil gate`) with content-hash baselines (`.anvil/baseline.json`), secret entropy scanning, inline suppression governance, and SARIF export.
+- **Shield v3 & Harness Control Center:** 60+ static agent security rules (`anvil shield`), deterministic 9-category readiness scorecard (`anvil scorecard`), context budget analyzer (`anvil context`), anti-tamper verification loops (`anvil loop`), worktree agent races (`anvil race`), and local state stored in `.anvil/`.
 - **Git Pre-Commit Hook:** 1-command hook management (`anvil hook install` / `anvil hook remove`) ensuring code is verified before every commit.
 - **Transactional Workspace Cleanup:** Dry-run preview and cleanup of build caches, temp files, and orphan source modules with atomic snapshot rollback (`anvil clean --undo <backupId>`).
 - **Context Budget Protection:** Compact summaries by default (`detail: false`) with structured `_meta` token estimations saving 96–99% context tokens compared to raw file reads.
+- **Python REA Bridge Verification:** Cross-platform Python `unittest` runner (`npm run test:rea`) executing `10` REA bridge test suites (`103` tests) alongside Vitest (`681` tests across `102` suites).
 
 ## Quick Start
 ```bash

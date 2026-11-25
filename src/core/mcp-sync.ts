@@ -6,10 +6,10 @@ import path from "node:path";
  * One MCP configuration for every harness.
  *
  * Each agent tool keeps MCP servers in its own file and format, and each one
- * writes environment references differently. FORGE keeps a neutral definition,
+ * writes environment references differently. ANVIL keeps a neutral definition,
  * pins packages, refuses to spread literal secrets, and writes each harness's
- * native format. `.forge/mcp-state.json` records what FORGE wrote, so `remove`
- * only touches FORGE's own entries.
+ * native format. `.anvil/mcp-state.json` records what ANVIL wrote, so `remove`
+ * only touches ANVIL's own entries.
  */
 
 export type McpTarget = "claude" | "cursor" | "codex" | "gemini" | "copilot" | "opencode" | "kiro";
@@ -44,7 +44,7 @@ export interface McpCatalogEntry extends McpServer {
   docs: string;
 }
 
-/** Curated servers with pinned packages (checked against the npm registry when FORGE 4.0 shipped). */
+/** Curated servers with pinned packages (checked against the npm registry when ANVIL shipped). */
 export const MCP_CATALOG: readonly McpCatalogEntry[] = [
   {
     name: "context7",
@@ -78,7 +78,7 @@ export const MCP_CATALOG: readonly McpCatalogEntry[] = [
     transport: "stdio",
     command: "npx",
     args: ["-y", "@modelcontextprotocol/server-memory@2.1.1"],
-    description: "Knowledge-graph memory (FORGE's own memory is also exposed by `forge mcp-server`)",
+    description: "Knowledge-graph memory (ANVIL's own memory is also exposed by `anvil mcp-server`)",
     auth: "none",
     docs: "https://github.com/modelcontextprotocol/servers",
   },
@@ -189,7 +189,7 @@ export function toNeutral(name: string, value: unknown): { server?: McpServer; p
     const refName = ref ? (ref[1] ?? ref[2] ?? ref[3]) : undefined;
     if (!ref || refName !== key)
       return {
-        problem: `env.${key} holds a literal value; use "\${${key}}" so FORGE never copies a secret into more files`,
+        problem: `env.${key} holds a literal value; use "\${${key}}" so ANVIL never copies a secret into more files`,
       };
     env.push(key);
   }
@@ -300,19 +300,27 @@ export function renderCodexTable(server: McpServer): string {
   return lines.join("\n");
 }
 
-const CODEX_BEGIN = "# forge:mcp:begin (managed by `forge mcp`; edit with forge mcp add/remove)";
-const CODEX_END = "# forge:mcp:end";
+const CODEX_BEGIN = "# anvil:mcp:begin (managed by `anvil mcp`; edit with anvil mcp add/remove)";
+const CODEX_END = "# anvil:mcp:end";
+const LEGACY_CODEX_BEGIN = "# forge:mcp:begin (managed by `forge mcp`; edit with forge mcp add/remove)";
+const LEGACY_CODEX_END = "# forge:mcp:end";
 
 function codexBlock(text: string): { before: string; block: string; after: string } | undefined {
-  const start = text.indexOf(CODEX_BEGIN);
-  if (start < 0) return undefined;
-  const end = text.indexOf(CODEX_END, start);
-  if (end < 0) throw new Error(".codex/config.toml has a FORGE MCP block without its end marker; fix it by hand.");
-  return {
-    before: text.slice(0, start),
-    block: text.slice(start + CODEX_BEGIN.length, end),
-    after: text.slice(end + CODEX_END.length),
-  };
+  for (const [beginMarker, endMarker] of [
+    [CODEX_BEGIN, CODEX_END],
+    [LEGACY_CODEX_BEGIN, LEGACY_CODEX_END],
+  ] as const) {
+    const start = text.indexOf(beginMarker);
+    if (start < 0) continue;
+    const end = text.indexOf(endMarker, start);
+    if (end < 0) throw new Error(".codex/config.toml has an ANVIL MCP block without its end marker; fix it by hand.");
+    return {
+      before: text.slice(0, start),
+      block: text.slice(start + beginMarker.length, end),
+      after: text.slice(end + endMarker.length),
+    };
+  }
+  return undefined;
 }
 
 export function codexServerNames(text: string): { all: string[]; managed: string[] } {
@@ -341,7 +349,7 @@ export function writeCodexBlock(text: string, tables: Map<string, string>): stri
 // State and file IO
 // ---------------------------------------------------------------------------
 
-export const MCP_STATE_PATH = ".forge/mcp-state.json";
+export const MCP_STATE_PATH = ".anvil/mcp-state.json";
 export interface McpState {
   schemaVersion: 1;
   servers: Record<string, { targets: McpTarget[]; source: "catalog" | "sync" }>;
@@ -375,11 +383,13 @@ async function atomicWrite(file: string, content: string | null): Promise<void> 
 }
 
 async function readState(root: string): Promise<McpState> {
-  try {
-    const parsed = JSON.parse(await readFile(path.join(root, MCP_STATE_PATH), "utf8")) as McpState;
-    if (parsed && parsed.schemaVersion === 1 && asRecord(parsed.servers)) return parsed;
-  } catch {
-    /* fresh */
+  for (const rel of [MCP_STATE_PATH, ".forge/mcp-state.json"]) {
+    try {
+      const parsed = JSON.parse(await readFile(path.join(root, rel), "utf8")) as McpState;
+      if (parsed && parsed.schemaVersion === 1 && asRecord(parsed.servers)) return parsed;
+    } catch {
+      /* try fallback */
+    }
   }
   return { schemaVersion: 1, servers: {} };
 }
@@ -394,7 +404,7 @@ function parseJsonDoc(text: string | undefined, file: string): Json {
   try {
     parsed = JSON.parse(text);
   } catch {
-    throw new Error(`${file} is not plain JSON (comments or trailing commas?); FORGE will not rewrite it.`);
+    throw new Error(`${file} is not plain JSON (comments or trailing commas?); ANVIL will not rewrite it.`);
   }
   const doc = asRecord(parsed);
   if (!doc) throw new Error(`${file} must contain a JSON object.`);
@@ -470,7 +480,7 @@ export async function addMcpServers(servers: McpServer[], options: McpApplyOptio
             file,
             server: server.name,
             action: "skip",
-            detail: "already defined outside FORGE's block",
+            detail: "already defined outside ANVIL's block",
           });
           continue;
         }
@@ -553,7 +563,7 @@ export async function addMcpServers(servers: McpServer[], options: McpApplyOptio
   return changes;
 }
 
-/** Remove servers FORGE wrote (or any entry with --force) from every target. */
+/** Remove servers ANVIL wrote (or any entry with --force) from every target. */
 export async function removeMcpServers(
   names: string[],
   options: Omit<McpApplyOptions, "source">
@@ -625,7 +635,7 @@ export async function readSyncSource(
   const root = await realpath(path.resolve(projectPath));
   const text = await readText(path.join(root, MCP_FILES[from]));
   if (text === undefined)
-    throw new Error(`${MCP_FILES[from]} does not exist. Add servers there first, or use \`forge mcp add <name>\`.`);
+    throw new Error(`${MCP_FILES[from]} does not exist. Add servers there first, or use \`anvil mcp add <name>\`.`);
   const doc = parseJsonDoc(text, MCP_FILES[from]);
   const section = asRecord(doc[jsonKey(from)]) ?? {};
   const servers: McpServer[] = [];
@@ -691,7 +701,7 @@ export async function mcpMatrix(projectPath: string): Promise<McpMatrixRow[]> {
 }
 
 export function formatMatrix(rows: McpMatrixRow[], targets?: readonly McpTarget[]): string {
-  if (!rows.length) return "No MCP servers configured. Try: forge mcp add context7 playwright";
+  if (!rows.length) return "No MCP servers configured. Try: anvil mcp add context7 playwright";
   const columns = targets ?? MCP_TARGETS.filter((t) => rows.some((r) => r.targets[t]));
   const width = Math.max(...rows.map((r) => r.name.length), 6);
   const header = `  ${"server".padEnd(width)}  ${columns.map((t) => t.padEnd(10)).join("")}`;
@@ -705,7 +715,7 @@ export function formatMatrix(rows: McpMatrixRow[], targets?: readonly McpTarget[
     ...body,
     "",
     gaps
-      ? `${gaps} server(s) are missing from some harnesses. Run \`forge mcp sync\` to copy .mcp.json everywhere.`
+      ? `${gaps} server(s) are missing from some harnesses. Run \`anvil mcp sync\` to copy .mcp.json everywhere.`
       : `Every server is available in ${columns.length === 1 ? columns[0] : "all " + columns.length + " harnesses"}.`,
   ].join("\n");
 }

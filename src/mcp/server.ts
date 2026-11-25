@@ -962,7 +962,7 @@ registerToolWithAlias(
   async ({ projectPath, detail }) => {
     try {
       const root = await resolveWorkspace(projectPath);
-      const card = await buildScorecard({ projectPath: root, forgeVersion: resolveVersion() });
+      const card = await buildScorecard({ projectPath: root, anvilVersion: resolveVersion() });
       if (!detail) {
         return result(
           {

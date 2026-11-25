@@ -1,8 +1,8 @@
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import type { VerificationResult } from "./verification.js";
+import { anvilWorkspacePath, listWorkspaceStatePaths } from "./workspace-paths.js";
 
-const HISTORY_DIR = path.join(".forge", "verifications");
 const ID_PATTERN = /^verify-[a-z0-9-]{8,80}$/;
 
 export interface VerificationComparison {
@@ -12,7 +12,7 @@ export interface VerificationComparison {
 }
 
 function historyPath(projectPath: string): string {
-  return path.join(path.resolve(projectPath), HISTORY_DIR);
+  return anvilWorkspacePath(projectPath, "verifications");
 }
 
 export async function saveVerification(projectPath: string, result: VerificationResult): Promise<string> {
@@ -26,21 +26,26 @@ export async function saveVerification(projectPath: string, result: Verification
 
 export async function listVerifications(projectPath: string, limit = 50): Promise<VerificationResult[]> {
   if (!Number.isInteger(limit) || limit < 1 || limit > 500) throw new Error("History limit must be between 1 and 500.");
-  const directory = historyPath(projectPath);
-  let names: string[];
-  try {
-    names = await readdir(directory);
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
-    throw error;
-  }
+  const seen = new Set<string>();
   const results: VerificationResult[] = [];
-  for (const name of names.filter((item) => ID_PATTERN.test(item.replace(/\.json$/, "")) && item.endsWith(".json"))) {
+  for (const directory of listWorkspaceStatePaths(projectPath, "verifications")) {
+    let names: string[];
     try {
-      const value: unknown = JSON.parse(await readFile(path.join(directory, name), "utf8"));
-      if (isVerificationResult(value)) results.push(value);
-    } catch {
-      /* Ignore malformed history entries; never execute or repair them. */
+      names = await readdir(directory);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") continue;
+      throw error;
+    }
+    for (const name of names.filter((item) => ID_PATTERN.test(item.replace(/\.json$/, "")) && item.endsWith(".json"))) {
+      try {
+        const value: unknown = JSON.parse(await readFile(path.join(directory, name), "utf8"));
+        if (isVerificationResult(value) && !seen.has(value.id)) {
+          seen.add(value.id);
+          results.push(value);
+        }
+      } catch {
+        /* Ignore malformed history entries; never execute or repair them. */
+      }
     }
   }
   return results.sort((a, b) => b.startedAt.localeCompare(a.startedAt)).slice(0, limit);

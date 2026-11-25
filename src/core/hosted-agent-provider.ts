@@ -1,7 +1,7 @@
 import { discardProviderResponse, readProviderJson } from "./provider-response.js";
 import type { AgentProvider, AgentRequest, AgentResponse } from "./orchestrator.js";
 import { OpenAICompatibleProvider } from "./openai-compatible-provider.js";
-import type { ForgePermissionPolicy } from "./permission-policy.js";
+import type { AnvilPermissionPolicy } from "./permission-policy.js";
 
 export type HostedProviderId = "openai" | "anthropic" | "google" | "ollama";
 
@@ -12,7 +12,7 @@ export interface HostedProviderOptions {
   baseUrl?: string;
   timeoutMs?: number;
   workspacePath?: string;
-  permissionPolicy?: ForgePermissionPolicy;
+  permissionPolicy?: AnvilPermissionPolicy;
 }
 
 function localHttpAllowed(url: URL): boolean {

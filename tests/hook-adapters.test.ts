@@ -43,7 +43,7 @@ describe("Cursor adapter", () => {
       JSON.stringify({ command: "rm -rf /", workspace_roots: [root] })
     );
     expect(destructive.json?.permission).toBe("deny");
-    expect(String(destructive.json?.agent_message)).toContain("FORGE");
+    expect(String(destructive.json?.agent_message)).toContain("ANVIL");
     const risky = await runNativeHook(
       "cursor",
       "beforeShellExecution",
@@ -104,7 +104,7 @@ describe("Cursor adapter", () => {
       "afterFileEdit",
       JSON.stringify({ file_path: path.join(root, "src/a.ts"), workspace_roots: [root] })
     );
-    const edits = JSON.parse(await readFile(path.join(root, ".forge/session/edits.json"), "utf8"));
+    const edits = JSON.parse(await readFile(path.join(root, ".anvil/session/edits.json"), "utf8"));
     expect(edits.files).toEqual(["src/a.ts"]);
   });
 });
@@ -230,7 +230,7 @@ describe("Gemini adapter", () => {
 });
 
 describe("native hook config", () => {
-  it("merges idempotently and removes only FORGE entries", () => {
+  it("merges idempotently and removes only ANVIL entries", () => {
     for (const harness of ["cursor", "codex", "gemini"] as const) {
       const user =
         harness === "cursor"
@@ -251,7 +251,7 @@ describe("native hook config", () => {
           entries.map((entry) => entry.command)
         )
       ).toEqual(once);
-      expect(JSON.stringify(once)).toContain(`forge hook --harness ${harness}`);
+      expect(JSON.stringify(once)).toContain(`anvil hook --harness ${harness}`);
       expect(
         removeNativeHooks(
           harness,
@@ -273,7 +273,7 @@ describe("native hook config", () => {
     });
     const cursor = JSON.parse(await readFile(path.join(root, ".cursor/hooks.json"), "utf8"));
     expect(cursor.version).toBe(1);
-    expect(cursor.hooks.beforeShellExecution[0].command).toBe("forge hook --harness cursor beforeShellExecution");
+    expect(cursor.hooks.beforeShellExecution[0].command).toBe("anvil hook --harness cursor beforeShellExecution");
     const codex = JSON.parse(await readFile(path.join(root, ".codex/hooks.json"), "utf8"));
     expect(codex.hooks.PreToolUse[0].matcher).toBe("Bash|apply_patch");
     const gemini = JSON.parse(await readFile(path.join(root, ".gemini/settings.json"), "utf8"));
@@ -290,8 +290,8 @@ describe("native hook config", () => {
 });
 
 describe("Shield on native hook configs", () => {
-  it("flags dangerous Cursor, Codex and Gemini hooks and passes FORGE's own", async () => {
-    const { runShield } = await import("../src/core/forge-shield.js");
+  it("flags dangerous Cursor, Codex and Gemini hooks and passes ANVIL's own", async () => {
+    const { runShield } = await import("../src/core/anvil-shield.js");
     const root = await project({
       ".cursor/hooks.json": JSON.stringify({
         version: 1,

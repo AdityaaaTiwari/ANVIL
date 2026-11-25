@@ -71,6 +71,6 @@ describe("forge guard", () => {
     expect(text).not.toContain("abcdef123456");
     expect(text).not.toContain("bbbbbbbb");
     expect(buildGuardReport(events, { since: new Date(Date.now() + 60_000) }).total).toBe(0);
-    expect(formatGuardReport(buildGuardReport([]))).toContain("forge install --hooks");
+    expect(formatGuardReport(buildGuardReport([]))).toContain("anvil install --hooks");
   });
 });

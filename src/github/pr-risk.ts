@@ -39,7 +39,7 @@ const AREAS: SensitiveArea[] = [
     id: "agent-config",
     points: 25,
     pattern:
-      /(?:^|\/)(?:\.claude\/settings(?:\.local)?\.json|\.mcp\.json|\.cursor\/mcp\.json|\.vscode\/mcp\.json|\.gemini\/settings\.json|\.claude\/hooks\/|\.forge\/harness-hooks\.json)$|(?:^|\/)\.claude\/hooks\//,
+      /(?:^|\/)(?:\.claude\/settings(?:\.local)?\.json|\.mcp\.json|\.cursor\/mcp\.json|\.vscode\/mcp\.json|\.gemini\/settings\.json|\.claude\/hooks\/|\.(?:anvil|forge)\/harness-hooks\.json)$|(?:^|\/)\.claude\/hooks\//,
     reason: "Changes agent permissions, hooks or MCP servers",
     reviewer: "security-reviewer",
   },
@@ -185,6 +185,6 @@ export function formatRiskMarkdown(risk: PullRequestRisk): string {
         } |`
       );
   }
-  lines.push("", `Suggested FORGE reviewers: ${risk.suggestedReviewers.map((r) => `\`${r}\``).join(", ")}`);
+  lines.push("", `Suggested ANVIL reviewers: ${risk.suggestedReviewers.map((r) => `\`${r}\``).join(", ")}`);
   return lines.join("\n");
 }

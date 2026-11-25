@@ -7,6 +7,7 @@ import {
   formatSkillExperimentMatrix,
 } from "../core/agent-experiment-studio.js";
 import { loadSkillRegistry } from "../core/skill-registry.js";
+import { anvilWorkspacePath } from "../core/workspace-paths.js";
 
 export async function runExperimentStudio(_command: string, rest: string[]): Promise<void> {
   const action = rest[0] ?? "create";
@@ -19,7 +20,7 @@ export async function runExperimentStudio(_command: string, rest: string[]): Pro
       "Usage: anvil experiment-studio compare --id ID --name NAME --candidates id:provider:model,id:provider:model [--config-versions id=cfg-id,id=cfg-id] [--repeats 2] [--path PROJECT]\n"
     );
     process.stderr.write(
-      "   or: forge experiment-studio create --id ID --name NAME --provider PROVIDER --model MODEL --skills skill-a,skill-b [--repeats 2] [--path PROJECT]\n"
+      "   or: anvil experiment-studio create --id ID --name NAME --provider PROVIDER --model MODEL --skills skill-a,skill-b [--repeats 2] [--path PROJECT]\n"
     );
     process.exitCode = 1;
     return;
@@ -71,7 +72,7 @@ export async function runExperimentStudio(_command: string, rest: string[]): Pro
       for (const candidate of candidates)
         if (candidate.configVersionId) await loadAgentConfigVersion(target, candidate.configVersionId);
       const matrix = createModelComparisonMatrix({ id, name, repeats, candidates });
-      const destination = path.join(target, ".forge", "experiments", id + ".json");
+      const destination = anvilWorkspacePath(target, "experiments", id + ".json");
       const { mkdir, writeFile } = await import("node:fs/promises");
       await mkdir(path.dirname(destination), { recursive: true, mode: 0o700 });
       await writeFile(destination, JSON.stringify(matrix, null, 2) + "\n", {
@@ -126,7 +127,7 @@ export async function runExperimentStudio(_command: string, rest: string[]): Pro
     const registry = await loadSkillRegistry(target);
     const unknown = skillIds.filter((skillId) => !registry.some((skill) => skill.id === skillId));
     if (unknown.length) throw new Error("Unknown workspace/built-in skill(s): " + unknown.join(", "));
-    const destination = path.join(target, ".forge", "experiments", id + ".json");
+    const destination = anvilWorkspacePath(target, "experiments", id + ".json");
     const { mkdir, writeFile } = await import("node:fs/promises");
     await mkdir(path.dirname(destination), { recursive: true, mode: 0o700 });
     await writeFile(destination, JSON.stringify(matrix, null, 2) + "\n", {

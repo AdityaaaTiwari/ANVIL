@@ -14,7 +14,7 @@ import { formatStatusLine, renderStatusLine } from "../src/core/statusline.js";
 
 const directories: string[] = [];
 async function project(): Promise<string> {
-  const directory = await mkdtemp(path.join(os.tmpdir(), "forge-cost-"));
+  const directory = await mkdtemp(path.join(os.tmpdir(), "anvil-cost-"));
   directories.push(directory);
   return directory;
 }

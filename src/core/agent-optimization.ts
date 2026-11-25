@@ -31,7 +31,7 @@ export function buildAgentOptimizationPlan(history: BenchmarkMatrixReport[]): Ag
         .find((item) => item.suiteId === current.suiteId && item.goal === current.goal)
     : undefined;
   const guardrails = [
-    "Recommendations are advisory; FORGE does not rewrite prompts, skills or agent configuration automatically.",
+    "Recommendations are advisory; ANVIL does not rewrite prompts, skills or agent configuration automatically.",
     "Validate every proposed change with a fresh controlled benchmark using the same suite, goal, provider and model.",
     "Rubric failures are diagnostic signals, not proof of root cause. Inspect the underlying agent outputs before changing configuration.",
   ];

@@ -1,7 +1,7 @@
 import { createPrivateKey, createSign, type KeyObject } from "node:crypto";
 
 /**
- * Minimal, dependency-free GitHub REST client for the FORGE GitHub App.
+ * Minimal, dependency-free GitHub REST client for the ANVIL GitHub App.
  * Uses App JWTs (RS256) to mint short-lived, repository-scoped installation tokens.
  */
 
@@ -17,7 +17,7 @@ export type FetchLike = (
 
 const API = "https://api.github.com";
 const API_VERSION = "2022-11-28";
-const USER_AGENT = "forge-ecc-github-app";
+const USER_AGENT = "anvil-workbench-github-app";
 
 function base64url(input: string | Buffer): string {
   return Buffer.from(input).toString("base64").replace(/=+$/, "").replace(/\+/g, "-").replace(/\//g, "_");

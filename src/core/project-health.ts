@@ -5,8 +5,9 @@ import { mapArchitecture } from "./architecture-map.js";
 import { auditProject, type FindingSeverity } from "./quality-audit.js";
 import { listVerifications } from "./verification-history.js";
 import { analyzeDependencies } from "./dependency-intelligence.js";
+import { ANVIL_STATE_DIR, anvilWorkspacePath, listWorkspaceStatePaths } from "./workspace-paths.js";
 
-const HISTORY_DIR = path.join(".forge", "health");
+const HISTORY_DIR = path.join(ANVIL_STATE_DIR, "health");
 const MAX_SNAPSHOTS = 100;
 export interface HealthSnapshot {
   id: string;
@@ -57,21 +58,25 @@ export interface ProjectHealthReport {
 }
 
 async function loadSnapshots(root: string): Promise<HealthSnapshot[]> {
-  const dir = path.join(path.resolve(root), HISTORY_DIR);
-  let names: string[];
-  try {
-    names = await readdir(dir);
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
-    throw error;
-  }
+  const seen = new Set<string>();
   const records: HealthSnapshot[] = [];
-  for (const name of names.filter((n) => /^health-[a-z0-9-]+\.json$/.test(n))) {
+  for (const dir of listWorkspaceStatePaths(root, "health")) {
+    let names: string[];
     try {
-      const item: unknown = JSON.parse(await readFile(path.join(dir, name), "utf8"));
-      if (isSnapshot(item)) records.push(item);
-    } catch {
-      /* Ignore malformed local history. */
+      names = await readdir(dir);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") continue;
+      throw error;
+    }
+    for (const name of names.filter((n) => /^health-[a-z0-9-]+\.json$/.test(n))) {
+      if (seen.has(name)) continue;
+      seen.add(name);
+      try {
+        const item: unknown = JSON.parse(await readFile(path.join(dir, name), "utf8"));
+        if (isSnapshot(item)) records.push(item);
+      } catch {
+        /* Ignore malformed local history. */
+      }
     }
   }
   return records.sort((a, b) => a.generatedAt.localeCompare(b.generatedAt)).slice(-MAX_SNAPSHOTS);
@@ -202,7 +207,7 @@ export async function generateProjectHealth(inputPath: string): Promise<ProjectH
       externalPackages: architecture.externalPackages.length,
     },
   };
-  const dir = path.join(root, HISTORY_DIR);
+  const dir = anvilWorkspacePath(root, "health");
   await mkdir(dir, { recursive: true });
   await writeFile(path.join(dir, current.id + ".json"), JSON.stringify(current, null, 2) + "\n", {
     flag: "wx",

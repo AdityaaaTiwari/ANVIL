@@ -1000,7 +1000,7 @@ export function parseSeverity(value: string | undefined): ShieldSeverity {
 
 export function formatShieldReport(report: ShieldReport): string {
   const lines = [
-    "FORGE Shield — agent harness security review",
+    "ANVIL Shield — agent harness security review",
     `Score ${report.score}/100 · Grade ${report.grade} · ${report.filesScanned} files scanned`,
     `Findings: ${report.summary.critical} critical · ${report.summary.high} high · ${report.summary.medium} medium · ${report.summary.low} low`,
     "",
@@ -1017,14 +1017,14 @@ export function formatShieldReport(report: ShieldReport): string {
     lines.push(`  → ${item.recommendation}`);
   }
   if (report.findings.some((item) => item.fixable))
-    lines.push("", "Run `forge shield --fix` to apply safe automatic fixes.");
+    lines.push("", "Run `anvil shield --fix` to apply safe automatic fixes.");
   lines.push("", ...report.caveats.map((item) => `  · ${item}`));
   return lines.join("\n");
 }
 
 export function formatShieldMarkdown(report: ShieldReport): string {
   const lines = [
-    `## 🛡️ FORGE Shield — score ${report.score}/100 (grade ${report.grade})`,
+    `## 🛡️ ANVIL Shield — score ${report.score}/100 (grade ${report.grade})`,
     "",
     `| Critical | High | Medium | Low | Files |`,
     `|---:|---:|---:|---:|---:|`,
@@ -1055,9 +1055,9 @@ export function toSarif(report: ShieldReport, version: string): Record<string, u
       {
         tool: {
           driver: {
-            name: "FORGE Shield",
+            name: "ANVIL Shield",
             version,
-            informationUri: "https://github.com/ansh44233/FORGE-ECC",
+            informationUri: "https://github.com/anvil-workbench/ANVIL",
             rules: usedRules.map((id) => {
               const rule = ruleFor(id);
               const severity = rule && "severity" in rule ? rule.severity : "medium";

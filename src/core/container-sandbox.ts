@@ -51,7 +51,7 @@ export function buildContainerRunArgs(
   const copyAndRun = [
     "const fs=require('node:fs');const path=require('node:path');",
     "const blocked=/(^|[. _-])(env|secret|secrets|credential|credentials|private|token|password)([. _-]|$)/i;",
-    "const excluded=new Set(['.git','.forge','.ssh','.aws','.azure','.kube','.docker','.gnupg','.npmrc','.pypirc','.netrc']);",
+    "const excluded=new Set(['.git','.anvil','.forge','.ssh','.aws','.azure','.kube','.docker','.gnupg','.npmrc','.pypirc','.netrc']);",
     "const filter=src=>{const info=fs.lstatSync(src);if(info.isSymbolicLink())return false;const rel=path.relative('/snapshot',src);if(!rel)return true;const parts=rel.split(path.sep).filter(Boolean);return !parts.some(name=>excluded.has(name.toLowerCase())||blocked.test(name)||/\\.(pem|key|p12|pfx|keystore)$/i.test(name)||/^(id_rsa|id_ed25519|authorized_keys)$/i.test(name));};",
     "fs.cpSync('/snapshot','/workspace',{recursive:true,filter});",
     "const r=require('node:child_process').spawnSync('npm',['run-script','--ignore-scripts',process.argv[1]],{cwd:'/workspace',stdio:'inherit'});process.exit(r.status===null?1:r.status);",
@@ -63,7 +63,7 @@ export function buildContainerRunArgs(
     "--name",
     containerName,
     "--label",
-    "com.forge.managed=true",
+    "com.anvil.managed=true",
     "--network=none",
     "--read-only",
     "--cap-drop=ALL",
@@ -246,7 +246,7 @@ export async function runContainerVerification(
   if (inspect.error) throw new Error("Could not start container runtime: " + inspect.error);
   if (inspect.code !== 0)
     throw new Error(
-      "Pinned sandbox image is not available locally. Pull and verify it separately; FORGE never pulls images automatically. " +
+      "Pinned sandbox image is not available locally. Pull and verify it separately; ANVIL never pulls images automatically. " +
         inspect.output
     );
   const security = await runProcess(runtime, ["info", "--format", "{{json .SecurityOptions}}"], root, 15_000);
@@ -264,7 +264,7 @@ export async function runContainerVerification(
     );
   }
   const startedAt = new Date();
-  const containerName = "forge-verify-" + randomUUID().replace(/-/g, "").slice(0, 20);
+  const containerName = "anvil-verify-" + randomUUID().replace(/-/g, "").slice(0, 20);
   const args = buildContainerRunArgs(root, image, script, containerName, profile, policy);
   let cleanupWarning = "";
   const result = await runProcess(runtime, args, root, timeoutMs, async () => {
@@ -273,15 +273,15 @@ export async function runContainerVerification(
       const removed = await runProcess(runtime, ["rm", "--force", containerName], root, 5_000);
       if (removed.error || removed.code !== 0 || removed.timedOut) {
         cleanupWarning =
-          "FORGE cleanup warning: stop and force-remove both failed; inspect the container runtime for a possibly running verification container.";
+          "ANVIL cleanup warning: stop and force-remove both failed; inspect the container runtime for a possibly running verification container.";
       }
     }
   });
   const finishedAt = new Date();
   result.output =
-    "[FORGE profile] " +
+    "[ANVIL profile] " +
     profile.name +
-    "\n[FORGE compliance] network=" +
+    "\n[ANVIL compliance] network=" +
     profile.network +
     ", readOnlyRoot=" +
     String(profile.readOnlyRoot) +
@@ -295,11 +295,11 @@ export async function runContainerVerification(
     String(policy?.maxCpus ?? profile.maxCpus) +
     ", pids=" +
     String(policy?.maxProcesses ?? profile.maxProcesses) +
-    "\n[FORGE runtime] Rootless daemon: " +
+    "\n[ANVIL runtime] Rootless daemon: " +
     (rootless === true ? "yes" : rootless === false ? "no" : "unknown") +
     "\n" +
     result.output;
-  if (result.error) result.output += "\nFORGE could not start container runtime: " + result.error;
+  if (result.error) result.output += "\nANVIL could not start container runtime: " + result.error;
   if (cleanupWarning) result.output += "\n" + cleanupWarning;
   return {
     id: "verify-container-" + startedAt.getTime().toString(36) + "-" + randomUUID().slice(0, 6),

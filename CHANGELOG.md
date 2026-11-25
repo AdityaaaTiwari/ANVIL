@@ -2,10 +2,15 @@
 
 ## Unreleased
 
+### Changed
+- **Internal `FORGE` Naming Cleanup:** Migrated internal modules, state defaults, and user-facing strings from `FORGE`/`.forge/` to `ANVIL`/`.anvil/` (`anvil-shield.ts`, `anvil-status.ts`, `.anvil/instincts.json`, `.anvil/loops/`, `.anvil/races/`, `.anvil/harness-hooks.json`, `.anvil/mcp-state.json`, `.anvil/evals/`, `.anvil/install-state.json`, `/anvil` GitHub App PR commands, and `ANVIL_*` env/header defaults) with automatic read/compatibility fallbacks for legacy `.forge/` files, `FORGE_*` environment variables, and `/forge` PR aliases.
+- **Modularized Core Subsystems:** Split `src/core/dashboard-server.ts` into `src/core/dashboard/` (`http-helpers.ts`, `sse.ts`, `styles.ts`, `page.ts`, `client-script.ts`, `routes-get.ts`, `routes-post.ts`) and split `src/core/harness-installer.ts` into `src/core/harness-installer/` (`types.ts`, `transactions.ts`, `renderers.ts`, `lifecycle.ts`, `mcp-planner.ts`) with full public barrel exports preserved.
+- **Python REA Bridge Tests in CI:** Added cross-platform `unittest` runner ([`scripts/run-rea-bridge-tests.py`](scripts/run-rea-bridge-tests.py) & [`scripts/run-rea-bridge-tests.mjs`](scripts/run-rea-bridge-tests.mjs)), registered `npm run test:rea` (`103` tests across `10` bridge suites under `catalog/rea/bridges/`), and wired it into `.github/workflows/ci.yml` alongside `npm run test:coverage` (`681` Vitest tests across `102` suites).
+
 ## 1.3.0 — FORGE 4.0 Engines, ECC Catalog Ingestion, AI Agent Security Audit & Universal Harness Installer (November 2026)
 
 ### Added
-- Integrated all FORGE 4.0 engines into ANVIL: `consult`, `agent-race`, `verified-loop`, `forge-shield`, `shield-extended`, `harness-scorecard`, `instincts`, `session-cost`, `statusline`, `guard-report`, `hook-adapters`, and `mcp-sync`.
+- Integrated all FORGE 4.0 engines into ANVIL: `consult`, `agent-race`, `verified-loop`, `anvil-shield`, `anvil-status`, `shield-extended`, `harness-scorecard`, `instincts`, `session-cost`, `statusline`, `guard-report`, `hook-adapters`, and `mcp-sync`.
 - 10 new CLI commands: `anvil scorecard`, `anvil consult`, `anvil context`, `anvil status`, `anvil instincts`, `anvil cost`, `anvil race`, `anvil loop`, `anvil shield`, `anvil harnesses`.
 - 4 new MCP tools: `anvil_scorecard`, `anvil_consult`, `anvil_context_budget`, `anvil_guard_check`.
 - Ingested ECC catalog: 395 specialist skills in `catalog/skills/`, 88 agent definitions in `catalog/agents/`, 122 workflow commands in `catalog/commands/`, 14 language rules in `catalog/rules/`.
@@ -22,7 +27,7 @@
 - `src/cli.ts` split into one module per command under `src/commands/` (no behavior change).
 
 ### Docs
-- Added Unified Multi-Cockpit Dashboard architecture at `docs/unified-dashboard-architecture.md` and upgraded `public/index.html` with an interactive 5-tab control center spanning Combined Overview, ANVIL Verification, ECC Skills, REA Binary Analysis, and FORGE Benchmarks.
+- Added Unified Multi-Cockpit Dashboard architecture at `docs/unified-dashboard-architecture.md` and upgraded `public/index.html` with an interactive control center spanning Combined Overview, ANVIL Verification, ECC Skills, REA Binary Analysis, Control Center Scorecard, and GitHub App Bot.
 - Added Everything Claude Code (ECC) Integration Guide at `docs/integrations/ecc.md` detailing lifecycle pairing (`plan -> test -> implement -> verify`), skill security auditing, and stop hook automation.
 - Added REA Reverse-Engineering Integration Guide at `docs/integrations/rea.md` outlining the Clean-Room Reengineering Pipeline combining `morluto/rea` binary analysis with ANVIL CI policy verification.
 - Added agent stop hooks documentation at `docs/agent-hooks.md` covering `anvil install --hooks`, automatic `gate --diff` triggers on agent finish, loop guards, and Claude Code/Cursor hook protocols.

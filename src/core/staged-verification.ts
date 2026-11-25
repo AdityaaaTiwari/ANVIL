@@ -58,7 +58,7 @@ export async function verifyStagedPatch(
     throw new Error("The --profile value must match the profile declared in --policy.");
   if (!/^patch-stage-[a-f0-9-]{20,40}$/.test(stageId) || stageId.includes(".."))
     throw new Error("Invalid patch stage identifier.");
-  const stageRoot = path.join(project, ".forge", "patch-workspaces", stageId);
+  const stageRoot = path.join(project, ".anvil", "patch-workspaces", stageId);
   const stageReal = await realpath(stageRoot);
   if (!stageReal.startsWith(project + path.sep)) throw new Error("Patch stage resolves outside the project.");
   const manifestPath = path.join(stageReal, "stage.json");
@@ -111,7 +111,7 @@ export async function verifyStagedPatch(
   const stagedContent = await readFile(stagedSource);
   if (digest(stagedContent) !== manifest.stagedSha256)
     throw new Error("Staged patch changed while preparing verification.");
-  const temporaryRoot = await mkdtemp(path.join(os.tmpdir(), "forge-staged-verify-"));
+  const temporaryRoot = await mkdtemp(path.join(os.tmpdir(), "anvil-staged-verify-"));
   const snapshot = path.join(temporaryRoot, "workspace");
   try {
     const counts = await copyStagedWorkspaceSnapshot(workspaceReal, snapshot);

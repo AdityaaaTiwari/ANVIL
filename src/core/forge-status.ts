@@ -60,15 +60,16 @@ export async function forgeStatus(
   const issues = 0;
 
   const next: string[] = [];
-  if (!doctor?.installed) next.push("forge install . --hooks");
-  else if (!doctor.healthy) next.push("forge repair .");
+  if (!doctor?.installed) next.push("anvil install . --hooks");
+  else if (!doctor.healthy) next.push("anvil repair .");
   if (doctor?.installed && missing.length)
-    next.push(`forge install --hooks   # Guard is not live in ${missing.join(", ")}`);
+    next.push(`anvil install --hooks   # Guard is not live in ${missing.join(", ")}`);
   if (context.findings.some((f: any) => f.severity !== "low"))
-    next.push("forge context --verbose   # trim what loads every session");
-  if (gaps) next.push("forge mcp sync   # some MCP servers are missing in some tools");
-  if (loop?.status === "needs-review") next.push(`forge loop status ${loop.id}   # review before trusting the result`);
-  if (race?.winner && !race.picked) next.push(`forge race pick ${race.id}   # apply ${race.winner}'s verified changes`);
+    next.push("anvil context --verbose   # trim what loads every session");
+  if (gaps) next.push("anvil mcp sync   # some MCP servers are missing in some tools");
+  if (loop?.status === "needs-review") next.push(`anvil loop show ${loop.id}   # review before trusting the result`);
+  if (race?.winner && !race.picked)
+    next.push(`anvil race pick ${race.id} ${race.winner}   # apply ${race.winner}'s verified changes`);
 
   return {
     install: {
@@ -103,7 +104,7 @@ export function formatStatus(status: ForgeStatus): string {
   const ok = (good: boolean) => (good ? "✓" : "!");
   const i = status.install;
   const lines = [
-    "FORGE status",
+    "ANVIL status",
     `  ${ok(i.installed && i.healthy)} install   ${i.installed ? `${i.version ?? "?"} · ${i.profile ?? "?"} · ${i.targets.join(", ") || "no targets"}${i.issues ? ` · ${i.issues} file issue(s)` : ""}` : "not installed"}`,
     `  ${ok(status.guard.live.length > 0 && !status.guard.missing.length)} guard     ${status.guard.live.length ? `live in ${status.guard.live.join(", ")}` : "not live"}${status.guard.missing.length ? ` · missing in ${status.guard.missing.join(", ")}` : ""} · ${status.guard.interventions} intervention(s), ${status.guard.lastDay} in 24h`,
     `  ${ok(status.context.grade <= "B")} context   grade ${status.context.grade} · heaviest ${status.context.heaviest ?? "-"} ≈ ${status.context.worst.toLocaleString("en-US")} tokens · ${status.context.findings} finding(s)`,
@@ -116,7 +117,7 @@ export function formatStatus(status: ForgeStatus): string {
       `  ${ok(Boolean(status.race.winner))} race      ${status.race.winner ? `winner ${status.race.winner}` : "no winner"} of ${status.race.agents}`
     );
   lines.push("");
-  lines.push(status.next.length ? "Next:" : "Nothing to do. Everything FORGE checks looks good.");
+  lines.push(status.next.length ? "Next:" : "Nothing to do. Everything ANVIL checks looks good.");
   for (const step of status.next) lines.push(`  ${step}`);
   return lines.join("\n");
 }

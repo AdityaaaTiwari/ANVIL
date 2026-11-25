@@ -7,8 +7,19 @@ const SESSION_TTL_SECONDS = 8 * 60 * 60;
 const COOKIE_NAME = "anvil_github_session";
 const API_VERSION = "2022-11-28";
 
+export interface SessionRepository {
+  fullName: string;
+  installationId: number;
+  private: boolean;
+}
 export type OAuthState = { verifier: string; installationId: number | null };
-export type AuthSession = { userId: number; login: string; installationIds: number[]; createdAt: number };
+export type AuthSession = {
+  userId: number;
+  login: string;
+  installationIds: number[];
+  repositories?: SessionRepository[];
+  createdAt: number;
+};
 
 export function randomToken(bytes = 32): string {
   return randomBytes(bytes).toString("base64url");
@@ -49,7 +60,18 @@ export function setSessionCookie(res: VercelResponse, id: string): void {
   );
 }
 export function clearSessionCookie(res: VercelResponse): void {
-  res.setHeader("Set-Cookie", `${COOKIE_NAME}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`);
+  const expired = "Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0";
+  res.setHeader("Set-Cookie", [`${COOKIE_NAME}=; ${expired}`, `forge_github_session=; ${expired}`]);
+}
+export function isValidSessionRepository(value: unknown): value is SessionRepository {
+  if (!value || typeof value !== "object") return false;
+  const repo = value as Partial<SessionRepository>;
+  return (
+    typeof repo.fullName === "string" &&
+    repo.fullName.includes("/") &&
+    isValidInstallationId(repo.installationId) &&
+    typeof repo.private === "boolean"
+  );
 }
 export async function readSession(req: VercelRequest): Promise<AuthSession | undefined> {
   const id = getCookie(req, COOKIE_NAME) || getCookie(req, "forge_github_session");
@@ -63,7 +85,9 @@ export async function readSession(req: VercelRequest): Promise<AuthSession | und
       value.userId <= 0 ||
       typeof value.login !== "string" ||
       !Array.isArray(value.installationIds) ||
-      !value.installationIds.every(isValidInstallationId)
+      !value.installationIds.every(isValidInstallationId) ||
+      (value.repositories !== undefined &&
+        (!Array.isArray(value.repositories) || !value.repositories.every(isValidSessionRepository)))
     )
       return undefined;
     return value;
@@ -112,8 +136,8 @@ export function oauthConfig() {
     if (parsed.protocol !== "https:" && parsed.hostname !== "localhost") {
       throw new Error("GitHub OAuth callback URL must use HTTPS protocol in production");
     }
-  } catch (err: any) {
-    throw new Error(`Invalid GITHUB_CALLBACK_URL provided: ${err?.message || String(err)}`);
+  } catch (err: unknown) {
+    throw new Error(`Invalid GITHUB_CALLBACK_URL provided: ${err instanceof Error ? err.message : String(err)}`);
   }
   return { clientId, clientSecret, appId, callbackUrl };
 }

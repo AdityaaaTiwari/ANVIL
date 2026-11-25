@@ -18,7 +18,7 @@ import {
 
 const directories: string[] = [];
 async function project(files: Record<string, string> = {}): Promise<string> {
-  const directory = await mkdtemp(path.join(os.tmpdir(), "forge-mcp-"));
+  const directory = await mkdtemp(path.join(os.tmpdir(), "anvil-mcp-"));
   directories.push(directory);
   for (const [name, content] of Object.entries(files)) {
     await mkdir(path.dirname(path.join(directory, name)), { recursive: true });
@@ -114,7 +114,7 @@ describe("MCP sync", () => {
     const mine = matrix.find((r) => r.name === "mine");
     expect(mine?.managed).toBe(false);
     expect([mine?.targets.claude, mine?.targets.cursor]).toEqual([true, false]);
-    expect(formatMatrix(matrix)).toContain("forge mcp sync");
+    expect(formatMatrix(matrix)).toContain("anvil mcp sync");
 
     await removeMcpServers(["context7", "playwright", "mine"], { projectPath: root, targets: [...all] });
     expect(Object.keys((await read(root, ".mcp.json")).mcpServers)).toEqual(["mine"]);

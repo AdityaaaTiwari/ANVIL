@@ -30,5 +30,5 @@ Return tool errors as results the agent can act on ("No issue 123 in repo x; did
 
 ## Verify
 - Unit-test each tool handler with valid, invalid and boundary inputs.
-- Run it with the MCP Inspector and at least one real client (`forge mcp add` or `.mcp.json`) and do the task end to end.
-- Run `forge shield` on the client configs you document.
+- Run it with the MCP Inspector and at least one real client (`anvil mcp add` or `.mcp.json`) and do the task end to end.
+- Run `anvil shield` on the client configs you document.

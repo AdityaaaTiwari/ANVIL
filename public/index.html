@@ -1154,7 +1154,7 @@
       font-weight: 800;
     }
 
-    /* FORGE Scorecard Meter */
+    /* ANVIL Scorecard Meter */
     .scorecard-summary-box {
       background: rgba(249, 115, 22, 0.06);
       border: 1px solid rgba(249, 115, 22, 0.25);
@@ -1940,7 +1940,7 @@
   <!-- Top Announcement Bar -->
   <aside class="top-announcement" aria-label="Version announcement">
     <span class="badge-mini">v1.3.0</span>
-    <span><strong>The Deterministic Verification Layer for AI Coding Agents</strong> · 561 Tests Passing · 100% Local</span>
+    <span><strong>The Deterministic Verification Layer for AI Coding Agents</strong> · 681 Vitest + 103 REA Tests · 100% Local</span>
     <a href="https://github.com/anvil-workbench/ANVIL" target="_blank" rel="noopener" style="text-decoration: underline; color: #fff;">GitHub →</a>
   </aside>
 
@@ -2177,9 +2177,9 @@
           <div class="sub">Zero external tracking or code phoning home</div>
         </div>
         <div class="stat-box">
-          <div class="val val-amber">561</div>
-          <div class="title">Verified Unit &amp; E2E Tests</div>
-          <div class="sub">100% test pass rate across Node 22/24</div>
+          <div class="val val-amber">784</div>
+          <div class="title">Verified Unit &amp; Bridge Tests</div>
+          <div class="sub">681 Vitest + 103 Python REA tests across CI</div>
         </div>
         <div class="stat-box">
           <div class="val val-cyan">1</div>
@@ -2267,10 +2267,10 @@
               <div class="dash-metric-card">
                 <div class="dash-metric-label">TEST VERIFICATION SUITE</div>
                 <div class="dash-metric-val">
-                  <span class="dash-metric-num" style="color: var(--cyan);">588</span>
+                  <span class="dash-metric-num" style="color: var(--cyan);">681</span>
                   <span style="font-size: 13px; color: var(--text-subtle);">passed</span>
                 </div>
-                <div class="dash-metric-sub">85 test files · 0-baseline green gate</div>
+                <div class="dash-metric-sub">102 Vitest suites + 103 REA bridge tests</div>
               </div>
             </div>
 
@@ -2685,7 +2685,7 @@
                     <span class="catalog-item-name">🛡️ /verify</span>
                     <span class="catalog-item-badge" style="background: rgba(249, 115, 22, 0.15); color: var(--amber); border: 1px solid rgba(249, 115, 22, 0.3);">COMMAND</span>
                   </div>
-                  <div class="catalog-item-desc">Runs full deterministic verification loop locally: Prettier formatting, ESLint hygiene, TypeScript compilation, full test execution, and policy gate.</div>
+                  <div class="catalog-item-desc">Runs full deterministic verification loop locally: Prettier formatting, TypeScript typecheck &amp; build, Vitest + REA bridge test suites, and policy gate.</div>
                 </div>
                 <div class="catalog-item-actions">
                   <span style="font-size: 11px; color: var(--text-subtle);">Slash Command</span>
@@ -2889,7 +2889,7 @@
                 <div class="dash-metric-val">
                   <span class="dash-metric-num" style="color: var(--emerald);">98.4%</span>
                 </div>
-                <div class="dash-metric-sub">Across 85 automated test matrices</div>
+                <div class="dash-metric-sub">Across 102 Vitest + 10 REA bridge suites</div>
               </div>
 
               <div class="dash-metric-card">
@@ -2966,7 +2966,7 @@
                 </div>
                 <div class="flow-box">
                   <div class="flow-box-title" style="justify-content: center; color: #a855f7;">4. Local Gate</div>
-                  <div class="flow-box-desc">Zero secrets · 588 passing tests.</div>
+                  <div class="flow-box-desc">Zero secrets · 681 Vitest + 103 REA tests.</div>
                 </div>
                 <div class="flow-box">
                   <div class="flow-box-title" style="justify-content: center; color: var(--emerald);">5. Receipt Hash</div>
@@ -3036,7 +3036,7 @@
             </div>
           </div>
 
-          <!-- TAB 6: GITHUB APP & PR BOT (ecc-tools & forge-workbench style) -->
+          <!-- TAB 6: GITHUB APP & PR BOT (ecc-tools & anvil-workbench style) -->
           <div class="dash-tab-panel" id="tab-github" role="tabpanel">
             <div class="dash-top-metrics">
               <div class="dash-metric-card">
@@ -3085,9 +3085,14 @@
                   Automatic PR review comments, SARIF security uploads, downstream blast radius graphs, and policy gate enforcement on every commit.
                 </div>
               </div>
-              <a class="btn btn-primary" href="https://github.com/apps/forge-workbench" target="_blank" rel="noopener" style="background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); border-color: #8b5cf6;">
-                Install GitHub App ↗
-              </a>
+              <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                <a class="btn btn-ghost" href="/app/">
+                  Open Control Center →
+                </a>
+                <a class="btn btn-primary" href="/api/github/install" style="background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); border-color: #8b5cf6;">
+                  Install GitHub App ↗
+                </a>
+              </div>
             </div>
 
             <!-- Live Simulated GitHub PR Comment Widget -->
@@ -3130,7 +3135,7 @@
                     <tr style="border-bottom: 1px solid #21262d;">
                       <td style="padding: 6px 8px;"><b>Regression Tests</b></td>
                       <td style="padding: 6px 8px; color: #3fb950;">✓ Passing</td>
-                      <td style="padding: 6px 8px; color: #8b949e;">588 passed across 85 test suites</td>
+                      <td style="padding: 6px 8px; color: #8b949e;">681 Vitest (102 suites) + 103 REA tests</td>
                     </tr>
                   </tbody>
                 </table>
@@ -3963,7 +3968,7 @@ jobs:
               <span class="faq-arrow">▼</span>
             </button>
             <div class="faq-a">
-              Yes! ANVIL includes a native Model Context Protocol (MCP) server. Run <code>anvil mcp-setup</code> to automatically configure Claude Code, Cursor, or Windsurf. Agents can then call <code>anvil_map_architecture</code>, <code>anvil_change_risk</code>, and <code>anvil_security_audit</code> directly before making edits.
+              Yes! ANVIL includes a native Model Context Protocol (MCP) server. Run <code>anvil mcp setup</code> to automatically configure Claude Code, Cursor, or Windsurf. Agents can then call <code>anvil_map_architecture</code>, <code>anvil_change_risk</code>, and <code>anvil_security_audit</code> directly before making edits.
             </div>
           </div>
 
@@ -3983,7 +3988,7 @@ jobs:
               <span class="faq-arrow">▼</span>
             </button>
             <div class="faq-a">
-              Yes. ANVIL is backed by 561 automated unit and integration tests passing across Node 22 and Node 24 on macOS, Ubuntu, and Windows runners in GitHub Actions CI. It provides deterministic, zero-hallucination AST inspection, blast radius evaluation, and pre-commit verification without external network calls.
+              Yes. ANVIL is backed by 681 Vitest unit/integration tests and 103 Python REA bridge tests passing across Node 22 and Node 24 on macOS, Ubuntu, and Windows runners in GitHub Actions CI. It provides deterministic, zero-hallucination AST inspection, blast radius evaluation, and pre-commit verification without external network calls.
             </div>
           </div>
         </div>
@@ -4162,7 +4167,7 @@ jobs:
   <span class="term-green">✓</span> Import hygiene: 0 circular dependency rings found
   <span class="term-green">✓</span> Policy enforcement: strict typecheck & lint rules active
   <span class="term-green">✓</span> Baseline check: 0 unapproved structural violations
-  <span class="term-green">✓</span> Regression guard: 588/588 automated tests verified clean
+  <span class="term-green">✓</span> Regression guard: 681 Vitest + 103 REA tests verified clean
 
 <span class="term-green">▶ GATE PASSED:</span> Score 100/100 (Grade A)
 <span class="term-dim">Summary written to test-action-gate.sarif (0 alerts)</span>`,
@@ -4174,14 +4179,14 @@ jobs:
   • Primary Language: TypeScript (88.4%)
   • Secondary: Python (7.8%), Docker / YAML (3.8%)
   • Package Manager: npm (package-lock.json v3)
-  • Test Harness: Vitest (82 suites, 561 tests)
+  • Test Harness: Vitest (102 suites, 681 tests) + Python unittest (10 suites, 103 REA bridge tests)
   • Build Target: TypeScript 5.8 -> dist/ (ES2022)
 
 <span class="term-amber">VERIFY COMMANDS DETECTED:</span>
   • npm run format:check (Prettier 3.4)
-  • npm run lint (ESLint 9)
-  • npm run typecheck (tsc --noEmit)
-  • npm run build (tsc -p tsconfig.build.json)
+  • npm run lint (tsc --noEmit &amp; Prettier check)
+  • npm run build (tsc -p tsconfig.json)
+  • npm run test:rea (Python REA bridge test suite)
 <span class="term-green">▶ Status: Clean project structure ready for AI agent integration</span>`,
 
       clean: `<span class="term-cyan">$ anvil clean --fix --dry-run</span>

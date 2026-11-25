@@ -7,10 +7,10 @@ import path from "node:path";
  * Token counts are exact: they are summed from the `usage` blocks Claude Code
  * writes to the session transcript. Dollar amounts are estimates from a rate
  * table (USD per million tokens) that the user can override in
- * `.forge/harness-hooks.json` → `cost.pricing`.
+ * `.anvil/harness-hooks.json` → `cost.pricing`.
  */
 
-export const COSTS_PATH = ".forge/session/costs.jsonl";
+export const COSTS_PATH = ".anvil/session/costs.jsonl";
 const MAX_TRANSCRIPT_BYTES = 64 * 1024 * 1024;
 
 export interface ModelRate {
@@ -197,7 +197,12 @@ export interface CostReport {
 export async function buildCostReport(root: string, options: { since?: Date } = {}): Promise<CostReport> {
   let text = "";
   try {
-    text = await readFile(path.join(root, COSTS_PATH), "utf8");
+    text = await readFile(path.join(root, COSTS_PATH), "utf8").catch(async (error: unknown) => {
+      if ((error as NodeJS.ErrnoException)?.code === "ENOENT") {
+        return readFile(path.join(root, ".forge/session/costs.jsonl"), "utf8");
+      }
+      throw error;
+    });
   } catch {
     /* no data yet */
   }
@@ -278,7 +283,7 @@ export function formatCostReport(report: CostReport): string {
   }
   lines.push(
     "",
-    "Dollar figures are estimates from default rates; set exact rates in .forge/harness-hooks.json → cost.pricing."
+    "Dollar figures are estimates from default rates; set exact rates in .anvil/harness-hooks.json → cost.pricing."
   );
   return lines.join("\n");
 }

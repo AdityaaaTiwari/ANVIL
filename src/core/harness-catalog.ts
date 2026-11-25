@@ -3,8 +3,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 /**
- * FORGE harness catalog: the FORGE-authored agents, skills, commands and rules
- * that `forge install` writes into agent harnesses (Claude Code, Cursor, Codex,
+ * ANVIL harness catalog: the ANVIL-authored agents, skills, commands and rules
+ * that `anvil install` writes into agent harnesses (Claude Code, Cursor, Codex,
  * OpenCode, Gemini). Every item is a Markdown file with simple frontmatter.
  */
 

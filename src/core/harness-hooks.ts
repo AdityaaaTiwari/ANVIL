@@ -1,7 +1,7 @@
 import { appendFile, lstat, mkdir, readFile, realpath, rename, rm, writeFile } from "node:fs/promises";
 import { randomBytes } from "node:crypto";
 import path from "node:path";
-import { runShield } from "./forge-shield.js";
+import { runShield } from "./anvil-shield.js";
 import { activeInstincts, formatInstinctContext, recordObservation } from "./instincts.js";
 import { addProjectMemory, buildProjectMemoryContext, listProjectMemory } from "./project-memory.js";
 import { parseRates, recordSessionCost, type ModelRate } from "./session-cost.js";
@@ -48,6 +48,8 @@ export interface HookInput {
   trigger?: string;
   reason?: string;
   /** Set by FORGE's native adapters; absent for Claude Code. */
+  anvil_harness?: string;
+  /** @deprecated Legacy alias accepted for backwards compatibility. */
   forge_harness?: string;
 }
 
@@ -75,8 +77,8 @@ export interface HarnessHookConfig {
   cost: { enabled: boolean; pricing: Record<string, ModelRate> };
 }
 
-export const HARNESS_HOOK_CONFIG_PATH = ".forge/harness-hooks.json";
-const SESSION_DIR = ".forge/session";
+export const HARNESS_HOOK_CONFIG_PATH = ".anvil/harness-hooks.json";
+const SESSION_DIR = ".anvil/session";
 const DEFAULT_CONFIG: HarnessHookConfig = {
   guard: { enabled: true, allow: [], rules: [] },
   configGuard: { enabled: true, protectQualityConfig: true },
@@ -205,7 +207,7 @@ export const COMMAND_RULES: CommandRule[] = [
 const SECRET_FILE =
   /(?:^|\/)(?:\.env(?:\.(?!example$|sample$|template$)[\w.-]+)?|id_(?:rsa|ed25519|ecdsa|dsa)(?:\.pub)?|[^/]+\.(?:pem|key|p12|pfx)|credentials\.json|\.npmrc|\.pypirc|\.netrc)$/i;
 const AGENT_CONFIG =
-  /(?:^|\/)(?:\.claude\/settings(?:\.local)?\.json|\.mcp\.json|\.cursor\/mcp\.json|\.vscode\/mcp\.json|\.gemini\/settings\.json|\.github\/workflows\/[^/]+\.ya?ml|\.forge\/harness-hooks\.json|\.forge\/permissions\.json)$/;
+  /(?:^|\/)(?:\.claude\/settings(?:\.local)?\.json|\.mcp\.json|\.cursor\/mcp\.json|\.vscode\/mcp\.json|\.gemini\/settings\.json|\.github\/workflows\/[^/]+\.ya?ml|\.(?:anvil|forge)\/(?:harness-hooks|permissions)\.json)$/;
 
 export const QUALITY_CONFIG =
   /(?:^|\/)(?:\.eslintrc(?:\.[\w]+)?|eslint\.config\.[cm]?[jt]s|\.prettierrc(?:\.[\w]+)?|prettier\.config\.[cm]?js|biome\.jsonc?|\.stylelintrc(?:\.[\w]+)?|ruff\.toml|\.ruff\.toml|\.flake8|\.pylintrc|mypy\.ini|\.golangci\.ya?ml|rustfmt\.toml|\.rustfmt\.toml|clippy\.toml|\.rubocop\.yml|\.editorconfig)$/;
@@ -340,7 +342,12 @@ export function parseCustomRules(values: unknown[]): CommandRule[] {
 export async function loadHarnessHookConfig(root: string): Promise<HarnessHookConfig> {
   let raw: string;
   try {
-    raw = await readFile(path.join(root, HARNESS_HOOK_CONFIG_PATH), "utf8");
+    raw = await readFile(path.join(root, HARNESS_HOOK_CONFIG_PATH), "utf8").catch(async (error: unknown) => {
+      if ((error as NodeJS.ErrnoException)?.code === "ENOENT") {
+        return readFile(path.join(root, ".forge/harness-hooks.json"), "utf8");
+      }
+      throw error;
+    });
   } catch (error) {
     if (isMissing(error)) return structuredClone(DEFAULT_CONFIG);
     throw error;
@@ -455,7 +462,7 @@ async function preTool(root: string, input: HookInput, config: HarnessHookConfig
         : "";
   await logGuard(root, {
     at: now.toISOString(),
-    harness: input.forge_harness ?? "claude",
+    harness: input.anvil_harness ?? input.forge_harness ?? "claude",
     session: input.session_id,
     tool: toolName,
     decision: verdict.decision,
@@ -468,7 +475,7 @@ async function preTool(root: string, input: HookInput, config: HarnessHookConfig
       hookSpecificOutput: {
         hookEventName: "PreToolUse",
         permissionDecision: verdict.decision,
-        permissionDecisionReason: `FORGE Guard ${verdict.ruleId}: ${verdict.reason}${verdict.decision === "deny" ? " Blocked. If this is intended, run it yourself or add an allow pattern to " + HARNESS_HOOK_CONFIG_PATH + "." : " Confirm only if this is intended."}`,
+        permissionDecisionReason: `ANVIL Guard ${verdict.ruleId}: ${verdict.reason}${verdict.decision === "deny" ? " Blocked. If this is intended, run it yourself or add an allow pattern to " + HARNESS_HOOK_CONFIG_PATH + "." : " Confirm only if this is intended."}`,
       },
     },
   };
@@ -509,7 +516,7 @@ async function postEdit(root: string, input: HookInput, config: HarnessHookConfi
     json: {
       decision: "block",
       reason:
-        `FORGE Shield found ${relevant.length} high-risk issue(s) in ${relative} after this edit:\n` +
+        `ANVIL Shield found ${relevant.length} high-risk issue(s) in ${relative} after this edit:\n` +
         relevant
           .map((item) => `- ${item.ruleId} (line ${item.line}): ${item.title}. ${item.recommendation}`)
           .join("\n") +
@@ -559,7 +566,7 @@ async function stop(root: string, input: HookInput, config: HarnessHookConfig, n
       json: {
         decision: "block",
         reason:
-          "FORGE verification failed for files edited in this session. Fix these before finishing:\n\n" +
+          "ANVIL verification failed for files edited in this session. Fix these before finishing:\n\n" +
           failures.join("\n\n"),
       },
     };
@@ -581,7 +588,7 @@ async function sessionStart(root: string, _input: HookInput, config: HarnessHook
     () => ({ text: "" })
   );
   const parts: string[] = [];
-  if (handoff) parts.push(`Latest FORGE handoff (${handoff.updatedAt}):\n${handoff.content}`);
+  if (handoff) parts.push(`Latest ANVIL handoff (${handoff.updatedAt}):\n${handoff.content}`);
   if (memory.text) parts.push(memory.text);
   const instincts = formatInstinctContext(await activeInstincts(root, { includeGlobal: true }).catch(() => []));
   if (instincts) parts.push(instincts);
@@ -603,7 +610,7 @@ async function promptSubmit(root: string, input: HookInput, config: HarnessHookC
   if (!match) return { exitCode: 0 };
   await logGuard(root, {
     at: now.toISOString(),
-    harness: input.forge_harness ?? "claude",
+    harness: input.anvil_harness ?? input.forge_harness ?? "claude",
     session: input.session_id,
     tool: "prompt",
     decision: "deny",
@@ -614,7 +621,7 @@ async function promptSubmit(root: string, input: HookInput, config: HarnessHookC
     exitCode: 0,
     json: {
       decision: "block",
-      reason: `FORGE blocked this prompt: it contains what looks like a live credential (${match[0].slice(0, 8)}…). Remove it and reference it through an environment variable instead, then rotate the key if it was shared anywhere.`,
+      reason: `ANVIL blocked this prompt: it contains what looks like a live credential (${match[0].slice(0, 8)}…). Remove it and reference it through an environment variable instead, then rotate the key if it was shared anywhere.`,
     },
   };
 }
@@ -698,7 +705,7 @@ export async function runHarnessHook(
     // Fail open on FORGE internal errors, but surface them to the operator.
     return {
       exitCode: 1,
-      json: { systemMessage: `FORGE hook ${event} failed: ${error instanceof Error ? error.message : String(error)}` },
+      json: { systemMessage: `ANVIL hook ${event} failed: ${error instanceof Error ? error.message : String(error)}` },
     };
   }
 }
@@ -714,8 +721,8 @@ export interface ClaudeHookEntry {
   timeout: number;
 }
 
-export function claudeHookEntries(hookCommand = "forge"): ClaudeHookEntry[] {
-  const base = hookCommand.trim() || "forge";
+export function claudeHookEntries(hookCommand = "anvil"): ClaudeHookEntry[] {
+  const base = hookCommand.trim() || "anvil";
   return [
     {
       event: "PreToolUse",
@@ -737,8 +744,8 @@ export function claudeHookEntries(hookCommand = "forge"): ClaudeHookEntry[] {
   ];
 }
 
-export function statusLineCommand(hookCommand = "forge"): string {
-  return `${hookCommand.trim() || "forge"} statusline`;
+export function statusLineCommand(hookCommand = "anvil"): string {
+  return `${hookCommand.trim() || "anvil"} statusline`;
 }
 
 export const SECRET_DENY_RULES = ["Read(./.env)", "Read(./.env.*)", "Read(./secrets/**)"];

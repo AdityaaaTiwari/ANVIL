@@ -62,7 +62,7 @@ describe("isolated approved patch staging", () => {
     expect(staged.approvalId).toBe(approval.id);
     expect(await readFile(path.join(root, "src/a.ts"), "utf8")).toBe("const a = 1;\n");
     expect(await readFile(path.join(root, staged.stagedFile), "utf8")).toBe("const a = 2;\n");
-    expect(staged.stagedFile).toContain(".forge/patch-workspaces/");
+    expect(staged.stagedFile).toContain(".anvil/patch-workspaces/");
   });
   it("does not allow the same approval to stage a second time", async () => {
     const approval = await fixture();
@@ -160,7 +160,7 @@ describe("isolated approved patch staging", () => {
   it("recovers a promotion interrupted before its manifest update", async () => {
     const approval = await fixture();
     const staged = await stageApprovedPatch(root, approval.id);
-    const stageRoot = path.join(root, ".forge", "patch-workspaces", staged.id);
+    const stageRoot = path.join(root, ".anvil", "patch-workspaces", staged.id);
     const manifestPath = path.join(stageRoot, "stage.json");
     const originalManifest = await readFile(manifestPath, "utf8");
     const promoted = await promoteStagedPatch(root, staged.id, "reviewer", staged.stagedSha256);
@@ -188,7 +188,7 @@ describe("isolated approved patch staging", () => {
   it("refuses recovery when the promotion journal does not match its stage", async () => {
     const approval = await fixture();
     const staged = await stageApprovedPatch(root, approval.id);
-    const stageRoot = path.join(root, ".forge", "patch-workspaces", staged.id);
+    const stageRoot = path.join(root, ".anvil", "patch-workspaces", staged.id);
     const manifestPath = path.join(stageRoot, "stage.json");
     const originalManifest = await readFile(manifestPath, "utf8");
     const promoted = await promoteStagedPatch(root, staged.id, "reviewer", staged.stagedSha256);
@@ -216,7 +216,7 @@ describe("isolated approved patch staging", () => {
   it("refuses recovery when the promotion journal points to a forged backup path", async () => {
     const approval = await fixture();
     const staged = await stageApprovedPatch(root, approval.id);
-    const stageRoot = path.join(root, ".forge", "patch-workspaces", staged.id);
+    const stageRoot = path.join(root, ".anvil", "patch-workspaces", staged.id);
     const manifestPath = path.join(stageRoot, "stage.json");
     const originalManifest = await readFile(manifestPath, "utf8");
     const promoted = await promoteStagedPatch(root, staged.id, "reviewer", staged.stagedSha256);
@@ -231,7 +231,7 @@ describe("isolated approved patch staging", () => {
         state: "prepared",
         sourceSha256: promoted.sourceSha256,
         stagedSha256: promoted.promotedSha256,
-        backupPath: ".forge/patch-workspaces/other-stage/backup/src/a.ts",
+        backupPath: ".anvil/patch-workspaces/other-stage/backup/src/a.ts",
         backupSha256: promoted.sourceSha256,
         preparedAt: new Date().toISOString(),
       })

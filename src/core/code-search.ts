@@ -1,7 +1,7 @@
 import { lstat, readdir, readFile, realpath } from "node:fs/promises";
 import path from "node:path";
 import ts from "typescript";
-const IGNORED = new Set([".git", "node_modules", ".forge", "dist", "build", "coverage", ".next", ".turbo"]);
+const IGNORED = new Set([".git", "node_modules", ".anvil", ".forge", "dist", "build", "coverage", ".next", ".turbo"]);
 const EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".mts", ".cts"]);
 const BLOCKED = /(^|[. _-])(env|secret|secrets|credential|credentials|private|token|password)([. _-]|$)/i;
 const MAX_FILES = 1200,

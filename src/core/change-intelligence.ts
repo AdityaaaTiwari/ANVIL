@@ -154,7 +154,7 @@ export async function analyzeChangeIntelligence(inputPath: string, base = "HEAD"
       ...structural.warnings,
       "Change-risk scores combine static structural hotspots, downstream import counts, and Git path heuristics. They are prioritization signals, not predictions of defects or proof of causation.",
       "Impact and test matching use static source paths; aliases, generated code, dynamic imports, shared integration tests, and runtime behavior may be missed.",
-      "Test recommendations are candidates only. FORGE does not create, modify, or execute tests in this analysis.",
+      "Test recommendations are candidates only. ANVIL does not create, modify, or execute tests in this analysis.",
     ],
   };
 }

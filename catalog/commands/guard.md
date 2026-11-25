@@ -5,6 +5,6 @@ profile: minimal
 ---
 
 # /guard
-1. If a command was given, run `anvil guard check "$ARGUMENTS" --json` and explain the decision and rule. If it is denied, suggest a safer alternative or, if the user really intends it, the allow pattern for `.forge/harness-hooks.json`.
+1. If a command was given, run `anvil guard check "$ARGUMENTS" --json` and explain the decision and rule. If it is denied, suggest a safer alternative or, if the user really intends it, the allow pattern for `.anvil/harness-hooks.json`.
 2. Otherwise run `anvil guard status` and `anvil guard log --days 7`, and summarise the interventions by harness and rule.
 3. If a rule fires often on legitimate work, propose a narrow allow pattern; never propose disabling Guard.

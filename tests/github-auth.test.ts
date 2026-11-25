@@ -1,6 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { getCookie, getQuery, pkceChallenge, randomToken, stateKey, sessionKey } from "../api/_lib/github-auth";
-import type { VercelRequest } from "../api/_lib/vercel-types";
+import {
+  clearSessionCookie,
+  getCookie,
+  getQuery,
+  isValidSessionRepository,
+  pkceChallenge,
+  randomToken,
+  stateKey,
+  sessionKey,
+} from "../api/_lib/github-auth";
+import type { VercelRequest, VercelResponse } from "../api/_lib/vercel-types";
 
 function request(headers: VercelRequest["headers"], query?: VercelRequest["query"]): VercelRequest {
   return {
@@ -33,5 +42,30 @@ describe("GitHub OAuth helpers", () => {
   it("reads only scalar query parameters", () => {
     expect(getQuery(request({}, { code: "abc" }), "code")).toBe("abc");
     expect(getQuery(request({}, { code: ["a", "b"] }), "code")).toBeUndefined();
+  });
+
+  it("validates stored session repositories and clears both session cookies", () => {
+    expect(isValidSessionRepository({ fullName: "acme/app", installationId: 12, private: false })).toBe(true);
+    expect(isValidSessionRepository({ fullName: "invalid", installationId: 12, private: false })).toBe(false);
+    expect(isValidSessionRepository({ fullName: "acme/app", installationId: 0, private: false })).toBe(false);
+    const headers: Record<string, string | string[]> = {};
+    const mockRes: VercelResponse = {
+      setHeader(name, value) {
+        headers[name] = value;
+      },
+      status() {
+        return this;
+      },
+      json() {
+        return this;
+      },
+      redirect() {
+        return this;
+      },
+    };
+    clearSessionCookie(mockRes);
+    expect(Array.isArray(headers["Set-Cookie"])).toBe(true);
+    expect((headers["Set-Cookie"] as string[]).some((c) => c.includes("anvil_github_session=;"))).toBe(true);
+    expect((headers["Set-Cookie"] as string[]).some((c) => c.includes("forge_github_session=;"))).toBe(true);
   });
 });

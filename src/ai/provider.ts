@@ -1,6 +1,6 @@
 import { ClaudeCodeProvider } from "./claude-code-provider.js";
 /**
- * Provider-neutral AI contract for FORGE.
+ * Provider-neutral AI contract for ANVIL.
  *
  * Core repository intelligence and MCP tools do not depend on an AI provider.
  * Real provider adapters can implement this interface without changing agents.
@@ -94,9 +94,9 @@ export class MockAIProvider implements AIProvider {
     const latestUserMessage = [...request.messages].reverse().find((message) => message.role === "user");
     return {
       provider: this.id,
-      model: request.model ?? "forge-mock",
+      model: request.model ?? "anvil-mock",
       text: [
-        "FORGE mock provider response",
+        "ANVIL mock provider response",
         "No external AI service was contacted and no API credentials were used.",
         latestUserMessage ? `Received task: ${latestUserMessage.content.slice(0, 500)}` : "No user task was supplied.",
         "Configure a supported provider adapter to enable model-generated responses.",

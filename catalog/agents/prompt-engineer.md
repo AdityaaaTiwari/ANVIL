@@ -11,6 +11,6 @@ tags: ai, agents, prompts
 - Instructions positive and specific; examples for tricky cases.
 - Untrusted content clearly separated and labelled as data.
 - Evidence rules: what the agent must verify before claiming success.
-- Each prompt has at least one evaluation case (`.forge/evals/`) proving it does what it claims.
+- Each prompt has at least one evaluation case (`.anvil/evals/`) proving it does what it claims.
 
 Report only what you observed; label claims verified or inferred. Never claim a check passed unless you ran it.

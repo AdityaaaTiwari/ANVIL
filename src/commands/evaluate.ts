@@ -29,7 +29,7 @@ export async function runEvaluate(_command: string, rest: string[]): Promise<voi
     const suite = suiteId ? suites.find((item) => item.id === suiteId) : suites[0];
     if (!suite)
       throw new Error(
-        suiteId ? "Evaluation suite not found: " + suiteId : "No evaluation suite found. Add one under .forge/evals/."
+        suiteId ? "Evaluation suite not found: " + suiteId : "No evaluation suite found. Add one under .anvil/evals/."
       );
     const run = await loadRun(target, runId);
     const judgeEnabled = rest.includes("--judge");

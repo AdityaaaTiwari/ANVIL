@@ -5,6 +5,7 @@ import {
   gitBlobSha,
   handleIssueComment,
   handlePullRequest,
+  parseAnvilCommand,
   parseForgeCommand,
   selectShieldPaths,
 } from "../src/github/app-handlers.js";
@@ -127,47 +128,50 @@ const comment = (body: string, extra: Record<string, unknown> = {}) => ({
   ...extra,
 });
 
-const context = (client: FakeClient) => ({ client: client as unknown as GitHubClient, forgeVersion: "2.0.0-test" });
+const context = (client: FakeClient) => ({ client: client as unknown as GitHubClient, anvilVersion: "2.0.0-test" });
 
 describe("GitHub App commands", () => {
-  it("parses /forge commands and options", () => {
+  it("parses /anvil and legacy /forge commands and options", () => {
+    expect(parseAnvilCommand("/anvil analyze --targets claude,cursor --profile minimal")).toMatchObject({
+      command: "analyze",
+    });
     expect(parseForgeCommand("/forge analyze --targets claude,cursor --profile minimal")).toMatchObject({
       command: "analyze",
     });
-    expect(parseForgeCommand("/forge analyze --targets claude,cursor")?.options.get("target")).toBe("claude,cursor");
-    expect(parseForgeCommand("thanks!\n/forge audit")).toBeUndefined();
-    expect(parseForgeCommand("/forge launch-rockets")?.flags.has("unknown")).toBe(true);
+    expect(parseAnvilCommand("/anvil analyze --targets claude,cursor")?.options.get("target")).toBe("claude,cursor");
+    expect(parseAnvilCommand("thanks!\n/anvil audit")).toBeUndefined();
+    expect(parseAnvilCommand("/anvil launch-rockets")?.flags.has("unknown")).toBe(true);
   });
 
-  it("/forge analyze opens a setup PR that preserves existing files", async () => {
+  it("/anvil analyze opens a setup PR that preserves existing files", async () => {
     const client = new FakeClient({ ...REPO });
-    const result = await handleIssueComment(context(client), comment("/forge analyze"));
+    const result = await handleIssueComment(context(client), comment("/anvil analyze"));
     expect(result.action).toBe("analyze");
     expect(client.pulls).toHaveLength(1);
     const pull = client.pulls[0]!;
-    expect(pull.branch).toBe("forge/setup");
+    expect(pull.branch).toBe("anvil/setup");
     const paths = pull.files.map((file) => file.path);
-    expect(paths).toContain(".claude/agents/forge-planner.md");
-    expect(paths).toContain(".cursor/rules/forge-typescript-typescript-style.mdc");
-    expect(paths).toContain(".claude/skills/forge-project/SKILL.md");
-    expect(paths).toContain(".forge/install-state.json");
+    expect(paths).toContain(".claude/agents/anvil-planner.md");
+    expect(paths).toContain(".cursor/rules/anvil-typescript-typescript-style.mdc");
+    expect(paths).toContain(".claude/skills/anvil-project/SKILL.md");
+    expect(paths).toContain(".anvil/install-state.json");
     const agents = pull.files.find((file) => file.path === "AGENTS.md")!.content;
     expect(agents.startsWith("# Team rules\n\nAlways use pnpm.")).toBe(true);
-    expect(agents).toContain("forge:begin");
-    const skill = pull.files.find((file) => file.path === ".claude/skills/forge-project/SKILL.md")!.content;
+    expect(agents).toContain("anvil:begin");
+    const skill = pull.files.find((file) => file.path === ".claude/skills/anvil-project/SKILL.md")!.content;
     expect(skill).toContain("pnpm typecheck");
     expect(skill).toContain("Conventional Commits");
-    expect(pull.body).toContain("FORGE Shield");
+    expect(pull.body).toContain("ANVIL Shield");
     expect(client.comments.at(-1)).toContain("https://github.com/acme/app/pull/7");
   });
 
   it("is idempotent once the setup PR is merged", async () => {
     const first = new FakeClient({ ...REPO });
-    await handleIssueComment(context(first), comment("/forge analyze"));
+    await handleIssueComment(context(first), comment("/anvil analyze"));
     const merged: Files = { ...REPO };
     for (const file of first.pulls[0]!.files) merged[file.path] = file.content;
     const second = new FakeClient(merged);
-    const result = await handleIssueComment(context(second), comment("/forge repair"));
+    const result = await handleIssueComment(context(second), comment("/anvil repair"));
     expect(second.pulls.map((pull) => pull.files.map((file) => file.path))).toEqual([]);
     expect(result.detail).toBe("up to date");
     expect(second.pulls).toHaveLength(0);
@@ -177,27 +181,27 @@ describe("GitHub App commands", () => {
     const client = new FakeClient({ ...REPO });
     const rejected = await handleIssueComment(
       context(client),
-      comment("/forge analyze", {
-        comment: { body: "/forge analyze", user: { login: "drive-by", type: "User" }, author_association: "NONE" },
+      comment("/anvil analyze", {
+        comment: { body: "/anvil analyze", user: { login: "drive-by", type: "User" }, author_association: "NONE" },
       })
     );
     expect(rejected.action).toBe("rejected");
     expect(client.pulls).toHaveLength(0);
     const bot = await handleIssueComment(
       context(client),
-      comment("/forge analyze", { sender: { type: "Bot", login: "forge[bot]" } })
+      comment("/anvil analyze", { sender: { type: "Bot", login: "anvil[bot]" } })
     );
     expect(bot.handled).toBe(false);
   });
 
-  it("/forge audit comments a Shield report and /forge doctor explains a missing install", async () => {
+  it("/anvil audit comments a Shield report and /anvil doctor explains a missing install", async () => {
     const client = new FakeClient({
       ...REPO,
       ".mcp.json": JSON.stringify({ mcpServers: { x: { url: "http://remote.example/mcp" } } }),
     });
-    await handleIssueComment(context(client), comment("/forge audit"));
+    await handleIssueComment(context(client), comment("/anvil audit"));
     expect(client.comments.at(-1)).toContain("SHIELD-MCP-001");
-    await handleIssueComment(context(client), comment("/forge doctor"));
+    await handleIssueComment(context(client), comment("/anvil doctor"));
     expect(client.comments.at(-1)).toContain("not installed");
   });
 
@@ -278,7 +282,7 @@ describe("GitHub building blocks", () => {
       "GET /repos/acme/app/git/commits/base-sha": { tree: { sha: "base-tree" } },
       "POST /repos/acme/app/git/trees": { sha: "new-tree" },
       "POST /repos/acme/app/git/commits": { sha: "new-commit" },
-      "POST /repos/acme/app/git/refs": { ref: "refs/heads/forge/setup" },
+      "POST /repos/acme/app/git/refs": { ref: "refs/heads/anvil/setup" },
       "POST /repos/acme/app/pulls": { html_url: "https://github.com/acme/app/pull/1", number: 1 },
     };
     const fetchImpl: FetchLike = async (url, init) => {
@@ -311,7 +315,7 @@ describe("GitHub building blocks", () => {
       owner: "acme",
       repo: "app",
       baseBranch: "main",
-      branch: "forge/setup",
+      branch: "anvil/setup",
       title: "t",
       body: "b",
       message: "m",
@@ -386,13 +390,13 @@ describe("GitHub building blocks", () => {
     expect(profile.verifyCommands).toEqual(["pnpm typecheck", "pnpm test", "pnpm build"]);
     expect(profile.commitConvention.conventional).toBe(100);
     expect(profile.commitConvention.topScopes[0]).toBe("api");
-    expect(renderProjectSkill(profile)).toMatch(/^---\nname: forge-project\n/);
+    expect(renderProjectSkill(profile)).toMatch(/^---\nname: anvil-project\n/);
   });
 
   it("builds a passing check run when nothing risky changed", () => {
     const shield = {
       schemaVersion: 1 as const,
-      tool: "forge-shield" as const,
+      tool: "anvil-shield" as const,
       generatedAt: "",
       filesScanned: 1,
       score: 100,

@@ -13,4 +13,4 @@ tags: agents, testing, reliability
 4. Treat `needs-review` as a stop: inspect deleted tests, skip markers, config, script or CI changes before anything else.
 5. For races, show the ranking and the winner's diff, and ask before `anvil race pick`.
 
-Never declare success from an agent's summary; only FORGE's own check runs count. Report the receipt id with every claim.
+Never declare success from an agent's summary; only ANVIL's own check runs count. Report the receipt id with every claim.

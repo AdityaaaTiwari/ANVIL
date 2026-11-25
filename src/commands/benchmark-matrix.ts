@@ -114,7 +114,7 @@ export async function runBenchmarkMatrix(_command: string, rest: string[]): Prom
           : {}),
         createProvider,
       });
-      const configWorkspace = await mkdtemp(path.join(os.tmpdir(), "forge-candidate-config-"));
+      const configWorkspace = await mkdtemp(path.join(os.tmpdir(), "anvil-candidate-config-"));
       try {
         const snapshotId = candidate.configVersionId;
         const snapshot = snapshotId
@@ -146,7 +146,7 @@ export async function runBenchmarkMatrix(_command: string, rest: string[]): Prom
           throw new Error(
             "Benchmark candidate " +
               candidate.id +
-              " requests unsupported tool permissions. FORGE currently enforces proposal-only execution with no enabled tools."
+              " requests unsupported tool permissions. ANVIL currently enforces proposal-only execution with no enabled tools."
           );
         const hooks = await loadHooks(configRoot);
         for (const record of run.tasks) {
@@ -233,7 +233,9 @@ export async function runBenchmarkMatrix(_command: string, rest: string[]): Prom
       suite,
       provider: "matrix",
       model: "candidate-specific",
-      ...(process.env.FORGE_BASE_URL ? { baseUrl: process.env.FORGE_BASE_URL } : {}),
+      ...(getAnvilEnv("ANVIL_BASE_URL", "FORGE_BASE_URL")
+        ? { baseUrl: getAnvilEnv("ANVIL_BASE_URL", "FORGE_BASE_URL")! }
+        : {}),
       agentConfigFingerprints: report.candidateProvenance ?? [],
     });
     const manifestPath = await saveExperimentManifest(target, experimentManifest);
@@ -253,7 +255,7 @@ export async function runBenchmarkMatrix(_command: string, rest: string[]): Prom
       process.exitCode = 2;
   } catch (error) {
     process.stderr.write(
-      "FORGE benchmark matrix failed: " + (error instanceof Error ? error.message : String(error)) + "\n"
+      "ANVIL benchmark matrix failed: " + (error instanceof Error ? error.message : String(error)) + "\n"
     );
     process.exitCode = 1;
   }

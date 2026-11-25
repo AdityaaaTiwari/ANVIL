@@ -145,11 +145,17 @@ Every command and flag listed below is verified and supported in ANVIL v1.3.0:
 | `anvil hook [install\|remove]` | Injects or removes automated pre-commit gate in `.git/hooks/pre-commit` | `--force` | **Available** |
 | `anvil security [path]` | Scans repository for hardcoded secrets, API keys, and sensitive tokens | `--fix`, `--json` | **Available** |
 | `anvil agent-security [path]` | Audits agent instructions, prompt injection, hidden Unicode, MCP secrets, and permissions | `--global`, `--sarif <file>`, `--json` | **Available** |
+| `anvil shield [path]` | Runs ANVIL Shield v3 static harness audit across instructions, hooks, MCP, and CI | `--fix`, `--sarif <file>`, `--fail-on <level>`, `--json` | **Available** |
+| `anvil scorecard [path]` | Computes deterministic harness readiness scorecard across 9 engineering categories | `--verbose`, `--json` | **Available** |
+| `anvil consult "<task>"` | Finds catalog agents, skills, commands, rules, and MCP servers matching a task | `--json` | **Available** |
+| `anvil context [path]` | Measures pre-prompt token cost per AI harness and flags duplicate/sprawl waste | `--verbose`, `--max <tokens>`, `--json` | **Available** |
+| `anvil loop run` / `status` | Executes anti-tamper verification loop with pre/post checksums and `.anvil/loops/` receipts | `--goal`, `--check`, `--max-iterations` | **Available** |
+| `anvil race` | Races multiple coding agents in isolated Git worktrees and ranks verified diffs | `--agents`, `--goal`, `--check` | **Available** |
 | `anvil doctor [path]` | Verifies environment health (Node, Git, Docker, workspace permissions) | `--fix`, `--json` | **Available** |
-| `anvil mcp [setup\|start]` | Sets up or runs local read-only Model Context Protocol server | `[setup]` | **Available** |
-| `anvil dashboard [path]` | Launches unified multi-cockpit dashboard (ANVIL, ECC, REA, FORGE) on loopback | `[path]` | **Available** |
-| `cross-harness handoff` | Synchronize active task state between Cursor and Claude Code | — | *Coming soon* |
-| `GitHub App Service` | Hosted GitHub App for automatic pull request comments & check runs | — | *Coming soon* |
+| `anvil mcp [setup\|start\|sync]` | Configures, runs, or cross-syncs the local Model Context Protocol server | `add`, `remove`, `sync`, `matrix` | **Available** |
+| `anvil dashboard [path]` | Launches unified multi-cockpit dashboard (Verification, ECC Skills, REA, Control Center) on loopback | `[path]` | **Available** |
+| `GitHub App Service` | GitHub App handlers & webhook bot (`/anvil analyze\|repair\|audit\|doctor\|risk`) | `/anvil`, `/forge` (legacy alias) | **Available** |
+| `cross-harness handoff` | Synchronize active session handoff state via `.anvil/memory.json` and hooks | `anvil memory handoff` | **Available** |
 
 ---
 
@@ -172,7 +178,7 @@ ANVIL acts as the local inspection and verification harness for your agent:
 - **ECC (affaan-m/ECC):**
   Complements ECC's 1,500+ skills and prompt workflows with ANVIL's deterministic verification, blast radius, and agent security scanning. See the [ECC Integration Guide](docs/integrations/ecc.md).
 - **REA (morluto/rea):**
-  Powers an end-to-end reverse-engineering and binary analysis pipeline: use REA for binary/bundle inspection and ANVIL for safe patch verification and CI gating. See the [REA Integration Guide](docs/integrations/rea.md).
+  Powers an end-to-end reverse-engineering and binary analysis pipeline: use REA for binary/bundle inspection and ANVIL for safe patch verification and CI gating (`npm run test:rea` executes the cross-platform Python REA bridge suite in `catalog/rea/bridges/`). See the [REA Integration Guide](docs/integrations/rea.md).
 - **Codex & OpenCode:**
   Use standard `AGENTS.md` instructions and run `anvil gate .` to verify changes before committing.
 - **Google Antigravity (AGY):**

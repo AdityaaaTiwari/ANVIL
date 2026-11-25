@@ -212,7 +212,7 @@ describe("container timeout cleanup", () => {
       expect(result.status).toBe("timed_out");
       const startedName = await readFile(startedPath, "utf8");
       const stopArgs = JSON.parse(await readFile(stoppedPath, "utf8")) as string[];
-      expect(startedName).toMatch(/^forge-verify-/);
+      expect(startedName).toMatch(/^anvil-verify-/);
       expect(stopArgs).toEqual(["--time", "2", startedName]);
       const removeArgs = JSON.parse(await readFile(removedPath, "utf8")) as string[];
       expect(removeArgs).toEqual(["--force", startedName]);
@@ -257,7 +257,7 @@ describe("container timeout cleanup", () => {
       expect(calls[0][0]).toBe("stop");
       expect(calls[1].slice(0, 2)).toEqual(["rm", "--force"]);
       expect(calls[1].at(-1)).toBe(calls[0].at(-1));
-      expect(result.output).toContain("FORGE cleanup warning");
+      expect(result.output).toContain("ANVIL cleanup warning");
     } finally {
       await rm(root, { recursive: true, force: true });
     }

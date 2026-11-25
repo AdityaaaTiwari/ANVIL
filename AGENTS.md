@@ -53,14 +53,17 @@ Always verify changes before marking tasks complete:
 # 1. Run Prettier format check
 npm run format:check
 
-# 2. Run ESLint
+# 2. Run TypeScript typecheck & Prettier check
 npm run lint
 
 # 3. Build TypeScript to dist/
 npm run build
 
-# 4. Run full test suite with coverage
+# 4. Run full Vitest test suite
 npx vitest run
+
+# 5. Run Python REA bridge test suite
+npm run test:rea
 ```
 
 ---

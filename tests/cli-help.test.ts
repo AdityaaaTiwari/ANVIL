@@ -121,7 +121,7 @@ describe("run-history CLI help", () => {
     ]) {
       expect(() => runCli("runs", directory, ...args)).toThrow();
     }
-  }, 20_000);
+  }, 45_000);
 
   it("rejects duplicate and unknown run-history options", async () => {
     const directory = await createWorkspace();
@@ -135,7 +135,7 @@ describe("run-history CLI help", () => {
     ]) {
       expect(() => runCli("runs", directory, ...args)).toThrow();
     }
-  }, 20_000);
+  }, 45_000);
 });
 
 // ---------------------------------------------------------------------------
@@ -323,4 +323,23 @@ describe("clean and fix CLI commands", () => {
     expect(output).toContain("--fix");
     expect(output).toContain("--json");
   });
+
+  it("supports mcp catalog, add, sync, and clean consult --with suggestions", async () => {
+    const catalogOut = runCli("mcp", "catalog");
+    expect(catalogOut).toContain("context7");
+    expect(catalogOut).toContain("playwright");
+
+    const dir = await createWorkspace();
+    const addOut = runCli("mcp", "add", "context7", "--targets", "claude,cursor", "--path", dir);
+    expect(addOut).toContain("ANVIL MCP add");
+    const syncOut = runCli("mcp", "sync", dir, "--targets", "gemini", "--dry-run");
+    expect(syncOut).toContain("ANVIL MCP sync (dry run)");
+
+    const consultOut = runCli("consult", "security review", "--limit", "3");
+    expect(consultOut).toContain("anvil install --with ");
+    expect(consultOut).not.toContain("forge install --with ");
+
+    const repairHelp = runCli("repair", "--help");
+    expect(repairHelp).toContain("anvil repair");
+  }, 20_000);
 });

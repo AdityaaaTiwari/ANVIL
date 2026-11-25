@@ -21,7 +21,7 @@ export interface RunHistoryJson {
   runs: RunHistoryJsonItem[];
 }
 
-/** Formats the public, versioned summary contract for `forge runs --json`. */
+/** Formats the public, versioned summary contract for `anvil runs --json`. */
 export function formatRunHistoryJson(runs: readonly RunRecord[]): string {
   const output: RunHistoryJson = {
     schemaVersion: 1,

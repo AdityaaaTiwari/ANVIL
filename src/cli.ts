@@ -23,7 +23,8 @@ Usage:
 
 Commands:
   init [path]      Create a safe, local-first .anvil starter workspace
-  install [path]   Connect ANVIL to Claude Code, Codex, Cursor, Copilot, Antigravity, Gemini and more
+  install [path]   Connect ANVIL MCP, hooks, and catalog packs (--profile, --with)
+  repair [path]    Restore or update installed ANVIL harness files without losing edits
   uninstall [path] Remove ANVIL from those AI tools (use --target to pick)
   inspect [path]   Analyze project languages, tooling, dependencies, and scripts
   evaluate RUNID  Score a saved run against a local evaluation suite
@@ -76,7 +77,7 @@ Commands:
   agents [path]    List built-in and workspace agent roles
   memory <action>  Manage local project memory (add, list, remove, context)
   adr <action>     Manage Architecture Decision Records (init, new, list, sync)
-  mcp [setup]      Model Context Protocol server and harness setup (cursor, claude, windsurf)
+  mcp [subcommand] Manage pinned MCP servers and sync across AI tools (catalog, list, add, remove, sync, setup)
   skills [path]    List built-in and workspace skills
   hooks [path]     List configured declarative lifecycle hooks
   agent-security [path] Audit agent instructions, skills, hooks, and permissions

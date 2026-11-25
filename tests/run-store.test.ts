@@ -48,19 +48,19 @@ describe("local run history", () => {
       { id: "draft", agent: "planner", title: "Draft", prompt: "Draft a plan" },
     ]);
     await saveRun(root, validRun);
-    await writeFile(path.join(root, ".forge", "runs", "run_malformed.json"), "{ this is not valid JSON");
+    await writeFile(path.join(root, ".anvil", "runs", "run_malformed.json"), "{ this is not valid JSON");
 
     const history = await listRuns(root);
     expect(history.map((run) => run.id)).toEqual([validRun.id]);
   });
 
   it("rejects malformed persisted token usage", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-run-invalid-token-usage-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-run-invalid-token-usage-"));
     const run = createRun("Reject corrupt budget", [
       { id: "draft", agent: "planner", title: "Draft", prompt: "Draft a plan" },
     ]);
     await saveRun(root, run);
-    const file = path.join(root, ".forge", "runs", run.id + ".json");
+    const file = path.join(root, ".anvil", "runs", run.id + ".json");
     await writeFile(
       file,
       JSON.stringify({ ...run, tokenUsage: { estimatedTokensUsed: -1, estimatedTokensByAgent: { planner: 3 } } })
@@ -129,10 +129,10 @@ describe("local run history", () => {
   });
 
   it("rejects a symlinked run-history directory", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-run-symlink-"));
-    const outside = await mkdtemp(path.join(os.tmpdir(), "forge-run-outside-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-run-symlink-"));
+    const outside = await mkdtemp(path.join(os.tmpdir(), "anvil-run-outside-"));
     try {
-      if (!(await trySymlink(outside, path.join(root, ".forge")))) return;
+      if (!(await trySymlink(outside, path.join(root, ".anvil")))) return;
       const run = createRun("Symlink check", [{ id: "draft", agent: "planner", title: "Draft", prompt: "Draft" }]);
       await expect(saveRun(root, run)).rejects.toThrow(/symbolic links/);
     } finally {
@@ -141,10 +141,10 @@ describe("local run history", () => {
   });
 
   it("rejects symlinked run files and malformed stored task records", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-run-file-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-run-file-"));
     const run = createRun("File validation", [{ id: "draft", agent: "planner", title: "Draft", prompt: "Draft" }]);
     await saveRun(root, run);
-    const directory = path.join(root, ".forge", "runs");
+    const directory = path.join(root, ".anvil", "runs");
     const file = path.join(directory, run.id + ".json");
     await rm(file);
     const outside = path.join(root, "outside.json");
@@ -190,7 +190,7 @@ describe("local run history", () => {
       tasks: run.tasks.map((task) => ({ ...task, status: "awaiting_approval" as const })),
     };
     await saveRun(root, held);
-    const directory = path.join(root, ".forge", "runs");
+    const directory = path.join(root, ".anvil", "runs");
     const lock = path.join(directory, `${run.id}.lock`);
 
     await (await import("node:fs/promises")).mkdir(lock);
@@ -282,7 +282,7 @@ describe("local run history", () => {
     root = await mkdtemp(path.join(os.tmpdir(), "forge-run-invalid-records-"));
     const run = createRun("Validate run records", [{ id: "draft", agent: "planner", title: "Draft", prompt: "Draft" }]);
     await saveRun(root, run);
-    const file = path.join(root, ".forge", "runs", run.id + ".json");
+    const file = path.join(root, ".anvil", "runs", run.id + ".json");
     await writeFile(
       file,
       JSON.stringify({ ...run, events: [{ at: "not-a-date", taskId: "draft", type: "started", message: "bad" }] })
@@ -296,7 +296,7 @@ describe("local run history", () => {
     root = await mkdtemp(path.join(os.tmpdir(), "forge-run-invalid-task-fields-"));
     const run = createRun("Validate task fields", [{ id: "draft", agent: "planner", title: "Draft", prompt: "Draft" }]);
     await saveRun(root, run);
-    const file = path.join(root, ".forge", "runs", run.id + ".json");
+    const file = path.join(root, ".anvil", "runs", run.id + ".json");
     const task = run.tasks[0]!;
     await writeFile(file, JSON.stringify({ ...run, tasks: [{ ...task, result: { content: 42, provider: "test" } }] }));
     await expect(loadRun(root, run.id)).rejects.toThrow(/invalid task result/);
@@ -346,7 +346,7 @@ describe("local run history", () => {
     root = await mkdtemp(path.join(os.tmpdir(), "forge-run-oversized-read-"));
     const run = createRun("Oversized stored run", [{ id: "draft", agent: "planner", title: "Draft", prompt: "Draft" }]);
     await saveRun(root, run);
-    const file = path.join(root, ".forge", "runs", run.id + ".json");
+    const file = path.join(root, ".anvil", "runs", run.id + ".json");
     await writeFile(file, " ".repeat(5 * 1024 * 1024 + 1));
     await expect(loadRun(root, run.id)).rejects.toThrow(/exceeds the size limit/);
   });

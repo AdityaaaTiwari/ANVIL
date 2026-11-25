@@ -65,9 +65,9 @@ See [Token Benchmark Results](token-benchmark-results.md) for reproducible, empi
 
 ## Available MCP Tools
 
-All tools are read-only, bounded, and execute locally within your workspace boundaries:
+All tools are bounded, run locally within your workspace boundaries, and expose canonical `anvil_*` names (set `ANVIL_FORGE_ALIASES=1` to also register legacy `forge_*` aliases):
 
-| Tool Name | Aliases | Model Directive / Purpose | Compact Default |
+| Tool Name | Opt-in Alias | Model Directive / Purpose | Compact Default |
 |---|---|---|:---:|
 | `anvil_inspect_project` | `forge_inspect_project` | Inspect project structure, languages, frameworks, package managers, scripts, and dependencies. Call first on onboarding. | Yes (`detail: false`) |
 | `anvil_map_architecture` | `forge_map_architecture` | In-memory import graph across TS, JS, Python, Go, Rust, Java, C++; TypeScript AST symbols. Call before planning refactors or tracing imports. | Yes (`detail: false`) |
@@ -84,9 +84,15 @@ All tools are read-only, bounded, and execute locally within your workspace boun
 | `anvil_create_review_plan` | `forge_create_review_plan` | Draft a structured multi-role engineering review workflow for a given goal. | - |
 | `anvil_agent_intelligence` | `forge_agent_intelligence` | Read-only analysis of agent effectiveness and recurring failure modes across benchmark history. | - |
 | `anvil_remediation_plan` | `forge_remediation_plan` | Advisory dependency remediation and upgrade plan with human approval guardrails. | - |
+| `anvil_agent_optimization` | `forge_agent_optimization` | Suggest harness configuration and agent prompt optimizations from local benchmark history. | - |
 | `anvil_project_memory` | `forge_project_memory` | Read saved project decisions and architecture constraints within a token budget. | - |
 | `anvil_agent_security_audit` | `forge_agent_security_audit` | Audit agent instructions, skills, hooks, and permissions for prompt injection and secret leaks. | - |
 | `anvil_dependency_impact` | `forge_dependency_impact` | Analyze manifest changes and undeclared imports against a git base revision. | - |
+| `anvil_rea_intelligence` | `forge_rea_intelligence` | Inventory REA clean-room assets and static compliance checks in the workspace. | - |
+| `anvil_scorecard` | `forge_scorecard` | Compute deterministic 9-category harness readiness scorecard across install, guards, gates, memory, learning, and CI. | - |
+| `anvil_consult` | `forge_consult` | Recommend catalog agents, skills, commands, rules, and MCP servers for a given task. | - |
+| `anvil_context_budget` | `forge_context_budget` | Measure pre-prompt context tokens loaded across configured harnesses. | - |
+| `anvil_guard_check` | `forge_guard_check` | Evaluate a planned tool command or file action against ANVIL Guard security rules. | - |
 | `anvil_doctor` | `forge_doctor` | Run diagnostic health checks on Node runtime, Git, Docker, and workspace permissions. | - |
 
 ---

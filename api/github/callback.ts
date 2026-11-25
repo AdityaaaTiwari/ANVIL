@@ -8,6 +8,7 @@ import {
   stateKey,
   type AuthSession,
   type OAuthState,
+  type SessionRepository,
 } from "../_lib/github-auth.js";
 import {
   isValidInstallationId,
@@ -19,6 +20,7 @@ import {
 type TokenResponse = { access_token?: string; error?: string };
 type GitHubUser = { id: number; login: string };
 type InstallationPage = { installations: GitHubInstallation[] };
+type InstallationRepoPage = { repositories?: Array<{ full_name?: string; private?: boolean }> };
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Cache-Control", "no-store");
@@ -28,7 +30,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: "Method not allowed" });
   }
   const oauthError = getQuery(req, "error");
-  if (oauthError) return res.redirect(302, "/?github=authorization_cancelled");
+  if (oauthError) return res.redirect(302, "/app/?github=authorization_cancelled");
   const code = getQuery(req, "code");
   const state = getQuery(req, "state");
   if (!code || code.length > 512 || !state || !/^[A-Za-z0-9_-]{40,60}$/.test(state)) {
@@ -85,20 +87,42 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
+    const repositories: SessionRepository[] = [];
+    const seenRepos = new Set<string>();
     for (const item of installations) {
       const record = installationRecord({ ...item, app_id: appId });
       await redisCommand(["SET", `anvil:github:installation:${item.id}`, JSON.stringify(record)]);
+      for (let page = 1; page <= 5; page++) {
+        const repoPage = await githubApi<InstallationRepoPage>(
+          `/user/installations/${item.id}/repositories?per_page=100&page=${page}`,
+          token
+        ).catch(() => ({ repositories: [] }));
+        const current = repoPage.repositories ?? [];
+        for (const repoItem of current) {
+          if (typeof repoItem.full_name !== "string" || !repoItem.full_name.includes("/")) continue;
+          const key = repoItem.full_name.toLowerCase();
+          if (seenRepos.has(key)) continue;
+          seenRepos.add(key);
+          repositories.push({
+            fullName: repoItem.full_name,
+            installationId: item.id,
+            private: Boolean(repoItem.private),
+          });
+        }
+        if (current.length < 100) break;
+      }
     }
 
     const session: AuthSession = {
       userId: user.id,
       login: user.login,
       installationIds: accessibleIds,
+      repositories,
       createdAt: Date.now(),
     };
     const sessionId = await createSession(session);
     setSessionCookie(res, sessionId);
-    return res.redirect(302, "/?github=connected");
+    return res.redirect(302, "/app/?github=connected");
   } catch {
     return res.status(502).json({ error: "GitHub sign-in failed. Please try again." });
   }

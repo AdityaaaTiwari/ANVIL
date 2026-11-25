@@ -4,6 +4,7 @@ import path from "node:path";
 import { loadAgentConfigVersion, type AgentConfigVersion } from "./agent-config-versioning.js";
 import type { BenchmarkRegressionReport } from "./benchmark-regression.js";
 import { fingerprintAgentConfig } from "./benchmark-matrix.js";
+import { anvilWorkspacePath, listWorkspaceStatePaths, resolveWorkspaceStatePath } from "./workspace-paths.js";
 
 export interface AgentConfigRelease {
   version: 1;
@@ -20,7 +21,7 @@ export interface AgentConfigRelease {
 }
 const ID = /^rel-[a-f0-9]{12}$/;
 function directory(projectPath: string): string {
-  return path.join(path.resolve(projectPath), ".forge", "config-releases");
+  return anvilWorkspacePath(projectPath, "config-releases");
 }
 async function atomicWrite(file: string, data: string): Promise<void> {
   await mkdir(path.dirname(file), { recursive: true, mode: 0o700 });
@@ -94,19 +95,22 @@ export async function prepareAgentConfigRelease(
   return release;
 }
 export async function listAgentConfigReleases(projectPath: string): Promise<AgentConfigRelease[]> {
-  let entries;
-  try {
-    entries = await readdir(directory(projectPath), { withFileTypes: true });
-  } catch (error) {
-    if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") return [];
-    throw error;
+  const seen = new Map<string, AgentConfigRelease>();
+  for (const releaseDir of listWorkspaceStatePaths(projectPath, "config-releases")) {
+    let entries;
+    try {
+      entries = await readdir(releaseDir, { withFileTypes: true });
+    } catch (error) {
+      if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") continue;
+      throw error;
+    }
+    for (const entry of entries) {
+      if (!entry.isFile() || !entry.name.endsWith(".json") || !ID.test(entry.name.slice(0, -5))) continue;
+      const item = validate(JSON.parse(await readFile(path.join(releaseDir, entry.name), "utf8")));
+      if (!seen.has(item.id)) seen.set(item.id, item);
+    }
   }
-  const items: AgentConfigRelease[] = [];
-  for (const entry of entries) {
-    if (!entry.isFile() || !entry.name.endsWith(".json") || !ID.test(entry.name.slice(0, -5))) continue;
-    items.push(validate(JSON.parse(await readFile(path.join(directory(projectPath), entry.name), "utf8"))));
-  }
-  return items.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  return [...seen.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 export async function decideAgentConfigRelease(
   projectPath: string,
@@ -116,7 +120,7 @@ export async function decideAgentConfigRelease(
 ): Promise<AgentConfigRelease> {
   if (!ID.test(id)) throw new Error("Invalid release ID.");
   if (!reviewer.trim() || reviewer.length > 80) throw new Error("A reviewer name of 1–80 characters is required.");
-  const file = path.join(directory(projectPath), id + ".json");
+  const file = resolveWorkspaceStatePath(projectPath, "config-releases", id + ".json");
   const current = validate(JSON.parse(await readFile(file, "utf8")));
   if (current.status !== "pending-approval") throw new Error("Only pending releases can be approved or rejected.");
   const updated: AgentConfigRelease = {
@@ -129,12 +133,10 @@ export async function decideAgentConfigRelease(
   if (decision === "approve") {
     const version: AgentConfigVersion = await loadAgentConfigVersion(projectPath, current.candidateVersionId);
     const approved = { ...version, status: "approved" as const, approvedBy: reviewer.trim() };
+    const versionsDir = path.dirname(resolveWorkspaceStatePath(projectPath, "config-versions", version.id + ".json"));
+    await atomicWrite(path.join(versionsDir, version.id + ".json"), JSON.stringify(approved, null, 2) + "\n");
     await atomicWrite(
-      path.join(path.resolve(projectPath), ".forge", "config-versions", version.id + ".json"),
-      JSON.stringify(approved, null, 2) + "\n"
-    );
-    await atomicWrite(
-      path.join(path.resolve(projectPath), ".forge", "config-versions", "approved.json"),
+      path.join(versionsDir, "approved.json"),
       JSON.stringify(
         { version: 1, activeApprovedVersionId: version.id, updatedAt: new Date().toISOString(), releaseId: id },
         null,

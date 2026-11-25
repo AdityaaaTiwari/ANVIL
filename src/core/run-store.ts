@@ -4,20 +4,40 @@ import { randomUUID } from "node:crypto";
 import os from "node:os";
 import path from "node:path";
 import type { RunRecord } from "./orchestrator.js";
+import { ANVIL_STATE_DIR, LEGACY_FORGE_STATE_DIR } from "./workspace-paths.js";
 
-const RUN_ID_PATTERN = /^forge-[a-z0-9-]{1,80}$/;
+const RUN_ID_PATTERN = /^(?:anvil|forge)-[a-z0-9-]{1,80}$/;
 const MAX_RUN_FILE_BYTES = 5 * 1024 * 1024;
 
 function validateRunId(id: string): void {
   if (!RUN_ID_PATTERN.test(id) || id.includes("..")) {
-    throw new Error("Invalid FORGE run identifier.");
+    throw new Error("Invalid ANVIL run identifier.");
   }
 }
 
-async function safeRunsDirectory(projectPath: string): Promise<string> {
+async function safeExistingRunsDirectory(projectPath: string, stateDirName: string): Promise<string | null> {
   const project = await realpath(path.resolve(projectPath));
   let current = project;
-  for (const part of [".forge", "runs"]) {
+  for (const part of [stateDirName, "runs"]) {
+    current = path.join(current, part);
+    let info;
+    try {
+      info = await lstat(current);
+    } catch (error) {
+      if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") return null;
+      throw error;
+    }
+    if (info.isSymbolicLink() || !info.isDirectory()) {
+      throw new Error("Run history storage must not contain symbolic links or non-directory components.");
+    }
+  }
+  return current;
+}
+
+async function safeRunsDirectory(projectPath: string, stateDirName = ANVIL_STATE_DIR): Promise<string> {
+  const project = await realpath(path.resolve(projectPath));
+  let current = project;
+  for (const part of [stateDirName, "runs"]) {
     current = path.join(current, part);
     try {
       await mkdir(current, { mode: 0o700 });
@@ -68,7 +88,7 @@ async function withRunLock<T>(
   } catch (error) {
     if (error && typeof error === "object" && "code" in error && error.code === "EEXIST") {
       throw new Error(
-        `Run ${runId} is locked by another or interrupted FORGE process. Inspect ${lock}/owner.json; do not remove the lock until you have confirmed its owner is no longer active.`
+        `Run ${runId} is locked by another or interrupted ANVIL process. Inspect ${lock}/owner.json; do not remove the lock until you have confirmed its owner is no longer active.`
       );
     }
     throw error;
@@ -114,12 +134,36 @@ export async function saveRun(projectPath: string, run: RunRecord): Promise<stri
 
 export async function loadRun(projectPath: string, runId: string): Promise<RunRecord> {
   validateRunId(runId);
-  const filePath = path.join(await safeRunsDirectory(projectPath), `${runId}.json`);
-  const linkInfo = await lstat(filePath);
-  if (linkInfo.isSymbolicLink() || !linkInfo.isFile()) {
-    throw new Error("Stored run file must be a regular file and not a symbolic link.");
+  let filePath = "";
+  let foundHandle: Awaited<ReturnType<typeof open>> | null = null;
+  let lastError: unknown;
+  for (const stateDirName of [ANVIL_STATE_DIR, LEGACY_FORGE_STATE_DIR]) {
+    const directory = await safeExistingRunsDirectory(projectPath, stateDirName);
+    if (!directory) continue;
+    const candidate = path.join(directory, `${runId}.json`);
+    try {
+      const linkInfo = await lstat(candidate);
+      if (linkInfo.isSymbolicLink() || !linkInfo.isFile()) {
+        throw new Error("Stored run file must be a regular file and not a symbolic link.");
+      }
+      foundHandle = await open(candidate, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0));
+      filePath = candidate;
+      break;
+    } catch (error) {
+      if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") {
+        lastError = error;
+        continue;
+      }
+      throw error;
+    }
   }
-  const handle = await open(filePath, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0));
+  if (!foundHandle) {
+    if (lastError) throw lastError;
+    const fallbackPath = path.join(await safeRunsDirectory(projectPath), `${runId}.json`);
+    foundHandle = await open(fallbackPath, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0));
+  }
+  const handle = foundHandle;
+  void filePath;
   let serialized: string;
   try {
     const info = await handle.stat();
@@ -272,24 +316,28 @@ export async function loadRun(projectPath: string, runId: string): Promise<RunRe
 }
 
 export async function listRuns(projectPath: string): Promise<RunRecord[]> {
-  const directory = await safeRunsDirectory(projectPath);
-  let entries;
-  try {
-    entries = await readdir(directory, { withFileTypes: true });
-  } catch (error) {
-    if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") return [];
-    throw error;
-  }
-
+  const seenIds = new Set<string>();
   const runs: RunRecord[] = [];
-  for (const entry of entries) {
-    if (!entry.isFile() || !entry.name.endsWith(".json")) continue;
-    const id = entry.name.slice(0, -5);
-    if (!RUN_ID_PATTERN.test(id) || id.includes("..")) continue;
+  for (const stateDirName of [ANVIL_STATE_DIR, LEGACY_FORGE_STATE_DIR]) {
+    const directory = await safeExistingRunsDirectory(projectPath, stateDirName);
+    if (!directory) continue;
+    let entries;
     try {
-      runs.push(await loadRun(projectPath, id));
-    } catch {
-      // Ignore malformed records; callers can inspect the .forge/runs directory.
+      entries = await readdir(directory, { withFileTypes: true });
+    } catch (error) {
+      if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") continue;
+      throw error;
+    }
+    for (const entry of entries) {
+      if (!entry.isFile() || !entry.name.endsWith(".json")) continue;
+      const id = entry.name.slice(0, -5);
+      if (!RUN_ID_PATTERN.test(id) || id.includes("..") || seenIds.has(id)) continue;
+      seenIds.add(id);
+      try {
+        runs.push(await loadRun(projectPath, id));
+      } catch {
+        // Ignore malformed records; callers can inspect the .anvil/runs directory.
+      }
     }
   }
   return runs.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
@@ -353,7 +401,7 @@ export async function recoverInterruptedRun(projectPath: string, runId: string):
     for (const record of interrupted) {
       record.status = "failed";
       record.error =
-        "Execution was interrupted. Provider outcome is unknown; FORGE did not automatically retry this task.";
+        "Execution was interrupted. Provider outcome is unknown; ANVIL did not automatically retry this task.";
       run.events.push({
         at,
         taskId: record.task.id,

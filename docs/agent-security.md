@@ -47,14 +47,14 @@ ANVIL inspects configuration formats natively (JSON, TOML, Markdown, YAML) witho
 - `.cursorrules`, `.windsurfrules`, `.clinerules`
 - `.github/copilot-instructions.md`, `.github/instructions/**/*.md`, `.github/prompts/**/*.md`
 - `.cursor/rules/*.mdc`, `.windsurf/rules/*`, `.agents/rules/*`, `.agent/rules/*`
-- `.claude/skills/*`, `.claude/commands/*`, `.claude/agents/*`, `.anvil/skills/*`, `.forge/skills/*`
+- `.claude/skills/*`, `.claude/commands/*`, `.claude/agents/*`, `.anvil/skills/*` (plus legacy `.forge/skills/*`)
 
 ### Workspace Tool & MCP Configurations
 - `.mcp.json`, `mcp.json`, `opencode.json`
 - `.cursor/mcp.json`, `.vscode/mcp.json`, `.agents/mcp_config.json`, `.gemini/settings.json`
 - `.claude/settings.json`, `.claude/settings.local.json`
 - `.codex/config.toml`, `.zed/settings.json`
-- `.anvil/hooks/*`, `.anvil/hooks.json`, `.claude/hooks/*`, `.forge/permissions.json`, `.forge/hooks.json`
+- `.anvil/hooks/*`, `.anvil/hooks.json`, `.anvil/harness-hooks.json`, `.anvil/permissions.json`, `.claude/hooks/*` (plus legacy `.forge/permissions.json`, `.forge/hooks.json`)
 
 ### Global Per-User Configurations (`--global`)
 When `--global` is passed, ANVIL scans configurations in the user's home directory:

@@ -1,8 +1,8 @@
 /**
  * Versioned capability manifest for supported agent harnesses.
  *
- * These declarations describe FORGE's current renderer and hook integration,
- * not every feature the upstream harness may support. "shared" means FORGE
+ * These declarations describe ANVIL's current renderer and hook integration,
+ * not every feature the upstream harness may support. "shared" means ANVIL
  * installs common Markdown/instructions rather than a native harness feature.
  */
 
@@ -32,7 +32,7 @@ export const HARNESS_CAPABILITIES: readonly HarnessCapability[] = [
     displayName: "Claude Code",
     schemaVersion: HARNESS_CAPABILITY_SCHEMA_VERSION,
     capabilities: { agents: "native", skills: "native", commands: "native", rules: "native", hooks: "native" },
-    notes: ["FORGE can merge its runtime hooks into Claude Code settings when --hooks is enabled."],
+    notes: ["ANVIL can merge its runtime hooks into Claude Code settings when --hooks is enabled."],
   },
   {
     target: "cursor",
@@ -41,7 +41,7 @@ export const HARNESS_CAPABILITIES: readonly HarnessCapability[] = [
     capabilities: { agents: "shared", skills: "shared", commands: "native", rules: "native", hooks: "native" },
     notes: [
       "Agents and skills are rendered as Cursor rules; they are not installed as native subagents or skill packages.",
-      "With --hooks, FORGE writes .cursor/hooks.json: Guard on shell commands and file reads, the prompt secret guard, the verification gate on stop, edit tracking and session memory.",
+      "With --hooks, ANVIL writes .cursor/hooks.json: Guard on shell commands and file reads, the prompt secret guard, the verification gate on stop, edit tracking and session memory.",
     ],
   },
   {
@@ -51,7 +51,7 @@ export const HARNESS_CAPABILITIES: readonly HarnessCapability[] = [
     capabilities: { agents: "shared", skills: "shared", commands: "shared", rules: "shared", hooks: "native" },
     notes: [
       "Shared project instructions are referenced from AGENTS.md; skills use the shared .agents/skills layout.",
-      "With --hooks, FORGE writes .codex/hooks.json (Bash and apply_patch Guard, prompt guard, verification gate, memory). Codex asks you to trust project hooks with /hooks; Codex cannot pause for approval, so FORGE turns 'ask' into a deny with instructions.",
+      "With --hooks, ANVIL writes .codex/hooks.json (Bash and apply_patch Guard, prompt guard, verification gate, memory). Codex asks you to trust project hooks with /hooks; Codex cannot pause for approval, so ANVIL turns 'ask' into a deny with instructions.",
     ],
   },
   {
@@ -60,8 +60,8 @@ export const HARNESS_CAPABILITIES: readonly HarnessCapability[] = [
     schemaVersion: HARNESS_CAPABILITY_SCHEMA_VERSION,
     capabilities: { agents: "native", skills: "shared", commands: "native", rules: "shared", hooks: "unsupported" },
     notes: [
-      "Rules are exposed through shared FORGE Markdown and project instructions.",
-      "FORGE runtime hooks are not installed for this target.",
+      "Rules are exposed through shared ANVIL Markdown and project instructions.",
+      "ANVIL runtime hooks are not installed for this target.",
     ],
   },
   {
@@ -71,7 +71,7 @@ export const HARNESS_CAPABILITIES: readonly HarnessCapability[] = [
     capabilities: { agents: "shared", skills: "shared", commands: "native", rules: "shared", hooks: "native" },
     notes: [
       "Shared instructions are referenced from GEMINI.md; skills use the shared .agents/skills layout.",
-      "With --hooks, FORGE merges hooks into .gemini/settings.json (BeforeTool Guard, BeforeAgent prompt guard, AfterAgent verification gate, memory and compaction handoffs).",
+      "With --hooks, ANVIL merges hooks into .gemini/settings.json (BeforeTool Guard, BeforeAgent prompt guard, AfterAgent verification gate, memory and compaction handoffs).",
     ],
   },
   {
@@ -82,7 +82,7 @@ export const HARNESS_CAPABILITIES: readonly HarnessCapability[] = [
     notes: [
       "Rules become .github/instructions/*.instructions.md with applyTo globs; workflows become .github/prompts/*.prompt.md; agents become .github/agents/*.agent.md.",
       "A managed block in .github/copilot-instructions.md indexes the shared harness.",
-      "Opt-in target: install with --target copilot, or FORGE adds it when .github/copilot-instructions.md exists.",
+      "Opt-in target: install with --target copilot, or ANVIL adds it when .github/copilot-instructions.md exists.",
     ],
   },
   {
@@ -93,7 +93,7 @@ export const HARNESS_CAPABILITIES: readonly HarnessCapability[] = [
     notes: [
       "Rules become .windsurf/rules with always_on, glob or model_decision triggers; workflows become .windsurf/workflows.",
       "Agents and skills are indexed from AGENTS.md.",
-      "Opt-in target: FORGE adds it when .windsurf/ exists.",
+      "Opt-in target: ANVIL adds it when .windsurf/ exists.",
     ],
   },
   {
@@ -103,8 +103,8 @@ export const HARNESS_CAPABILITIES: readonly HarnessCapability[] = [
     capabilities: { agents: "shared", skills: "shared", commands: "shared", rules: "native", hooks: "unsupported" },
     notes: [
       "Rules become .kiro/steering files with always, fileMatch or manual inclusion.",
-      "Agents and workflows become manual steering files you pull in with #forge-<kind>-<id>.",
-      "Opt-in target: FORGE adds it when .kiro/ exists.",
+      "Agents and workflows become manual steering files you pull in with #anvil-<kind>-<id>.",
+      "Opt-in target: ANVIL adds it when .kiro/ exists.",
     ],
   },
   {
@@ -114,8 +114,8 @@ export const HARNESS_CAPABILITIES: readonly HarnessCapability[] = [
     capabilities: { agents: "shared", skills: "shared", commands: "native", rules: "native", hooks: "unsupported" },
     notes: [
       "Rules become .clinerules/*.md (with paths frontmatter when scoped); workflows become .clinerules/workflows.",
-      "A managed .clinerules/forge-harness.md indexes agents and skills.",
-      "Opt-in target: FORGE adds it when .clinerules exists.",
+      "A managed .clinerules/anvil-harness.md indexes agents and skills.",
+      "Opt-in target: ANVIL adds it when .clinerules exists.",
     ],
   },
   {
@@ -124,9 +124,9 @@ export const HARNESS_CAPABILITIES: readonly HarnessCapability[] = [
     schemaVersion: HARNESS_CAPABILITY_SCHEMA_VERSION,
     capabilities: { agents: "shared", skills: "shared", commands: "shared", rules: "shared", hooks: "unsupported" },
     notes: [
-      "Zed's agent reads AGENTS.md, so FORGE installs the shared harness and its managed AGENTS.md block.",
+      "Zed's agent reads AGENTS.md, so ANVIL installs the shared harness and its managed AGENTS.md block.",
       "If the project has a .rules file, Zed prefers it over AGENTS.md; add a pointer to AGENTS.md there.",
-      "Opt-in target: FORGE adds it when .zed/ or .rules exists.",
+      "Opt-in target: ANVIL adds it when .zed/ or .rules exists.",
     ],
   },
 ] as const;
@@ -145,12 +145,12 @@ export function listHarnessCapabilities(): HarnessCapability[] {
   }));
 }
 
-/** Human-readable capability matrix for `forge harnesses`. */
+/** Human-readable capability matrix for `anvil harnesses`. */
 export function formatHarnessCapabilities(): string {
   const rows = listHarnessCapabilities();
   const columns = ["agents", "skills", "commands", "rules", "hooks"] as const;
   const lines = [
-    "FORGE harness capability matrix (native = native format; shared = shared Markdown; unsupported = not integrated)",
+    "ANVIL harness capability matrix (native = native format; shared = shared Markdown; unsupported = not integrated)",
     "",
     "Harness".padEnd(16) + columns.map((column) => column.padEnd(13)).join(""),
   ];

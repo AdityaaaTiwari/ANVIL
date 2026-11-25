@@ -16,7 +16,7 @@ export async function runSandboxCleanup(_command: string, rest: string[]): Promi
       "ps",
       "-a",
       "--filter",
-      "label=com.forge.managed=true",
+      "label=com.anvil.managed=true",
       "--format",
       "{{.ID}}\\t{{.Status}}\\t{{.Names}}",
     ]);

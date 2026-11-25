@@ -20,7 +20,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!session || !session.installationIds.includes(id)) {
       return res.redirect(302, `/api/github/login?installation_id=${id}`);
     }
-    return res.redirect(302, "/?github=connected");
+    return res.redirect(302, "/app/?github=connected");
   } catch {
     return res.status(503).json({ error: "Could not verify the GitHub installation" });
   }

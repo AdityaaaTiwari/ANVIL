@@ -105,7 +105,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (!allowed) return jsonError(res, 404, "Repository not found in your ANVIL installations");
       const client = await clientFor(allowed.installationId, target.repo);
       const overview = await buildRepoOverview(
-        { client, forgeVersion: ANVIL_VERSION, catalogRoot: path.join(process.cwd(), "catalog") },
+        { client, anvilVersion: ANVIL_VERSION, catalogRoot: path.join(process.cwd(), "catalog") },
         target.owner,
         target.repo,
         await history(allowed.fullName)
@@ -127,7 +127,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (!allowed) return jsonError(res, 404, "Repository not found in your ANVIL installations");
       const client = await clientFor(allowed.installationId, repoTarget.repo);
       const result = await runDashboardAction(
-        { client, forgeVersion: ANVIL_VERSION, catalogRoot: path.join(process.cwd(), "catalog") },
+        { client, anvilVersion: ANVIL_VERSION, catalogRoot: path.join(process.cwd(), "catalog") },
         repoTarget.owner,
         repoTarget.repo,
         body.action,

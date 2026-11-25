@@ -120,10 +120,10 @@ const ROOT_FILES = new Set([
   "opencode.json",
 ]);
 const SCANNED_DIRECTORIES = [
-  ".forge/skills",
-  ".forge/hooks",
   ".anvil/skills",
   ".anvil/hooks",
+  ".forge/skills",
+  ".forge/hooks",
   ".claude/commands",
   ".claude/agents",
   ".claude/skills",
@@ -138,6 +138,9 @@ const SCANNED_DIRECTORIES = [
   ".opencode",
 ];
 const SCANNED_FILES = new Set([
+  ".anvil/permissions.json",
+  ".anvil/policy.json",
+  ".anvil/hooks.json",
   ".forge/permissions.json",
   ".forge/policy.json",
   ".forge/hooks.json",

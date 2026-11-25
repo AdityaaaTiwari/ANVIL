@@ -48,6 +48,13 @@ jobs:
         run: npm run typecheck
       - name: Run tests with coverage
         run: npm run test:coverage
+      - name: Run Python REA bridge tests
+        run: |
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            npm run test:rea
+          else
+            npm run test:rea -- --require-posix
+          fi
       - name: Build
         run: npm run build
       - name: Test ANVIL GitHub Action

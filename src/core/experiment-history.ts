@@ -118,7 +118,7 @@ export function buildExperimentHistory(
 }
 export function formatExperimentHistory(report: ExperimentHistoryReport): string {
   const lines = [
-    "FORGE Experiment History & Leaderboard",
+    "ANVIL Experiment History & Leaderboard",
     "Reports analyzed: " + report.reportsAnalyzed,
     "",
     "Suite | Rank | Candidate | Provider/model | Runs | Trials | Avg score | Pass rate | Avg duration | Estimated tokens | Score trend",

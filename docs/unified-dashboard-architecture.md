@@ -1,13 +1,13 @@
 # Unified Multi-Cockpit Dashboard Architecture
 
-ANVIL provides a unified engineering control center that combines **Verification (ANVIL)**, **Agent Skills (ECC)**, **Binary Reverse-Engineering (REA)**, and **Multi-Agent Benchmarks (FORGE)** into one cohesive cockpit with dedicated domain-specific views.
+ANVIL provides a unified engineering control center that combines **Verification (ANVIL)**, **Agent Skills (ECC)**, **Binary Reverse-Engineering (REA)**, and **Control Center & Harness Scorecard** workflows into one cohesive cockpit with dedicated domain-specific views.
 
 ```text
-┌────────────────────────────────────────────────────────────────────────────────┐
-│               UNIFIED WORKBENCH COCKPIT (SEPARATE YET COMBINED)                │
-├────────────────────────────────────────────────────────────────────────────────┤
-│ [ 🌐 Combined ]  [ 🛡️ ANVIL Gate ]  [ 🧠 ECC Skills ]  [ 🔍 REA ]  [ 📊 FORGE ] │
-└────────────────────────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                    UNIFIED WORKBENCH COCKPIT (SEPARATE YET COMBINED)                   │
+├────────────────────────────────────────────────────────────────────────────────────────┤
+│ [ 🌐 Combined ]  [ 🛡️ ANVIL Gate ]  [ 🧠 ECC Skills ]  [ 🔍 REA ]  [ ⚡ Control Center ] │
+└────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -31,7 +31,7 @@ Mixing all of these into a single cluttered screen causes information overload, 
 ### 1. 🌐 All-in-One Cockpit (Unified Executive View)
 The primary overview displaying cross-platform synchronization and end-to-end pipeline health:
 - **Unified Safety Shield:** High-level grade (Grade A / 100/100) combining zero secret leaks, clean AST import hygiene, and passing tests.
-- **Ecosystem Health Matrix:** Real-time synchronization status across ANVIL, ECC, REA, and FORGE.
+- **Ecosystem Health Matrix:** Real-time synchronization status across ANVIL Verification, ECC Skills, REA Binary Inspection, and Control Center Harness Readiness.
 - **Live Pipeline Activity:** Traces the lifecycle of a task from initial binary inspection (REA) to clean reimplementation (ECC) and automated stop-hook verification (ANVIL).
 
 ### 2. 🛡️ ANVIL Verification Gate & Policy
@@ -55,12 +55,23 @@ Dedicated view for `morluto/rea` black-box decompilation:
 - **Clean Polyfill Preview:** Verification that reimplementations are authored cleanly without copying proprietary binary blobs.
 - **REA MCP Tools:** Verification that `rea_decompile`, `rea_extract_symbols`, and `rea_inspect_ipc` are connected via stdio.
 
-### 5. 📊 FORGE Multi-Agent Benchmarks & Orchestration
-Dedicated view for `ansh44233/FORGE-ECC` evaluation intelligence:
-- **Agent Leaderboard:** Accuracy, pass rate, and token efficiency scorecards comparing Claude 3.7 Sonnet, GPT-4o, Gemini 2.0 Pro, and local models.
+### 5. ⚡ ANVIL Control Center, Scorecard & Benchmarks
+Dedicated view for harness readiness, verified loops, instincts, and multi-agent benchmarks (originally inspired by `ansh44233/FORGE-ECC`):
+- **Harness Readiness Scorecard:** 9-category deterministic scorecards served on `/api/anvil/scorecard` (with `/api/forge/scorecard` legacy alias).
+- **Agent Leaderboard:** Accuracy, pass rate, and token efficiency scorecards comparing configured providers and models.
 - **Token Compression:** Metrics demonstrating 96%+ token reductions using compact AST summaries over raw source reads.
-- **Transactional Rollback:** Inventory of snapshot backups in `.anvil/backups/cleaner/` with 1-click byte-accurate undo (`anvil undo <backupId>`).
-- **Execution Traces:** Step-by-step history of multi-agent plans and decisions.
+- **Transactional Rollback:** Inventory of snapshot backups in `.anvil/backups/` (and legacy `.forge/backups/`) with byte-accurate undo (`anvil undo <backupId>`).
+- **Execution Traces:** Step-by-step history of multi-agent plans and decisions stored under `.anvil/traces/`.
+
+---
+
+## 🧩 Modular Server Implementation
+
+The local dashboard server ([`src/core/dashboard-server.ts`](../src/core/dashboard-server.ts)) delegates to focused submodules under `src/core/dashboard/`:
+- `http-helpers.ts` — Loopback Host validation and JSON/HTML response helpers
+- `sse.ts` — Live Server-Sent Events client registry and broadcasts
+- `styles.ts` & `page.ts` & `client-script.ts` — Cockpit UI layout, theme, and browser script
+- `routes-get.ts` & `routes-post.ts` — Read/write API handlers reading `.anvil/` state with `.forge/` compatibility fallbacks
 
 ---
 

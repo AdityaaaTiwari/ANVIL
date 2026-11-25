@@ -1,5 +1,6 @@
 const EXCLUDED_SCAN_DIRECTORIES = new Set([
   ".git",
+  ".anvil",
   ".forge",
   ".ssh",
   ".aws",
