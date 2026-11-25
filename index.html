@@ -972,9 +972,9 @@
     }
     .tab-dot.dot-combined { background: linear-gradient(135deg, #f97316, #38bdf8); box-shadow: 0 0 8px #f97316; }
     .tab-dot.dot-anvil { background: #38bdf8; box-shadow: 0 0 8px #38bdf8; }
-    .tab-dot.dot-ecc { background: #a855f7; box-shadow: 0 0 8px #a855f7; }
-    .tab-dot.dot-rea { background: #34d399; box-shadow: 0 0 8px #34d399; }
-    .tab-dot.dot-forge { background: #f97316; box-shadow: 0 0 8px #f97316; }
+    .tab-dot.dot-catalog { background: #a855f7; box-shadow: 0 0 8px #a855f7; }
+    .tab-dot.dot-binary { background: #34d399; box-shadow: 0 0 8px #34d399; }
+    .tab-dot.dot-control { background: #f97316; box-shadow: 0 0 8px #f97316; }
     .tab-dot.dot-github { background: #8b5cf6; box-shadow: 0 0 8px #8b5cf6; }
 
     /* Unified Cockpit Filter & Search Controls */
@@ -1099,7 +1099,7 @@
       border-color: var(--cyan);
     }
 
-    /* REA Binary Specs Grid */
+    /* Binary Specs Grid */
     .specs-tag-cloud {
       display: flex;
       flex-wrap: wrap;
@@ -1940,7 +1940,7 @@
   <!-- Top Announcement Bar -->
   <aside class="top-announcement" aria-label="Version announcement">
     <span class="badge-mini">v1.3.0</span>
-    <span><strong>The Deterministic Verification Layer for AI Coding Agents</strong> · 681 Vitest + 103 REA Tests · 100% Local</span>
+    <span><strong>The Deterministic Verification Layer for AI Coding Agents</strong> · 680 Vitest + 103 REA Tests · 100% Local</span>
     <a href="https://github.com/anvil-workbench/ANVIL" target="_blank" rel="noopener" style="text-decoration: underline; color: #fff;">GitHub →</a>
   </aside>
 
@@ -2177,9 +2177,9 @@
           <div class="sub">Zero external tracking or code phoning home</div>
         </div>
         <div class="stat-box">
-          <div class="val val-amber">784</div>
+          <div class="val val-amber">783</div>
           <div class="title">Verified Unit &amp; Bridge Tests</div>
-          <div class="sub">681 Vitest + 103 Python REA tests across CI</div>
+          <div class="sub">680 Vitest + 103 Python REA tests across CI</div>
         </div>
         <div class="stat-box">
           <div class="val val-cyan">1</div>
@@ -2219,14 +2219,14 @@
             <button class="dash-tab-btn" data-cockpit-tab="tab-anvil" role="tab" aria-selected="false">
               <span class="tab-dot dot-anvil"></span> 🛡️ ANVIL Verification
             </button>
-            <button class="dash-tab-btn" data-cockpit-tab="tab-ecc" role="tab" aria-selected="false">
-              <span class="tab-dot dot-ecc"></span> 🧠 Agent Toolkit
+            <button class="dash-tab-btn" data-cockpit-tab="tab-catalog" role="tab" aria-selected="false">
+              <span class="tab-dot dot-catalog"></span> 🧠 Agent Toolkit
             </button>
-            <button class="dash-tab-btn" data-cockpit-tab="tab-rea" role="tab" aria-selected="false">
-              <span class="tab-dot dot-rea"></span> 🔬 Binary Intelligence
+            <button class="dash-tab-btn" data-cockpit-tab="tab-binary" role="tab" aria-selected="false">
+              <span class="tab-dot dot-binary"></span> 🔬 Binary Intelligence
             </button>
-            <button class="dash-tab-btn" data-cockpit-tab="tab-forge" role="tab" aria-selected="false">
-              <span class="tab-dot dot-forge"></span> ⚡ Control Center
+            <button class="dash-tab-btn" data-cockpit-tab="tab-control" role="tab" aria-selected="false">
+              <span class="tab-dot dot-control"></span> ⚡ Control Center
             </button>
             <button class="dash-tab-btn" data-cockpit-tab="tab-github" role="tab" aria-selected="false">
               <span class="tab-dot dot-github"></span> 🐙 GitHub App &amp; PR Bot
@@ -2267,10 +2267,10 @@
               <div class="dash-metric-card">
                 <div class="dash-metric-label">TEST VERIFICATION SUITE</div>
                 <div class="dash-metric-val">
-                  <span class="dash-metric-num" style="color: var(--cyan);">681</span>
+                  <span class="dash-metric-num" style="color: var(--cyan);">680</span>
                   <span style="font-size: 13px; color: var(--text-subtle);">passed</span>
                 </div>
-                <div class="dash-metric-sub">102 Vitest suites + 103 REA bridge tests</div>
+                <div class="dash-metric-sub">101 Vitest suites + 103 REA bridge tests</div>
               </div>
             </div>
 
@@ -2472,7 +2472,7 @@
           </div>
 
           <!-- TAB 3: ANVIL AGENT TOOLKIT -->
-          <div class="dash-tab-panel" id="tab-ecc" role="tabpanel">
+          <div class="dash-tab-panel" id="tab-catalog" role="tabpanel">
             <div class="dash-top-metrics">
               <div class="dash-metric-card">
                 <div class="dash-metric-label">AGENT SKILLS CATALOG</div>
@@ -2510,10 +2510,10 @@
               </div>
             </div>
 
-            <!-- ECC Filter & Search Toolbar -->
+            <!-- Catalog Filter & Search Toolbar -->
             <div class="cockpit-toolbar">
-              <input type="text" id="eccSearchInput" class="cockpit-search-input" placeholder="🔍 Search 88 agents, 348 skills &amp; 113 workflow commands... (e.g., architect, nextjs, /plan, docker, rust)" />
-              <div class="cockpit-filter-pills" id="eccFilterPills">
+              <input type="text" id="catalogSearchInput" class="cockpit-search-input" placeholder="🔍 Search 88 agents, 348 skills &amp; 113 workflow commands... (e.g., architect, nextjs, /plan, docker, rust)" />
+              <div class="cockpit-filter-pills" id="catalogFilterPills">
                 <span class="cockpit-pill active" data-filter="all">All (436)</span>
                 <span class="cockpit-pill" data-filter="architecture">Architecture (7)</span>
                 <span class="cockpit-pill" data-filter="code-review">Code Review (7)</span>
@@ -2527,7 +2527,7 @@
             </div>
 
             <!-- Specialist Agents & Skills Grid -->
-            <div class="catalog-card-grid" id="eccCatalogGrid">
+            <div class="catalog-card-grid" id="catalogItemGrid">
               <!-- Architect Agent -->
               <div class="catalog-item-card" data-category="architecture" data-keywords="architect architecture adr boundary system modular design">
                 <div>
@@ -2711,7 +2711,7 @@
           </div>
 
           <!-- TAB 4: ANVIL BINARY INTELLIGENCE -->
-          <div class="dash-tab-panel" id="tab-rea" role="tabpanel">
+          <div class="dash-tab-panel" id="tab-binary" role="tabpanel">
             <div class="dash-top-metrics">
               <div class="dash-metric-card">
                 <div class="dash-metric-label">BINARY SPECIFICATIONS</div>
@@ -2872,7 +2872,7 @@
           </div>
 
           <!-- TAB 5: ANVIL CONTROL CENTER -->
-          <div class="dash-tab-panel" id="tab-forge" role="tabpanel">
+          <div class="dash-tab-panel" id="tab-control" role="tabpanel">
             <div class="dash-top-metrics">
               <div class="dash-metric-card">
                 <div class="dash-metric-label">HARNESS SCORECARD</div>
@@ -2889,7 +2889,7 @@
                 <div class="dash-metric-val">
                   <span class="dash-metric-num" style="color: var(--emerald);">98.4%</span>
                 </div>
-                <div class="dash-metric-sub">Across 102 Vitest + 10 REA bridge suites</div>
+                <div class="dash-metric-sub">Across 101 Vitest + 10 REA bridge suites</div>
               </div>
 
               <div class="dash-metric-card">
@@ -2966,7 +2966,7 @@
                 </div>
                 <div class="flow-box">
                   <div class="flow-box-title" style="justify-content: center; color: #a855f7;">4. Local Gate</div>
-                  <div class="flow-box-desc">Zero secrets · 681 Vitest + 103 REA tests.</div>
+                  <div class="flow-box-desc">Zero secrets · 680 Vitest + 103 REA tests.</div>
                 </div>
                 <div class="flow-box">
                   <div class="flow-box-title" style="justify-content: center; color: var(--emerald);">5. Receipt Hash</div>
@@ -3036,7 +3036,7 @@
             </div>
           </div>
 
-          <!-- TAB 6: GITHUB APP & PR BOT (ecc-tools & anvil-workbench style) -->
+          <!-- TAB 6: GITHUB APP & PR BOT (anvil-workbench style) -->
           <div class="dash-tab-panel" id="tab-github" role="tabpanel">
             <div class="dash-top-metrics">
               <div class="dash-metric-card">
@@ -3135,7 +3135,7 @@
                     <tr style="border-bottom: 1px solid #21262d;">
                       <td style="padding: 6px 8px;"><b>Regression Tests</b></td>
                       <td style="padding: 6px 8px; color: #3fb950;">✓ Passing</td>
-                      <td style="padding: 6px 8px; color: #8b949e;">681 Vitest (102 suites) + 103 REA tests</td>
+                      <td style="padding: 6px 8px; color: #8b949e;">680 Vitest (101 suites) + 103 REA tests</td>
                     </tr>
                   </tbody>
                 </table>
@@ -3988,7 +3988,7 @@ jobs:
               <span class="faq-arrow">▼</span>
             </button>
             <div class="faq-a">
-              Yes. ANVIL is backed by 681 Vitest unit/integration tests and 103 Python REA bridge tests passing across Node 22 and Node 24 on macOS, Ubuntu, and Windows runners in GitHub Actions CI. It provides deterministic, zero-hallucination AST inspection, blast radius evaluation, and pre-commit verification without external network calls.
+              Yes. ANVIL is backed by 680 Vitest unit/integration tests and 103 Python REA bridge tests passing across Node 22 and Node 24 on macOS, Ubuntu, and Windows runners in GitHub Actions CI. It provides deterministic, zero-hallucination AST inspection, blast radius evaluation, and pre-commit verification without external network calls.
             </div>
           </div>
         </div>
@@ -4167,7 +4167,7 @@ jobs:
   <span class="term-green">✓</span> Import hygiene: 0 circular dependency rings found
   <span class="term-green">✓</span> Policy enforcement: strict typecheck & lint rules active
   <span class="term-green">✓</span> Baseline check: 0 unapproved structural violations
-  <span class="term-green">✓</span> Regression guard: 681 Vitest + 103 REA tests verified clean
+  <span class="term-green">✓</span> Regression guard: 680 Vitest + 103 REA tests verified clean
 
 <span class="term-green">▶ GATE PASSED:</span> Score 100/100 (Grade A)
 <span class="term-dim">Summary written to test-action-gate.sarif (0 alerts)</span>`,
@@ -4179,7 +4179,7 @@ jobs:
   • Primary Language: TypeScript (88.4%)
   • Secondary: Python (7.8%), Docker / YAML (3.8%)
   • Package Manager: npm (package-lock.json v3)
-  • Test Harness: Vitest (102 suites, 681 tests) + Python unittest (10 suites, 103 REA bridge tests)
+  • Test Harness: Vitest (101 suites, 680 tests) + Python unittest (10 suites, 103 REA bridge tests)
   • Build Target: TypeScript 5.8 -> dist/ (ES2022)
 
 <span class="term-amber">VERIFY COMMANDS DETECTED:</span>
@@ -4247,17 +4247,17 @@ jobs:
       }
     });
   
-    // ECC Catalog Search & Category Filter
-    const eccSearchInput = document.getElementById('eccSearchInput');
-    const eccFilterPills = document.querySelectorAll('.cockpit-pill');
-    const eccCards = document.querySelectorAll('#eccCatalogGrid .catalog-item-card');
+    // ANVIL Catalog Search & Category Filter
+    const catalogSearchInput = document.getElementById('catalogSearchInput');
+    const catalogFilterPills = document.querySelectorAll('.cockpit-pill');
+    const catalogCards = document.querySelectorAll('#catalogItemGrid .catalog-item-card');
 
-    function filterEccCatalog() {
-      const query = (eccSearchInput ? eccSearchInput.value : '').toLowerCase().trim();
+    function filterCatalogCards() {
+      const query = (catalogSearchInput ? catalogSearchInput.value : '').toLowerCase().trim();
       const activePill = document.querySelector('.cockpit-pill.active');
       const activeCategory = activePill ? activePill.getAttribute('data-filter') : 'all';
 
-      eccCards.forEach(card => {
+      catalogCards.forEach(card => {
         const cat = card.getAttribute('data-category');
         const keywords = card.getAttribute('data-keywords') || '';
         const cardText = card.textContent.toLowerCase();
@@ -4273,15 +4273,15 @@ jobs:
       });
     }
 
-    if (eccSearchInput) {
-      eccSearchInput.addEventListener('input', filterEccCatalog);
+    if (catalogSearchInput) {
+      catalogSearchInput.addEventListener('input', filterCatalogCards);
     }
 
-    eccFilterPills.forEach(pill => {
+    catalogFilterPills.forEach(pill => {
       pill.addEventListener('click', () => {
-        eccFilterPills.forEach(p => p.classList.remove('active'));
+        catalogFilterPills.forEach(p => p.classList.remove('active'));
         pill.classList.add('active');
-        filterEccCatalog();
+        filterCatalogCards();
       });
     });
 
