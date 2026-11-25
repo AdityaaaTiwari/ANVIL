@@ -22,8 +22,7 @@
   <a href="#feature-overview">Feature table</a> ·
   <a href="#how-anvil-fits-with-your-ai-coding-tools">AI tool integrations</a> ·
   <a href="#github-action-usage">GitHub Action</a> ·
-  <a href="#documentation">Docs</a> ·
-  <a href="#credits--upstream-attribution">Credits</a>
+  <a href="#documentation">Docs</a>
 </p>
 
 ---
@@ -251,13 +250,3 @@ Explore detailed guides in the `docs/` directory:
 - 📋 **[Policy-as-Code](docs/policy-as-code.md)**: Configure `.anvil/policy.json` rules and baselines.
 - 🛡️ **[CI Gate & SARIF Integration](docs/ci-gate-and-sarif.md)**: GitHub Actions and SARIF reports.
 - ⚡ **[Token Benchmark Results](docs/token-benchmark-results.md)**: Empirical comparison measuring 96%+ token savings.
-
----
-
-## Credits & Upstream Attribution
-
-ANVIL is open-source software licensed under the **[MIT License](LICENSE)**.
-
-- **Upstream Foundation:** ANVIL started as a fork of the **[FORGE project](https://github.com/ansh44233/FORGE-ECC)** by **[Ansh](https://github.com/ansh44233)**. We gratefully acknowledge Ansh and the FORGE community for their original foundational work in agent harnesses. See [NOTICE](NOTICE) and [ACKNOWLEDGEMENTS.md](ACKNOWLEDGEMENTS.md) for full attribution.
-- **Ecosystem Complement:** ANVIL complements prompt, skills, and agent catalogs like [ECC (Everything Claude Code)](https://github.com/affaan-m/ECC) by Affaan M, acting as the local verification, AST inspection, and policy enforcement engine.
-- **Standards:** Built on the open [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) and the [OASIS SARIF v2.1.0 standard](https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html).
