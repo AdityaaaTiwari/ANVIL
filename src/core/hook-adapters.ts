@@ -2,17 +2,17 @@ import { readFile } from "node:fs/promises";
 import { runHarnessHook, type HookEventName, type HookInput, type HookOutput } from "./harness-hooks.js";
 
 /**
- * Native hook adapters: FORGE Guard, the verification gate, memory, the prompt
+ * Native hook adapters: ANVIL Guard, the verification gate, memory, the prompt
  * secret guard and handoffs for Cursor, Codex and Gemini CLI.
  *
  * Each harness has its own event names, payloads and response schema. The
- * adapter translates the native payload into FORGE's hook input, runs the same
+ * adapter translates the native payload into ANVIL's hook input, runs the same
  * handler Claude Code uses, and translates the answer back. Policy lives in
  * one place; only the wire format differs.
  *
  * Differences that matter:
  * - Codex does not support "ask" in PreToolUse; Cursor does not enforce it in
- *   beforeReadFile; Gemini only has allow/deny. FORGE maps "ask" to "deny" there
+ *   beforeReadFile; Gemini only has allow/deny. ANVIL maps "ask" to "deny" there
  *   and tells the agent to get explicit approval from the user.
  * - Cursor permission hooks must always print valid JSON, or Cursor blocks the action.
  */
@@ -22,7 +22,7 @@ export const NATIVE_HOOK_HARNESSES: readonly NativeHookHarness[] = ["cursor", "c
 
 type Json = Record<string, unknown>;
 
-/** Native event name → FORGE event, per harness. */
+/** Native event name → ANVIL event, per harness. */
 export const NATIVE_EVENTS: Record<NativeHookHarness, Record<string, HookEventName>> = {
   cursor: {
     beforeShellExecution: "pre-tool",
@@ -69,7 +69,7 @@ interface Translated {
   inputs: HookInput[];
 }
 
-/** Native payload → one or more FORGE hook inputs (apply_patch can touch several files). */
+/** Native payload → one or more ANVIL hook inputs (apply_patch can touch several files). */
 export function translateInput(harness: NativeHookHarness, event: string, payload: Json): Translated {
   const base: HookInput = { anvil_harness: harness };
   const cwd =
@@ -163,7 +163,7 @@ interface Verdict {
   context?: string;
 }
 
-/** Pull FORGE's decision out of a Claude-shaped hook output. */
+/** Pull ANVIL's decision out of a Claude-shaped hook output. */
 function readVerdict(output: HookOutput): Verdict {
   const json = output.json ?? {};
   const specific = obj(json.hookSpecificOutput);
@@ -200,7 +200,7 @@ function mergeVerdicts(verdicts: Verdict[]): Verdict {
 const askAsDeny = (reason: string | undefined) =>
   `${reason ?? "ANVIL Guard needs approval."} This tool cannot pause for approval, so ANVIL blocked it: ask the user to confirm explicitly, then let them run it or allow it in .anvil/harness-hooks.json.`;
 
-/** FORGE verdict → native response JSON. */
+/** ANVIL verdict → native response JSON. */
 export function translateOutput(harness: NativeHookHarness, event: string, verdict: Verdict): Json | undefined {
   if (harness === "cursor") {
     switch (event) {
@@ -272,8 +272,8 @@ export async function runNativeHook(
   rawInput: string,
   options: { cwd?: string; now?: () => Date } = {}
 ): Promise<HookOutput> {
-  const forgeEvent = NATIVE_EVENTS[harness]?.[event];
-  if (!forgeEvent)
+  const anvilEvent = NATIVE_EVENTS[harness]?.[event];
+  if (!anvilEvent)
     return { exitCode: 0, ...(harness === "cursor" && /^before/.test(event) ? { json: { permission: "allow" } } : {}) };
   let payload: Json = {};
   try {
@@ -284,7 +284,7 @@ export async function runNativeHook(
   const { inputs } = translateInput(harness, event, payload);
   const verdicts: Verdict[] = [];
   for (const input of inputs) {
-    const output = await runHarnessHook(forgeEvent, JSON.stringify(input), options);
+    const output = await runHarnessHook(anvilEvent, JSON.stringify(input), options);
     verdicts.push(readVerdict(output));
   }
   const json = translateOutput(harness, event, mergeVerdicts(verdicts));
@@ -356,7 +356,7 @@ function hooksOf(doc: Doc): Record<string, unknown[]> {
     : {};
 }
 
-/** Remove FORGE's commands from a native hook document, keeping everything else. */
+/** Remove ANVIL's commands from a native hook document, keeping everything else. */
 export function removeNativeHooks(harness: NativeHookHarness, doc: Doc, commands: readonly string[]): Doc {
   const next = structuredClone(doc);
   const hooks = hooksOf(next);
@@ -394,7 +394,7 @@ export function removeNativeHooks(harness: NativeHookHarness, doc: Doc, commands
   return next;
 }
 
-/** Add FORGE's entries idempotently, after removing any older FORGE entries. */
+/** Add ANVIL's entries idempotently, after removing any older ANVIL entries. */
 export function addNativeHooks(
   harness: NativeHookHarness,
   doc: Doc,

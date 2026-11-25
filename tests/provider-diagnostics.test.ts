@@ -16,7 +16,7 @@ describe("provider diagnostics", () => {
     );
     const result = await diagnoseProvider(
       "openai",
-      { OPENAI_API_KEY: "test-secret", FORGE_AI_MODEL: "gpt-4.1-mini" },
+      { OPENAI_API_KEY: "test-secret", ANVIL_AI_MODEL: "gpt-4.1-mini" },
       fetcher as unknown as typeof fetch
     );
     expect(result).toMatchObject({ status: "connected", modelAvailable: true, modelCount: 2, model: "gpt-4.1-mini" });
@@ -39,7 +39,7 @@ describe("provider diagnostics", () => {
     const fetcher = vi.fn(
       async () => new Response(JSON.stringify({ models: [{ name: "llama3.1" }] }), { status: 200 })
     );
-    const result = await diagnoseProvider("ollama", { FORGE_AI_MODEL: "llama3.2" }, fetcher as unknown as typeof fetch);
+    const result = await diagnoseProvider("ollama", { ANVIL_AI_MODEL: "llama3.2" }, fetcher as unknown as typeof fetch);
     expect(result).toMatchObject({ status: "connected", modelAvailable: false, modelCount: 1 });
   });
 

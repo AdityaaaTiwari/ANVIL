@@ -39,7 +39,7 @@ export interface ModelRouterOptions {
   initialEstimatedTokensByAgent?: Readonly<Record<string, number>>;
   /** Optional cumulative estimated input + output token ceilings keyed by agent ID. */
   maxEstimatedTokensPerAgent?: Readonly<Record<string, number>>;
-  /** Wall-clock ceiling; providers without abort support may continue after FORGE stops waiting. */
+  /** Wall-clock ceiling; providers without abort support may continue after ANVIL stops waiting. */
   maxTaskDurationMs?: number;
   /** Optional stricter duration ceilings keyed by agent ID. */
   maxTaskDurationMsByAgent?: Readonly<Record<string, number>>;
@@ -378,7 +378,6 @@ export class ModelRouter implements AgentProvider {
       const primaryMessage = primaryError instanceof Error ? primaryError.message : String(primaryError);
       if (
         primaryMessage.startsWith("ANVIL budget exceeded:") ||
-        primaryMessage.startsWith("FORGE budget exceeded:") ||
         !isRetryableProviderError(primaryError) ||
         !this.options.fallbackModel ||
         this.options.fallbackModel === route.model

@@ -302,14 +302,9 @@ export function renderCodexTable(server: McpServer): string {
 
 const CODEX_BEGIN = "# anvil:mcp:begin (managed by `anvil mcp`; edit with anvil mcp add/remove)";
 const CODEX_END = "# anvil:mcp:end";
-const LEGACY_CODEX_BEGIN = "# forge:mcp:begin (managed by `forge mcp`; edit with forge mcp add/remove)";
-const LEGACY_CODEX_END = "# forge:mcp:end";
 
 function codexBlock(text: string): { before: string; block: string; after: string } | undefined {
-  for (const [beginMarker, endMarker] of [
-    [CODEX_BEGIN, CODEX_END],
-    [LEGACY_CODEX_BEGIN, LEGACY_CODEX_END],
-  ] as const) {
+  for (const [beginMarker, endMarker] of [[CODEX_BEGIN, CODEX_END]] as const) {
     const start = text.indexOf(beginMarker);
     if (start < 0) continue;
     const end = text.indexOf(endMarker, start);
@@ -383,7 +378,7 @@ async function atomicWrite(file: string, content: string | null): Promise<void> 
 }
 
 async function readState(root: string): Promise<McpState> {
-  for (const rel of [MCP_STATE_PATH, ".forge/mcp-state.json"]) {
+  for (const rel of [MCP_STATE_PATH]) {
     try {
       const parsed = JSON.parse(await readFile(path.join(root, rel), "utf8")) as McpState;
       if (parsed && parsed.schemaVersion === 1 && asRecord(parsed.servers)) return parsed;

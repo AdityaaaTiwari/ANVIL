@@ -11,8 +11,8 @@ describe("declarative lifecycle hooks", () => {
     root = "";
   });
   it("loads policy hooks and applies matching approval, context and block actions", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-hooks-"));
-    const dir = path.join(root, ".forge");
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-hooks-"));
+    const dir = path.join(root, ".anvil");
     await mkdir(dir, { recursive: true });
     await writeFile(
       path.join(dir, "hooks.json"),
@@ -58,8 +58,8 @@ describe("declarative lifecycle hooks", () => {
     expect(blocked.blockedReason).toContain("blocked");
   });
   it("rejects duplicate IDs and malformed filters", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-hooks-"));
-    const dir = path.join(root, ".forge");
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-hooks-"));
+    const dir = path.join(root, ".anvil");
     await mkdir(dir, { recursive: true });
     await writeFile(
       path.join(dir, "hooks.json"),
@@ -78,8 +78,8 @@ describe("declarative lifecycle hooks", () => {
     await expect(loadHooks(root)).rejects.toThrow("invalid agent filters");
   });
   it("rejects unsupported hook actions", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-hooks-"));
-    const dir = path.join(root, ".forge");
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-hooks-"));
+    const dir = path.join(root, ".anvil");
     await mkdir(dir, { recursive: true });
     await writeFile(
       path.join(dir, "hooks.json"),

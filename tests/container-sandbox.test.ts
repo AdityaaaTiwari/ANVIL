@@ -32,13 +32,13 @@ const image = "node:22-alpine@sha256:" + "a".repeat(64);
 
 describe("container sandbox arguments", () => {
   it("requires an immutable image digest", () => {
-    expect(() => buildContainerRunArgs("/tmp/project", "node:22", "test", "forge-test")).toThrow(
+    expect(() => buildContainerRunArgs("/tmp/project", "node:22", "test", "anvil-test")).toThrow(
       /pinned by an immutable sha256 digest/
     );
   });
 
   it("disables networking and privilege escalation while bounding resources", () => {
-    const args = buildContainerRunArgs("/tmp/project", image, "test", "forge-test");
+    const args = buildContainerRunArgs("/tmp/project", image, "test", "anvil-test");
     expect(args).toContain("--network=none");
     expect(args).toContain("--read-only");
     expect(args).toContain("--cap-drop=ALL");
@@ -64,16 +64,16 @@ describe("container sandbox arguments", () => {
   });
 
   it("rejects lifecycle hooks and unsafe script names", () => {
-    expect(() => buildContainerRunArgs("/tmp/project", image, "pretest", "forge-test")).toThrow(
+    expect(() => buildContainerRunArgs("/tmp/project", image, "pretest", "anvil-test")).toThrow(
       /explicit package script/
     );
-    expect(() => buildContainerRunArgs("/tmp/project", image, "../test", "forge-test")).toThrow(
+    expect(() => buildContainerRunArgs("/tmp/project", image, "../test", "anvil-test")).toThrow(
       /explicit package script/
     );
   });
 
   it("rejects comma-containing mount paths to avoid mount option injection", () => {
-    expect(() => buildContainerRunArgs("/tmp/proj,ect", image, "test", "forge-test")).toThrow(/cannot contain commas/);
+    expect(() => buildContainerRunArgs("/tmp/proj,ect", image, "test", "anvil-test")).toThrow(/cannot contain commas/);
   });
 });
 
@@ -97,7 +97,7 @@ describe("custom sandbox policy runtime enforcement", () => {
       "/tmp/project",
       image,
       "test",
-      "forge-policy",
+      "anvil-policy",
       getSandboxSecurityProfile("balanced"),
       policy
     );
@@ -112,7 +112,7 @@ describe("custom sandbox policy runtime enforcement", () => {
   });
 
   it("keeps built-in limits when no custom policy is supplied", () => {
-    const args = buildContainerRunArgs("/tmp/project", image, "test", "forge-default");
+    const args = buildContainerRunArgs("/tmp/project", image, "test", "anvil-default");
     expect(args).toContain("--memory=1g");
     expect(args).toContain("--cpus=2");
     expect(args).toContain("--pids-limit=128");
@@ -121,7 +121,7 @@ describe("custom sandbox policy runtime enforcement", () => {
 
 describe("mocked container runtime policy execution", () => {
   it("passes loaded policy limits to the runtime and reports effective limits", async () => {
-    const root = await mkdtemp(path.join(os.tmpdir(), "forge-mock-runtime-"));
+    const root = await mkdtemp(path.join(os.tmpdir(), "anvil-mock-runtime-"));
     try {
       const project = path.join(root, "project");
       const runtime = path.join(root, "mock-runtime.cjs");
@@ -177,7 +177,7 @@ describe("mocked container runtime policy execution", () => {
 
 describe("container timeout cleanup", () => {
   it("stops the named container and reports a timeout", async () => {
-    const root = await mkdtemp(path.join(os.tmpdir(), "forge-timeout-cleanup-"));
+    const root = await mkdtemp(path.join(os.tmpdir(), "anvil-timeout-cleanup-"));
     try {
       const project = path.join(root, "project");
       const runtime = path.join(root, "mock-runtime-timeout.cjs");
@@ -223,7 +223,7 @@ describe("container timeout cleanup", () => {
   });
 
   it("warns when both graceful stop and force removal fail", async () => {
-    const root = await mkdtemp(path.join(os.tmpdir(), "forge-timeout-cleanup-failure-"));
+    const root = await mkdtemp(path.join(os.tmpdir(), "anvil-timeout-cleanup-failure-"));
     try {
       const project = path.join(root, "project");
       const runtime = path.join(root, "mock-runtime-cleanup-failure.cjs");
@@ -298,7 +298,7 @@ describe("container runtime fail-closed behavior", () => {
   }
 
   it("refuses a rootful daemon when policy requires rootless", async () => {
-    const root = await mkdtemp(path.join(os.tmpdir(), "forge-rootless-required-"));
+    const root = await mkdtemp(path.join(os.tmpdir(), "anvil-rootless-required-"));
     try {
       const project = await makeProject(root);
       const runtime = await makeRuntime(root, "rootful");
@@ -324,7 +324,7 @@ describe("container runtime fail-closed behavior", () => {
   });
 
   it("rejects a conflicting direct-API security profile and policy", async () => {
-    const root = await mkdtemp(path.join(os.tmpdir(), "forge-policy-profile-api-"));
+    const root = await mkdtemp(path.join(os.tmpdir(), "anvil-policy-profile-api-"));
     try {
       const project = await makeProject(root);
       const runtime = await makeRuntime(root, "rootful");
@@ -354,7 +354,7 @@ describe("container runtime fail-closed behavior", () => {
   });
 
   it("fails closed when the pinned image is not locally available", async () => {
-    const root = await mkdtemp(path.join(os.tmpdir(), "forge-image-missing-"));
+    const root = await mkdtemp(path.join(os.tmpdir(), "anvil-image-missing-"));
     try {
       const project = await makeProject(root);
       const runtime = await makeRuntime(root, "missing-image");
@@ -367,7 +367,7 @@ describe("container runtime fail-closed behavior", () => {
   });
 
   it("returns a failed verification when the runtime exits unsuccessfully", async () => {
-    const root = await mkdtemp(path.join(os.tmpdir(), "forge-runtime-error-"));
+    const root = await mkdtemp(path.join(os.tmpdir(), "anvil-runtime-error-"));
     try {
       const project = await makeProject(root);
       const runtime = await makeRuntime(root, "spawn-error");
@@ -396,7 +396,7 @@ describe("container runtime security detection", () => {
 describe("staged verification CLI security flags", () => {
   it("documents rootless mode as a container-only option", () => {
     const usage =
-      "forge patch-verify PATCH_STAGE_ID SCRIPT [--install-dependencies] [--sandbox-image IMAGE@sha256:DIGEST] [--require-rootless] [--path PROJECT]";
+      "anvil patch-verify PATCH_STAGE_ID SCRIPT [--install-dependencies] [--sandbox-image IMAGE@sha256:DIGEST] [--require-rootless] [--path PROJECT]";
     expect(usage).toContain("--require-rootless");
     expect(usage).toContain("--sandbox-image");
   });
@@ -418,7 +418,7 @@ describe("staged verification policy integration", () => {
   };
 
   it("requires container execution when a policy file is supplied", async () => {
-    const root = await mkdtemp(path.join(os.tmpdir(), "forge-policy-cli-"));
+    const root = await mkdtemp(path.join(os.tmpdir(), "anvil-policy-cli-"));
     try {
       const policyPath = path.join(root, "policy.json");
       await writeFile(policyPath, JSON.stringify(policy), "utf8");
@@ -433,7 +433,7 @@ describe("staged verification policy integration", () => {
   });
 
   it("rejects a profile that conflicts with the loaded policy", async () => {
-    const root = await mkdtemp(path.join(os.tmpdir(), "forge-policy-profile-"));
+    const root = await mkdtemp(path.join(os.tmpdir(), "anvil-policy-profile-"));
     try {
       const policyPath = path.join(root, "policy.json");
       await writeFile(policyPath, JSON.stringify(policy), "utf8");
@@ -512,16 +512,16 @@ describe("sandbox runtime status report", () => {
 
 describe("sandbox lifecycle cleanup selection", () => {
   it("parses managed container records", () => {
-    expect(parseManagedContainers("abcdef123456\tExited (0) 2 hours ago\tforge-verify-old")).toEqual([
-      { id: "abcdef123456", status: "Exited (0) 2 hours ago", name: "forge-verify-old" },
+    expect(parseManagedContainers("abcdef123456\tExited (0) 2 hours ago\tanvil-verify-old")).toEqual([
+      { id: "abcdef123456", status: "Exited (0) 2 hours ago", name: "anvil-verify-old" },
     ]);
   });
   it("selects only stopped managed containers", () => {
     const items = parseManagedContainers(
       [
-        "abcdef123456\tExited (0) 2 hours ago\tforge-verify-old",
-        "abcdef123457\tUp 5 minutes\tforge-verify-active",
-        "abcdef123458\tCreated\tforge-verify-created",
+        "abcdef123456\tExited (0) 2 hours ago\tanvil-verify-old",
+        "abcdef123457\tUp 5 minutes\tanvil-verify-active",
+        "abcdef123458\tCreated\tanvil-verify-created",
       ].join("\n")
     );
     expect(selectStoppedManagedContainers(items).map((item) => item.id)).toEqual(["abcdef123456", "abcdef123458"]);
@@ -538,13 +538,13 @@ describe("sandbox lifecycle cleanup selection", () => {
 
 describe("sandbox cleanup audit history", () => {
   it("persists bounded cleanup history and formats it", async () => {
-    const root = await mkdtemp(path.join(os.tmpdir(), "forge-cleanup-audit-"));
+    const root = await mkdtemp(path.join(os.tmpdir(), "anvil-cleanup-audit-"));
     try {
       const entry = {
         id: "cleanup-test",
         timestamp: "2026-11-16T12:00:00.000Z",
         mode: "apply" as const,
-        candidates: [{ id: "abcdef123456", name: "forge-old", status: "Exited (0)" }],
+        candidates: [{ id: "abcdef123456", name: "anvil-old", status: "Exited (0)" }],
         removed: ["abcdef123456"],
       };
       await appendSandboxCleanupAudit(root, entry);
@@ -643,7 +643,7 @@ describe("fail-closed sandbox policy validation", () => {
   });
 
   it("loads a valid policy file and rejects symlink paths", async () => {
-    const root = await mkdtemp(path.join(os.tmpdir(), "forge-policy-file-"));
+    const root = await mkdtemp(path.join(os.tmpdir(), "anvil-policy-file-"));
     try {
       const policyPath = path.join(root, "policy.json");
       const linkPath = path.join(root, "policy-link.json");
@@ -673,7 +673,7 @@ describe("fail-closed sandbox policy validation", () => {
   });
 
   it("rejects malformed and oversized policy files", async () => {
-    const root = await mkdtemp(path.join(os.tmpdir(), "forge-policy-invalid-"));
+    const root = await mkdtemp(path.join(os.tmpdir(), "anvil-policy-invalid-"));
     try {
       const policyPath = path.join(root, "policy.json");
       await writeFile(policyPath, "{broken", "utf8");

@@ -197,12 +197,7 @@ export interface CostReport {
 export async function buildCostReport(root: string, options: { since?: Date } = {}): Promise<CostReport> {
   let text = "";
   try {
-    text = await readFile(path.join(root, COSTS_PATH), "utf8").catch(async (error: unknown) => {
-      if ((error as NodeJS.ErrnoException)?.code === "ENOENT") {
-        return readFile(path.join(root, ".forge/session/costs.jsonl"), "utf8");
-      }
-      throw error;
-    });
+    text = await readFile(path.join(root, COSTS_PATH), "utf8");
   } catch {
     /* no data yet */
   }

@@ -51,7 +51,7 @@ export function buildContainerRunArgs(
   const copyAndRun = [
     "const fs=require('node:fs');const path=require('node:path');",
     "const blocked=/(^|[. _-])(env|secret|secrets|credential|credentials|private|token|password)([. _-]|$)/i;",
-    "const excluded=new Set(['.git','.anvil','.forge','.ssh','.aws','.azure','.kube','.docker','.gnupg','.npmrc','.pypirc','.netrc']);",
+    "const excluded=new Set(['.git','.anvil','.ssh','.aws','.azure','.kube','.docker','.gnupg','.npmrc','.pypirc','.netrc']);",
     "const filter=src=>{const info=fs.lstatSync(src);if(info.isSymbolicLink())return false;const rel=path.relative('/snapshot',src);if(!rel)return true;const parts=rel.split(path.sep).filter(Boolean);return !parts.some(name=>excluded.has(name.toLowerCase())||blocked.test(name)||/\\.(pem|key|p12|pfx|keystore)$/i.test(name)||/^(id_rsa|id_ed25519|authorized_keys)$/i.test(name));};",
     "fs.cpSync('/snapshot','/workspace',{recursive:true,filter});",
     "const r=require('node:child_process').spawnSync('npm',['run-script','--ignore-scripts',process.argv[1]],{cwd:'/workspace',stdio:'inherit'});process.exit(r.status===null?1:r.status);",
@@ -84,8 +84,6 @@ export function buildContainerRunArgs(
     "NODE_ENV=test",
     "--env",
     "ANVIL_VERIFICATION=1",
-    "--env",
-    "FORGE_VERIFICATION=1",
     "--env",
     "HOME=/tmp",
     "--env",

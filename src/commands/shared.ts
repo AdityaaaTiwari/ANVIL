@@ -57,7 +57,7 @@ export function runSandboxProbe(args: string[]): Promise<string> {
 }
 
 export function readAgentTokenBudgets(): Record<string, number> | undefined {
-  const raw = getAnvilEnv("ANVIL_MAX_ESTIMATED_TOKENS_PER_AGENT", "FORGE_MAX_ESTIMATED_TOKENS_PER_AGENT");
+  const raw = getAnvilEnv("ANVIL_MAX_ESTIMATED_TOKENS_PER_AGENT");
   if (!raw) return undefined;
   const parsed: unknown = JSON.parse(raw);
   if (!parsed || typeof parsed !== "object" || Array.isArray(parsed))
@@ -72,7 +72,7 @@ export function readAgentTokenBudgets(): Record<string, number> | undefined {
 }
 
 export function readAgentDurationBudgets(): Record<string, number> | undefined {
-  const raw = getAnvilEnv("ANVIL_MAX_TASK_DURATION_MS_BY_AGENT", "FORGE_MAX_TASK_DURATION_MS_BY_AGENT");
+  const raw = getAnvilEnv("ANVIL_MAX_TASK_DURATION_MS_BY_AGENT");
   if (!raw) return undefined;
   const parsed: unknown = JSON.parse(raw);
   if (!parsed || typeof parsed !== "object" || Array.isArray(parsed))

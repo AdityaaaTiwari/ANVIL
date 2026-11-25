@@ -4,7 +4,7 @@ import path from "node:path";
 import { HARNESS_CAPABILITIES } from "../harness-capabilities.js";
 import { INSTALL_PROFILES, type HarnessCatalog, type InstallProfile } from "../harness-catalog.js";
 import type { NativeHookHarness } from "../hook-adapters.js";
-import { ANVIL_STATE_DIR, LEGACY_FORGE_STATE_DIR } from "../workspace-paths.js";
+import { ANVIL_STATE_DIR } from "../workspace-paths.js";
 
 /**
  * Shared types, constants, and target parsing helpers for the ANVIL harness installer.
@@ -90,16 +90,12 @@ export function normalizeHarnessTargets(targets: readonly string[]): HarnessTarg
 
 export const STATE_SCHEMA = 2;
 export const INSTALL_STATE_PATH = `${ANVIL_STATE_DIR}/install-state.json`;
-export const LEGACY_INSTALL_STATE_PATH = `${LEGACY_FORGE_STATE_DIR}/install-state.json`;
 export const TRANSACTION_JOURNAL_PATH = `${ANVIL_STATE_DIR}/transaction-journal.json`;
-export const LEGACY_TRANSACTION_JOURNAL_PATH = `${LEGACY_FORGE_STATE_DIR}/transaction-journal.json`;
 export const LEGACY_STATE_SCHEMA_VERSION = 1;
 export const STATE_SCHEMA_VERSION = STATE_SCHEMA;
 
 export const BLOCK_BEGIN = "<!-- anvil:begin (managed by `anvil install`; edit outside this block) -->";
 export const BLOCK_END = "<!-- anvil:end -->";
-export const LEGACY_BLOCK_BEGIN = "<!-- forge:begin (managed by `forge install`; edit outside this block) -->";
-export const LEGACY_BLOCK_END = "<!-- forge:end -->";
 
 export const CLAUDE_SETTINGS_PATH = ".claude/settings.json";
 export const HOOK_TARGETS: readonly HarnessTarget[] = ["claude", "cursor"];
@@ -189,7 +185,6 @@ export interface InstallStateNativeHooks {
 export interface InstallState {
   schemaVersion: number;
   anvilVersion?: string;
-  forgeVersion?: string;
   installedAt: string;
   profile: InstallProfile;
   targets: HarnessTarget[];
@@ -230,8 +225,6 @@ export interface InstallOptions {
   dryRun?: boolean;
   force?: boolean;
   anvilVersion?: string;
-  /** @deprecated Use `anvilVersion`. */
-  forgeVersion?: string;
   catalog?: HarnessCatalog;
   now?: () => Date;
   /** Merge ANVIL runtime hooks (guard, config guard, verify, session memory) into Claude Code settings. */

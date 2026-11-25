@@ -12,7 +12,7 @@ describe("skill registry", () => {
     root = "";
   });
   it("selects relevant built-in skills and formats their guidance", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-skills-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-skills-"));
     const skills = await loadSkillRegistry(root);
     const selected = selectSkills(skills, "implement secure authentication and verify tests");
     expect(selected.map((skill) => skill.id)).toContain("secure-changes");
@@ -114,7 +114,7 @@ describe("skill registry", () => {
     expect((await loadSkillRegistry(root)).some((skill) => skill.id === "linked")).toBe(false);
   });
   it("discovers ECC format skills from .claude/skills and rules from .cursor/rules", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-skills-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-skills-"));
     const claudeDir = path.join(root, ".claude", "skills", "ecc-pack");
     await mkdir(claudeDir, { recursive: true });
     await writeFile(

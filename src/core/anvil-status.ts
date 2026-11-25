@@ -29,9 +29,6 @@ export interface AnvilStatus {
   next: string[];
 }
 
-/** @deprecated Use `AnvilStatus` instead. */
-export type ForgeStatus = AnvilStatus;
-
 const HOOK_CAPABLE = new Set(["claude", "cursor", "codex", "gemini"]);
 
 export async function anvilStatus(
@@ -41,7 +38,7 @@ export async function anvilStatus(
 ): Promise<AnvilStatus> {
   const root = path.resolve(projectPath);
   const [doctor, events, context, mcp, loops, races] = await Promise.all([
-    doctorHarness({ projectPath: root, forgeVersion: anvilVersion }).catch(() => undefined),
+    doctorHarness({ projectPath: root, anvilVersion }).catch(() => undefined),
     readGuardEvents(root),
     analyzeContext(root),
     mcpMatrix(root).catch(() => []),
@@ -77,7 +74,7 @@ export async function anvilStatus(
     install: {
       installed: Boolean(doctor?.installed),
       healthy: Boolean(doctor?.healthy),
-      ...(doctor?.forgeVersion ? { version: doctor.forgeVersion } : {}),
+      ...(doctor?.anvilVersion ? { version: doctor.anvilVersion } : {}),
       targets,
       issues,
     },
@@ -101,9 +98,6 @@ export async function anvilStatus(
     next,
   };
 }
-
-/** @deprecated Use `anvilStatus` instead. */
-export const forgeStatus = anvilStatus;
 
 export function formatStatus(status: AnvilStatus): string {
   const ok = (good: boolean) => (good ? "✓" : "!");

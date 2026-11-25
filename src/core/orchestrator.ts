@@ -1,5 +1,5 @@
 /**
- * FORGE orchestration contracts.
+ * ANVIL orchestration contracts.
  *
  * The engine coordinates provider-generated text proposals only. It has no
  * shell, filesystem-write, network, or tool-execution capability.
@@ -293,9 +293,7 @@ export async function advanceRun(
       })
     );
     const budgetExceeded = batchResults.some(
-      (outcome) =>
-        "error" in outcome &&
-        (outcome.error.startsWith("ANVIL budget exceeded:") || outcome.error.startsWith("FORGE budget exceeded:"))
+      (outcome) => "error" in outcome && outcome.error.startsWith("ANVIL budget exceeded:")
     );
     if (budgetExceeded) {
       for (const record of next.tasks) {

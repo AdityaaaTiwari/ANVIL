@@ -50,7 +50,6 @@ const DEFAULT_IGNORED_DIRS = new Set([
   ".cache",
   ".turbo",
   ".anvil-snapshots",
-  ".forge-snapshots",
 ]);
 
 const SECRET_PATTERNS: Array<{

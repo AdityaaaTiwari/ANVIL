@@ -32,14 +32,14 @@ describe("verification history", () => {
     root = "";
   });
   it("persists results locally and lists newest first", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-history-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-history-"));
     await saveVerification(root, result("verify-older0001", "passed", "2026-01-01T00:00:00.000Z"));
     await saveVerification(root, result("verify-newer0002", "failed", "2026-01-02T00:00:00.000Z"));
     const history = await listVerifications(root);
     expect(history.map((item) => item.id)).toEqual(["verify-newer0002", "verify-older0001"]);
   });
   it("detects regressions and improvements against the previous same-script run", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-history-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-history-"));
     await saveVerification(root, result("verify-older0001", "passed", "2026-01-01T00:00:00.000Z"));
     const failed = result("verify-newer0002", "failed", "2026-01-02T00:00:00.000Z");
     await saveVerification(root, failed);
@@ -51,7 +51,7 @@ describe("verification history", () => {
     expect(improvement.change).toBe("improvement");
   });
   it("returns an empty history when no records exist", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-history-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-history-"));
     expect(await listVerifications(root)).toEqual([]);
   });
 });

@@ -17,7 +17,7 @@ afterEach(async () => {
 
 describe("workspace browser", () => {
   it("lists safe directories and previews supported source files", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-workspace-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-workspace-"));
     await mkdir(path.join(root, "src"));
     await writeFile(path.join(root, "src", "index.ts"), "export const answer = 42;\n");
     await writeFile(path.join(root, ".env"), "TOKEN=do-not-show");
@@ -31,14 +31,14 @@ describe("workspace browser", () => {
   });
 
   it("rejects traversal and sensitive files", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-workspace-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-workspace-"));
     await writeFile(path.join(root, ".env"), "SECRET=value");
     await expect(listWorkspaceDirectory(root, "../")).rejects.toThrow("inside the project");
     await expect(readWorkspaceFile(root, ".env")).rejects.toThrow();
   });
 
   it("rejects symlinks and oversized previews", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-workspace-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-workspace-"));
     const outside = path.join(root, "outside.ts");
     await writeFile(outside, "outside");
     const symlinkedFile = await trySymlink(outside, path.join(root, "linked.ts"));
@@ -60,7 +60,7 @@ describe("workspace browser", () => {
   });
 
   it("applies the same visibility rules to selected project roots", () => {
-    for (const relativePath of [".forge", ".git", "node_modules", "dist", ".turbo"]) {
+    for (const relativePath of [".anvil", ".git", "node_modules", "dist", ".turbo"]) {
       expect(() => assertWorkspacePathAllowed(relativePath)).toThrow(/Hidden or excluded/);
     }
     expect(() => assertWorkspacePathAllowed("src")).not.toThrow();
@@ -68,8 +68,8 @@ describe("workspace browser", () => {
   });
 
   it("rejects direct browsing of hidden and excluded directories", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-workspace-"));
-    for (const directory of [".forge", ".git", "node_modules", "dist", ".turbo"]) {
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-workspace-"));
+    for (const directory of [".anvil", ".git", "node_modules", "dist", ".turbo"]) {
       await mkdir(path.join(root, directory), { recursive: true });
       await writeFile(path.join(root, directory, "notes.ts"), "private workspace data");
       await expect(listWorkspaceDirectory(root, directory)).rejects.toThrow(/Hidden or excluded/);
@@ -78,7 +78,7 @@ describe("workspace browser", () => {
   });
 
   it("blocks sensitive path segments even when the leaf filename looks harmless", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-workspace-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-workspace-"));
     await mkdir(path.join(root, "credentials"));
     await writeFile(path.join(root, "credentials", "notes.txt"), "private material");
     await expect(listWorkspaceDirectory(root, "credentials")).rejects.toThrow(/Sensitive workspace paths/);

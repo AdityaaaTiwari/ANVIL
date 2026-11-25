@@ -22,7 +22,7 @@ describe("anvil status", () => {
     await writeFile(path.join(root, "package.json"), "{}");
     await installHarness({
       projectPath: root,
-      forgeVersion: "test",
+      anvilVersion: "test",
       targets: ["claude", "cursor", "codex"],
       profile: "minimal",
       hooks: true,

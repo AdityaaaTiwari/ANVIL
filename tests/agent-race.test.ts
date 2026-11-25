@@ -16,8 +16,8 @@ import {
 
 const directories: string[] = [];
 async function repo(): Promise<{ root: string; agents: string }> {
-  const root = await mkdtemp(path.join(os.tmpdir(), "forge-race-"));
-  const agents = await mkdtemp(path.join(os.tmpdir(), "forge-race-agents-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "anvil-race-"));
+  const agents = await mkdtemp(path.join(os.tmpdir(), "anvil-race-agents-"));
   directories.push(root, agents);
   await writeFile(path.join(root, "sum.js"), "module.exports = (a, b) => a - b;\n");
   await mkdir(path.join(root, "tests"));
@@ -27,8 +27,8 @@ async function repo(): Promise<{ root: string; agents: string }> {
   );
   const git = (...args: string[]) => execFileSync("git", args, { cwd: root, stdio: "ignore" });
   git("init", "-q");
-  git("config", "user.email", "forge@example.com");
-  git("config", "user.name", "FORGE test");
+  git("config", "user.email", "anvil@example.com");
+  git("config", "user.name", "ANVIL test");
   git("add", "-A");
   git("commit", "-qm", "init");
   await writeFile(
@@ -49,7 +49,7 @@ const check =
   "node -e \"const fs=require('fs');if(!fs.existsSync('tests/sum.test.js'))process.exit(0);require('child_process').execSync('node tests/sum.test.js',{stdio:'inherit'})\"";
 
 describe("agent race", () => {
-  it("runs contestants in isolated worktrees and ranks by FORGE's own checks", async () => {
+  it("runs contestants in isolated worktrees and ranks by ANVIL's own checks", async () => {
     const { root, agents } = await repo();
     const race = await runRace({
       projectPath: root,
@@ -82,7 +82,7 @@ describe("agent race", () => {
 
     const cleaned = await cleanRace(root, race.id);
     expect(cleaned.removed.sort()).toEqual(["cheater", "tight", "verbose"]);
-    await expect(stat(path.join(root, ".forge/races", race.id))).rejects.toThrow();
+    await expect(stat(path.join(root, ".anvil/races", race.id))).rejects.toThrow();
     expect(execFileSync("git", ["worktree", "list"], { cwd: root }).toString().trim().split("\n")).toHaveLength(1);
   });
 

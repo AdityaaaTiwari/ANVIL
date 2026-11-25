@@ -36,12 +36,7 @@ const GUARD_LOG = ".anvil/session/guard.jsonl";
 export async function readGuardEvents(projectPath: string): Promise<GuardEvent[]> {
   let raw = "";
   try {
-    raw = await readFile(path.join(projectPath, GUARD_LOG), "utf8").catch(async (error: unknown) => {
-      if ((error as NodeJS.ErrnoException)?.code === "ENOENT") {
-        return readFile(path.join(projectPath, ".forge/session/guard.jsonl"), "utf8");
-      }
-      throw error;
-    });
+    raw = await readFile(path.join(projectPath, GUARD_LOG), "utf8");
   } catch {
     return [];
   }

@@ -22,15 +22,15 @@ afterEach(async () => {
   workspace = "";
 });
 
-describe("FORGE MCP stdio protocol integration", () => {
+describe("ANVIL MCP stdio protocol integration", () => {
   it("lists tools, serves a read-only workspace call, and rejects traversal over JSON-RPC", async () => {
-    workspace = await mkdtemp(path.join(os.tmpdir(), "forge-mcp-protocol-"));
+    workspace = await mkdtemp(path.join(os.tmpdir(), "anvil-mcp-protocol-"));
     await mkdir(path.join(workspace, "src"));
     await writeFile(path.join(workspace, "package.json"), JSON.stringify({ name: "mcp-fixture", scripts: {} }));
     await writeFile(path.join(workspace, "src", "index.ts"), "export const answer = 42;\n");
-    await mkdir(path.join(workspace, ".forge"));
+    await mkdir(path.join(workspace, ".anvil"));
     await writeFile(
-      path.join(workspace, ".forge", "permissions.json"),
+      path.join(workspace, ".anvil", "permissions.json"),
       JSON.stringify({
         version: 1,
         mode: "restricted",
@@ -41,7 +41,7 @@ describe("FORGE MCP stdio protocol integration", () => {
 
     child = spawn(process.execPath, ["--import", "tsx", "src/mcp/server.ts"], {
       cwd: process.cwd(),
-      env: { ...process.env, FORGE_WORKSPACE: workspace, ANVIL_FORGE_ALIASES: "1" },
+      env: { ...process.env, ANVIL_WORKSPACE: workspace },
       stdio: ["pipe", "pipe", "pipe"],
     });
 
@@ -85,32 +85,32 @@ describe("FORGE MCP stdio protocol integration", () => {
     const initialized = await request("initialize", {
       protocolVersion: "2025-06-18",
       capabilities: {},
-      clientInfo: { name: "forge-mcp-integration-test", version: "1.0.0" },
+      clientInfo: { name: "anvil-mcp-integration-test", version: "1.0.0" },
     });
     expect(initialized.error).toBeUndefined();
-    expect(initialized.result?.serverInfo?.name).toMatch(/^(?:anvil|forge)-engineering-workbench$/);
+    expect(initialized.result?.serverInfo?.name).toBe("anvil-engineering-workbench");
     notify("notifications/initialized");
 
     const listed = await request("tools/list");
     expect(listed.error).toBeUndefined();
     const toolNames = listed.result.tools.map((tool: { name: string }) => tool.name);
-    expect(toolNames).toContain("forge_list_files");
-    expect(toolNames).toContain("forge_create_review_plan");
-    expect(toolNames).toContain("forge_agent_intelligence");
-    expect(toolNames).toContain("forge_project_health");
-    expect(toolNames).toContain("forge_change_risk");
-    expect(toolNames).toContain("forge_remediation_plan");
-    expect(toolNames).toContain("forge_agent_optimization");
-    expect(toolNames).toContain("forge_project_memory");
-    expect(toolNames).toContain("forge_agent_security_audit");
-    expect(toolNames).toContain("forge_dependency_impact");
-    expect(toolNames).toContain("forge_doctor");
-    expect(toolNames).toContain("forge_clean_preview");
+    expect(toolNames.some((name: string) => name.startsWith("forge_"))).toBe(false);
+    expect(toolNames).toContain("anvil_list_files");
+    expect(toolNames).toContain("anvil_create_review_plan");
+    expect(toolNames).toContain("anvil_agent_intelligence");
+    expect(toolNames).toContain("anvil_project_health");
+    expect(toolNames).toContain("anvil_change_risk");
+    expect(toolNames).toContain("anvil_remediation_plan");
+    expect(toolNames).toContain("anvil_agent_optimization");
+    expect(toolNames).toContain("anvil_project_memory");
+    expect(toolNames).toContain("anvil_agent_security_audit");
+    expect(toolNames).toContain("anvil_dependency_impact");
+    expect(toolNames).toContain("anvil_binary_intelligence");
     expect(toolNames).toContain("anvil_doctor");
     expect(toolNames).toContain("anvil_clean_preview");
 
     const agentIntel = await request("tools/call", {
-      name: "forge_agent_intelligence",
+      name: "anvil_agent_intelligence",
       arguments: {},
     });
     expect(agentIntel.error).toBeUndefined();
@@ -119,7 +119,7 @@ describe("FORGE MCP stdio protocol integration", () => {
     expect(agentIntelText).toContain('"status": "insufficient-data"');
 
     const listing = await request("tools/call", {
-      name: "forge_list_files",
+      name: "anvil_list_files",
       arguments: {},
     });
     expect(listing.error).toBeUndefined();
@@ -130,7 +130,7 @@ describe("FORGE MCP stdio protocol integration", () => {
     expect(listingText).not.toContain("MCP_SENTINEL");
 
     const sourceListing = await request("tools/call", {
-      name: "forge_list_files",
+      name: "anvil_list_files",
       arguments: { relativePath: "src" },
     });
     expect(sourceListing.result?.isError).not.toBe(true);
@@ -139,7 +139,7 @@ describe("FORGE MCP stdio protocol integration", () => {
     expect(sourceListingText).toContain("src/index.ts");
 
     const read = await request("tools/call", {
-      name: "forge_read_file",
+      name: "anvil_read_file",
       arguments: { relativePath: "src/index.ts" },
     });
     expect(read.result?.isError).not.toBe(true);
@@ -147,7 +147,7 @@ describe("FORGE MCP stdio protocol integration", () => {
     expect(readText).toContain("export const answer = 42");
 
     const search = await request("tools/call", {
-      name: "forge_search_code",
+      name: "anvil_search_code",
       arguments: { query: "answer" },
     });
     expect(search.result?.isError).not.toBe(true);
@@ -180,7 +180,7 @@ describe("FORGE MCP stdio protocol integration", () => {
     expect(Array.isArray(parsedDetail.nodes)).toBe(true);
 
     const denied = await request("tools/call", {
-      name: "forge_list_files",
+      name: "anvil_list_files",
       arguments: { projectPath: "../outside" },
     });
     expect(denied.error).toBeUndefined();

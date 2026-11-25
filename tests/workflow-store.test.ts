@@ -12,7 +12,7 @@ afterEach(async () => {
 
 describe("reusable workflow store", () => {
   it("saves, lists, reloads and creates a draft run with dependency links", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-workflows-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-workflows-"));
     const saved = await saveWorkflow(root, {
       id: "safe-release",
       name: "Safe release",
@@ -37,7 +37,7 @@ describe("reusable workflow store", () => {
   });
 
   it("rejects invalid dependency references and cyclic plans", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-workflows-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-workflows-"));
     await expect(
       saveWorkflow(root, {
         id: "bad-flow",
@@ -60,7 +60,7 @@ describe("reusable workflow store", () => {
   });
 
   it("persists graph coordinates and rejects invalid node positions", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-workflows-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-workflows-"));
     const saved = await saveWorkflow(root, {
       id: "position-flow",
       name: "Position flow",
@@ -81,7 +81,7 @@ describe("reusable workflow store", () => {
   });
 
   it("rejects excessive task counts and invalid identifiers", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-workflows-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-workflows-"));
     await expect(
       saveWorkflow(root, {
         id: "../escape",

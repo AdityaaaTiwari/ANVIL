@@ -4,9 +4,9 @@ import { randomUUID } from "node:crypto";
 import os from "node:os";
 import path from "node:path";
 import type { RunRecord } from "./orchestrator.js";
-import { ANVIL_STATE_DIR, LEGACY_FORGE_STATE_DIR } from "./workspace-paths.js";
+import { ANVIL_STATE_DIR } from "./workspace-paths.js";
 
-const RUN_ID_PATTERN = /^(?:anvil|forge)-[a-z0-9-]{1,80}$/;
+const RUN_ID_PATTERN = /^anvil-[a-z0-9-]{1,80}$/;
 const MAX_RUN_FILE_BYTES = 5 * 1024 * 1024;
 
 function validateRunId(id: string): void {
@@ -137,7 +137,7 @@ export async function loadRun(projectPath: string, runId: string): Promise<RunRe
   let filePath = "";
   let foundHandle: Awaited<ReturnType<typeof open>> | null = null;
   let lastError: unknown;
-  for (const stateDirName of [ANVIL_STATE_DIR, LEGACY_FORGE_STATE_DIR]) {
+  for (const stateDirName of [ANVIL_STATE_DIR]) {
     const directory = await safeExistingRunsDirectory(projectPath, stateDirName);
     if (!directory) continue;
     const candidate = path.join(directory, `${runId}.json`);
@@ -318,7 +318,7 @@ export async function loadRun(projectPath: string, runId: string): Promise<RunRe
 export async function listRuns(projectPath: string): Promise<RunRecord[]> {
   const seenIds = new Set<string>();
   const runs: RunRecord[] = [];
-  for (const stateDirName of [ANVIL_STATE_DIR, LEGACY_FORGE_STATE_DIR]) {
+  for (const stateDirName of [ANVIL_STATE_DIR]) {
     const directory = await safeExistingRunsDirectory(projectPath, stateDirName);
     if (!directory) continue;
     let entries;

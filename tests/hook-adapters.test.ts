@@ -14,7 +14,7 @@ import { addProjectMemory } from "../src/core/project-memory.js";
 
 const directories: string[] = [];
 async function project(files: Record<string, string> = {}): Promise<string> {
-  const directory = await mkdtemp(path.join(os.tmpdir(), "forge-native-"));
+  const directory = await mkdtemp(path.join(os.tmpdir(), "anvil-native-"));
   directories.push(directory);
   for (const [name, content] of Object.entries(files)) {
     await mkdir(path.dirname(path.join(directory, name)), { recursive: true });
@@ -266,7 +266,7 @@ describe("native hook config", () => {
     const root = await project({ ".gemini/settings.json": JSON.stringify({ theme: "dark" }) });
     await installHarness({
       projectPath: root,
-      forgeVersion: "test",
+      anvilVersion: "test",
       targets: ["claude", "cursor", "codex", "gemini"],
       profile: "minimal",
       hooks: true,
@@ -279,7 +279,7 @@ describe("native hook config", () => {
     const gemini = JSON.parse(await readFile(path.join(root, ".gemini/settings.json"), "utf8"));
     expect(gemini.theme).toBe("dark");
     expect(gemini.hooks.BeforeTool[0].hooks[0].timeout).toBe(10_000);
-    const doctor = await doctorHarness({ projectPath: root, forgeVersion: "test" });
+    const doctor = await doctorHarness({ projectPath: root, anvilVersion: "test" });
     expect(doctor.healthy).toBe(true);
     expect(doctor.hookTargets).toEqual(["claude", "cursor", "codex", "gemini"]);
     await uninstallHarness({ projectPath: root });
@@ -308,7 +308,7 @@ describe("Shield on native hook configs", () => {
     const clean = await project();
     await installHarness({
       projectPath: clean,
-      forgeVersion: "test",
+      anvilVersion: "test",
       targets: ["cursor", "codex", "gemini"],
       profile: "minimal",
       hooks: true,
@@ -326,13 +326,13 @@ describe("scorecard credit for native guards", () => {
     const root = await project({ "package.json": "{}" });
     await installHarness({
       projectPath: root,
-      forgeVersion: "test",
+      anvilVersion: "test",
       targets: ["cursor"],
       profile: "minimal",
       hooks: true,
     });
     const guards = (
-      await buildScorecard({ projectPath: root, forgeVersion: "test", now: () => new Date("2026-11-24T00:00:00Z") })
+      await buildScorecard({ projectPath: root, anvilVersion: "test", now: () => new Date("2026-11-24T00:00:00Z") })
     ).categories.find((c) => c.id === "guards");
     expect(guards?.score).toBe(guards?.max);
   });

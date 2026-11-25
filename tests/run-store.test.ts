@@ -21,7 +21,7 @@ afterEach(async () => {
 
 describe("local run history", () => {
   it("saves, loads, and lists run records", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-run-store-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-run-store-"));
     const run = createRun("Track a plan", [{ id: "draft", agent: "planner", title: "Draft", prompt: "Draft a plan" }]);
     await saveRun(root, run);
     const loaded = await loadRun(root, run.id);
@@ -32,7 +32,7 @@ describe("local run history", () => {
   });
 
   it("persists cumulative token usage with the run record", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-run-token-usage-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-run-token-usage-"));
     const run = createRun("Preserve budget across resume", [
       { id: "draft", agent: "planner", title: "Draft", prompt: "Draft a plan" },
     ]);
@@ -43,7 +43,7 @@ describe("local run history", () => {
   });
 
   it("lists valid runs while skipping malformed history files", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-run-malformed-list-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-run-malformed-list-"));
     const validRun = createRun("Keep valid history visible", [
       { id: "draft", agent: "planner", title: "Draft", prompt: "Draft a plan" },
     ]);
@@ -68,7 +68,7 @@ describe("local run history", () => {
     await expect(loadRun(root, run.id)).rejects.toThrow(/invalid token usage/);
   });
   it("records one-time approval and rejection decisions with audit events", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-run-approval-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-run-approval-"));
     const run = createRun("Gate sensitive tasks", [
       { id: "approve-me", agent: "reviewer", title: "Review", prompt: "Review", requiresApproval: true },
       { id: "reject-me", agent: "reviewer", title: "Reject", prompt: "Reject", requiresApproval: true },
@@ -90,7 +90,7 @@ describe("local run history", () => {
   });
 
   it("recovers interrupted provider work without replaying it", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-run-recovery-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-run-recovery-"));
     const run = createRun("Recover after restart", [
       { id: "finished", agent: "planner", title: "Finished", prompt: "Done" },
       { id: "interrupted", agent: "reviewer", title: "Interrupted", prompt: "May have reached provider" },
@@ -124,7 +124,7 @@ describe("local run history", () => {
   });
 
   it("returns an empty list when no run history exists", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-run-store-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-run-store-"));
     await expect(listRuns(root)).resolves.toEqual([]);
   });
 
@@ -158,7 +158,7 @@ describe("local run history", () => {
   });
 
   it("allows only one concurrent approval decision", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-run-race-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-run-race-"));
     const run = createRun("Serialize approvals", [
       { id: "review", agent: "reviewer", title: "Review", prompt: "Review", requiresApproval: true },
     ]);
@@ -180,7 +180,7 @@ describe("local run history", () => {
   });
 
   it("shares one lock between approval and interrupted-run recovery", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-run-shared-lock-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-run-shared-lock-"));
     const run = createRun("Serialize recovery and approval", [
       { id: "review", agent: "reviewer", title: "Review", prompt: "Review", requiresApproval: true },
     ]);
@@ -211,7 +211,7 @@ describe("local run history", () => {
   });
 
   it("allows only one process to hold a run execution lease", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-run-execution-lock-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-run-execution-lock-"));
     const run = createRun("Prevent duplicate execution", [
       { id: "task", agent: "planner", title: "Task", prompt: "Execute once" },
     ]);
@@ -240,7 +240,7 @@ describe("local run history", () => {
   });
 
   it("does not allow approval to race an active resume execution", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-run-approval-execution-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-run-approval-execution-"));
     const run = createRun("Serialize approval and execution", [
       { id: "review", agent: "reviewer", title: "Review", prompt: "Review", requiresApproval: true },
     ]);
@@ -274,12 +274,12 @@ describe("local run history", () => {
   });
 
   it("rejects path-like run identifiers", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-run-store-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-run-store-"));
     await expect(loadRun(root, "../outside")).rejects.toThrow(/identifier/);
   });
 
   it("rejects malformed persisted run events and duplicate task IDs", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-run-invalid-records-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-run-invalid-records-"));
     const run = createRun("Validate run records", [{ id: "draft", agent: "planner", title: "Draft", prompt: "Draft" }]);
     await saveRun(root, run);
     const file = path.join(root, ".anvil", "runs", run.id + ".json");
@@ -293,7 +293,7 @@ describe("local run history", () => {
   });
 
   it("rejects invalid task results, approvals, and unknown dependencies", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-run-invalid-task-fields-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-run-invalid-task-fields-"));
     const run = createRun("Validate task fields", [{ id: "draft", agent: "planner", title: "Draft", prompt: "Draft" }]);
     await saveRun(root, run);
     const file = path.join(root, ".anvil", "runs", run.id + ".json");
@@ -313,7 +313,7 @@ describe("local run history", () => {
   });
 
   it("rejects run records that exceed the persistence size limit", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-run-oversized-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-run-oversized-"));
     const run = createRun("Oversized run", [
       { id: "draft", agent: "planner", title: "Draft", prompt: "x".repeat(5 * 1024 * 1024) },
     ]);
@@ -321,7 +321,7 @@ describe("local run history", () => {
   });
 
   it("preserves the previous run record when an oversized update is rejected", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-run-oversized-update-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-run-oversized-update-"));
     const run = createRun("Keep valid history", [
       { id: "draft", agent: "planner", title: "Draft", prompt: "Original prompt" },
     ]);
@@ -343,7 +343,7 @@ describe("local run history", () => {
   });
 
   it("rejects oversized run-history files before parsing them", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-run-oversized-read-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-run-oversized-read-"));
     const run = createRun("Oversized stored run", [{ id: "draft", agent: "planner", title: "Draft", prompt: "Draft" }]);
     await saveRun(root, run);
     const file = path.join(root, ".anvil", "runs", run.id + ".json");

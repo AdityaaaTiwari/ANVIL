@@ -70,7 +70,7 @@ export interface LoopOptions {
   goal: string;
   checks: string[];
   agent?: LoopAgent;
-  /** For agent "command": argv; the prompt is passed on stdin and in ANVIL_LOOP_PROMPT (and legacy FORGE_LOOP_PROMPT). */
+  /** For agent "command": argv; the prompt is passed on stdin and in ANVIL_LOOP_PROMPT. */
   agentCommand?: string[];
   /** Extra arguments appended to the built-in agent command. */
   agentArgs?: string[];
@@ -227,7 +227,7 @@ const SKIP_MARKER =
   /\b(?:it|test|describe|context)\.(?:skip|only|todo)\s*\(|\bx(?:it|describe|test)\s*\(|\bf(?:it|describe)\s*\(|@pytest\.mark\.(?:skip|xfail)|\bpytest\.skip\s*\(|\bt\.Skip(?:Now|f)?\s*\(|#\[ignore\]|@Disabled\b|@Ignore\b|\bunittest\.skip/;
 
 /** Files that are allowed to change silently. Everything else is part of the agent's diff. */
-const IGNORED = /^(?:\.anvil\/|\.forge\/|node_modules\/|dist\/|build\/|coverage\/|\.next\/|target\/)/;
+const IGNORED = /^(?:\.anvil\/|node_modules\/|dist\/|build\/|coverage\/|\.next\/|target\/)/;
 
 async function changedFiles(root: string): Promise<Array<{ status: string; file: string }>> {
   const out = await git(root, ["status", "--porcelain=v1", "-z", "--untracked-files=all"]);
@@ -421,9 +421,6 @@ export async function runVerifiedLoop(options: LoopOptions): Promise<LoopRecord>
         ANVIL_LOOP_ID: record.id,
         ANVIL_LOOP_ITERATION: String(n),
         ANVIL_LOOP_PROMPT: prompt,
-        FORGE_LOOP_ID: record.id,
-        FORGE_LOOP_ITERATION: String(n),
-        FORGE_LOOP_PROMPT: prompt,
       },
     });
     if (result.exitCode === null && !result.timedOut && /ENOENT/.test(result.output)) {
@@ -482,7 +479,7 @@ export async function runVerifiedLoop(options: LoopOptions): Promise<LoopRecord>
 
 export async function listLoops(projectPath: string): Promise<LoopRecord[]> {
   const root = path.resolve(projectPath);
-  const dirs = [path.join(root, LOOPS_DIR), path.join(root, ".forge/loops")];
+  const dirs = [path.join(root, LOOPS_DIR)];
   const byId = new Map<string, LoopRecord>();
   for (const dir of dirs) {
     let names: string[] = [];

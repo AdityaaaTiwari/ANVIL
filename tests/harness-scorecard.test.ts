@@ -9,7 +9,7 @@ import { buildScorecard, formatScorecard, formatScorecardMarkdown } from "../src
 
 const directories: string[] = [];
 async function project(files: Record<string, string>): Promise<string> {
-  const directory = await mkdtemp(path.join(os.tmpdir(), "forge-score-"));
+  const directory = await mkdtemp(path.join(os.tmpdir(), "anvil-score-"));
   directories.push(directory);
   for (const [name, content] of Object.entries(files)) {
     await mkdir(path.dirname(path.join(directory, name)), { recursive: true });
@@ -29,7 +29,7 @@ describe("harness scorecard", () => {
   it("scores an empty project low and points at the first actions", async () => {
     const card = await buildScorecard({
       projectPath: await project({ "package.json": "{}" }),
-      forgeVersion: "test",
+      anvilVersion: "test",
       now,
     });
     expect(card.categories.map((c) => c.id)).toEqual([
@@ -57,14 +57,14 @@ describe("harness scorecard", () => {
         "jobs:\n  test:\n    steps:\n      - run: npm test\n      - run: npx anvil shield .\n",
       ".github/dependabot.yml": "version: 2\n",
     });
-    await installHarness({ projectPath: root, forgeVersion: "test", targets: ["claude", "codex"], hooks: true });
+    await installHarness({ projectPath: root, anvilVersion: "test", targets: ["claude", "codex"], hooks: true });
     await addProjectMemory(root, { kind: "decision", content: "Use ESM only", evidence: ["package.json"] });
     await addProjectMemory(root, { kind: "constraint", content: "Node 20+" });
     await addProjectMemory(root, { kind: "handoff", content: "Finished the parser" });
     await addProjectMemory(root, { kind: "lesson", content: "Run tests serially" });
     await addManualInstinct(root, "editing src/**", "run the unit tests");
-    const first = await buildScorecard({ projectPath: root, forgeVersion: "test", now });
-    const second = await buildScorecard({ projectPath: root, forgeVersion: "test", now });
+    const first = await buildScorecard({ projectPath: root, anvilVersion: "test", now });
+    const second = await buildScorecard({ projectPath: root, anvilVersion: "test", now });
     expect(second).toEqual(first);
     const score = (id: string) => first.categories.find((c) => c.id === id)?.score;
     expect(score("install")).toBe(10);
@@ -79,8 +79,8 @@ describe("harness scorecard", () => {
 
   it("flags harnesses the repo uses but ANVIL does not cover", async () => {
     const root = await project({ "package.json": pkg, ".windsurf/rules/team.md": "x" });
-    await installHarness({ projectPath: root, forgeVersion: "test", targets: ["claude"] });
-    const coverage = (await buildScorecard({ projectPath: root, forgeVersion: "test", now })).categories.find(
+    await installHarness({ projectPath: root, anvilVersion: "test", targets: ["claude"] });
+    const coverage = (await buildScorecard({ projectPath: root, anvilVersion: "test", now })).categories.find(
       (c) => c.id === "coverage"
     );
     expect(coverage?.actions.join(" ")).toMatch(/--target claude,windsurf/);

@@ -14,9 +14,6 @@ export interface AnvilHook {
   enabled?: boolean;
 }
 
-/** @deprecated Use `AnvilHook`. */
-export type ForgeHook = AnvilHook;
-
 export interface HookResult {
   task: AgentTask;
   context: string[];

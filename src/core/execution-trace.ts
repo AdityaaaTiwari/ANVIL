@@ -129,7 +129,7 @@ export async function saveExecutionTrace(
   runId: string,
   entries: readonly AgentTrace[]
 ): Promise<string> {
-  if (!/^(?:anvil|forge)-[a-z0-9-]{1,80}$/.test(runId) || runId.includes("..")) {
+  if (!/^anvil-[a-z0-9-]{1,80}$/.test(runId) || runId.includes("..")) {
     throw new Error("Invalid ANVIL run identifier.");
   }
   const directory = anvilWorkspacePath(projectPath, "traces");
@@ -207,7 +207,7 @@ export async function saveExecutionTrace(
 }
 
 export async function loadExecutionTrace(projectPath: string, runId: string): Promise<ExecutionTraceDocument> {
-  if (!/^(?:anvil|forge)-[a-z0-9-]{1,80}$/.test(runId) || runId.includes("..")) {
+  if (!/^anvil-[a-z0-9-]{1,80}$/.test(runId) || runId.includes("..")) {
     throw new Error("Invalid ANVIL run identifier.");
   }
   const file = resolveWorkspaceStatePath(projectPath, "traces", runId + ".json");

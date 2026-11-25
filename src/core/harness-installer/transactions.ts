@@ -1,14 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { lstat, mkdir, readFile, readdir, realpath, rename, rm, rmdir, writeFile } from "node:fs/promises";
 import path from "node:path";
-import {
-  BLOCK_BEGIN,
-  BLOCK_END,
-  LEGACY_BLOCK_BEGIN,
-  LEGACY_BLOCK_END,
-  LEGACY_TRANSACTION_JOURNAL_PATH,
-  TRANSACTION_JOURNAL_PATH,
-} from "./types.js";
+import { BLOCK_BEGIN, BLOCK_END, TRANSACTION_JOURNAL_PATH } from "./types.js";
 
 function isMissing(error: unknown): boolean {
   return Boolean(
@@ -181,9 +174,7 @@ async function recoverJournalFile(root: string, relativeJournalPath: string): Pr
 /** Recover an interrupted install/uninstall by restoring durable pre-transaction snapshots. */
 export async function recoverFileTransaction(projectPath: string): Promise<boolean> {
   const root = await realpath(path.resolve(projectPath));
-  const recoveredPrimary = await recoverJournalFile(root, TRANSACTION_JOURNAL_PATH);
-  const recoveredLegacy = await recoverJournalFile(root, LEGACY_TRANSACTION_JOURNAL_PATH);
-  return recoveredPrimary || recoveredLegacy;
+  return recoverJournalFile(root, TRANSACTION_JOURNAL_PATH);
 }
 
 /** Persist snapshots before mutations so a later CLI invocation can recover after a process crash. */
@@ -252,10 +243,7 @@ function findBlockBounds(content: string, beginMarker: string, endMarker: string
 }
 
 export function extractManagedBlock(content: string): { before: string; block: string; after: string } | undefined {
-  const pairs: Array<[string, string]> = [
-    [BLOCK_BEGIN, BLOCK_END],
-    [LEGACY_BLOCK_BEGIN, LEGACY_BLOCK_END],
-  ];
+  const pairs: Array<[string, string]> = [[BLOCK_BEGIN, BLOCK_END]];
   for (const [beginMarker, endMarker] of pairs) {
     const bounds = findBlockBounds(content, beginMarker, endMarker);
     if (bounds) {

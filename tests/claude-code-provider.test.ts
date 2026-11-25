@@ -4,7 +4,7 @@ import { createAIProvider, readAIProviderConfig } from "../src/ai/provider.js";
 
 describe("Claude Code harness adapter", () => {
   it("selects Claude Code without requiring an Anthropic API key", () => {
-    expect(readAIProviderConfig({ FORGE_AI_PROVIDER: "claude-code" }).provider).toBe("claude-code");
+    expect(readAIProviderConfig({ ANVIL_AI_PROVIDER: "claude-code" }).provider).toBe("claude-code");
   });
 
   it("builds a bounded plan-mode invocation and denies write and shell tools", () => {

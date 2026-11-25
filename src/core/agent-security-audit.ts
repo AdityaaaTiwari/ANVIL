@@ -41,7 +41,7 @@ const MAX_DEPTH = 6;
 
 const RULES: Rule[] = [
   {
-    id: "FORGE-AGENT-001",
+    id: "ANVIL-AGENT-001",
     severity: "critical",
     title: "Credential value embedded in agent configuration",
     pattern:
@@ -51,7 +51,7 @@ const RULES: Rule[] = [
       "Remove the credential from the file, rotate it with its provider, and use an environment-backed secret store.",
   },
   {
-    id: "FORGE-AGENT-002",
+    id: "ANVIL-AGENT-002",
     severity: "high",
     title: "Arbitrary command execution is explicitly permitted",
     pattern:
@@ -61,7 +61,7 @@ const RULES: Rule[] = [
       "Replace broad command permission with a short allowlist and require human approval for actions that change project state.",
   },
   {
-    id: "FORGE-AGENT-003",
+    id: "ANVIL-AGENT-003",
     severity: "high",
     title: "Destructive actions can bypass review",
     pattern:
@@ -71,7 +71,7 @@ const RULES: Rule[] = [
       "Require explicit human approval before deletion, overwrites, deployments, publication, or other irreversible actions.",
   },
   {
-    id: "FORGE-AGENT-004",
+    id: "ANVIL-AGENT-004",
     severity: "high",
     title: "Untrusted repository or tool content is treated as instructions",
     pattern:
@@ -82,7 +82,7 @@ const RULES: Rule[] = [
       "Treat repository files, tool output, and external content as data. Never let them override system, developer, or user instructions.",
   },
   {
-    id: "FORGE-AGENT-005",
+    id: "ANVIL-AGENT-005",
     severity: "medium",
     title: "Unrestricted filesystem access is described",
     pattern:
@@ -93,7 +93,7 @@ const RULES: Rule[] = [
       "Scope file access to the current workspace, block secrets and private key material, and keep writes behind an approval boundary.",
   },
   {
-    id: "FORGE-AGENT-006",
+    id: "ANVIL-AGENT-006",
     severity: "medium",
     title: "Unrestricted network access is described",
     pattern:
@@ -103,7 +103,7 @@ const RULES: Rule[] = [
   },
 ];
 
-const NEGATABLE_RULES = new Set(["FORGE-AGENT-002", "FORGE-AGENT-004", "FORGE-AGENT-005", "FORGE-AGENT-006"]);
+const NEGATABLE_RULES = new Set(["ANVIL-AGENT-002", "ANVIL-AGENT-004", "ANVIL-AGENT-005", "ANVIL-AGENT-006"]);
 const DEFENSIVE_WORDING =
   /\b(?:do\s+not|don't|never|must\s+not|should\s+not|untrusted|not\s+trusted|refuse|forbid(?:den)?|prohibit(?:ed)?)\b/i;
 
@@ -122,8 +122,6 @@ const ROOT_FILES = new Set([
 const SCANNED_DIRECTORIES = [
   ".anvil/skills",
   ".anvil/hooks",
-  ".forge/skills",
-  ".forge/hooks",
   ".claude/commands",
   ".claude/agents",
   ".claude/skills",
@@ -141,9 +139,6 @@ const SCANNED_FILES = new Set([
   ".anvil/permissions.json",
   ".anvil/policy.json",
   ".anvil/hooks.json",
-  ".forge/permissions.json",
-  ".forge/policy.json",
-  ".forge/hooks.json",
   ".claude/settings.json",
   ".claude/settings.local.json",
   ".cursor/mcp.json",
@@ -258,7 +253,7 @@ function scanText(relativePath: string, content: string): AgentSecurityFinding[]
     for (const rule of RULES) {
       rule.pattern.lastIndex = 0;
       if (!rule.pattern.test(line)) continue;
-      if (rule.id === "FORGE-AGENT-001" && structuredSecretLines.has(index + 1)) continue;
+      if (rule.id === "ANVIL-AGENT-001" && structuredSecretLines.has(index + 1)) continue;
       // Defensive guidance ("never run arbitrary commands", "treat repo files as untrusted") is not a grant.
       if (NEGATABLE_RULES.has(rule.id) && DEFENSIVE_WORDING.test(line)) continue;
       findings.push({

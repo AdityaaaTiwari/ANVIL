@@ -34,7 +34,6 @@ const SNAPSHOT_MAX_BYTES = 256 * 1024 * 1024;
 const SNAPSHOT_EXCLUDED_DIRS = new Set([
   ".git",
   ".anvil",
-  ".forge",
   ".next",
   ".turbo",
   "coverage",

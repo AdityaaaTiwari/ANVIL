@@ -56,11 +56,11 @@ Dedicated view for `morluto/rea` black-box decompilation:
 - **REA MCP Tools:** Verification that `rea_decompile`, `rea_extract_symbols`, and `rea_inspect_ipc` are connected via stdio.
 
 ### 5. ⚡ ANVIL Control Center, Scorecard & Benchmarks
-Dedicated view for harness readiness, verified loops, instincts, and multi-agent benchmarks (originally inspired by `ansh44233/FORGE-ECC`):
-- **Harness Readiness Scorecard:** 9-category deterministic scorecards served on `/api/anvil/scorecard` (with `/api/forge/scorecard` legacy alias).
+Dedicated view for harness readiness, verified loops, instincts, and multi-agent benchmarks:
+- **Harness Readiness Scorecard:** 9-category deterministic scorecards served on `/api/anvil/scorecard`.
 - **Agent Leaderboard:** Accuracy, pass rate, and token efficiency scorecards comparing configured providers and models.
 - **Token Compression:** Metrics demonstrating 96%+ token reductions using compact AST summaries over raw source reads.
-- **Transactional Rollback:** Inventory of snapshot backups in `.anvil/backups/` (and legacy `.forge/backups/`) with byte-accurate undo (`anvil undo <backupId>`).
+- **Transactional Rollback:** Inventory of snapshot backups in `.anvil/backups/` with byte-accurate undo (`anvil undo <backupId>`).
 - **Execution Traces:** Step-by-step history of multi-agent plans and decisions stored under `.anvil/traces/`.
 
 ---
@@ -71,7 +71,7 @@ The local dashboard server ([`src/core/dashboard-server.ts`](../src/core/dashboa
 - `http-helpers.ts` — Loopback Host validation and JSON/HTML response helpers
 - `sse.ts` — Live Server-Sent Events client registry and broadcasts
 - `styles.ts` & `page.ts` & `client-script.ts` — Cockpit UI layout, theme, and browser script
-- `routes-get.ts` & `routes-post.ts` — Read/write API handlers reading `.anvil/` state with `.forge/` compatibility fallbacks
+- `routes-get.ts` & `routes-post.ts` — Read/write API handlers reading `.anvil/` state
 
 ---
 

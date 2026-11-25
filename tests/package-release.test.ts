@@ -3,7 +3,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 describe("npm package release metadata", () => {
-  it("exposes the compiled FORGE CLI and includes release documentation", async () => {
+  it("exposes the compiled ANVIL CLI and includes release documentation", async () => {
     const packageJson = JSON.parse(await readFile(path.join(process.cwd(), "package.json"), "utf8")) as {
       version?: string;
       bin?: Record<string, string>;
@@ -21,7 +21,7 @@ describe("npm package release metadata", () => {
     expect(packageJson.engines?.node).toBe(">=22");
     expect(packageJson.scripts?.prepack).toContain("npm run build");
     expect(packageJson.scripts?.prepublishOnly).toContain("npm run typecheck");
-    expect(packageJson.repository?.url).toMatch(/ANVIL|FORGE-ECC/);
+    expect(packageJson.repository?.url).toContain("ANVIL");
     const changelog = await readFile(path.join(process.cwd(), "CHANGELOG.md"), "utf8");
     expect(changelog).toContain("## 1.0.0 — First major release");
   });

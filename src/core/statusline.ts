@@ -39,9 +39,7 @@ async function branch(root: string): Promise<string | undefined> {
 async function guardBlocks(root: string, session: string | undefined): Promise<number> {
   if (!session) return 0;
   try {
-    const text = await readFile(path.join(root, ".anvil/session/guard.jsonl"), "utf8").catch(() =>
-      readFile(path.join(root, ".forge/session/guard.jsonl"), "utf8")
-    );
+    const text = await readFile(path.join(root, ".anvil/session/guard.jsonl"), "utf8");
     return text
       .split("\n")
       .slice(-500)
@@ -67,9 +65,7 @@ export async function collectStatus(input: StatusInput, fallbackCwd: string): Pr
     input.workspace?.project_dir ?? input.workspace?.current_dir ?? input.cwd ?? fallbackCwd
   );
   const root = await realpath(candidate).catch(() => candidate);
-  const edits =
-    (await readJson<{ files?: unknown[] }>(path.join(root, ".anvil/session/edits.json"))) ??
-    (await readJson<{ files?: unknown[] }>(path.join(root, ".forge/session/edits.json")));
+  const edits = await readJson<{ files?: unknown[] }>(path.join(root, ".anvil/session/edits.json"));
   const last = await readJson<{ results?: Array<{ script?: string; status?: string }> }>(
     path.join(root, ".anvil/session/last-verification.json")
   );

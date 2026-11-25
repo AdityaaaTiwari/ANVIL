@@ -121,7 +121,7 @@ describe("dashboard data", () => {
       {
         installed: true,
         healthy: false,
-        state: { forgeVersion: "2.0.1", profile: "standard", targets: ["claude"], installedAt: "x", hooks: true },
+        state: { anvilVersion: "2.0.1", profile: "standard", targets: ["claude"], installedAt: "x", hooks: true },
         missing: ["a"],
         outdated: ["b", "c"],
         added: [],
@@ -130,7 +130,7 @@ describe("dashboard data", () => {
     );
     expect(doctor).toMatchObject({ installed: true, hooks: true, targets: ["claude"] });
     expect(doctor.summary).toEqual({ ok: 0, missing: 1, modified: 0, outdated: 2 });
-    expect(parseRepoFullName("ansh44233/FORGE-ECC")).toEqual({ owner: "ansh44233", repo: "FORGE-ECC" });
+    expect(parseRepoFullName("anvil-workbench/ANVIL")).toEqual({ owner: "anvil-workbench", repo: "ANVIL" });
     expect(parseRepoFullName("../etc")).toBeUndefined();
   });
 

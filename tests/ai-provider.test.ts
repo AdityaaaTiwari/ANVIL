@@ -7,7 +7,7 @@ describe("AI provider foundation", () => {
   });
 
   it("returns a clear error when a hosted provider has no API key", () => {
-    expect(() => readAIProviderConfig({ FORGE_AI_PROVIDER: "anthropic" })).toThrow("ANTHROPIC_API_KEY is not set");
+    expect(() => readAIProviderConfig({ ANVIL_AI_PROVIDER: "anthropic" })).toThrow("ANTHROPIC_API_KEY is not set");
   });
 
   it("does not pretend an unimplemented provider adapter is available", () => {

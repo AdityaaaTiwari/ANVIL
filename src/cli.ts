@@ -97,7 +97,7 @@ Commands:
   undo [path]      Rollback the last anvil clean/fix operation using saved snapshot backup
   hook [install|remove]  Install or remove ANVIL automated pre-commit hook in Git (use --force to overwrite)
   hook stop --harness claude|cursor  Agent stop hook: gate the agent's changes (installed by anvil install --hooks)
-  rea [path]       Inspect binary assets, bundles, WASM, and enforce clean-room compliance
+  binary [path]    Inspect binary assets, bundles, WASM, and clean-room compliance (alias: rea)
   doctor [path]    Run environment health checks; add --fix to auto-scaffold config
   scorecard [path] Check harness readiness (0-10) across install, guards, quality, memory, CI
   consult QUERY    Find matching skills, agents, commands, rules, and MCP servers

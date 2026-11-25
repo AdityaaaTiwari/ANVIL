@@ -14,7 +14,7 @@ afterEach(async () => {
 });
 describe("change risk intelligence", () => {
   it("combines changed files, downstream impact, structural hotspots and existing test candidates", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-change-risk-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-change-risk-"));
     await mkdir(path.join(root, "src"), { recursive: true });
     await mkdir(path.join(root, "tests"), { recursive: true });
     await writeFile(path.join(root, "package.json"), JSON.stringify({ scripts: { test: "vitest run" } }));
@@ -25,8 +25,8 @@ describe("change risk intelligence", () => {
     );
     await writeFile(path.join(root, "tests", "shared.test.ts"), "import { shared } from '../src/shared';\n");
     await exec("git", ["init", "-q"], { cwd: root });
-    await exec("git", ["config", "user.email", "forge@example.test"], { cwd: root });
-    await exec("git", ["config", "user.name", "FORGE Test"], { cwd: root });
+    await exec("git", ["config", "user.email", "anvil@example.test"], { cwd: root });
+    await exec("git", ["config", "user.name", "ANVIL Test"], { cwd: root });
     await exec("git", ["add", "."], { cwd: root });
     await exec("git", ["commit", "-qm", "baseline"], { cwd: root });
     await writeFile(path.join(root, "src", "shared.ts"), "export const shared = 2;\n");

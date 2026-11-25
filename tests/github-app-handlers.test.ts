@@ -6,7 +6,6 @@ import {
   handleIssueComment,
   handlePullRequest,
   parseAnvilCommand,
-  parseForgeCommand,
   selectShieldPaths,
 } from "../src/github/app-handlers.js";
 import {
@@ -131,13 +130,11 @@ const comment = (body: string, extra: Record<string, unknown> = {}) => ({
 const context = (client: FakeClient) => ({ client: client as unknown as GitHubClient, anvilVersion: "2.0.0-test" });
 
 describe("GitHub App commands", () => {
-  it("parses /anvil and legacy /forge commands and options", () => {
+  it("parses /anvil commands and ignores non-anvil commands", () => {
     expect(parseAnvilCommand("/anvil analyze --targets claude,cursor --profile minimal")).toMatchObject({
       command: "analyze",
     });
-    expect(parseForgeCommand("/forge analyze --targets claude,cursor --profile minimal")).toMatchObject({
-      command: "analyze",
-    });
+    expect(parseAnvilCommand("/forge analyze --targets claude,cursor --profile minimal")).toBeUndefined();
     expect(parseAnvilCommand("/anvil analyze --targets claude,cursor")?.options.get("target")).toBe("claude,cursor");
     expect(parseAnvilCommand("thanks!\n/anvil audit")).toBeUndefined();
     expect(parseAnvilCommand("/anvil launch-rockets")?.flags.has("unknown")).toBe(true);

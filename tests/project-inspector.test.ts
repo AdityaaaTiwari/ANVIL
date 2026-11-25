@@ -13,7 +13,7 @@ describe("inspectProject", () => {
   });
 
   it("detects TypeScript, npm metadata, scripts, and frameworks", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-test-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-test-"));
     await mkdir(path.join(root, "src"));
     await mkdir(path.join(root, "node_modules", "ignored"), { recursive: true });
     await writeFile(path.join(root, "src", "index.ts"), "export {};");
@@ -39,12 +39,12 @@ describe("inspectProject", () => {
   });
 
   it("does not traverse private configuration directories", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-private-scan-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-private-scan-"));
     await mkdir(path.join(root, "src"), { recursive: true });
-    await mkdir(path.join(root, ".forge", "agents"), { recursive: true });
+    await mkdir(path.join(root, ".anvil", "agents"), { recursive: true });
     await mkdir(path.join(root, ".ssh"), { recursive: true });
     await writeFile(path.join(root, "src", "main.ts"), "export {};");
-    await writeFile(path.join(root, ".forge", "agents", "private.ts"), "export {};");
+    await writeFile(path.join(root, ".anvil", "agents", "private.ts"), "export {};");
     await writeFile(path.join(root, ".ssh", "helper.ts"), "export {};");
     const report = await inspectProject(root);
     expect(report.summary.filesScanned).toBe(1);
@@ -52,7 +52,7 @@ describe("inspectProject", () => {
   });
 
   it("formats a readable report", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-test-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-test-"));
     await writeFile(path.join(root, "main.py"), "print('hello')");
     const report = await inspectProject(root);
     expect(formatProjectReport(report)).toContain("# ANVIL Project Intelligence");

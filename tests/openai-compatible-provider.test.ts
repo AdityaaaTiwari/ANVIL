@@ -73,7 +73,7 @@ describe("OpenAI-compatible provider", () => {
     ).rejects.toThrow("HTTP 500");
   });
   it("executes an explicitly allowed read-only tool call and returns its result to the model", async () => {
-    const workspace = await mkdtemp(path.join(os.tmpdir(), "forge-agent-tools-"));
+    const workspace = await mkdtemp(path.join(os.tmpdir(), "anvil-agent-tools-"));
     try {
       await mkdir(path.join(workspace, "src"));
       await writeFile(path.join(workspace, "src", "hello.ts"), "export const greeting = 'hello from workspace';");
@@ -144,7 +144,7 @@ describe("OpenAI-compatible provider", () => {
   });
 
   it("rejects an oversized tool-call batch before executing any tool", async () => {
-    const workspace = await mkdtemp(path.join(os.tmpdir(), "forge-agent-tool-budget-"));
+    const workspace = await mkdtemp(path.join(os.tmpdir(), "anvil-agent-tool-budget-"));
     try {
       const fetchMock = vi.fn().mockResolvedValue(
         new Response(
@@ -207,7 +207,7 @@ describe("OpenAI-compatible provider", () => {
   });
 
   it("rejects malformed tool-call identifiers and names without a second provider request", async () => {
-    const workspace = await mkdtemp(path.join(os.tmpdir(), "forge-agent-malformed-call-"));
+    const workspace = await mkdtemp(path.join(os.tmpdir(), "anvil-agent-malformed-call-"));
     try {
       const fetchMock = vi.fn().mockResolvedValue(
         new Response(
@@ -251,7 +251,7 @@ describe("OpenAI-compatible provider", () => {
   });
 
   it("rejects unknown tool names through the broker and returns a bounded error to the model", async () => {
-    const workspace = await mkdtemp(path.join(os.tmpdir(), "forge-agent-unknown-tool-"));
+    const workspace = await mkdtemp(path.join(os.tmpdir(), "anvil-agent-unknown-tool-"));
     try {
       const fetchMock = vi
         .fn()

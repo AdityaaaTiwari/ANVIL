@@ -33,7 +33,7 @@ import { consult } from "../core/consult.js";
 import { analyzeContext } from "../core/context-budget.js";
 import { evaluateToolUse } from "../core/harness-hooks.js";
 
-const WORKSPACE_ROOT = await realpath(process.env.ANVIL_WORKSPACE ?? process.env.FORGE_WORKSPACE ?? process.cwd());
+const WORKSPACE_ROOT = await realpath(process.env.ANVIL_WORKSPACE ?? process.cwd());
 
 const resolveWorkspace = createWorkspaceResolver(WORKSPACE_ROOT);
 
@@ -141,14 +141,7 @@ function registerToolWithAlias<T extends z.ZodRawShape>(
   },
   handler: (args: z.infer<z.ZodObject<T>>) => Promise<any>
 ) {
-  const anvilName = name.startsWith("anvil_") ? name : name.replace(/^forge_/, "anvil_");
-  (server.registerTool as any)(anvilName, config, handler);
-
-  // Opt-in legacy forge_* alias registration to avoid doubling token overhead in tools/list
-  if (process.env.ANVIL_FORGE_ALIASES === "1" || process.env.FORGE_ALIASES === "1") {
-    const forgeName = name.startsWith("forge_") ? name : name.replace(/^anvil_/, "forge_");
-    (server.registerTool as any)(forgeName, config, handler);
-  }
+  (server.registerTool as any)(name, config, handler);
 }
 
 registerToolWithAlias(
@@ -811,96 +804,92 @@ registerToolWithAlias(
   }
 );
 
-for (const name of ["forge_doctor", "anvil_doctor"] as const) {
-  server.registerTool(
-    name,
-    {
-      title: "Run diagnostic system and workspace health checks",
-      description:
-        "Run comprehensive diagnostic checks on Node.js runtime, Git CLI, Docker daemon, provider credentials, and workspace configuration.",
-      inputSchema: z.object({
-        projectPath: z
-          .string()
-          .optional()
-          .describe("Workspace-relative directory. Defaults to the configured workspace root."),
-      }),
-    },
-    async ({ projectPath }) => {
-      try {
-        const root = await resolveWorkspace(projectPath);
-        return result(await auditReadOnlyMcpTool(name, () => runDoctorChecks(root)));
-      } catch (error) {
-        return failure(error);
-      }
+server.registerTool(
+  "anvil_doctor",
+  {
+    title: "Run diagnostic system and workspace health checks",
+    description:
+      "Run comprehensive diagnostic checks on Node.js runtime, Git CLI, Docker daemon, provider credentials, and workspace configuration.",
+    inputSchema: z.object({
+      projectPath: z
+        .string()
+        .optional()
+        .describe("Workspace-relative directory. Defaults to the configured workspace root."),
+    }),
+  },
+  async ({ projectPath }) => {
+    try {
+      const root = await resolveWorkspace(projectPath);
+      return result(await auditReadOnlyMcpTool("anvil_doctor", () => runDoctorChecks(root)));
+    } catch (error) {
+      return failure(error);
     }
-  );
-}
+  }
+);
 
-for (const name of ["forge_clean_preview", "anvil_clean_preview"] as const) {
-  server.registerTool(
-    name,
-    {
-      title: "Preview workspace cleanup and dead code",
-      description:
-        "Perform a safe, read-only dry-run scan to identify junk files, cache files, build artifacts, temporary downloads, and unreferenced orphan source modules. Call this before releases or repo cleanup. Returns compact summary by default; pass detail: true for itemized list.",
-      inputSchema: z.object({
-        projectPath: z
-          .string()
-          .optional()
-          .describe("Workspace-relative directory. Defaults to the configured workspace root."),
-        includeOrphans: z
-          .boolean()
-          .optional()
-          .describe("Scan and flag unreferenced source files across TypeScript, Python, Rust, Go, Java, and C/C++."),
-        detail: z
-          .boolean()
-          .optional()
-          .default(false)
-          .describe(
-            "When false (default), returns reclaimable byte counts and category totals. Pass true for itemized list of every removable file."
+server.registerTool(
+  "anvil_clean_preview",
+  {
+    title: "Preview workspace cleanup and dead code",
+    description:
+      "Perform a safe, read-only dry-run scan to identify junk files, cache files, build artifacts, temporary downloads, and unreferenced orphan source modules. Call this before releases or repo cleanup. Returns compact summary by default; pass detail: true for itemized list.",
+    inputSchema: z.object({
+      projectPath: z
+        .string()
+        .optional()
+        .describe("Workspace-relative directory. Defaults to the configured workspace root."),
+      includeOrphans: z
+        .boolean()
+        .optional()
+        .describe("Scan and flag unreferenced source files across TypeScript, Python, Rust, Go, Java, and C/C++."),
+      detail: z
+        .boolean()
+        .optional()
+        .default(false)
+        .describe(
+          "When false (default), returns reclaimable byte counts and category totals. Pass true for itemized list of every removable file."
+        ),
+    }),
+  },
+  async ({ projectPath, includeOrphans, detail }) => {
+    try {
+      const root = await resolveWorkspace(projectPath);
+      const preview = await auditReadOnlyMcpTool("anvil_clean_preview", () =>
+        cleanProject(root, { apply: false, checkOrphans: includeOrphans ?? true })
+      );
+      if (!detail) {
+        const summary = {
+          root: preview.root,
+          dryRun: preview.dryRun,
+          stats: preview.stats,
+          orphanFilesCount: preview.orphanFiles.length,
+          junkCategories: preview.junkItems.reduce(
+            (acc, item) => {
+              acc[item.category] = (acc[item.category] ?? 0) + 1;
+              return acc;
+            },
+            {} as Record<string, number>
           ),
-      }),
-    },
-    async ({ projectPath, includeOrphans, detail }) => {
-      try {
-        const root = await resolveWorkspace(projectPath);
-        const preview = await auditReadOnlyMcpTool(name, () =>
-          cleanProject(root, { apply: false, checkOrphans: includeOrphans ?? true })
-        );
-        if (!detail) {
-          const summary = {
-            root: preview.root,
-            dryRun: preview.dryRun,
-            stats: preview.stats,
-            orphanFilesCount: preview.orphanFiles.length,
-            junkCategories: preview.junkItems.reduce(
-              (acc, item) => {
-                acc[item.category] = (acc[item.category] ?? 0) + 1;
-                return acc;
-              },
-              {} as Record<string, number>
-            ),
-            warnings: preview.warnings,
-          };
-          return result(summary, {
-            compact: true,
-            hint: "Pass detail: true to view the complete list of files identified for cleanup.",
-          });
-        }
-        return result(preview, { compact: false });
-      } catch (error) {
-        return failure(error);
+          warnings: preview.warnings,
+        };
+        return result(summary, {
+          compact: true,
+          hint: "Pass detail: true to view the complete list of files identified for cleanup.",
+        });
       }
+      return result(preview, { compact: false });
+    } catch (error) {
+      return failure(error);
     }
-  );
-}
+  }
+);
 
 registerToolWithAlias(
-  "anvil_rea_intelligence",
+  "anvil_binary_intelligence",
   {
-    title: "Binary, Bundle & Clean-Room Analysis",
+    title: "Binary, Bundle & Provenance Analysis",
     description:
-      "Inspect workspace for compiled native binaries, web bundles, source maps, WASM, and capture files using REA intelligence. Audits clean-room invariants and flags proprietary binary leaks. Returns compact summary by default; pass detail: true for full asset inventory.",
+      "Inspect workspace for compiled native binaries, web bundles, source maps, WASM, and capture files. Audits clean-room invariants and flags proprietary binary leaks. Returns compact summary by default; pass detail: true for full asset inventory.",
     inputSchema: z.object({
       projectPath: z
         .string()
@@ -918,7 +907,7 @@ registerToolWithAlias(
   async ({ projectPath, detail }) => {
     try {
       const root = await resolveWorkspace(projectPath);
-      const report = await auditReadOnlyMcpTool("anvil_rea_intelligence", () => analyzeReaIntelligence(root));
+      const report = await auditReadOnlyMcpTool("anvil_binary_intelligence", () => analyzeReaIntelligence(root));
       if (!detail) {
         const summary = {
           workspace: report.workspace,

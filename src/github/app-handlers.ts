@@ -8,7 +8,6 @@ import {
   extractManagedBlock,
   HARNESS_TARGETS,
   INSTALL_STATE_PATH,
-  LEGACY_INSTALL_STATE_PATH,
   parseProfile,
   parseTargets,
   sha256,
@@ -30,14 +29,12 @@ import { analyzeRepository, MANIFEST_FILES, renderProjectSkill, type RepoProfile
 export interface AppContext {
   client: GitHubClient;
   anvilVersion?: string;
-  /** @deprecated Legacy alias accepted for backwards compatibility. */
-  forgeVersion?: string;
   catalogRoot?: string;
   now?: () => Date;
 }
 
-function resolveAppVersion(context: Pick<AppContext, "anvilVersion" | "forgeVersion">): string {
-  return context.anvilVersion ?? context.forgeVersion ?? "0.0.0";
+function resolveAppVersion(context: Pick<AppContext, "anvilVersion">): string {
+  return context.anvilVersion ?? "0.0.0";
 }
 
 export interface HandlerResult {
@@ -62,7 +59,7 @@ export function parseAnvilCommand(body: string): ParsedCommand | undefined {
       .split(/\r?\n/)
       .map((item) => item.trim())
       .find((item) => item.length > 0) ?? "";
-  const match = line.match(/^\/(?:anvil|forge)(?:-ecc)?\s+([a-z-]+)((?:\s+\S+)*)\s*$/i);
+  const match = line.match(/^\/anvil\s+([a-z-]+)((?:\s+\S+)*)\s*$/i);
   if (!match) return undefined;
   const command = (match[1] ?? "").toLowerCase();
   if (!COMMANDS.includes(command as AnvilCommand))
@@ -81,9 +78,6 @@ export function parseAnvilCommand(body: string): ParsedCommand | undefined {
   return { command: command as AnvilCommand, options, flags };
 }
 
-/** @deprecated Use `parseAnvilCommand`. */
-export const parseForgeCommand = parseAnvilCommand;
-
 export function gitBlobSha(content: string): string {
   const buffer = Buffer.from(content, "utf8");
   return createHash("sha1").update(`blob ${buffer.length}\0`).update(buffer).digest("hex");
@@ -94,7 +88,7 @@ export function gitBlobSha(content: string): string {
 // ---------------------------------------------------------------------------
 
 const SHIELD_PATH =
-  /^(?:AGENTS\.md|CLAUDE\.md|CLAUDE\.local\.md|GEMINI\.md|\.cursorrules|\.windsurfrules|\.clinerules|\.rules|\.mcp\.json|mcp\.json|opencode\.json|\.github\/copilot-instructions\.md|\.claude\/settings(?:\.local)?\.json|\.cursor\/mcp\.json|\.cursor\/hooks\.json|\.codex\/hooks\.json|\.vscode\/(?:mcp|settings)\.json|\.gemini\/settings\.json|\.codex\/config\.toml|\.zed\/settings\.json|\.kiro\/settings\/mcp\.json|\.roo\/mcp\.json|\.windsurf\/mcp\.json|\.(?:anvil|forge)\/(?:permissions|policy)\.json)$|^(?:\.claude\/(?:agents|commands|skills|hooks|rules)|\.cursor\/(?:rules|commands)|\.opencode|\.gemini\/commands|\.agents\/skills|\.(?:anvil|forge)\/(?:skills|hooks|harness)|\.github\/(?:workflows|instructions|prompts|agents)|\.windsurf\/(?:rules|workflows)|\.kiro\/steering|\.clinerules|\.roo\/rules)\/.+\.(?:md|mdc|json|ya?ml|toml|sh|js|mjs|cjs|ts|py)$/;
+  /^(?:AGENTS\.md|CLAUDE\.md|CLAUDE\.local\.md|GEMINI\.md|\.cursorrules|\.windsurfrules|\.clinerules|\.rules|\.mcp\.json|mcp\.json|opencode\.json|\.github\/copilot-instructions\.md|\.claude\/settings(?:\.local)?\.json|\.cursor\/mcp\.json|\.cursor\/hooks\.json|\.codex\/hooks\.json|\.vscode\/(?:mcp|settings)\.json|\.gemini\/settings\.json|\.codex\/config\.toml|\.zed\/settings\.json|\.kiro\/settings\/mcp\.json|\.roo\/mcp\.json|\.windsurf\/mcp\.json|\.anvil\/(?:permissions|policy)\.json)$|^(?:\.claude\/(?:agents|commands|skills|hooks|rules)|\.cursor\/(?:rules|commands)|\.opencode|\.gemini\/commands|\.agents\/skills|\.anvil\/(?:skills|hooks|harness)|\.github\/(?:workflows|instructions|prompts|agents)|\.windsurf\/(?:rules|workflows)|\.kiro\/steering|\.clinerules|\.roo\/rules)\/.+\.(?:md|mdc|json|ya?ml|toml|sh|js|mjs|cjs|ts|py)$/;
 const MAX_REMOTE_FILES = 200;
 
 /** Highest-risk surfaces first; ANVIL-generated catalog copies last. */
@@ -106,7 +100,7 @@ function shieldPriority(file: string): number {
     return 0;
   if (file.startsWith(".github/workflows/") || /\/hooks\//.test(file)) return 1;
   if (
-    /(?:^|\/)(?:anvil|forge)-[\w.-]+(?:\/SKILL)?\.(?:md|mdc|toml)$|^\.(?:anvil|forge)\/harness\/|^\.(?:claude\/(?:commands|rules)|gemini\/commands)\/(?:anvil|forge)\//.test(
+    /(?:^|\/)anvil-[\w.-]+(?:\/SKILL)?\.(?:md|mdc|toml)$|^\.anvil\/harness\/|^\.(?:claude\/(?:commands|rules)|gemini\/commands)\/anvil\//.test(
       file
     )
   )
@@ -227,7 +221,7 @@ export async function planRepositorySetup(
   const blobs = new Map(data.entries.filter((entry) => entry.type === "blob").map((entry) => [entry.path, entry.sha]));
   // Exclude ANVIL's own generated files so re-analysis after merging is stable.
   const ownFiles =
-    /^\.(?:anvil|forge)\/|(?:^|\/)(?:anvil|forge)-[\w.-]+(?:\/SKILL)?\.(?:md|mdc|toml)$|(?:^|\/)(?:anvil|forge)-project\/SKILL\.md$|^\.(?:claude\/(?:commands|rules)|gemini\/commands)\/(?:anvil|forge)\//;
+    /^\.anvil\/|(?:^|\/)anvil-[\w.-]+(?:\/SKILL)?\.(?:md|mdc|toml)$|(?:^|\/)anvil-project\/SKILL\.md$|^\.(?:claude\/(?:commands|rules)|gemini\/commands)\/anvil\//;
   const profile = analyzeRepository({
     name: `${owner}/${repo}`,
     files: [...blobs.keys()].filter((file) => !ownFiles.test(file)),
@@ -236,11 +230,7 @@ export async function planRepositorySetup(
   });
 
   let previous: InstallState | undefined;
-  const statePath = blobs.has(INSTALL_STATE_PATH)
-    ? INSTALL_STATE_PATH
-    : blobs.has(LEGACY_INSTALL_STATE_PATH)
-      ? LEGACY_INSTALL_STATE_PATH
-      : undefined;
+  const statePath = blobs.has(INSTALL_STATE_PATH) ? INSTALL_STATE_PATH : undefined;
   if (statePath) {
     try {
       previous = JSON.parse((await client.getFileText(owner, repo, statePath, ref)) ?? "") as InstallState;
@@ -426,7 +416,7 @@ export async function runRemoteSetup(
 export interface RemoteDoctor {
   installed: boolean;
   healthy: boolean;
-  state?: Pick<InstallState, "anvilVersion" | "forgeVersion" | "profile" | "targets" | "installedAt"> & {
+  state?: Pick<InstallState, "anvilVersion" | "profile" | "targets" | "installedAt"> & {
     languages?: string[];
     hooks?: boolean;
     hookTargets?: string[];
@@ -447,11 +437,7 @@ export async function computeRemoteDoctor(
   const ref = prefetched?.ref ?? (await client.getRepository(owner, repo)).default_branch;
   const entries = prefetched?.entries ?? (await client.getTree(owner, repo, ref)).entries;
   const blobs = new Map(entries.filter((entry) => entry.type === "blob").map((entry) => [entry.path, entry.sha]));
-  const statePath = blobs.has(INSTALL_STATE_PATH)
-    ? INSTALL_STATE_PATH
-    : blobs.has(LEGACY_INSTALL_STATE_PATH)
-      ? LEGACY_INSTALL_STATE_PATH
-      : undefined;
+  const statePath = blobs.has(INSTALL_STATE_PATH) ? INSTALL_STATE_PATH : undefined;
   const rawState = statePath ? await client.getFileText(owner, repo, statePath, ref) : undefined;
   if (!rawState) return { installed: false, healthy: false, missing: [], outdated: [], added: [] };
   const state = JSON.parse(rawState) as InstallState;
@@ -471,12 +457,12 @@ export async function computeRemoteDoctor(
   const added = plan.files
     .filter((file) => !blobs.has(file.path) && !state.files.some((entry) => entry.path === file.path))
     .map((file) => file.path);
-  const installedVersion = state.anvilVersion ?? state.forgeVersion;
+  const installedVersion = state.anvilVersion;
   return {
     installed: true,
     healthy: !missing.length && !outdated.length && !added.length,
     state: {
-      ...(installedVersion ? { anvilVersion: installedVersion, forgeVersion: installedVersion } : {}),
+      ...(installedVersion ? { anvilVersion: installedVersion } : {}),
       profile: state.profile,
       targets: state.targets,
       installedAt: state.installedAt,
@@ -505,7 +491,7 @@ export function formatRemoteDoctor(doctor: RemoteDoctor, anvilVersion: string): 
           "",
         ]
       : [];
-  const installedVersion = doctor.state.anvilVersion ?? doctor.state.forgeVersion ?? "unknown";
+  const installedVersion = doctor.state.anvilVersion ?? "unknown";
   return [
     `### ANVIL doctor: ${doctor.healthy ? "✅ healthy" : "⚠️ needs attention"}`,
     "",
@@ -537,7 +523,7 @@ interface CommentPayload {
 }
 
 const HELP = [
-  "**ANVIL commands** (comment on any issue or pull request; legacy `/forge` aliases also supported):",
+  "**ANVIL commands** (comment on any issue or pull request):",
   "",
   "| Command | What it does |",
   "|---|---|",

@@ -81,7 +81,7 @@ describe("ANVIL doctor diagnostics", () => {
   });
 
   it("marks workspace status as fail if target path does not exist", async () => {
-    const nonExistent = path.join(os.tmpdir(), "forge-nonexistent-" + Date.now());
+    const nonExistent = path.join(os.tmpdir(), "anvil-nonexistent-" + Date.now());
     const report = await runDoctorChecks(nonExistent);
     const wsCheck = report.checks.find((c) => c.name === "Project workspace");
     expect(wsCheck?.status).toBe("fail");
@@ -124,7 +124,7 @@ describe("ANVIL doctor diagnostics", () => {
   });
 
   it("scaffolds missing .anvil, .gitignore, and .env.example with fixDoctorIssues", async () => {
-    const tmp = await mkdtemp(path.join(os.tmpdir(), "forge-doc-fix-"));
+    const tmp = await mkdtemp(path.join(os.tmpdir(), "anvil-doc-fix-"));
     try {
       const result = await fixDoctorIssues(tmp);
       expect(result.repaired.length).toBeGreaterThanOrEqual(3);

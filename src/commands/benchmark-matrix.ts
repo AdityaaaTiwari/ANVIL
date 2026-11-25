@@ -60,8 +60,8 @@ export async function runBenchmarkMatrix(_command: string, rest: string[]): Prom
     const suites = await loadEvaluationSuites(target);
     const suite = suites.find((item) => item.id === suiteId);
     if (!suite) throw new Error("Evaluation suite not found: " + suiteId);
-    const apiKey = getAnvilEnv("ANVIL_API_KEY", "FORGE_API_KEY") ?? process.env.OPENAI_API_KEY ?? "";
-    const baseUrl = getAnvilEnv("ANVIL_BASE_URL", "FORGE_BASE_URL", "https://api.openai.com/v1")!;
+    const apiKey = getAnvilEnv("ANVIL_API_KEY") ?? process.env.OPENAI_API_KEY ?? "";
+    const baseUrl = getAnvilEnv("ANVIL_BASE_URL", "https://api.openai.com/v1")!;
     const report = await executeBenchmarkMatrix(config, async (candidate, _repeat) => {
       const createProvider = (selectedModel: string) =>
         candidate.provider === "claude-code"
@@ -70,9 +70,8 @@ export async function runBenchmarkMatrix(_command: string, rest: string[]): Prom
               {
                 ...process.env,
                 ANVIL_AI_PROVIDER: candidate.provider,
-                FORGE_AI_PROVIDER: candidate.provider,
-                ...(apiKey ? { ANVIL_API_KEY: apiKey, FORGE_API_KEY: apiKey } : {}),
-                ...(baseUrl ? { ANVIL_BASE_URL: baseUrl, FORGE_BASE_URL: baseUrl } : {}),
+                ...(apiKey ? { ANVIL_API_KEY: apiKey } : {}),
+                ...(baseUrl ? { ANVIL_BASE_URL: baseUrl } : {}),
               },
               selectedModel
             );
@@ -80,36 +79,30 @@ export async function runBenchmarkMatrix(_command: string, rest: string[]): Prom
         fastModel: candidate.model,
         balancedModel: candidate.model,
         reasoningModel: candidate.model,
-        retryAttempts: Number(getAnvilEnv("ANVIL_MODEL_RETRY_ATTEMPTS", "FORGE_MODEL_RETRY_ATTEMPTS", "2")),
-        retryDelayMs: Number(getAnvilEnv("ANVIL_MODEL_RETRY_DELAY_MS", "FORGE_MODEL_RETRY_DELAY_MS", "500")),
-        ...(getAnvilEnv("ANVIL_MAX_INPUT_TOKENS_PER_TASK", "FORGE_MAX_INPUT_TOKENS_PER_TASK")
+        retryAttempts: Number(getAnvilEnv("ANVIL_MODEL_RETRY_ATTEMPTS", "2")),
+        retryDelayMs: Number(getAnvilEnv("ANVIL_MODEL_RETRY_DELAY_MS", "500")),
+        ...(getAnvilEnv("ANVIL_MAX_INPUT_TOKENS_PER_TASK")
           ? {
-              maxInputTokensPerTask: Number(
-                getAnvilEnv("ANVIL_MAX_INPUT_TOKENS_PER_TASK", "FORGE_MAX_INPUT_TOKENS_PER_TASK")
-              ),
+              maxInputTokensPerTask: Number(getAnvilEnv("ANVIL_MAX_INPUT_TOKENS_PER_TASK")),
             }
           : {}),
-        ...(getAnvilEnv("ANVIL_MAX_OUTPUT_TOKENS_PER_TASK", "FORGE_MAX_OUTPUT_TOKENS_PER_TASK")
+        ...(getAnvilEnv("ANVIL_MAX_OUTPUT_TOKENS_PER_TASK")
           ? {
-              maxOutputTokensPerTask: Number(
-                getAnvilEnv("ANVIL_MAX_OUTPUT_TOKENS_PER_TASK", "FORGE_MAX_OUTPUT_TOKENS_PER_TASK")
-              ),
+              maxOutputTokensPerTask: Number(getAnvilEnv("ANVIL_MAX_OUTPUT_TOKENS_PER_TASK")),
             }
           : {}),
-        ...(getAnvilEnv("ANVIL_MAX_ESTIMATED_TOKENS_PER_RUN", "FORGE_MAX_ESTIMATED_TOKENS_PER_RUN")
+        ...(getAnvilEnv("ANVIL_MAX_ESTIMATED_TOKENS_PER_RUN")
           ? {
-              maxEstimatedTokensPerRun: Number(
-                getAnvilEnv("ANVIL_MAX_ESTIMATED_TOKENS_PER_RUN", "FORGE_MAX_ESTIMATED_TOKENS_PER_RUN")
-              ),
+              maxEstimatedTokensPerRun: Number(getAnvilEnv("ANVIL_MAX_ESTIMATED_TOKENS_PER_RUN")),
             }
           : {}),
-        ...(getAnvilEnv("ANVIL_MAX_ESTIMATED_TOKENS_PER_AGENT", "FORGE_MAX_ESTIMATED_TOKENS_PER_AGENT")
+        ...(getAnvilEnv("ANVIL_MAX_ESTIMATED_TOKENS_PER_AGENT")
           ? { maxEstimatedTokensPerAgent: readAgentTokenBudgets()! }
           : {}),
-        ...(getAnvilEnv("ANVIL_MAX_TASK_DURATION_MS", "FORGE_MAX_TASK_DURATION_MS")
-          ? { maxTaskDurationMs: Number(getAnvilEnv("ANVIL_MAX_TASK_DURATION_MS", "FORGE_MAX_TASK_DURATION_MS")) }
+        ...(getAnvilEnv("ANVIL_MAX_TASK_DURATION_MS")
+          ? { maxTaskDurationMs: Number(getAnvilEnv("ANVIL_MAX_TASK_DURATION_MS")) }
           : {}),
-        ...(getAnvilEnv("ANVIL_MAX_TASK_DURATION_MS_BY_AGENT", "FORGE_MAX_TASK_DURATION_MS_BY_AGENT")
+        ...(getAnvilEnv("ANVIL_MAX_TASK_DURATION_MS_BY_AGENT")
           ? { maxTaskDurationMsByAgent: readAgentDurationBudgets()! }
           : {}),
         createProvider,
@@ -233,9 +226,7 @@ export async function runBenchmarkMatrix(_command: string, rest: string[]): Prom
       suite,
       provider: "matrix",
       model: "candidate-specific",
-      ...(getAnvilEnv("ANVIL_BASE_URL", "FORGE_BASE_URL")
-        ? { baseUrl: getAnvilEnv("ANVIL_BASE_URL", "FORGE_BASE_URL")! }
-        : {}),
+      ...(getAnvilEnv("ANVIL_BASE_URL") ? { baseUrl: getAnvilEnv("ANVIL_BASE_URL")! } : {}),
       agentConfigFingerprints: report.candidateProvenance ?? [],
     });
     const manifestPath = await saveExperimentManifest(target, experimentManifest);

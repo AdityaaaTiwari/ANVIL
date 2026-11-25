@@ -128,7 +128,7 @@ describe("agent configuration versioning", () => {
     ).toThrow("unsupported fields");
   });
   it("requires a workspace configuration to snapshot", async () => {
-    const root = await mkdtemp(path.join(os.tmpdir(), "forge-agent-config-empty-"));
+    const root = await mkdtemp(path.join(os.tmpdir(), "anvil-agent-config-empty-"));
     roots.push(root);
     await expect(captureAgentConfigVersion(root)).rejects.toThrow("No workspace agent or skill");
   });

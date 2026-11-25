@@ -4,17 +4,17 @@ ANVIL's `anvil run` command supports Claude Code CLI and four hosted/local HTTP 
 
 ## Provider setup
 
-Choose one provider with `ANVIL_AI_PROVIDER` (legacy `FORGE_AI_PROVIDER` is accepted with a deprecation warning):
+Choose one provider with `ANVIL_AI_PROVIDER`:
 
 | Provider | Required environment | Default model |
 | --- | --- | --- |
 | `claude-code` | Claude Code CLI installed and authenticated | `sonnet` |
-| `openai` | `ANVIL_API_KEY` (or `OPENAI_API_KEY` / legacy `FORGE_API_KEY`) | `gpt-4.1-mini` |
+| `openai` | `ANVIL_API_KEY` (or `OPENAI_API_KEY`) | `gpt-4.1-mini` |
 | `anthropic` | `ANTHROPIC_API_KEY` | `claude-sonnet-4-5` |
 | `google` | `GOOGLE_API_KEY` | `gemini-2.5-flash` |
 | `ollama` | Ollama running locally | `llama3.2` |
 
-Set `ANVIL_AI_MODEL` (or legacy `FORGE_AI_MODEL`) to override the model. Set `ANVIL_BASE_URL` (or legacy `FORGE_BASE_URL`) to use a compatible gateway or custom endpoint. For Ollama, `OLLAMA_HOST` overrides the default `http://localhost:11434`.
+Set `ANVIL_AI_MODEL` to override the model. Set `ANVIL_BASE_URL` to use a compatible gateway or custom endpoint. For Ollama, `OLLAMA_HOST` overrides the default `http://localhost:11434`.
 
 ## Examples
 

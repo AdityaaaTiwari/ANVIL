@@ -29,7 +29,7 @@ function runCliRaw(...args: string[]): { stdout: string; exitCode: number } {
 
 const temporaryDirectories: string[] = [];
 async function createWorkspace(): Promise<string> {
-  const directory = await mkdtemp(path.join(os.tmpdir(), "forge-cli-help-"));
+  const directory = await mkdtemp(path.join(os.tmpdir(), "anvil-cli-help-"));
   temporaryDirectories.push(directory);
   return directory;
 }
@@ -57,11 +57,11 @@ describe("run-history CLI help", () => {
   it("rejects malformed show-run arguments", async () => {
     const directory = await createWorkspace();
     for (const args of [
-      ["forge-example", "--path"],
-      ["forge-example", "--path", "--json"],
-      ["forge-example", "--path", directory, "--path", directory],
-      ["forge-example", "extra"],
-      ["forge-example", "--unexpected"],
+      ["anvil-example", "--path"],
+      ["anvil-example", "--path", "--json"],
+      ["anvil-example", "--path", directory, "--path", directory],
+      ["anvil-example", "extra"],
+      ["anvil-example", "--unexpected"],
     ]) {
       expect(() => runCli("show-run", ...args)).toThrow();
     }
@@ -139,7 +139,7 @@ describe("run-history CLI help", () => {
 });
 
 // ---------------------------------------------------------------------------
-// forge agent-intelligence --help and --json
+// anvil agent-intelligence --help and --json
 // ---------------------------------------------------------------------------
 
 describe("agent-intelligence CLI flags", () => {
@@ -161,7 +161,7 @@ describe("agent-intelligence CLI flags", () => {
   });
 
   it("returns insufficient-data JSON when there is no benchmark history", async () => {
-    const directory = await mkdtemp(path.join(os.tmpdir(), "forge-agi-json-"));
+    const directory = await mkdtemp(path.join(os.tmpdir(), "anvil-agi-json-"));
     try {
       // Uses runCliRaw so we can inspect output even when exit code is 2.
       const { stdout, exitCode } = runCliRaw("agent-intelligence", "--path", directory, "--json");
@@ -182,10 +182,10 @@ describe("agent-intelligence CLI flags", () => {
   }, 20_000);
 
   it("returns a ready JSON report when benchmark history exists", async () => {
-    const directory = await mkdtemp(path.join(os.tmpdir(), "forge-agi-ready-"));
+    const directory = await mkdtemp(path.join(os.tmpdir(), "anvil-agi-ready-"));
     try {
-      // Write a minimal benchmark matrix report to .forge/benchmark-matrices/
-      const benchmarkDir = path.join(directory, ".forge", "benchmark-matrices");
+      // Write a minimal benchmark matrix report to .anvil/benchmark-matrices/
+      const benchmarkDir = path.join(directory, ".anvil", "benchmark-matrices");
       await mkdir(benchmarkDir, { recursive: true });
       const matrixReport: BenchmarkMatrixReport = {
         version: 1,
@@ -260,7 +260,7 @@ describe("agent-intelligence CLI flags", () => {
   }, 20_000);
 
   it("rejects --limit values outside the allowed range", async () => {
-    const directory = await mkdtemp(path.join(os.tmpdir(), "forge-agi-limit-"));
+    const directory = await mkdtemp(path.join(os.tmpdir(), "anvil-agi-limit-"));
     try {
       for (const badLimit of ["1", "51", "abc"]) {
         expect(() => runCli("agent-intelligence", "--path", directory, "--limit", badLimit)).toThrow();

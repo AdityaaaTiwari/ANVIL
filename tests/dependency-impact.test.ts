@@ -14,7 +14,7 @@ afterEach(async () => {
 });
 describe("dependency and change impact intelligence", () => {
   it("finds undeclared imports and transitive changed-file impact", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-impact-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-impact-"));
     await mkdir(path.join(root, "src"), { recursive: true });
     await writeFile(
       path.join(root, "package.json"),
@@ -26,8 +26,8 @@ describe("dependency and change impact intelligence", () => {
     );
     await writeFile(path.join(root, "src", "consumer.ts"), "import { app } from './core';\nexport default app;\n");
     await run("git", ["init", root]);
-    await run("git", ["-C", root, "config", "user.email", "forge@example.invalid"]);
-    await run("git", ["-C", root, "config", "user.name", "FORGE Tests"]);
+    await run("git", ["-C", root, "config", "user.email", "anvil@example.invalid"]);
+    await run("git", ["-C", root, "config", "user.name", "ANVIL Tests"]);
     await run("git", ["-C", root, "add", "."]);
     await run("git", ["-C", root, "commit", "-m", "baseline"]);
     await writeFile(
@@ -40,7 +40,7 @@ describe("dependency and change impact intelligence", () => {
     expect(report.changedFiles.find((item) => item.file === "src/core.ts")?.affected).toContain("src/consumer.ts");
   });
   it("compares manifest dependency changes and checks npm lock metadata", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-impact-lock-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-impact-lock-"));
     await mkdir(path.join(root, "src"), { recursive: true });
     const original = { name: "fixture", dependencies: { express: "^4.0.0" } };
     await writeFile(path.join(root, "package.json"), JSON.stringify(original));
@@ -50,8 +50,8 @@ describe("dependency and change impact intelligence", () => {
     );
     await writeFile(path.join(root, "src", "app.ts"), "import express from 'express';\nexport default express;\n");
     await run("git", ["init", root]);
-    await run("git", ["-C", root, "config", "user.email", "forge@example.invalid"]);
-    await run("git", ["-C", root, "config", "user.name", "FORGE Tests"]);
+    await run("git", ["-C", root, "config", "user.email", "anvil@example.invalid"]);
+    await run("git", ["-C", root, "config", "user.name", "ANVIL Tests"]);
     await run("git", ["-C", root, "add", "."]);
     await run("git", ["-C", root, "commit", "-m", "baseline"]);
     await writeFile(

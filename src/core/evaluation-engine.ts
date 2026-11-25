@@ -416,7 +416,7 @@ export async function loadEvaluationReport(
   runId: string,
   suiteId?: string
 ): Promise<EvaluationReport | JudgedEvaluationReport> {
-  if (!/^(?:anvil|forge)-[a-z0-9-]{1,80}$/.test(runId) || runId.includes("..")) {
+  if (!/^anvil-[a-z0-9-]{1,80}$/.test(runId) || runId.includes("..")) {
     throw new Error("Invalid ANVIL run identifier.");
   }
   if (suiteId && !SAFE_ID.test(suiteId)) throw new Error("Invalid evaluation suite identifier.");

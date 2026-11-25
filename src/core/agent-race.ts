@@ -187,9 +187,7 @@ async function ensureIgnored(root: string): Promise<void> {
 }
 
 async function diffStat(worktree: string, head: string): Promise<{ added: number; removed: number; files: string[] }> {
-  await git(worktree, ["add", "-A", "--", ".", ":(exclude).anvil", ":(exclude).forge", ":(exclude)node_modules"]).catch(
-    () => ""
-  );
+  await git(worktree, ["add", "-A", "--", ".", ":(exclude).anvil", ":(exclude)node_modules"]).catch(() => "");
   const numstat = await git(worktree, ["diff", "--cached", "--numstat", head]).catch(() => "");
   let added = 0;
   let removed = 0;
@@ -339,7 +337,7 @@ export async function runRace(options: RaceOptions): Promise<RaceRecord> {
 
 export async function listRaces(projectPath: string): Promise<RaceRecord[]> {
   const root = path.resolve(projectPath);
-  const dirs = [path.join(root, RACES_DIR), path.join(root, ".forge/races")];
+  const dirs = [path.join(root, RACES_DIR)];
   const byId = new Map<string, RaceRecord>();
   for (const dir of dirs) {
     const names = await readdir(dir).catch(() => [] as string[]);
@@ -385,7 +383,7 @@ export async function pickRace(
   await lstat(worktree).catch(() => {
     throw new Error(`The worktree for ${chosen} was removed. Its changes are no longer available.`);
   });
-  await git(worktree, ["add", "-A", "--", ".", ":(exclude).anvil", ":(exclude).forge", ":(exclude)node_modules"]);
+  await git(worktree, ["add", "-A", "--", ".", ":(exclude).anvil", ":(exclude)node_modules"]);
   const patch = await git(worktree, ["diff", "--cached", "--binary", race.head]);
   if (!patch.trim()) throw new Error(`${chosen} made no changes.`);
   const patchFile = path.join(root, RACES_DIR, `${race.id}-${chosen}.patch`);

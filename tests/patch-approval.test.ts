@@ -19,7 +19,7 @@ describe("patch approval records", () => {
     if (root) await rm(root, { recursive: true, force: true });
   });
   async function fixture() {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-patch-approval-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-patch-approval-"));
     await mkdir(path.join(root, "src"));
     await writeFile(path.join(root, "src/a.ts"), "const a = 1;\n");
     const report = {

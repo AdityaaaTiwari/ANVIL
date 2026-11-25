@@ -65,35 +65,35 @@ See [Token Benchmark Results](token-benchmark-results.md) for reproducible, empi
 
 ## Available MCP Tools
 
-All tools are bounded, run locally within your workspace boundaries, and expose canonical `anvil_*` names (set `ANVIL_FORGE_ALIASES=1` to also register legacy `forge_*` aliases):
+All tools are bounded, run locally within your workspace boundaries, and expose canonical `anvil_*` names:
 
-| Tool Name | Opt-in Alias | Model Directive / Purpose | Compact Default |
-|---|---|---|:---:|
-| `anvil_inspect_project` | `forge_inspect_project` | Inspect project structure, languages, frameworks, package managers, scripts, and dependencies. Call first on onboarding. | Yes (`detail: false`) |
-| `anvil_map_architecture` | `forge_map_architecture` | In-memory import graph across TS, JS, Python, Go, Rust, Java, C++; TypeScript AST symbols. Call before planning refactors or tracing imports. | Yes (`detail: false`) |
-| `anvil_change_risk` | `forge_change_risk` | Blast radius, downstream affected modules, and candidate test targets. Call before committing or opening PRs. | Yes (`detail: false`) |
-| `anvil_git_intelligence` | `forge_git_intelligence` | Working-tree git diff, uncommitted changes, affected modules, and heuristic commit risk. | Yes (`detail: false`) |
-| `anvil_quality_audit` | `forge_quality_audit` | Fast static quality audit across manifests, tests, workflows, and security patterns. | Yes (`detail: false`) |
-| `anvil_security_audit` | `forge_security_audit` | Deep scan for hardcoded secrets, API keys, and sensitive tokens with zero network calls. | Yes (`detail: false`) |
-| `anvil_clean_preview` | `forge_clean_preview` | Safe preview scan of OS junk, build caches, temp downloads, and orphan source modules. | Yes (`detail: false`) |
-| `anvil_search_code` | `forge_search_code` | Search symbols and text with automatic secret, `.env`, and `node_modules` exclusion. | - |
-| `anvil_list_files` | `forge_list_files` | Directory listing bounded to 200 items, filtering out secrets, symlinks, and caches. | - |
-| `anvil_read_file` | `forge_read_file` | Read source files up to 128 KiB with strict path traversal prevention. | - |
-| `anvil_project_health` | `forge_project_health` | Unified 0–100 health score and letter grade (A–F) combining tooling and architecture. | - |
-| `anvil_list_agents` | `forge_list_agents` | List specialist engineering personas (architecture, reviewer, security, tester, release). | - |
-| `anvil_create_review_plan` | `forge_create_review_plan` | Draft a structured multi-role engineering review workflow for a given goal. | - |
-| `anvil_agent_intelligence` | `forge_agent_intelligence` | Read-only analysis of agent effectiveness and recurring failure modes across benchmark history. | - |
-| `anvil_remediation_plan` | `forge_remediation_plan` | Advisory dependency remediation and upgrade plan with human approval guardrails. | - |
-| `anvil_agent_optimization` | `forge_agent_optimization` | Suggest harness configuration and agent prompt optimizations from local benchmark history. | - |
-| `anvil_project_memory` | `forge_project_memory` | Read saved project decisions and architecture constraints within a token budget. | - |
-| `anvil_agent_security_audit` | `forge_agent_security_audit` | Audit agent instructions, skills, hooks, and permissions for prompt injection and secret leaks. | - |
-| `anvil_dependency_impact` | `forge_dependency_impact` | Analyze manifest changes and undeclared imports against a git base revision. | - |
-| `anvil_rea_intelligence` | `forge_rea_intelligence` | Inventory REA clean-room assets and static compliance checks in the workspace. | - |
-| `anvil_scorecard` | `forge_scorecard` | Compute deterministic 9-category harness readiness scorecard across install, guards, gates, memory, learning, and CI. | - |
-| `anvil_consult` | `forge_consult` | Recommend catalog agents, skills, commands, rules, and MCP servers for a given task. | - |
-| `anvil_context_budget` | `forge_context_budget` | Measure pre-prompt context tokens loaded across configured harnesses. | - |
-| `anvil_guard_check` | `forge_guard_check` | Evaluate a planned tool command or file action against ANVIL Guard security rules. | - |
-| `anvil_doctor` | `forge_doctor` | Run diagnostic health checks on Node runtime, Git, Docker, and workspace permissions. | - |
+| Tool Name | Model Directive / Purpose | Compact Default |
+|---|---|:---:|
+| `anvil_inspect_project` | Inspect project structure, languages, frameworks, package managers, scripts, and dependencies. Call first on onboarding. | Yes (`detail: false`) |
+| `anvil_map_architecture` | In-memory import graph across TS, JS, Python, Go, Rust, Java, C++; TypeScript AST symbols. Call before planning refactors or tracing imports. | Yes (`detail: false`) |
+| `anvil_change_risk` | Blast radius, downstream affected modules, and candidate test targets. Call before committing or opening PRs. | Yes (`detail: false`) |
+| `anvil_git_intelligence` | Working-tree git diff, uncommitted changes, affected modules, and heuristic commit risk. | Yes (`detail: false`) |
+| `anvil_quality_audit` | Fast static quality audit across manifests, tests, workflows, and security patterns. | Yes (`detail: false`) |
+| `anvil_security_audit` | Deep scan for hardcoded secrets, API keys, and sensitive tokens with zero network calls. | Yes (`detail: false`) |
+| `anvil_clean_preview` | Safe preview scan of OS junk, build caches, temp downloads, and orphan source modules. | Yes (`detail: false`) |
+| `anvil_search_code` | Search symbols and text with automatic secret, `.env`, and `node_modules` exclusion. | - |
+| `anvil_list_files` | Directory listing bounded to 200 items, filtering out secrets, symlinks, and caches. | - |
+| `anvil_read_file` | Read source files up to 128 KiB with strict path traversal prevention. | - |
+| `anvil_project_health` | Unified 0–100 health score and letter grade (A–F) combining tooling and architecture. | - |
+| `anvil_list_agents` | List specialist engineering personas (architecture, reviewer, security, tester, release). | - |
+| `anvil_create_review_plan` | Draft a structured multi-role engineering review workflow for a given goal. | - |
+| `anvil_agent_intelligence` | Read-only analysis of agent effectiveness and recurring failure modes across benchmark history. | - |
+| `anvil_remediation_plan` | Advisory dependency remediation and upgrade plan with human approval guardrails. | - |
+| `anvil_agent_optimization` | Suggest harness configuration and agent prompt optimizations from local benchmark history. | - |
+| `anvil_project_memory` | Read saved project decisions and architecture constraints within a token budget. | - |
+| `anvil_agent_security_audit` | Audit agent instructions, skills, hooks, and permissions for prompt injection and secret leaks. | - |
+| `anvil_dependency_impact` | Analyze manifest changes and undeclared imports against a git base revision. | - |
+| `anvil_binary_intelligence` | Inventory compiled binaries, source maps, WASM, and clean-room compliance in the workspace. | - |
+| `anvil_scorecard` | Compute deterministic 9-category harness readiness scorecard across install, guards, gates, memory, learning, and CI. | - |
+| `anvil_consult` | Recommend catalog agents, skills, commands, rules, and MCP servers for a given task. | - |
+| `anvil_context_budget` | Measure pre-prompt context tokens loaded across configured harnesses. | - |
+| `anvil_guard_check` | Evaluate a planned tool command or file action against ANVIL Guard security rules. | - |
+| `anvil_doctor` | Run diagnostic health checks on Node runtime, Git, Docker, and workspace permissions. | - |
 
 ---
 
@@ -104,4 +104,3 @@ All tools are bounded, run locally within your workspace boundaries, and expose 
 | `ANVIL_WORKSPACE` | Absolute path to the workspace root directory. | Current working directory (`process.cwd()`) |
 | `ANVIL_MAX_ESTIMATED_TOKENS_PER_AGENT` | Maximum estimated tokens allowed per agent run. | Unset (unlimited) |
 | `ANVIL_MAX_TASK_DURATION_MS_BY_AGENT` | Maximum task duration in milliseconds for an agent task. | Unset (unlimited) |
-| `FORGE_WORKSPACE` | Deprecated fallback for `ANVIL_WORKSPACE`. | `ANVIL_WORKSPACE` value |

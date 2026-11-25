@@ -61,7 +61,7 @@ export function setSessionCookie(res: VercelResponse, id: string): void {
 }
 export function clearSessionCookie(res: VercelResponse): void {
   const expired = "Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0";
-  res.setHeader("Set-Cookie", [`${COOKIE_NAME}=; ${expired}`, `forge_github_session=; ${expired}`]);
+  res.setHeader("Set-Cookie", `${COOKIE_NAME}=; ${expired}`);
 }
 export function isValidSessionRepository(value: unknown): value is SessionRepository {
   if (!value || typeof value !== "object") return false;
@@ -74,7 +74,7 @@ export function isValidSessionRepository(value: unknown): value is SessionReposi
   );
 }
 export async function readSession(req: VercelRequest): Promise<AuthSession | undefined> {
-  const id = getCookie(req, COOKIE_NAME) || getCookie(req, "forge_github_session");
+  const id = getCookie(req, COOKIE_NAME);
   if (!id || !/^[A-Za-z0-9_-]{40,60}$/.test(id)) return undefined;
   const stored = await redisCommand<string | null>(["GET", sessionKey(id)]);
   if (!stored) return undefined;
@@ -103,10 +103,7 @@ export async function createSession(session: AuthSession): Promise<string> {
 export async function getVerifiedInstallations(ids: number[]): Promise<InstallationRecord[]> {
   const records: InstallationRecord[] = [];
   for (const id of ids.slice(0, 100)) {
-    let raw = await redisCommand<string | null>(["GET", installationKey(id)]);
-    if (!raw) {
-      raw = await redisCommand<string | null>(["GET", `forge:github:installation:${id}`]);
-    }
+    const raw = await redisCommand<string | null>(["GET", installationKey(id)]);
     const record = parseInstallationRecord(raw);
     if (
       record &&

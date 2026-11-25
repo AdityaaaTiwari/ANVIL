@@ -10,7 +10,7 @@ afterEach(async () => {
 });
 describe("dependency graph", () => {
   it("connects source files to declared and undeclared package nodes", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-graph-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-graph-"));
     await mkdir(path.join(root, "src"), { recursive: true });
     await writeFile(
       path.join(root, "package.json"),

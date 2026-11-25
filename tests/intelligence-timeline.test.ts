@@ -14,7 +14,7 @@ afterEach(async () => {
 });
 describe("engineering intelligence timeline", () => {
   it("captures local snapshots and compares risk metrics and hotspot membership", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-intel-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-intel-"));
     await mkdir(path.join(root, "src"), { recursive: true });
     await writeFile(path.join(root, "package.json"), JSON.stringify({ scripts: { test: "vitest run" } }));
     await writeFile(path.join(root, "README.md"), "# Timeline fixture");

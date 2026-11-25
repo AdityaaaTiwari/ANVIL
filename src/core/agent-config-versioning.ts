@@ -1,12 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import { lstat, mkdir, readFile, readdir, rename, rm, writeFile, realpath } from "node:fs/promises";
 import path from "node:path";
-import {
-  ANVIL_STATE_DIR,
-  LEGACY_FORGE_STATE_DIR,
-  anvilWorkspacePath,
-  listWorkspaceStatePaths,
-} from "./workspace-paths.js";
+import { ANVIL_STATE_DIR, anvilWorkspacePath, listWorkspaceStatePaths } from "./workspace-paths.js";
 
 export interface AgentConfigFile {
   path: string;
@@ -100,7 +95,7 @@ export async function captureAgentConfigVersion(
   const seenRelative = new Set<string>();
   let agentMarkdownFileCount = 0;
 
-  for (const stateDirName of [ANVIL_STATE_DIR, LEGACY_FORGE_STATE_DIR]) {
+  for (const stateDirName of [ANVIL_STATE_DIR]) {
     const stateDirectory = path.join(root, stateDirName);
     for (const directory of ["agents", "skills"]) {
       const absolute = path.join(stateDirectory, directory);
@@ -133,7 +128,7 @@ export async function captureAgentConfigVersion(
   }
 
   const readOptionalPolicy = async (fileName: "hooks.json" | "permissions.json", defaultContent: string) => {
-    for (const stateDirName of [ANVIL_STATE_DIR, LEGACY_FORGE_STATE_DIR]) {
+    for (const stateDirName of [ANVIL_STATE_DIR]) {
       const policyFile = path.join(root, stateDirName, fileName);
       try {
         const info = await lstat(policyFile);

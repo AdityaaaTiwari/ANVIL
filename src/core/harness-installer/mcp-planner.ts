@@ -53,7 +53,7 @@ export function hookCommand(options: InstallOptions, harness: "claude" | "cursor
 }
 
 const isAnvilHook = (command: unknown) =>
-  typeof command === "string" && /\b(?:anvil|forge)/i.test(command) && /\bhook\s+stop\s+--harness\b/.test(command);
+  typeof command === "string" && /\banvil\b/i.test(command) && /\bhook\s+stop\s+--harness\b/.test(command);
 
 function transformClaudeHooks(data: Record<string, unknown>, command: string | undefined): Record<string, unknown> {
   const hooks =

@@ -48,10 +48,7 @@ async function readJson(req: VercelRequest): Promise<unknown> {
 
 async function history(fullName: string): Promise<DashboardEvent[]> {
   try {
-    let items = await redisCommand<string[]>(["LRANGE", `anvil:repo:${fullName.toLowerCase()}:events`, 0, 24]);
-    if (!items || !items.length) {
-      items = await redisCommand<string[]>(["LRANGE", `forge:repo:${fullName.toLowerCase()}:events`, 0, 24]);
-    }
+    const items = await redisCommand<string[]>(["LRANGE", `anvil:repo:${fullName.toLowerCase()}:events`, 0, 24]);
     return (items ?? []).flatMap((item) => {
       try {
         return [JSON.parse(item) as DashboardEvent];

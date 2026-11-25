@@ -38,9 +38,9 @@ ${DASHBOARD_STYLES}
 <nav class="tab-nav">
   <button class="tab-btn active" data-tab="tab-overview">📊 Overview & Health</button>
   <button class="tab-btn" data-tab="tab-gate">🛡️ Policy & Gate</button>
-  <button class="tab-btn" data-tab="tab-ecc">🧠 ECC Skills & Rules</button>
-  <button class="tab-btn" data-tab="tab-rea">🔬 REA Binary & Clean-Room</button>
-  <button class="tab-btn" data-tab="tab-forge">⚡ ANVIL Control Center</button>
+  <button class="tab-btn" data-tab="tab-catalog">🧠 Skills & Rules</button>
+  <button class="tab-btn" data-tab="tab-binary">🔬 Binary & Provenance</button>
+  <button class="tab-btn" data-tab="tab-control">⚡ ANVIL Control Center</button>
   <button class="tab-btn" data-tab="tab-github">🐙 GitHub App & PR Bot</button>
   <button class="tab-btn" data-tab="tab-cleaner">⚡ Self-Healing & Security</button>
   <button class="tab-btn" data-tab="tab-agents">🤖 Agents & Workflow Studio</button>
@@ -519,7 +519,7 @@ ${DASHBOARD_STYLES}
 
   <section class="section card" id="agentConfigStudio">
     <div class="section-head"><h2>Agent Configuration Studio</h2><span class="pill">WORKSPACE-OWNED MARKDOWN</span></div>
-    <p class="run-meta">Edit custom agent and skill instructions in .anvil/agents and .anvil/skills (or .forge/). Built-in agents stay read-only. Saving changes local workspace files only; it does not execute agents or automatically promote a configuration.</p>
+    <p class="run-meta">Edit custom agent and skill instructions in .anvil/agents and .anvil/skills. Built-in agents stay read-only. Saving changes local workspace files only; it does not execute agents or automatically promote a configuration.</p>
     <div class="columns">
       <div class="inspector">
         <label class="metric-label" for="configCategory">Configuration type</label>
@@ -895,17 +895,17 @@ ${DASHBOARD_STYLES}
   </section>
 </div>
 
-<!-- ==================== TAB: ECC SKILLS & RULES ==================== -->
-<div id="tab-ecc" class="tab-pane">
+<!-- ==================== TAB: ANVIL SKILLS & RULES ==================== -->
+<div id="tab-catalog" class="tab-pane">
   <section class="hero">
-    <div class="eyebrow">EVERYTHING CLAUDE CODE (ECC) / 08</div>
+    <div class="eyebrow">ANVIL AGENT CATALOG / 08</div>
     <h1>Skills, Rules & Habits</h1>
     <p>Curated domain workflows, lifecycle prompts, and prompt injection defense across Claude, Cursor, Antigravity, and Codex.</p>
   </section>
 
-  <section class="grid" id="eccMetrics">
-    <div class="card"><div class="metric-label">Loaded Skills</div><div class="metric" id="eccTotalSkills">—</div><div class="metric-sub">Builtin + Workspace</div></div>
-    <div class="card"><div class="metric-label">Security Scan</div><div class="metric" id="eccSecStatus" style="color:var(--emerald)">VERIFIED</div><div class="metric-sub">Zero Prompt Injection</div></div>
+  <section class="grid" id="catalogMetrics">
+    <div class="card"><div class="metric-label">Loaded Skills</div><div class="metric" id="catalogTotalSkills">—</div><div class="metric-sub">Builtin + Workspace</div></div>
+    <div class="card"><div class="metric-label">Security Scan</div><div class="metric" id="catalogSecStatus" style="color:var(--emerald)">VERIFIED</div><div class="metric-sub">Zero Prompt Injection</div></div>
     <div class="card"><div class="metric-label">Harness Targets</div><div class="metric" style="color:var(--cyan)">9 AI Tools</div><div class="metric-sub">Claude, Cursor, Codex, etc.</div></div>
     <div class="card"><div class="metric-label">Lifecycle Hook</div><div class="metric" style="color:var(--accent)">180s Gate</div><div class="metric-sub">Auto-stops & blocks on fail</div></div>
   </section>
@@ -915,22 +915,22 @@ ${DASHBOARD_STYLES}
       <h2>Skill & Rule Library</h2>
       <span class="pill pill-cyan">ACTIVE WORKSPACE DISCOVERY</span>
     </div>
-    <div id="eccSkillsList" class="list"><div class="loading">Loading ECC skills and rules…</div></div>
+    <div id="catalogSkillsList" class="list"><div class="loading">Loading workspace skills and rules…</div></div>
   </section>
 </div>
 
-<!-- ==================== TAB: REA BINARY & CLEAN-ROOM ==================== -->
-<div id="tab-rea" class="tab-pane">
+<!-- ==================== TAB: ANVIL BINARY & PROVENANCE ==================== -->
+<div id="tab-binary" class="tab-pane">
   <section class="hero">
-    <div class="eyebrow">REVERSE ENGINEER ANYTHING (REA) / 09</div>
+    <div class="eyebrow">ANVIL BINARY INTELLIGENCE / 09</div>
     <h1>Binary, Bundle & Clean-Room Intelligence</h1>
     <p>Inspection layer for native binaries, WASM, source maps, web bundles, and clean-room provenance verification.</p>
   </section>
 
-  <section class="grid" id="reaMetrics">
-    <div class="card"><div class="metric-label">Total Binary Assets</div><div class="metric" id="reaTotalAssets">—</div><div class="metric-sub">Binaries, Maps, WASM</div></div>
-    <div class="card"><div class="metric-label">Clean-Room Status</div><div class="metric" id="reaCleanStatus" style="color:var(--emerald)">COMPLIANT</div><div class="metric-sub">No proprietary leaks</div></div>
-    <div class="card"><div class="metric-label">REA MCP Server</div><div class="metric" style="color:var(--purple)">rea-agents</div><div class="metric-sub">io.github.morluto/rea</div></div>
+  <section class="grid" id="binaryMetrics">
+    <div class="card"><div class="metric-label">Total Binary Assets</div><div class="metric" id="binaryTotalAssets">—</div><div class="metric-sub">Binaries, Maps, WASM</div></div>
+    <div class="card"><div class="metric-label">Clean-Room Status</div><div class="metric" id="binaryCleanStatus" style="color:var(--emerald)">COMPLIANT</div><div class="metric-sub">No proprietary leaks</div></div>
+    <div class="card"><div class="metric-label">Binary Inspector</div><div class="metric" style="color:var(--purple)">ANVIL Engine</div><div class="metric-sub">AST, WASM, Maps &amp; ELF/PE</div></div>
     <div class="card"><div class="metric-label">Decompiler Guard</div><div class="metric" style="color:var(--emerald)">ACTIVE</div><div class="metric-sub">Enforces clean provenance</div></div>
   </section>
 
@@ -939,20 +939,20 @@ ${DASHBOARD_STYLES}
       <h2>Detected Compiled Assets</h2>
       <span class="pill pill-purple">BINARY INVENTORY</span>
     </div>
-    <div id="reaAssetsList" class="list"><div class="loading">Scanning for compiled binaries and source maps…</div></div>
+    <div id="binaryAssetsList" class="list"><div class="loading">Scanning for compiled binaries and source maps…</div></div>
   </section>
 </div>
 
 <!-- ==================== TAB: ANVIL CONTROL CENTER ==================== -->
-<div id="tab-forge" class="tab-pane">
+<div id="tab-control" class="tab-pane">
   <section class="hero">
     <div class="eyebrow">ANVIL CONTROL CENTER / 10</div>
     <h1>The Verified Layer for Coding Agents</h1>
     <p>Harness readiness scorecard, verified loop execution telemetry, Shield v3 guard rules, and anti-tamper proof receipts.</p>
   </section>
 
-  <section class="grid" id="forgeMetrics">
-    <div class="card"><div class="metric-label">Harness Scorecard</div><div class="metric" id="forgeScorecardScore" style="color:var(--accent)">95/100</div><div class="metric-sub">Grade A Optimal Readiness</div></div>
+  <section class="grid" id="controlMetrics">
+    <div class="card"><div class="metric-label">Harness Scorecard</div><div class="metric" id="controlScorecardScore" style="color:var(--accent)">95/100</div><div class="metric-sub">Grade A Optimal Readiness</div></div>
     <div class="card"><div class="metric-label">Benchmark Pass Rate</div><div class="metric" style="color:var(--emerald)">98.4%</div><div class="metric-sub">85 Automated Test Matrices</div></div>
     <div class="card"><div class="metric-label">Shield Guard Rules</div><div class="metric" style="color:var(--cyan)">16 Rules</div><div class="metric-sub">Static Harness Enforcement</div></div>
     <div class="card"><div class="metric-label">Anti-Tamper Receipts</div><div class="metric" style="color:var(--purple)">SHA-256</div><div class="metric-sub">Signed Local Proofs</div></div>
@@ -963,7 +963,7 @@ ${DASHBOARD_STYLES}
       <h2>Harness Readiness Categories</h2>
       <span class="pill pill-accent">ANVIL SCORECARD</span>
     </div>
-    <div id="forgeScorecardDetails" class="list">
+    <div id="controlScorecardDetails" class="list">
       <div class="activity-item"><div style="width:100%"><div class="rowitem"><b>1. Installation &amp; Setup</b><span class="pill pill-accent">10/10 (100%)</span></div><div class="run-meta">All CLI commands, workspace manifests, and MCP definitions verified.</div></div></div>
       <div class="activity-item"><div style="width:100%"><div class="rowitem"><b>2. Guardrails &amp; Sandboxing</b><span class="pill pill-accent">10/10 (100%)</span></div><div class="run-meta">Prohibits root removal, token leaks, and unpinned package installations.</div></div></div>
       <div class="activity-item"><div style="width:100%"><div class="rowitem"><b>3. Deterministic Gate</b><span class="pill pill-accent">10/10 (100%)</span></div><div class="run-meta">AST dependency graph, 0-baseline policy verification, sub-second runs.</div></div></div>

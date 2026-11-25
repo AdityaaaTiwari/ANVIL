@@ -14,14 +14,14 @@ afterEach(async () => {
 
 describe("agent registry", () => {
   it("provides built-in agents when no workspace exists", async () => {
-    temporaryDirectory = await mkdtemp(path.join(os.tmpdir(), "forge-agents-"));
+    temporaryDirectory = await mkdtemp(path.join(os.tmpdir(), "anvil-agents-"));
     const agents = await loadAgentRegistry(temporaryDirectory);
     expect(agents.map((agent) => agent.id)).toContain("planner");
     expect(agents.every((agent) => agent.source === "builtin")).toBe(true);
   });
 
   it("registers the expanded specialist team", async () => {
-    temporaryDirectory = await mkdtemp(path.join(os.tmpdir(), "forge-agents-"));
+    temporaryDirectory = await mkdtemp(path.join(os.tmpdir(), "anvil-agents-"));
     const agents = await loadAgentRegistry(temporaryDirectory);
     const ids = new Set(agents.map((agent) => agent.id));
     for (const id of [
@@ -97,7 +97,7 @@ describe("agent registry", () => {
   });
 
   it("discovers agents from catalog/agents when present", async () => {
-    temporaryDirectory = await mkdtemp(path.join(os.tmpdir(), "forge-agents-"));
+    temporaryDirectory = await mkdtemp(path.join(os.tmpdir(), "anvil-agents-"));
     const directory = path.join(temporaryDirectory, "catalog", "agents");
     await mkdir(directory, { recursive: true });
     await writeFile(

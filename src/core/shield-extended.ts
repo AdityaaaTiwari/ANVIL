@@ -545,7 +545,7 @@ export function scanHookCommandExtended(
     npx &&
     npx[1] &&
     !/@(?:\d|[~^]\d)/.test(npx[1].replace(/^@/, "")) &&
-    !/^(?:anvil|forge)(?:-engineering-workbench)?$/.test(npx[1])
+    !/^anvil(?:-engineering-workbench)?$/.test(npx[1])
   ) {
     out.push(make("SHIELD-HOOK-008", file, line, `The hook runs \`${npx[1]}\` without a pinned version.`));
   }

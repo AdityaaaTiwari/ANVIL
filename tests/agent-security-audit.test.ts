@@ -31,7 +31,7 @@ describe("agent configuration security audit", () => {
     expect(report.status).toBe("findings");
     expect(report.summary.critical).toBe(1);
     expect(report.summary.high).toBeGreaterThanOrEqual(2);
-    expect(report.findings.map((item) => item.id)).toContain("FORGE-AGENT-001");
+    expect(report.findings.map((item) => item.id)).toContain("ANVIL-AGENT-001");
     expect(JSON.stringify(report)).not.toContain("sk-1234567890abcdef1234567890");
     expect(formatAgentSecurityReport(report)).toContain("RECOMMEND:");
     expect(formatAgentSecurityReport(report)).not.toContain("sk-1234567890abcdef1234567890");
@@ -55,8 +55,8 @@ describe("agent configuration security audit", () => {
     );
     const report = await auditAgentConfiguration(directory);
     expect(report.filesScanned).toBe(3);
-    expect(report.findings.map((item) => item.id)).toContain("FORGE-AGENT-006");
-    expect(report.findings.map((item) => item.id)).toContain("FORGE-AGENT-005");
+    expect(report.findings.map((item) => item.id)).toContain("ANVIL-AGENT-006");
+    expect(report.findings.map((item) => item.id)).toContain("ANVIL-AGENT-005");
   });
 
   it("does not follow symlinked configuration files or directories", async () => {

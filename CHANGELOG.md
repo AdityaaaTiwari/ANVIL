@@ -3,9 +3,12 @@
 ## Unreleased
 
 ### Changed
-- **Internal `FORGE` Naming Cleanup:** Migrated internal modules, state defaults, and user-facing strings from `FORGE`/`.forge/` to `ANVIL`/`.anvil/` (`anvil-shield.ts`, `anvil-status.ts`, `.anvil/instincts.json`, `.anvil/loops/`, `.anvil/races/`, `.anvil/harness-hooks.json`, `.anvil/mcp-state.json`, `.anvil/evals/`, `.anvil/install-state.json`, `/anvil` GitHub App PR commands, and `ANVIL_*` env/header defaults) with automatic read/compatibility fallbacks for legacy `.forge/` files, `FORGE_*` environment variables, and `/forge` PR aliases.
+- **Native ANVIL Consolidation (Phase 1 & Phase 2):**
+  - Removed unused duplicate/legacy modules (`src/core/forge-shield.ts`, `src/core/forge-status.ts`, `tests/forge-status.test.ts`), renamed heuristic rules `FORGE-AGENT-001`..`006` → `ANVIL-AGENT-001`..`006`, added canonical `anvil binary` CLI command (`anvil_binary_intelligence` MCP tool), and unified dashboard/landing page tabs (`tab-catalog`, `tab-binary`, `tab-control`) under native ANVIL labels.
+  - Dropped legacy `FORGE_*` environment fallbacks, `.forge/` workspace state fallbacks, `forge_*` MCP aliases, `/forge` PR bot alias, and `forge_github_session` cookie fallback across `src/`, `api/`, `tests/`, and active documentation (`0` remaining `FORGE` shims in `src/` and `api/`).
+  - Cleaned up stale unreferenced `FORGE-V2-*` / `V3-*` docs/assets and removed the `upstream` git remote.
 - **Modularized Core Subsystems:** Split `src/core/dashboard-server.ts` into `src/core/dashboard/` (`http-helpers.ts`, `sse.ts`, `styles.ts`, `page.ts`, `client-script.ts`, `routes-get.ts`, `routes-post.ts`) and split `src/core/harness-installer.ts` into `src/core/harness-installer/` (`types.ts`, `transactions.ts`, `renderers.ts`, `lifecycle.ts`, `mcp-planner.ts`) with full public barrel exports preserved.
-- **Python REA Bridge Tests in CI:** Added cross-platform `unittest` runner ([`scripts/run-rea-bridge-tests.py`](scripts/run-rea-bridge-tests.py) & [`scripts/run-rea-bridge-tests.mjs`](scripts/run-rea-bridge-tests.mjs)), registered `npm run test:rea` (`103` tests across `10` bridge suites under `catalog/rea/bridges/`), and wired it into `.github/workflows/ci.yml` alongside `npm run test:coverage` (`681` Vitest tests across `102` suites).
+- **Python REA Bridge Tests in CI:** Added cross-platform `unittest` runner ([`scripts/run-rea-bridge-tests.py`](scripts/run-rea-bridge-tests.py) & [`scripts/run-rea-bridge-tests.mjs`](scripts/run-rea-bridge-tests.mjs)), registered `npm run test:rea` (`103` tests across `10` bridge suites under `catalog/rea/bridges/`), and wired it into `.github/workflows/ci.yml` alongside `npm run test:coverage` (`680` Vitest tests across `101` suites).
 
 ## 1.3.0 — FORGE 4.0 Engines, ECC Catalog Ingestion, AI Agent Security Audit & Universal Harness Installer (November 2026)
 

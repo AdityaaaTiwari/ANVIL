@@ -294,7 +294,6 @@ export async function loadSkillRegistry(projectPath: string): Promise<SkillDefin
   const root = await realpath(path.resolve(projectPath));
   const candidateDirs = [
     path.join(root, ".anvil", "skills"),
-    path.join(root, ".forge", "skills"),
     path.join(root, ".claude", "skills"),
     path.join(root, ".agents", "skills"),
     path.join(root, ".cursor", "skills"),

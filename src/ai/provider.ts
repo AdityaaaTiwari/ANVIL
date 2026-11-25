@@ -56,7 +56,7 @@ const PROVIDER_ENV: Record<
 };
 
 export function readAIProviderConfig(env: NodeJS.ProcessEnv = process.env): AIProviderConfig {
-  const raw = (env.ANVIL_AI_PROVIDER ?? env.FORGE_AI_PROVIDER ?? "mock").trim().toLowerCase();
+  const raw = (env.ANVIL_AI_PROVIDER ?? "mock").trim().toLowerCase();
   if (!["mock", "claude-code", "anthropic", "openai", "google", "ollama"].includes(raw)) {
     throw new Error(
       `Unsupported ANVIL_AI_PROVIDER "${raw}". Choose mock, claude-code, anthropic, openai, google, or ollama.`
@@ -64,7 +64,7 @@ export function readAIProviderConfig(env: NodeJS.ProcessEnv = process.env): AIPr
   }
 
   const provider = raw as AIProviderId;
-  const modelOverride = env.ANVIL_AI_MODEL ?? env.FORGE_AI_MODEL;
+  const modelOverride = env.ANVIL_AI_MODEL;
   if (provider === "mock" || provider === "claude-code")
     return { provider, ...(modelOverride ? { model: modelOverride } : {}) };
 

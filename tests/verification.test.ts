@@ -17,7 +17,7 @@ describe("verification engine", () => {
     root = "";
   });
   async function setup(scripts: Record<string, string>) {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-verify-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-verify-"));
     await writeFile(path.join(root, "package.json"), JSON.stringify({ scripts }));
   }
   it("discovers named checks and hides lifecycle hooks", async () => {
@@ -41,22 +41,22 @@ describe("verification engine", () => {
     await expect(runVerification(root, "pretest")).rejects.toThrow(/valid, explicit/);
   });
   it("executes only the selected script and records its actual exit code", async () => {
-    await setup({ verify: "node -e \"console.log('FORGE_CHECK_OK')\"" });
+    await setup({ verify: "node -e \"console.log('ANVIL_CHECK_OK')\"" });
     const result = await runVerification(root, "verify");
     expect(result.status).toBe("passed");
     expect(result.exitCode).toBe(0);
-    expect(result.output).toContain("FORGE_CHECK_OK");
+    expect(result.output).toContain("ANVIL_CHECK_OK");
     expect(formatVerificationResult(result)).toContain("PASSED");
   });
   it("does not forward arbitrary environment secrets to project scripts", async () => {
-    await setup({ verify: "node -e \"console.log(process.env.FORGE_TEST_SECRET || 'NOT_FORWARDED')\"" });
-    process.env.FORGE_TEST_SECRET = "test-secret-value";
+    await setup({ verify: "node -e \"console.log(process.env.ANVIL_TEST_SECRET || 'NOT_FORWARDED')\"" });
+    process.env.ANVIL_TEST_SECRET = "test-secret-value";
     try {
       const result = await runVerification(root, "verify");
       expect(result.output).toContain("NOT_FORWARDED");
       expect(result.output).not.toContain("test-secret-value");
     } finally {
-      delete process.env.FORGE_TEST_SECRET;
+      delete process.env.ANVIL_TEST_SECRET;
     }
   });
   it("records a failing script as failed", async () => {

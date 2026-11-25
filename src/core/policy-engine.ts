@@ -9,8 +9,6 @@ import { auditAgentConfiguration } from "./agent-security-audit.js";
 import { importExternalSarif } from "./sarif-formatter.js";
 export { importExternalSarif } from "./sarif-formatter.js";
 
-let warnedForgeDockerEnv = false;
-
 export const GatePolicySchema = z
   .object({
     version: z.literal(1).default(1),
@@ -124,21 +122,13 @@ export interface GateEvaluation {
 
 /**
  * Robust detection of containerized execution environments.
- * Checks modern ANVIL env vars, legacy FORGE env vars (with deprecation warning),
+ * Checks ANVIL container environment variables,
  * standard container envs, and container filesystem/cgroup markers.
  */
 export async function isRunningInContainer(): Promise<boolean> {
-  if (process.env.FORGE_DOCKER_IMAGE && !process.env.ANVIL_DOCKER_IMAGE && !warnedForgeDockerEnv) {
-    warnedForgeDockerEnv = true;
-    process.stderr.write(
-      "[DEPRECATION] FORGE_DOCKER_IMAGE is deprecated and will be removed in ANVIL v2.0. Use ANVIL_DOCKER_IMAGE instead.\n"
-    );
-  }
-
   if (
     process.env.ANVIL_CONTAINER ||
     process.env.ANVIL_DOCKER_IMAGE ||
-    process.env.FORGE_DOCKER_IMAGE ||
     process.env.CONTAINER ||
     process.env.DOCKER_CONTAINER ||
     process.env.KUBERNETES_SERVICE_HOST

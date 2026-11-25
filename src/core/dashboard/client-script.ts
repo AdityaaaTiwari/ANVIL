@@ -1064,14 +1064,14 @@ on("refreshGateBtn","click",loadGate);
 on("gateScanMode","change",loadGate);
 on("gateMinConfidence","change",loadGate);
 
-async function loadEccSkills(){
+async function loadCatalogSkills(){
   try{
-    const res = await fetch("/api/ecc/skills");
+    const res = await fetch("/api/catalog/skills");
     if(!res.ok) return;
     const data = await res.json();
-    const totalNode = el("eccTotalSkills");
+    const totalNode = el("catalogTotalSkills");
     if(totalNode) totalNode.textContent = data.total ?? data.skills?.length ?? 0;
-    const list = el("eccSkillsList");
+    const list = el("catalogSkillsList");
     if(!list) return;
     if(!data.skills || !data.skills.length){
       list.innerHTML = '<div class="empty">No skills or rules registered in workspace yet.</div>';
@@ -1093,19 +1093,19 @@ async function loadEccSkills(){
   }catch{}
 }
 
-async function loadReaAssets(){
+async function loadBinaryAssets(){
   try{
-    const res = await fetch("/api/rea/assets");
+    const res = await fetch("/api/binary/assets");
     if(!res.ok) return;
     const data = await res.json();
-    const totalNode = el("reaTotalAssets");
+    const totalNode = el("binaryTotalAssets");
     if(totalNode) totalNode.textContent = data.totalAssets ?? 0;
-    const cleanStatus = el("reaCleanStatus");
+    const cleanStatus = el("binaryCleanStatus");
     if(cleanStatus){
       cleanStatus.textContent = data.cleanRoomReport && data.cleanRoomReport.compliant ? "COMPLIANT" : "FLAGGED";
       cleanStatus.style.color = data.cleanRoomReport && data.cleanRoomReport.compliant ? "var(--emerald)" : "var(--danger)";
     }
-    const list = el("reaAssetsList");
+    const list = el("binaryAssetsList");
     if(!list) return;
     if(!data.assets || !data.assets.length){
       list.innerHTML = '<div class="empty">No compiled binaries or web bundles detected in root.</div>';
@@ -1130,7 +1130,7 @@ function reloadAllViews(){
   loadSkillExperiments();loadExperimentHistory();loadAgentOptimization();loadAgentIntelligence();
   loadHealth();loadRegression();loadReviews();loadQuality();loadVerifications();
   loadCleanerBackups();loadMemory();loadAdrs();loadSecurityAudit();loadGate();
-  loadEccSkills();loadReaAssets();
+  loadCatalogSkills();loadBinaryAssets();
 }
 
 reloadAllViews();

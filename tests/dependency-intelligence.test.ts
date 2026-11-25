@@ -10,7 +10,7 @@ afterEach(async () => {
 });
 describe("dependency intelligence", () => {
   it("inventories npm direct and transitive packages and marks missing assessments honestly", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-deps-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-deps-"));
     await writeFile(
       path.join(root, "package.json"),
       JSON.stringify({ dependencies: { alpha: "^1.0.0" }, devDependencies: { beta: "~2.0.0" } })
@@ -35,7 +35,7 @@ describe("dependency intelligence", () => {
     expect(formatDependencyIntelligence(report)).toContain("NOT ASSESSED");
   });
   it("imports npm audit and outdated JSON without executing commands", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-deps-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-deps-"));
     await writeFile(path.join(root, "package.json"), JSON.stringify({ dependencies: { alpha: "^1.0.0" } }));
     await writeFile(
       path.join(root, "package-lock.json"),
@@ -64,7 +64,7 @@ describe("dependency intelligence", () => {
     expect(report.dependencies[0]?.licenseClass).toBe("permissive");
   });
   it("rejects report paths outside the project", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-deps-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-deps-"));
     await expect(analyzeDependencies(root, { auditReport: "../outside.json" })).rejects.toThrow("inside the project");
   });
 });

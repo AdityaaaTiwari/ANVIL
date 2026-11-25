@@ -44,8 +44,6 @@ export interface Scorecard {
 export interface ScorecardOptions {
   projectPath: string;
   anvilVersion?: string;
-  /** @deprecated Legacy alias accepted for backwards compatibility. */
-  forgeVersion?: string;
   now?: () => Date;
   /** Injected for tests; computed from disk when absent. */
   doctor?: DoctorReport;
@@ -125,7 +123,7 @@ export async function buildScorecard(options: ScorecardOptions): Promise<Scoreca
     options.doctor ??
     (await doctorHarness({
       projectPath: root,
-      anvilVersion: options.anvilVersion ?? options.forgeVersion ?? "0.0.0",
+      anvilVersion: options.anvilVersion ?? "0.0.0",
     }).catch(() => undefined));
   const shield = options.shield ?? (await runShield(root, { now }));
   const pkgText = await readText(path.join(root, "package.json"));
@@ -363,9 +361,7 @@ export async function buildScorecard(options: ScorecardOptions): Promise<Scoreca
     );
     c.check(
       (await exists(path.join(root, ".claude", "skills", "anvil-project", "SKILL.md"))) ||
-        (await exists(path.join(root, ".agents", "skills", "anvil-project", "SKILL.md"))) ||
-        (await exists(path.join(root, ".claude", "skills", "forge-project", "SKILL.md"))) ||
-        (await exists(path.join(root, ".agents", "skills", "forge-project", "SKILL.md"))),
+        (await exists(path.join(root, ".agents", "skills", "anvil-project", "SKILL.md"))),
       3,
       "project skill generated from the codebase",
       "Run `anvil inspect` or open a setup PR to generate a project skill from the repo."
@@ -433,10 +429,7 @@ export async function buildScorecard(options: ScorecardOptions): Promise<Scoreca
     const lessons = memory.filter((e) => e.kind === "lesson").length;
     let instincts: Array<{ status?: string; confidence?: number }> = [];
     try {
-      const instinctText =
-        (await readText(path.join(root, ".anvil", "instincts.json"))) ??
-        (await readText(path.join(root, ".forge", "instincts.json"))) ??
-        "{}";
+      const instinctText = (await readText(path.join(root, ".anvil", "instincts.json"))) ?? "{}";
       const parsed = JSON.parse(instinctText) as {
         instincts?: unknown;
       };
@@ -465,9 +458,7 @@ export async function buildScorecard(options: ScorecardOptions): Promise<Scoreca
     );
     c.check(
       (await exists(path.join(root, ".claude", "skills", "anvil-learned"))) ||
-        (await exists(path.join(root, ".agents", "skills", "anvil-learned"))) ||
-        (await exists(path.join(root, ".claude", "skills", "forge-learned"))) ||
-        (await exists(path.join(root, ".agents", "skills", "forge-learned"))),
+        (await exists(path.join(root, ".agents", "skills", "anvil-learned"))),
       2,
       "learned skill generated",
       "Turn active instincts into a skill: `anvil evolve --write`."
@@ -491,9 +482,7 @@ export async function buildScorecard(options: ScorecardOptions): Promise<Scoreca
       "Run the test suite in CI."
     );
     c.check(
-      /(?:anvil|forge)(?:-engineering-workbench)?[^\n]*(?:shield|gate)|anvil-workbench\/ANVIL|ansh44233\/FORGE-ECC|(?:anvil|forge) shield/i.test(
-        workflowText
-      ),
+      /anvil(?:-engineering-workbench)?[^\n]*(?:shield|gate)|anvil-workbench\/ANVIL|anvil shield/i.test(workflowText),
       2,
       "ANVIL Shield runs in CI",
       "Add the ANVIL action / Shield step to CI (see README → GitHub Action)."

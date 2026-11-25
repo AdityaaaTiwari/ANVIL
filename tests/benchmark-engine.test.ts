@@ -55,11 +55,11 @@ const trace = (runId: string, model: string, durationMs: number): ExecutionTrace
 
 describe("Benchmark Lab", () => {
   it("aggregates real runs by provider and model and computes consistency", async () => {
-    const root = await mkdtemp(path.join(os.tmpdir(), "forge-bench-"));
+    const root = await mkdtemp(path.join(os.tmpdir(), "anvil-bench-"));
     try {
-      const first = createBenchmarkTrial(report("forge-run-1", 90), trace("forge-run-1", "model-a", 1000));
-      const second = createBenchmarkTrial(report("forge-run-2", 70), trace("forge-run-2", "model-a", 2000));
-      const third = createBenchmarkTrial(report("forge-run-3", 95), trace("forge-run-3", "model-b", 500));
+      const first = createBenchmarkTrial(report("anvil-run-1", 90), trace("anvil-run-1", "model-a", 1000));
+      const second = createBenchmarkTrial(report("anvil-run-2", 70), trace("anvil-run-2", "model-a", 2000));
+      const third = createBenchmarkTrial(report("anvil-run-3", 95), trace("anvil-run-3", "model-b", 500));
       await recordBenchmarkTrial(root, first);
       const document = await recordBenchmarkTrial(root, second);
       await recordBenchmarkTrial(root, third);
@@ -78,11 +78,11 @@ describe("Benchmark Lab", () => {
 
   it("keeps model-judge scores separate from deterministic rubric scores", () => {
     const judged = {
-      ...report("forge-judged", 75),
+      ...report("anvil-judged", 75),
       judge: { provider: "judge-api", model: "judge-model", evaluatedCases: 1, averageScore: 91, passed: true },
       judgedCases: [],
     };
-    const trial = createBenchmarkTrial(judged, trace("forge-judged", "candidate-model", 1200));
+    const trial = createBenchmarkTrial(judged, trace("anvil-judged", "candidate-model", 1200));
     expect(trial.score).toBe(75);
     expect(trial.judgeScore).toBe(91);
     expect(trial.judgeProvider).toBe("judge-api");
@@ -90,10 +90,10 @@ describe("Benchmark Lab", () => {
   });
 
   it("replaces a duplicate run instead of inflating repeat counts", async () => {
-    const root = await mkdtemp(path.join(os.tmpdir(), "forge-bench-dedupe-"));
+    const root = await mkdtemp(path.join(os.tmpdir(), "anvil-bench-dedupe-"));
     try {
       const trial: BenchmarkTrial = {
-        runId: "forge-repeat",
+        runId: "anvil-repeat",
         recordedAt: new Date().toISOString(),
         suiteId: "engineering-basics",
         suiteName: "Engineering Basics",

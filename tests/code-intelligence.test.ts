@@ -10,7 +10,7 @@ describe("AST code intelligence", () => {
     if (root) await rm(root, { recursive: true, force: true });
   });
   it("finds exported declarations and reverse import impact", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-ast-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-ast-"));
     await mkdir(path.join(root, "src"), { recursive: true });
     await writeFile(
       path.join(root, "src", "core.ts"),
@@ -26,7 +26,7 @@ describe("AST code intelligence", () => {
     expect(report.impact.find((i) => i.file === "src/core.ts")?.affected).toContain("src/app.ts");
   });
   it("detects a circular import group", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-cycle-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-cycle-"));
     await mkdir(path.join(root, "src"), { recursive: true });
     await writeFile(path.join(root, "src", "a.ts"), "import './b';\nexport const a = 1;\n");
     await writeFile(path.join(root, "src", "b.ts"), "import './a';\nexport const b = 2;\n");

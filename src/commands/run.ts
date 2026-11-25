@@ -28,60 +28,53 @@ export async function runRun(_command: string, rest: string[]): Promise<void> {
   const target = path.resolve(pathIndex >= 0 ? (rest[pathIndex + 1] ?? ".") : ".");
   try {
     const permissions = await loadPermissionPolicy(target);
-    const model = getAnvilEnv("ANVIL_AI_MODEL", "FORGE_AI_MODEL") ?? getAnvilEnv("ANVIL_MODEL", "FORGE_MODEL");
-    const providerChoice = getAnvilEnv("ANVIL_AI_PROVIDER", "FORGE_AI_PROVIDER", "openai")!.toLowerCase();
+    const model = getAnvilEnv("ANVIL_AI_MODEL") ?? getAnvilEnv("ANVIL_MODEL");
+    const providerChoice = getAnvilEnv("ANVIL_AI_PROVIDER", "openai")!.toLowerCase();
     assertSupportedAgentPolicy(permissions, providerChoice, "ANVIL run");
     const baseModel = model ?? (providerChoice === "claude-code" ? "sonnet" : "gpt-4.1-mini");
-    const apiKey = getAnvilEnv("ANVIL_API_KEY", "FORGE_API_KEY") ?? process.env.OPENAI_API_KEY ?? "";
-    const baseUrl = getAnvilEnv("ANVIL_BASE_URL", "FORGE_BASE_URL", "https://api.openai.com/v1")!;
+    const apiKey = getAnvilEnv("ANVIL_API_KEY") ?? process.env.OPENAI_API_KEY ?? "";
+    const baseUrl = getAnvilEnv("ANVIL_BASE_URL", "https://api.openai.com/v1")!;
     const createProvider = (selectedModel: string) => {
       if (providerChoice === "claude-code") return new ClaudeCodeProvider({ cwd: target, model: selectedModel });
       if (["openai", "anthropic", "google", "ollama"].includes(providerChoice)) {
-        return createHostedAgentProvider(
-          { ...process.env, ANVIL_AI_PROVIDER: providerChoice, FORGE_AI_PROVIDER: providerChoice },
-          selectedModel,
-          { workspacePath: target, permissionPolicy: permissions }
-        );
+        return createHostedAgentProvider({ ...process.env, ANVIL_AI_PROVIDER: providerChoice }, selectedModel, {
+          workspacePath: target,
+          permissionPolicy: permissions,
+        });
       }
       throw new Error("Unsupported ANVIL_AI_PROVIDER. Choose claude-code, openai, anthropic, google or ollama.");
     };
-    const runFallback = getAnvilEnv("ANVIL_FALLBACK_MODEL", "FORGE_FALLBACK_MODEL");
+    const runFallback = getAnvilEnv("ANVIL_FALLBACK_MODEL");
     const router = new ModelRouter({
-      fastModel: getAnvilEnv("ANVIL_MODEL_FAST", "FORGE_MODEL_FAST") ?? baseModel,
-      balancedModel: getAnvilEnv("ANVIL_MODEL_BALANCED", "FORGE_MODEL_BALANCED") ?? baseModel,
-      reasoningModel: getAnvilEnv("ANVIL_MODEL_REASONING", "FORGE_MODEL_REASONING") ?? baseModel,
+      fastModel: getAnvilEnv("ANVIL_MODEL_FAST") ?? baseModel,
+      balancedModel: getAnvilEnv("ANVIL_MODEL_BALANCED") ?? baseModel,
+      reasoningModel: getAnvilEnv("ANVIL_MODEL_REASONING") ?? baseModel,
       ...(runFallback ? { fallbackModel: runFallback } : {}),
-      retryAttempts: Number(getAnvilEnv("ANVIL_MODEL_RETRY_ATTEMPTS", "FORGE_MODEL_RETRY_ATTEMPTS", "2")),
-      retryDelayMs: Number(getAnvilEnv("ANVIL_MODEL_RETRY_DELAY_MS", "FORGE_MODEL_RETRY_DELAY_MS", "500")),
+      retryAttempts: Number(getAnvilEnv("ANVIL_MODEL_RETRY_ATTEMPTS", "2")),
+      retryDelayMs: Number(getAnvilEnv("ANVIL_MODEL_RETRY_DELAY_MS", "500")),
       createProvider,
-      ...(getAnvilEnv("ANVIL_MAX_INPUT_TOKENS_PER_TASK", "FORGE_MAX_INPUT_TOKENS_PER_TASK")
+      ...(getAnvilEnv("ANVIL_MAX_INPUT_TOKENS_PER_TASK")
         ? {
-            maxInputTokensPerTask: Number(
-              getAnvilEnv("ANVIL_MAX_INPUT_TOKENS_PER_TASK", "FORGE_MAX_INPUT_TOKENS_PER_TASK")
-            ),
+            maxInputTokensPerTask: Number(getAnvilEnv("ANVIL_MAX_INPUT_TOKENS_PER_TASK")),
           }
         : {}),
-      ...(getAnvilEnv("ANVIL_MAX_OUTPUT_TOKENS_PER_TASK", "FORGE_MAX_OUTPUT_TOKENS_PER_TASK")
+      ...(getAnvilEnv("ANVIL_MAX_OUTPUT_TOKENS_PER_TASK")
         ? {
-            maxOutputTokensPerTask: Number(
-              getAnvilEnv("ANVIL_MAX_OUTPUT_TOKENS_PER_TASK", "FORGE_MAX_OUTPUT_TOKENS_PER_TASK")
-            ),
+            maxOutputTokensPerTask: Number(getAnvilEnv("ANVIL_MAX_OUTPUT_TOKENS_PER_TASK")),
           }
         : {}),
-      ...(getAnvilEnv("ANVIL_MAX_ESTIMATED_TOKENS_PER_RUN", "FORGE_MAX_ESTIMATED_TOKENS_PER_RUN")
+      ...(getAnvilEnv("ANVIL_MAX_ESTIMATED_TOKENS_PER_RUN")
         ? {
-            maxEstimatedTokensPerRun: Number(
-              getAnvilEnv("ANVIL_MAX_ESTIMATED_TOKENS_PER_RUN", "FORGE_MAX_ESTIMATED_TOKENS_PER_RUN")
-            ),
+            maxEstimatedTokensPerRun: Number(getAnvilEnv("ANVIL_MAX_ESTIMATED_TOKENS_PER_RUN")),
           }
         : {}),
-      ...(getAnvilEnv("ANVIL_MAX_ESTIMATED_TOKENS_PER_AGENT", "FORGE_MAX_ESTIMATED_TOKENS_PER_AGENT")
+      ...(getAnvilEnv("ANVIL_MAX_ESTIMATED_TOKENS_PER_AGENT")
         ? { maxEstimatedTokensPerAgent: readAgentTokenBudgets()! }
         : {}),
-      ...(getAnvilEnv("ANVIL_MAX_TASK_DURATION_MS", "FORGE_MAX_TASK_DURATION_MS")
-        ? { maxTaskDurationMs: Number(getAnvilEnv("ANVIL_MAX_TASK_DURATION_MS", "FORGE_MAX_TASK_DURATION_MS")) }
+      ...(getAnvilEnv("ANVIL_MAX_TASK_DURATION_MS")
+        ? { maxTaskDurationMs: Number(getAnvilEnv("ANVIL_MAX_TASK_DURATION_MS")) }
         : {}),
-      ...(getAnvilEnv("ANVIL_MAX_TASK_DURATION_MS_BY_AGENT", "FORGE_MAX_TASK_DURATION_MS_BY_AGENT")
+      ...(getAnvilEnv("ANVIL_MAX_TASK_DURATION_MS_BY_AGENT")
         ? { maxTaskDurationMsByAgent: readAgentDurationBudgets()! }
         : {}),
     });

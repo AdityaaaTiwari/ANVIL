@@ -38,7 +38,7 @@ import { loadSkillRegistry } from "../skill-registry.js";
 import { listVerifications } from "../verification-history.js";
 import { listWorkflows } from "../workflow-store.js";
 import { listWorkspaceDirectory, readWorkspaceFile } from "../workspace-browser.js";
-import { ANVIL_STATE_DIR, LEGACY_FORGE_STATE_DIR } from "../workspace-paths.js";
+import { ANVIL_STATE_DIR } from "../workspace-paths.js";
 import { safeProviderOrigin, sendJson } from "./http-helpers.js";
 import { handleSseRequest } from "./sse.js";
 
@@ -65,7 +65,7 @@ function parseBudgetMap(raw: string | undefined): Record<string, number> {
 async function readSingleConfigFile(root: string, category: string, id: string): Promise<string> {
   const realRoot = await realpath(root);
   let lastNotFound: unknown = null;
-  for (const stateDirName of [ANVIL_STATE_DIR, LEGACY_FORGE_STATE_DIR]) {
+  for (const stateDirName of [ANVIL_STATE_DIR]) {
     const stateDirectory = path.join(root, stateDirName);
     const directory = path.join(stateDirectory, category);
     const file = path.join(directory, `${id}.md`);
@@ -97,7 +97,7 @@ async function listConfigFiles(
 ): Promise<Array<{ category: string; id: string; bytes: number }>> {
   const realRoot = await realpath(root);
   const seen = new Map<string, { category: string; id: string; bytes: number }>();
-  for (const stateDirName of [ANVIL_STATE_DIR, LEGACY_FORGE_STATE_DIR]) {
+  for (const stateDirName of [ANVIL_STATE_DIR]) {
     const stateDirectory = path.join(root, stateDirName);
     for (const kind of categories) {
       const directory = path.join(stateDirectory, kind);
@@ -155,49 +155,39 @@ export async function handleDashboardGet(
   }
 
   if (requestUrl.pathname === "/api/providers") {
-    const selected = (process.env.ANVIL_AI_PROVIDER ?? process.env.FORGE_AI_PROVIDER ?? "openai").toLowerCase();
+    const selected = (process.env.ANVIL_AI_PROVIDER ?? "openai").toLowerCase();
     const rows = [
       {
         id: "openai",
-        configured: Boolean(process.env.ANVIL_API_KEY || process.env.FORGE_API_KEY || process.env.OPENAI_API_KEY),
-        model:
-          process.env.ANVIL_AI_MODEL ||
-          process.env.FORGE_AI_MODEL ||
-          process.env.ANVIL_MODEL ||
-          process.env.FORGE_MODEL ||
-          "gpt-4.1-mini",
+        configured: Boolean(process.env.ANVIL_API_KEY || process.env.OPENAI_API_KEY),
+        model: process.env.ANVIL_AI_MODEL || process.env.ANVIL_MODEL || "gpt-4.1-mini",
         detail: "API credential presence only; connectivity is not tested.",
       },
       {
         id: "anthropic",
         configured: Boolean(process.env.ANTHROPIC_API_KEY),
-        model: process.env.ANVIL_AI_MODEL || process.env.FORGE_AI_MODEL || "claude-sonnet-4-5",
+        model: process.env.ANVIL_AI_MODEL || "claude-sonnet-4-5",
         detail: "API credential presence only; connectivity is not tested.",
       },
       {
         id: "google",
         configured: Boolean(process.env.GOOGLE_API_KEY),
-        model: process.env.ANVIL_AI_MODEL || process.env.FORGE_AI_MODEL || "gemini-2.5-flash",
+        model: process.env.ANVIL_AI_MODEL || "gemini-2.5-flash",
         detail: "API credential presence only; connectivity is not tested.",
       },
       {
         id: "ollama",
         configured: true,
-        model: process.env.ANVIL_AI_MODEL || process.env.FORGE_AI_MODEL || "llama3.2",
+        model: process.env.ANVIL_AI_MODEL || "llama3.2",
         detail:
           "Endpoint origin: " +
-          safeProviderOrigin(
-            process.env.ANVIL_BASE_URL ||
-              process.env.FORGE_BASE_URL ||
-              process.env.OLLAMA_HOST ||
-              "http://localhost:11434"
-          ) +
+          safeProviderOrigin(process.env.ANVIL_BASE_URL || process.env.OLLAMA_HOST || "http://localhost:11434") +
           "; connectivity is not tested.",
       },
       {
         id: "claude-code",
         configured: false,
-        model: process.env.ANVIL_AI_MODEL || process.env.FORGE_AI_MODEL || "sonnet",
+        model: process.env.ANVIL_AI_MODEL || "sonnet",
         detail: "Local CLI installation and account authentication are not checked by the dashboard.",
       },
     ].map((item) => ({
@@ -470,17 +460,10 @@ export async function handleDashboardGet(
       agents: [...agents.values()].sort((a, b) => b.durationMs - a.durationMs),
       providers: [...providers.values()].sort((a, b) => b.requests - a.requests),
       budgets: {
-        perAgentTokens: parseBudgetMap(
-          process.env.ANVIL_MAX_ESTIMATED_TOKENS_PER_AGENT || process.env.FORGE_MAX_ESTIMATED_TOKENS_PER_AGENT
-        ),
-        perAgentDurationMs: parseBudgetMap(
-          process.env.ANVIL_MAX_TASK_DURATION_MS_BY_AGENT || process.env.FORGE_MAX_TASK_DURATION_MS_BY_AGENT
-        ),
-        runTokens:
-          Number(process.env.ANVIL_MAX_ESTIMATED_TOKENS_PER_RUN || process.env.FORGE_MAX_ESTIMATED_TOKENS_PER_RUN) ||
-          null,
-        taskDurationMs:
-          Number(process.env.ANVIL_MAX_TASK_DURATION_MS || process.env.FORGE_MAX_TASK_DURATION_MS) || null,
+        perAgentTokens: parseBudgetMap(process.env.ANVIL_MAX_ESTIMATED_TOKENS_PER_AGENT),
+        perAgentDurationMs: parseBudgetMap(process.env.ANVIL_MAX_TASK_DURATION_MS_BY_AGENT),
+        runTokens: Number(process.env.ANVIL_MAX_ESTIMATED_TOKENS_PER_RUN) || null,
+        taskDurationMs: Number(process.env.ANVIL_MAX_TASK_DURATION_MS) || null,
       },
       recent,
     });
@@ -686,10 +669,7 @@ export async function handleDashboardGet(
   }
 
   if (requestUrl.pathname === "/api/clean/snapshots") {
-    const backupDirs = [
-      path.join(projectPath, ANVIL_STATE_DIR, "backups"),
-      path.join(projectPath, LEGACY_FORGE_STATE_DIR, "backups"),
-    ];
+    const backupDirs = [path.join(projectPath, ANVIL_STATE_DIR, "backups")];
     const snapshots: Array<{ id: string; at: string; files: number }> = [];
     for (const dir of backupDirs) {
       try {
@@ -759,25 +739,25 @@ export async function handleDashboardGet(
     return true;
   }
 
-  if (requestUrl.pathname === "/api/anvil/scorecard" || requestUrl.pathname === "/api/forge/scorecard") {
+  if (requestUrl.pathname === "/api/anvil/scorecard") {
     const card = await buildScorecard({ projectPath, anvilVersion: version.replace(/^v/, "") });
     sendJson(response, 200, card);
     return true;
   }
 
-  if (requestUrl.pathname === "/api/ecc/skills") {
+  if (requestUrl.pathname === "/api/catalog/skills" || requestUrl.pathname === "/api/ecc/skills") {
     const skills = await loadSkillRegistry(projectPath);
     sendJson(response, 200, { skills, total: skills.length });
     return true;
   }
 
-  if (requestUrl.pathname === "/api/rea/assets") {
+  if (requestUrl.pathname === "/api/binary/assets" || requestUrl.pathname === "/api/rea/assets") {
     sendJson(response, 200, await analyzeReaIntelligence(projectPath));
     return true;
   }
 
   if (requestUrl.pathname === "/api/cockpit/status") {
-    const [skills, reaReport, gateEval] = await Promise.all([
+    const [skills, binaryReport, gateEval] = await Promise.all([
       loadSkillRegistry(projectPath).catch(() => []),
       analyzeReaIntelligence(projectPath).catch(() => null),
       evaluateGate(projectPath).catch(() => null),
@@ -795,17 +775,17 @@ export async function handleDashboardGet(
           violations: gateEval?.violations?.length ?? 0,
           activeFindings: gateEval?.activeFindings?.length ?? 0,
         },
-        ecc: {
+        catalog: {
           totalSkills: skills.length,
           builtinSkills: skills.filter((s) => s.source === "builtin").length,
           workspaceSkills: skills.filter((s) => s.source === "workspace").length,
         },
-        rea: {
-          totalAssets: reaReport?.totalAssets ?? 0,
-          cleanRoomCompliant: reaReport?.cleanRoomReport?.compliant ?? true,
-          findingsCount: reaReport?.cleanRoomReport?.findings?.length ?? 0,
+        binary: {
+          totalAssets: binaryReport?.totalAssets ?? 0,
+          cleanRoomCompliant: binaryReport?.cleanRoomReport?.compliant ?? true,
+          findingsCount: binaryReport?.cleanRoomReport?.findings?.length ?? 0,
         },
-        forge: {
+        controlCenter: {
           status: "connected",
         },
       },

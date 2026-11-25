@@ -10,7 +10,7 @@ afterEach(async () => {
 });
 describe("engineering risk intelligence", () => {
   it("ranks shared modules and exposes transparent structural signals", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-risk-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-risk-"));
     await mkdir(path.join(root, "src"), { recursive: true });
     await mkdir(path.join(root, "tests"), { recursive: true });
     await writeFile(path.join(root, "package.json"), JSON.stringify({ scripts: { test: "vitest run" } }));

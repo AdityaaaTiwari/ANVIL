@@ -24,11 +24,8 @@ export async function runExperiment(_command: string, rest: string[]): Promise<v
       const matrixFile = option("--matrix-file");
       const suiteId = option("--suite");
       const matrixId = option("--matrix-id");
-      const provider = option("--provider") ?? getAnvilEnv("ANVIL_AI_PROVIDER", "FORGE_AI_PROVIDER", "openai")!;
-      const model =
-        option("--model") ??
-        getAnvilEnv("ANVIL_AI_MODEL", "FORGE_AI_MODEL") ??
-        getAnvilEnv("ANVIL_MODEL", "FORGE_MODEL", "gpt-4.1")!;
+      const provider = option("--provider") ?? getAnvilEnv("ANVIL_AI_PROVIDER", "openai")!;
+      const model = option("--model") ?? getAnvilEnv("ANVIL_AI_MODEL") ?? getAnvilEnv("ANVIL_MODEL", "gpt-4.1")!;
       if (!matrixFile || !suiteId || !matrixId)
         throw new Error(
           "Usage: anvil experiment capture --matrix-file CONFIG.json --matrix-id ID --suite SUITE_ID [--provider ID] [--model NAME] [--path PROJECT]"
@@ -47,7 +44,7 @@ export async function runExperiment(_command: string, rest: string[]): Promise<v
           fingerprint: fingerprintAgentConfig(snapshot.files),
         });
       }
-      const baseUrl = getAnvilEnv("ANVIL_BASE_URL", "FORGE_BASE_URL");
+      const baseUrl = getAnvilEnv("ANVIL_BASE_URL");
       const manifest = await captureExperimentManifest({
         projectPath: target,
         matrixFile: path.resolve(matrixFile),

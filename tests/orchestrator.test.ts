@@ -9,7 +9,7 @@ import {
 
 const provider = new DemoAgentProvider();
 
-describe("FORGE orchestration engine", () => {
+describe("ANVIL orchestration engine", () => {
   it("rejects empty and malformed provider responses", async () => {
     const invalidResponses = [
       { provider: "test", content: "   " },

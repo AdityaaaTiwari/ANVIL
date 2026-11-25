@@ -16,7 +16,7 @@ afterEach(async () => {
 
 describe("experiment manifests", () => {
   it("captures hashed inputs, saves, and reloads a manifest", async () => {
-    const root = await mkdtemp(path.join(os.tmpdir(), "forge-experiment-"));
+    const root = await mkdtemp(path.join(os.tmpdir(), "anvil-experiment-"));
     roots.push(root);
     await mkdir(path.join(root, ".git"), { recursive: true });
     const matrix = path.join(root, "matrix.json");
@@ -33,7 +33,7 @@ describe("experiment manifests", () => {
     expect(manifest.fingerprint).toMatch(/^[a-f0-9]{64}$/);
     expect(manifest.inputs.matrixSha256).toMatch(/^[a-f0-9]{64}$/);
     expect(manifest.environment).toBeDefined();
-    expect(JSON.stringify(manifest)).not.toMatch(/OPENAI_API_KEY|FORGE_API_KEY|secret-value/);
+    expect(JSON.stringify(manifest)).not.toMatch(/OPENAI_API_KEY|ANVIL_API_KEY|secret-value/);
     const saved = await saveExperimentManifest(root, manifest);
     expect((await loadExperimentManifest(root, manifest.id)).fingerprint).toBe(manifest.fingerprint);
     expect(JSON.parse(await readFile(saved, "utf8")).id).toBe(manifest.id);
@@ -102,7 +102,7 @@ describe("experiment manifests", () => {
     expect(changed.differences).toHaveLength(5);
   });
   it("rejects invalid manifest IDs", async () => {
-    const root = await mkdtemp(path.join(os.tmpdir(), "forge-experiment-invalid-"));
+    const root = await mkdtemp(path.join(os.tmpdir(), "anvil-experiment-invalid-"));
     roots.push(root);
     await expect(loadExperimentManifest(root, "../escape")).rejects.toThrow("Invalid experiment manifest ID");
   });

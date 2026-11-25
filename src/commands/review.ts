@@ -22,12 +22,12 @@ export async function runReview(_command: string, rest: string[]): Promise<void>
     const report = await reviewProject(target, { base, all });
     let ai: Awaited<ReturnType<typeof generateAIReview>> | undefined;
     if (rest.includes("--ai")) {
-      const apiKey = getAnvilEnv("ANVIL_API_KEY", "FORGE_API_KEY") ?? process.env.OPENAI_API_KEY ?? "";
-      if (!apiKey) throw new Error("Set ANVIL_API_KEY, FORGE_API_KEY, or OPENAI_API_KEY before using --ai.");
+      const apiKey = getAnvilEnv("ANVIL_API_KEY") ?? process.env.OPENAI_API_KEY ?? "";
+      if (!apiKey) throw new Error("Set ANVIL_API_KEY or OPENAI_API_KEY before using --ai.");
       const provider = new OpenAICompatibleProvider({
         apiKey,
-        model: getAnvilEnv("ANVIL_MODEL", "FORGE_MODEL", "gpt-4.1-mini")!,
-        baseUrl: getAnvilEnv("ANVIL_BASE_URL", "FORGE_BASE_URL", "https://api.openai.com/v1")!,
+        model: getAnvilEnv("ANVIL_MODEL", "gpt-4.1-mini")!,
+        baseUrl: getAnvilEnv("ANVIL_BASE_URL", "https://api.openai.com/v1")!,
       });
       ai = await generateAIReview(report, provider);
     }

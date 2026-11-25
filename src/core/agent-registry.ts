@@ -151,7 +151,6 @@ export async function loadAgentRegistry(projectPath: string): Promise<AgentDefin
   const candidateDirs = [
     path.join(root, "catalog", "agents"),
     path.join(root, "agents"),
-    path.join(root, ".forge", "agents"),
     path.join(root, ".anvil", "agents"),
   ];
 

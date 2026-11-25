@@ -13,12 +13,12 @@ describe("code review", () => {
     if (root) await safeRm(root);
   });
   it("reports heuristic findings with file and line evidence", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-review-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-review-"));
     await mkdir(path.join(root, "src"));
     await writeFile(path.join(root, "src", "sample.ts"), "export const safe = 1;");
     await run("git", ["init", root]);
-    await run("git", ["-C", root, "config", "user.email", "forge@example.invalid"]);
-    await run("git", ["-C", root, "config", "user.name", "FORGE Tests"]);
+    await run("git", ["-C", root, "config", "user.email", "anvil@example.invalid"]);
+    await run("git", ["-C", root, "config", "user.name", "ANVIL Tests"]);
     await run("git", ["-C", root, "add", "."]);
     await run("git", ["-C", root, "commit", "-m", "baseline"]);
     await writeFile(
@@ -30,7 +30,7 @@ describe("code review", () => {
     expect(report.summary.medium).toBeGreaterThan(0);
   });
   it("supports reviewing all source files without a Git diff", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-review-all-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-review-all-"));
     await mkdir(path.join(root, "src"));
     await writeFile(path.join(root, "src", "x.js"), "new Function('return 1');"); // anvil-disable-line ANVIL-R001
     const report = await reviewProject(root, { all: true });

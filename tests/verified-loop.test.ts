@@ -7,8 +7,8 @@ import { agentInvocation, buildLoopPrompt, listLoops, readLoop, runVerifiedLoop 
 
 const directories: string[] = [];
 async function repo(): Promise<{ root: string; agents: string }> {
-  const root = await mkdtemp(path.join(os.tmpdir(), "forge-loop-"));
-  const agents = await mkdtemp(path.join(os.tmpdir(), "forge-loop-agents-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "anvil-loop-"));
+  const agents = await mkdtemp(path.join(os.tmpdir(), "anvil-loop-agents-"));
   directories.push(root, agents);
   await writeFile(path.join(root, "sum.js"), "module.exports = (a, b) => a - b;\n");
   await mkdir(path.join(root, "tests"));
@@ -19,8 +19,8 @@ async function repo(): Promise<{ root: string; agents: string }> {
   await writeFile(path.join(root, "package.json"), JSON.stringify({ scripts: { test: "node tests/sum.test.js" } }));
   const git = (...args: string[]) => execFileSync("git", args, { cwd: root, stdio: "ignore" });
   git("init", "-q");
-  git("config", "user.email", "forge@example.com");
-  git("config", "user.name", "FORGE test");
+  git("config", "user.email", "anvil@example.com");
+  git("config", "user.name", "ANVIL test");
   git("add", "-A");
   git("commit", "-qm", "init");
   await writeFile(
@@ -44,7 +44,7 @@ afterEach(async () => {
 const check = "node tests/sum.test.js";
 
 describe("verified loop", () => {
-  it("passes only when FORGE's own check run passes, and keeps a receipt", async () => {
+  it("passes only when ANVIL's own check run passes, and keeps a receipt", async () => {
     const { root, agents } = await repo();
     const record = await runVerifiedLoop({
       projectPath: root,

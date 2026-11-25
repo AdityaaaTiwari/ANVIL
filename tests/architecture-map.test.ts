@@ -12,12 +12,12 @@ describe("mapArchitecture", () => {
   });
 
   it("excludes source files inside hidden and private configuration directories", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-map-private-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-map-private-"));
     await mkdir(path.join(root, "src"), { recursive: true });
-    await mkdir(path.join(root, ".forge", "agents"), { recursive: true });
+    await mkdir(path.join(root, ".anvil", "agents"), { recursive: true });
     await mkdir(path.join(root, ".ssh"), { recursive: true });
     await writeFile(path.join(root, "src", "main.ts"), "export const visible = true;");
-    await writeFile(path.join(root, ".forge", "agents", "private.ts"), "export const privateAgent = true;");
+    await writeFile(path.join(root, ".anvil", "agents", "private.ts"), "export const privateAgent = true;");
     await writeFile(path.join(root, ".ssh", "helper.ts"), "export const privateHelper = true;");
 
     const result = await mapArchitecture(root);
@@ -27,7 +27,7 @@ describe("mapArchitecture", () => {
   });
 
   it("maps relative imports and identifies likely entry points", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-map-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-map-"));
     await mkdir(path.join(root, "src", "lib"), { recursive: true });
     await writeFile(path.join(root, "src", "main.ts"), 'import { add } from "./lib/math";\nconsole.log(add(1, 2));');
     await writeFile(path.join(root, "src", "lib", "math.ts"), "export const add = (a: number, b: number) => a + b;");
@@ -41,7 +41,7 @@ describe("mapArchitecture", () => {
   });
 
   it("maps multi-language architectures (Python, Rust, C/C++)", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-map-multilang-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-map-multilang-"));
     await mkdir(path.join(root, "app"), { recursive: true });
     await mkdir(path.join(root, "rust_src"), { recursive: true });
     await mkdir(path.join(root, "c_src"), { recursive: true });

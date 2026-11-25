@@ -328,19 +328,19 @@ export function parseLoopCard(raw: string | undefined): LoopCard | undefined {
 
 /** Files the scorecard reads for content; everything else only needs to exist. */
 const SCORECARD_CONTENT =
-  /^(?:package\.json|pyproject\.toml|\.claude\/settings\.json|\.(?:anvil|forge)\/memory\.json|\.(?:anvil|forge)\/instincts\.json|\.github\/workflows\/[^/]+\.ya?ml)$/;
+  /^(?:package\.json|pyproject\.toml|\.claude\/settings\.json|\.anvil\/memory\.json|\.anvil\/instincts\.json|\.github\/workflows\/[^/]+\.ya?ml)$/;
 const SCORECARD_EXISTS =
-  /^(?:[^/]+|\.github\/(?:dependabot\.yml|renovate\.json|copilot-instructions\.md)|\.(?:claude|agents)\/skills\/(?:anvil|forge)-(?:project|learned)\/SKILL\.md|\.(?:windsurf|kiro|zed|cursor|codex|opencode|gemini|clinerules)\/[^/]+)$/;
+  /^(?:[^/]+|\.github\/(?:dependabot\.yml|renovate\.json|copilot-instructions\.md)|\.(?:claude|agents)\/skills\/anvil-(?:project|learned)\/SKILL\.md|\.(?:windsurf|kiro|zed|cursor|codex|opencode|gemini|clinerules)\/[^/]+)$/;
 
 export function doctorFromRemote(setup: RemoteDoctor, anvilVersion: string): DoctorReport {
-  const installedVersion = setup.state?.anvilVersion ?? setup.state?.forgeVersion;
+  const installedVersion = setup.state?.anvilVersion;
   return {
     installed: setup.installed,
     healthy: setup.healthy,
     currentVersion: anvilVersion,
     ...(setup.state
       ? {
-          ...(installedVersion ? { anvilVersion: installedVersion, forgeVersion: installedVersion } : {}),
+          ...(installedVersion ? { anvilVersion: installedVersion } : {}),
           profile: setup.state.profile,
           targets: setup.state.targets,
           ...(setup.state.languages ? { languages: setup.state.languages } : {}),
@@ -411,7 +411,7 @@ export async function buildRepoOverview(
   const files = data.entries
     .filter((entry) => entry.type === "blob")
     .map((entry) => entry.path)
-    .filter((file) => !/^\.(?:anvil|forge)\/|(?:^|\/)(?:anvil|forge)-[\w.-]+(?:\/SKILL)?\.(?:md|mdc|toml)$/.test(file));
+    .filter((file) => !/^\.anvil\/|(?:^|\/)anvil-[\w.-]+(?:\/SKILL)?\.(?:md|mdc|toml)$/.test(file));
   const profile = analyzeRepository({
     name: `${owner}/${repo}`,
     files,
@@ -423,9 +423,8 @@ export async function buildRepoOverview(
     blobPaths.has(file)
       ? client.getFileText(owner, repo, file, ref).catch(() => undefined)
       : Promise.resolve(undefined);
-  const readFirst = async (primary: string, fallback: string) => (await read(primary)) ?? (await read(fallback));
   const loopFiles = [...blobPaths]
-    .filter((file) => /^\.(?:anvil|forge)\/loops\/loop-[\w-]+\.json$/.test(file))
+    .filter((file) => /^\.anvil\/loops\/loop-[\w-]+\.json$/.test(file))
     .sort()
     .reverse()
     .slice(0, 8);
@@ -435,8 +434,8 @@ export async function buildRepoOverview(
     client
       .request<PullSummary[]>("GET", `${client.repo(owner, repo)}/pulls?state=open&per_page=6&sort=updated`)
       .catch(() => [] as PullSummary[]),
-    readFirst(".anvil/memory.json", ".forge/memory.json"),
-    readFirst(".anvil/instincts.json", ".forge/instincts.json"),
+    read(".anvil/memory.json"),
+    read(".anvil/instincts.json"),
     Promise.all(loopFiles.map(read)),
   ]);
   const now = context.now ?? (() => new Date());
@@ -447,7 +446,7 @@ export async function buildRepoOverview(
       repo,
       ref,
       data.entries,
-      doctorFromRemote(setup, context.anvilVersion ?? context.forgeVersion ?? "0.0.0"),
+      doctorFromRemote(setup, context.anvilVersion ?? "0.0.0"),
       shield,
       now
     ).catch(() => undefined),
@@ -499,11 +498,11 @@ export async function buildRepoOverview(
         }
       : {}),
     memory: {
-      committed: blobPaths.has(".anvil/memory.json") || blobPaths.has(".forge/memory.json"),
+      committed: blobPaths.has(".anvil/memory.json"),
       entries: parseMemoryCards(memoryRaw),
     },
     instincts: {
-      committed: blobPaths.has(".anvil/instincts.json") || blobPaths.has(".forge/instincts.json"),
+      committed: blobPaths.has(".anvil/instincts.json"),
       items: parseInstinctCards(instinctsRaw),
     },
     loops: loopRaws.map(parseLoopCard).filter((l): l is LoopCard => Boolean(l)),

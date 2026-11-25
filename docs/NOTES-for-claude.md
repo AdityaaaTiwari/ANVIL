@@ -21,7 +21,7 @@ ANVIL has been clearly repositioned across all documentation, manifests, and the
 Key relationship distinctions:
 - **Complements ECC (`affaan-m/ECC`)**: ECC provides agent content/skills; ANVIL provides the local verification layer and policy gate.
 - **Upstream Credit**: Acknowledges origin fork of FORGE-ECC (`ansh44233/FORGE-ECC` by Ansh), while eliminating copycat text and establishing ANVIL's unique deterministic verification identity.
-- **Removed Unsubstantiated Claims**: Removed unbacked claims such as "10/10 production rating" from the website and docs, replacing them with concrete verified test metrics (`681` Vitest tests across `102` suites plus `103` Python REA bridge tests across `10` suites passing across Node 22/24 and Python 3 on macOS, Ubuntu, and Windows).
+- **Removed Unsubstantiated Claims**: Removed unbacked claims such as "10/10 production rating" from the website and docs, replacing them with concrete verified test metrics (`680` Vitest tests across `101` suites plus `103` Python REA bridge tests across `10` suites passing across Node 22/24 and Python 3 on macOS, Ubuntu, and Windows).
 
 ---
 

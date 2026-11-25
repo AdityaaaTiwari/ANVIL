@@ -72,9 +72,7 @@ export async function diagnoseProvider(
   const started = Date.now();
   const model =
     env.ANVIL_AI_MODEL ||
-    env.FORGE_AI_MODEL ||
     env.ANVIL_MODEL ||
-    env.FORGE_MODEL ||
     (provider === "openai"
       ? "gpt-4.1-mini"
       : provider === "anthropic"
@@ -85,7 +83,7 @@ export async function diagnoseProvider(
   const checkedAt = new Date().toISOString();
   const key =
     provider === "openai"
-      ? env.ANVIL_API_KEY || env.FORGE_API_KEY || env.OPENAI_API_KEY
+      ? env.ANVIL_API_KEY || env.OPENAI_API_KEY
       : provider === "anthropic"
         ? env.ANTHROPIC_API_KEY
         : provider === "google"
@@ -110,10 +108,7 @@ export async function diagnoseProvider(
     return finish("needs-credentials", "Required API credential is not configured.");
   try {
     const configured =
-      env.ANVIL_BASE_URL ||
-      env.FORGE_BASE_URL ||
-      (provider === "ollama" ? env.OLLAMA_HOST : undefined) ||
-      defaults[provider];
+      env.ANVIL_BASE_URL || (provider === "ollama" ? env.OLLAMA_HOST : undefined) || defaults[provider];
     const base = endpointOrigin(configured, provider).toString().replace(/\/+$/, "");
     let url: string;
     const headers: Record<string, string> = {};

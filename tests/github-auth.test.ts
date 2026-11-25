@@ -33,10 +33,10 @@ describe("GitHub OAuth helpers", () => {
   });
 
   it("reads only the requested cookie and safely decodes it", () => {
-    const req = request({ cookie: "other=one; forge_github_session=abc%2Fdef; theme=dark" });
-    expect(getCookie(req, "forge_github_session")).toBe("abc/def");
+    const req = request({ cookie: "other=one; anvil_github_session=abc%2Fdef; theme=dark" });
+    expect(getCookie(req, "anvil_github_session")).toBe("abc/def");
     expect(getCookie(req, "missing")).toBeUndefined();
-    expect(getCookie(request({ cookie: "forge_github_session=%E0%A4%A" }), "forge_github_session")).toBeUndefined();
+    expect(getCookie(request({ cookie: "anvil_github_session=%E0%A4%A" }), "anvil_github_session")).toBeUndefined();
   });
 
   it("reads only scalar query parameters", () => {
@@ -44,7 +44,7 @@ describe("GitHub OAuth helpers", () => {
     expect(getQuery(request({}, { code: ["a", "b"] }), "code")).toBeUndefined();
   });
 
-  it("validates stored session repositories and clears both session cookies", () => {
+  it("validates stored session repositories and clears the session cookie", () => {
     expect(isValidSessionRepository({ fullName: "acme/app", installationId: 12, private: false })).toBe(true);
     expect(isValidSessionRepository({ fullName: "invalid", installationId: 12, private: false })).toBe(false);
     expect(isValidSessionRepository({ fullName: "acme/app", installationId: 0, private: false })).toBe(false);
@@ -64,8 +64,6 @@ describe("GitHub OAuth helpers", () => {
       },
     };
     clearSessionCookie(mockRes);
-    expect(Array.isArray(headers["Set-Cookie"])).toBe(true);
-    expect((headers["Set-Cookie"] as string[]).some((c) => c.includes("anvil_github_session=;"))).toBe(true);
-    expect((headers["Set-Cookie"] as string[]).some((c) => c.includes("forge_github_session=;"))).toBe(true);
+    expect(String(headers["Set-Cookie"])).toContain("anvil_github_session=;");
   });
 });

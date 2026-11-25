@@ -12,7 +12,7 @@ afterEach(async () => {
 
 describe("agent workspace context", () => {
   it("provides bounded read-only source evidence relevant to a task", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-agent-context-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-agent-context-"));
     await mkdir(path.join(root, "src"));
     await writeFile(
       path.join(root, "src", "auth.ts"),
@@ -32,7 +32,7 @@ describe("agent workspace context", () => {
   });
 
   it("caps context size and handles tasks with no useful terms", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-agent-context-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-agent-context-"));
     const empty = await buildAgentWorkspaceContext(root, { agent: "review", title: "Review", prompt: "Build project" });
     expect(empty).toContain("no safe search terms");
     await writeFile(

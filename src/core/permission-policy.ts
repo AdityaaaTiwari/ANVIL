@@ -1,16 +1,13 @@
 import { constants } from "node:fs";
 import { lstat, open, realpath } from "node:fs/promises";
 import path from "node:path";
-import { ANVIL_STATE_DIR, LEGACY_FORGE_STATE_DIR } from "./workspace-paths.js";
+import { ANVIL_STATE_DIR } from "./workspace-paths.js";
 
 export interface AnvilPermissionPolicy {
   version: 1;
   mode: "proposal-only" | "restricted";
   allowedTools: string[];
 }
-
-/** @deprecated Use `AnvilPermissionPolicy`. */
-export type ForgePermissionPolicy = AnvilPermissionPolicy;
 
 export const DEFAULT_PERMISSION_POLICY: AnvilPermissionPolicy = {
   version: 1,
@@ -48,7 +45,7 @@ function isMissing(error: unknown): boolean {
 /** Loads declarative policy. Missing files resolve to the safe proposal-only default. */
 export async function loadPermissionPolicy(projectPath: string): Promise<AnvilPermissionPolicy> {
   const root = await realpath(path.resolve(projectPath));
-  for (const stateDirName of [ANVIL_STATE_DIR, LEGACY_FORGE_STATE_DIR]) {
+  for (const stateDirName of [ANVIL_STATE_DIR]) {
     const directory = path.join(root, stateDirName);
     const file = path.join(directory, "permissions.json");
     try {

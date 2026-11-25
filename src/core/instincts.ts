@@ -6,15 +6,15 @@ import { promisify } from "node:util";
 import { globalMemoryRoot } from "./project-memory.js";
 
 /**
- * Instincts: small, evidence-backed behaviours FORGE learns from a project.
+ * Instincts: small, evidence-backed behaviours ANVIL learns from a project.
  *
- * Sources are deterministic — git co-change history, commit conventions, FORGE
+ * Sources are deterministic — git co-change history, commit conventions, ANVIL
  * Guard denials and verification failures recorded by the runtime hooks — so
  * the same history always yields the same instincts.
  *
  * Trust boundary: learned and imported instincts always start as `candidate`.
- * Only a human (`forge instinct promote`) makes one `active`, and only active
- * instincts are injected into sessions or compiled into skills by `forge evolve`.
+ * Only a human (`anvil instinct promote`) makes one `active`, and only active
+ * instincts are injected into sessions or compiled into skills by `anvil evolve`.
  */
 
 const execFileAsync = promisify(execFile);
@@ -117,13 +117,8 @@ export async function loadInstincts(projectPath: string, scope: InstinctScope = 
   try {
     raw = await readFile(file);
   } catch (error) {
-    if ((error as { code?: string }).code !== "ENOENT") throw error;
-    try {
-      raw = await readFile(path.join(baseRoot, ".forge/instincts.json"));
-    } catch (fallbackError) {
-      if ((fallbackError as { code?: string }).code === "ENOENT") return [];
-      throw fallbackError;
-    }
+    if ((error as { code?: string }).code === "ENOENT") return [];
+    throw error;
   }
   if (raw.byteLength > MAX_FILE_BYTES) throw new Error(`${INSTINCTS_PATH} exceeds the 1 MiB safety limit.`);
   const parsed = JSON.parse(raw.toString("utf8")) as Partial<InstinctDocument>;
@@ -219,7 +214,7 @@ export interface LearnedCandidate {
 }
 
 const NOISE =
-  /(?:^|\/)(?:package-lock\.json|pnpm-lock\.yaml|yarn\.lock|bun\.lockb|Cargo\.lock|go\.sum|poetry\.lock|CHANGELOG\.md|\.anvil\/|\.forge\/|dist\/|build\/|node_modules\/)/;
+  /(?:^|\/)(?:package-lock\.json|pnpm-lock\.yaml|yarn\.lock|bun\.lockb|Cargo\.lock|go\.sum|poetry\.lock|CHANGELOG\.md|\.anvil\/|dist\/|build\/|node_modules\/)/;
 
 function domainOf(file: string): string {
   if (/(?:^|\/)(?:tests?|__tests__|spec)\/|\.(?:test|spec)\.[a-z]+$/.test(file)) return "testing";
@@ -434,10 +429,7 @@ export async function learnInstincts(
   const candidates = [
     ...mineCoChange(commits),
     ...mineCommitConvention(commits),
-    ...mineGuard([
-      ...(await readJsonLines(path.join(root, ".anvil/session/guard.jsonl"))),
-      ...(await readJsonLines(path.join(root, ".forge/session/guard.jsonl"))),
-    ]),
+    ...mineGuard([...(await readJsonLines(path.join(root, ".anvil/session/guard.jsonl")))]),
     ...mineVerification(await readJsonLines(path.join(root, OBSERVATIONS_PATH))),
   ];
   const result = mergeCandidates(await loadInstincts(root), candidates, now);
@@ -542,12 +534,7 @@ export async function importInstincts(
   options: { scope?: InstinctScope; now?: () => Date } = {}
 ): Promise<LearnResult> {
   const body = payload as Partial<InstinctExport> | null;
-  if (
-    !body ||
-    (body.tool !== "anvil-instincts" && body.tool !== "forge-instincts") ||
-    body.version !== 1 ||
-    !Array.isArray(body.instincts)
-  )
+  if (!body || body.tool !== "anvil-instincts" || body.version !== 1 || !Array.isArray(body.instincts))
     throw new Error('Not an ANVIL instinct export (expected tool "anvil-instincts", version 1).');
   const now = (options.now ?? (() => new Date()))().toISOString();
   const candidates: LearnedCandidate[] = [];

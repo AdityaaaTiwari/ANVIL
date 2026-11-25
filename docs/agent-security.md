@@ -47,14 +47,14 @@ ANVIL inspects configuration formats natively (JSON, TOML, Markdown, YAML) witho
 - `.cursorrules`, `.windsurfrules`, `.clinerules`
 - `.github/copilot-instructions.md`, `.github/instructions/**/*.md`, `.github/prompts/**/*.md`
 - `.cursor/rules/*.mdc`, `.windsurf/rules/*`, `.agents/rules/*`, `.agent/rules/*`
-- `.claude/skills/*`, `.claude/commands/*`, `.claude/agents/*`, `.anvil/skills/*` (plus legacy `.forge/skills/*`)
+- `.claude/skills/*`, `.claude/commands/*`, `.claude/agents/*`, `.anvil/skills/*`
 
 ### Workspace Tool & MCP Configurations
 - `.mcp.json`, `mcp.json`, `opencode.json`
 - `.cursor/mcp.json`, `.vscode/mcp.json`, `.agents/mcp_config.json`, `.gemini/settings.json`
 - `.claude/settings.json`, `.claude/settings.local.json`
 - `.codex/config.toml`, `.zed/settings.json`
-- `.anvil/hooks/*`, `.anvil/hooks.json`, `.anvil/harness-hooks.json`, `.anvil/permissions.json`, `.claude/hooks/*` (plus legacy `.forge/permissions.json`, `.forge/hooks.json`)
+- `.anvil/hooks/*`, `.anvil/hooks.json`, `.anvil/harness-hooks.json`, `.anvil/permissions.json`, `.claude/hooks/*`
 
 ### Global Per-User Configurations (`--global`)
 When `--global` is passed, ANVIL scans configurations in the user's home directory:
@@ -75,7 +75,7 @@ When `--global` is passed, ANVIL scans configurations in the user's home directo
 
 ANVIL runs two complementary detection layers:
 1. **Structured AST & Config Checks (`ANVIL-AGENT-101` – `112`)**: Syntax-aware parsers that understand JSON schemas, TOML tables, Claude Code hooks and permissions, and MCP server declarations.
-2. **Instruction & Pattern Heuristics (`FORGE-AGENT-001` – `006`)**: Context-aware regex rules with negation and defensive-context guards.
+2. **Instruction & Pattern Heuristics (`ANVIL-AGENT-001` – `006`)**: Context-aware regex rules with negation and defensive-context guards.
 
 ### Structured Configuration Checks (`ANVIL-AGENT-101` .. `112`)
 
@@ -96,16 +96,16 @@ ANVIL runs two complementary detection layers:
 
 ---
 
-### Instruction Heuristics (`FORGE-AGENT-001` .. `006`)
+### Instruction Heuristics (`ANVIL-AGENT-001` .. `006`)
 
 | Rule ID | Severity | Title | Description |
 |---|---|---|---|
-| `FORGE-AGENT-001` | **Critical** | Credential value embedded in agent configuration | Identifies live credentials embedded in instruction documents. ANVIL automatically redacts matching values from output reports. |
-| `FORGE-AGENT-002` | **High** | Arbitrary command execution is explicitly permitted | Natural language instructions advising an agent that it has permission to run arbitrary or unrestricted shell commands. |
-| `FORGE-AGENT-003` | **High** | Destructive actions can bypass review | Text explicitly instructing agents to bypass human confirmation for deletion, deployment, or destructive operations. |
-| `FORGE-AGENT-004` | **High** | Untrusted repository or tool content is treated as instructions | Directives telling agents to treat repository files, web content, or tool output as trusted system instructions (indirect prompt injection vulnerability). |
-| `FORGE-AGENT-005` | **Medium** | Unrestricted filesystem access is described | Instructions stating that the agent has unrestricted access to the entire host filesystem. |
-| `FORGE-AGENT-006` | **Medium** | Unrestricted network access is described | Instructions permitting unrestricted outbound internet connectivity without an explicit endpoint allowlist. |
+| `ANVIL-AGENT-001` | **Critical** | Credential value embedded in agent configuration | Identifies live credentials embedded in instruction documents. ANVIL automatically redacts matching values from output reports. |
+| `ANVIL-AGENT-002` | **High** | Arbitrary command execution is explicitly permitted | Natural language instructions advising an agent that it has permission to run arbitrary or unrestricted shell commands. |
+| `ANVIL-AGENT-003` | **High** | Destructive actions can bypass review | Text explicitly instructing agents to bypass human confirmation for deletion, deployment, or destructive operations. |
+| `ANVIL-AGENT-004` | **High** | Untrusted repository or tool content is treated as instructions | Directives telling agents to treat repository files, web content, or tool output as trusted system instructions (indirect prompt injection vulnerability). |
+| `ANVIL-AGENT-005` | **Medium** | Unrestricted filesystem access is described | Instructions stating that the agent has unrestricted access to the entire host filesystem. |
+| `ANVIL-AGENT-006` | **Medium** | Unrestricted network access is described | Instructions permitting unrestricted outbound internet connectivity without an explicit endpoint allowlist. |
 
 ---
 

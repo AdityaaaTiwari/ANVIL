@@ -58,17 +58,7 @@ const CATEGORY_MAP: Record<string, BinaryAssetCategory> = {
   ".db": "database",
 };
 
-const IGNORED_DIRS = new Set([
-  "node_modules",
-  ".git",
-  "dist",
-  "build",
-  "coverage",
-  ".anvil",
-  ".forge",
-  ".next",
-  ".turbo",
-]);
+const IGNORED_DIRS = new Set(["node_modules", ".git", "dist", "build", "coverage", ".anvil", ".next", ".turbo"]);
 
 function isInside(root: string, candidate: string): boolean {
   const relative = path.relative(root, candidate);

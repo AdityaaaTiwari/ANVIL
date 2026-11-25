@@ -31,7 +31,7 @@ describe("review history", () => {
     if (root) await rm(root, { recursive: true, force: true });
   });
   it("saves, lists, and loads immutable review snapshots", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-history-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-history-"));
     const saved = await saveReview(root, report("Finding"));
     expect(await listReviews(root)).toHaveLength(1);
     expect((await loadReview(root, saved.id)).report.findings[0]?.title).toBe("Finding");

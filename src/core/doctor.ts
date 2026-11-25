@@ -155,22 +155,18 @@ export async function runDoctorChecks(projectPath?: string): Promise<DoctorRepor
           detail: `Accessible directory: ${resolved}`,
         });
 
-        // Check .anvil / .forge
+        // Check .anvil
         let configFound = false;
         try {
           const anvilStat = await lstat(path.join(resolved, ".anvil"));
           if (anvilStat.isDirectory()) configFound = true;
-        } catch {}
-        try {
-          const forgeStat = await lstat(path.join(resolved, ".forge"));
-          if (forgeStat.isDirectory()) configFound = true;
         } catch {}
 
         if (configFound) {
           checks.push({
             name: "ANVIL configuration",
             status: "ok",
-            detail: ".anvil (or legacy .forge) directory detected.",
+            detail: ".anvil directory detected.",
           });
         } else {
           checks.push({
@@ -254,18 +250,13 @@ export async function fixDoctorIssues(projectPath?: string): Promise<DoctorFixRe
 
   // 1. Scaffold .anvil workspace directories if missing
   const anvilDir = path.join(root, ".anvil");
-  const forgeDir = path.join(root, ".forge");
   try {
     let hasAnvil = false;
     try {
       hasAnvil = (await lstat(anvilDir)).isDirectory();
     } catch {}
-    let hasForge = false;
-    try {
-      hasForge = (await lstat(forgeDir)).isDirectory();
-    } catch {}
 
-    if (!hasAnvil && !hasForge) {
+    if (!hasAnvil) {
       await mkdir(path.join(anvilDir, "agents"), { recursive: true });
       await mkdir(path.join(anvilDir, "skills"), { recursive: true });
       await mkdir(path.join(anvilDir, "workflows"), { recursive: true });
@@ -322,7 +313,6 @@ target/
 
 # ANVIL local state
 .anvil/
-.forge/
 `;
       await writeFile(gitignorePath, standardGitignore, "utf8");
       repaired.push("Created comprehensive multi-language .gitignore file.");

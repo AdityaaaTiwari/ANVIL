@@ -1,7 +1,7 @@
 import path from "node:path";
 import { analyzeReaIntelligence } from "../core/rea-intelligence.js";
 
-export async function runRea(_command: string, rest: string[]): Promise<void> {
+export async function runBinary(_command: string, rest: string[]): Promise<void> {
   const target = path.resolve(rest.find((arg) => !arg.startsWith("--")) ?? ".");
   const isJson = rest.includes("--json");
   const cleanRoomOnly = rest.includes("--clean-room");
@@ -14,7 +14,7 @@ export async function runRea(_command: string, rest: string[]): Promise<void> {
       return;
     }
 
-    process.stdout.write(`\n# REA Binary & Clean-Room Intelligence\n`);
+    process.stdout.write(`\n# ANVIL Binary & Provenance Intelligence\n`);
     process.stdout.write(`Target: ${report.workspace}\n`);
     process.stdout.write(`Total Binary/Bundle Assets: ${report.totalAssets}\n\n`);
 
@@ -57,3 +57,6 @@ export async function runRea(_command: string, rest: string[]): Promise<void> {
     process.exitCode = 1;
   }
 }
+
+/** @deprecated Use `runBinary` instead. */
+export const runRea = runBinary;

@@ -12,7 +12,7 @@ ANVIL is an open-source, local-first verification harness and Model Context Prot
 - **Git Pre-Commit Hook:** 1-command hook management (`anvil hook install` / `anvil hook remove`) ensuring code is verified before every commit.
 - **Transactional Workspace Cleanup:** Dry-run preview and cleanup of build caches, temp files, and orphan source modules with atomic snapshot rollback (`anvil clean --undo <backupId>`).
 - **Context Budget Protection:** Compact summaries by default (`detail: false`) with structured `_meta` token estimations saving 96–99% context tokens compared to raw file reads.
-- **Python REA Bridge Verification:** Cross-platform Python `unittest` runner (`npm run test:rea`) executing `10` REA bridge test suites (`103` tests) alongside Vitest (`681` tests across `102` suites).
+- **Python REA Bridge Verification:** Cross-platform Python `unittest` runner (`npm run test:rea`) executing `10` REA bridge test suites (`103` tests) alongside Vitest (`680` tests across `101` suites).
 
 ## Quick Start
 ```bash

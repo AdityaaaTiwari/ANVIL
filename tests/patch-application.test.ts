@@ -23,7 +23,7 @@ describe("isolated approved patch staging", () => {
     for (const item of afterEachCleanup.splice(0)) await safeRm(item);
   });
   async function fixture() {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-patch-stage-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-patch-stage-"));
     await mkdir(path.join(root, "src"));
     await writeFile(path.join(root, "src/a.ts"), "const a = 1;\n");
     const report = {
@@ -247,7 +247,7 @@ describe("isolated approved patch staging", () => {
     const promoted = await promoteStagedPatch(root, staged.id, "reviewer", staged.stagedSha256);
     const backupDir = path.dirname(path.join(root, promoted.backupPath));
     const originalParent = path.join(path.dirname(backupDir), "src-original");
-    const outside = await mkdtemp(path.join(os.tmpdir(), "forge-outside-backup-"));
+    const outside = await mkdtemp(path.join(os.tmpdir(), "anvil-outside-backup-"));
     await afterEachCleanup.push(outside);
     await mkdir(path.join(outside, "src"));
     await writeFile(path.join(outside, "src/a.ts"), "forged backup\\n");

@@ -11,7 +11,7 @@ afterEach(async () => {
 });
 describe("workspace code search", () => {
   it("finds declaration and reference locations", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-search-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-search-"));
     await mkdir(path.join(root, "src"));
     await writeFile(
       path.join(root, "src", "main.ts"),
@@ -24,7 +24,7 @@ describe("workspace code search", () => {
     expect(r.results.map((x) => x.kind)).toContain("reference");
   });
   it("excludes hidden, generated, sensitive and linked files", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-search-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-search-"));
     await mkdir(path.join(root, "node_modules"));
     await writeFile(path.join(root, ".env"), "searchNeedle");
     await writeFile(path.join(root, "secret.ts"), "searchNeedle");
@@ -36,7 +36,7 @@ describe("workspace code search", () => {
     expect(r.filesScanned).toBe(1);
   });
   it("validates query length and caps results", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-search-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-search-"));
     await writeFile(
       path.join(root, "many.ts"),
       Array.from({ length: 12 }, (_, i) => "const target" + i + " = targetValue;").join("\n")
@@ -48,7 +48,7 @@ describe("workspace code search", () => {
   });
 
   it("does not descend into nested sensitive directories", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-search-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-search-"));
     await mkdir(path.join(root, "src", "credentials"), { recursive: true });
     await writeFile(path.join(root, "src", "credentials", "notes.ts"), "export const hiddenNeedle = true;");
     await writeFile(path.join(root, "src", "visible.ts"), "export const visible = true;");

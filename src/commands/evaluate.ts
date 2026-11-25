@@ -35,16 +35,16 @@ export async function runEvaluate(_command: string, rest: string[]): Promise<voi
     const judgeEnabled = rest.includes("--judge");
     let report: EvaluationReport | JudgedEvaluationReport;
     if (judgeEnabled) {
-      const providerChoice = getAnvilEnv("ANVIL_AI_PROVIDER", "FORGE_AI_PROVIDER", "openai")!;
+      const providerChoice = getAnvilEnv("ANVIL_AI_PROVIDER", "openai")!;
       const model =
-        getAnvilEnv("ANVIL_EVAL_JUDGE_MODEL", "FORGE_EVAL_JUDGE_MODEL") ??
-        getAnvilEnv("ANVIL_AI_MODEL", "FORGE_AI_MODEL") ??
-        getAnvilEnv("ANVIL_MODEL", "FORGE_MODEL") ??
+        getAnvilEnv("ANVIL_EVAL_JUDGE_MODEL") ??
+        getAnvilEnv("ANVIL_AI_MODEL") ??
+        getAnvilEnv("ANVIL_MODEL") ??
         (providerChoice === "claude-code" ? "sonnet" : "gpt-4.1");
-      const apiKey = getAnvilEnv("ANVIL_API_KEY", "FORGE_API_KEY") ?? process.env.OPENAI_API_KEY ?? "";
-      const baseUrl = getAnvilEnv("ANVIL_BASE_URL", "FORGE_BASE_URL", "https://api.openai.com/v1")!;
+      const apiKey = getAnvilEnv("ANVIL_API_KEY") ?? process.env.OPENAI_API_KEY ?? "";
+      const baseUrl = getAnvilEnv("ANVIL_BASE_URL", "https://api.openai.com/v1")!;
       if (providerChoice !== "claude-code" && !apiKey)
-        throw new Error("Set ANVIL_API_KEY, FORGE_API_KEY, or OPENAI_API_KEY to use model-judged evaluation.");
+        throw new Error("Set ANVIL_API_KEY or OPENAI_API_KEY to use model-judged evaluation.");
       const judgeProvider =
         providerChoice === "claude-code"
           ? new ClaudeCodeProvider({ cwd: target, model })

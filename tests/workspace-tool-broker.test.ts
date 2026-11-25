@@ -21,7 +21,7 @@ describe("workspace tool broker", () => {
   });
 
   it("denies calls unless explicitly allowlisted and records the denial", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-tool-broker-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-tool-broker-"));
     const audit: WorkspaceToolAuditEvent[] = [];
     await expect(
       executeWorkspaceAgentTool(
@@ -41,7 +41,7 @@ describe("workspace tool broker", () => {
   });
 
   it("executes allowlisted reads and records metadata without file contents", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-tool-broker-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-tool-broker-"));
     await mkdir(path.join(root, "src"));
     await writeFile(path.join(root, "src", "auth.ts"), "export function authenticateUser() { return true; }");
     const policy = validatePermissionPolicy({
@@ -76,7 +76,7 @@ describe("workspace tool broker", () => {
   });
 
   it("rejects unknown tools, invalid arguments and traversal", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-tool-broker-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-tool-broker-"));
     const policy = validatePermissionPolicy({ version: 1, mode: "restricted", allowedTools: ["read-file"] });
     await expect(executeWorkspaceAgentTool(root, policy, "shell", {})).rejects.toThrow(/Unknown workspace tool/);
     await expect(
@@ -85,7 +85,7 @@ describe("workspace tool broker", () => {
   });
 
   it("does not put project paths or filesystem error details in audit summaries", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-audit-private-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-audit-private-"));
     const policy = validatePermissionPolicy({ version: 1, mode: "restricted", allowedTools: ["read-file"] });
     const audit: WorkspaceToolAuditEvent[] = [];
     await expect(
@@ -109,7 +109,7 @@ describe("workspace tool broker", () => {
   });
 
   it("does not include filenames in successful read audit summaries", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-audit-filename-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-audit-filename-"));
     await mkdir(path.join(root, "src"));
     await writeFile(path.join(root, "src", "component-name.ts"), "export const value = 1;");
     const policy = validatePermissionPolicy({ version: 1, mode: "restricted", allowedTools: ["read-file"] });
@@ -132,7 +132,7 @@ describe("workspace tool broker", () => {
   });
 
   it("blocks direct reads through sensitive directory names", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-tool-broker-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-tool-broker-"));
     await mkdir(path.join(root, "credentials"), { recursive: true });
     await writeFile(path.join(root, "credentials", "notes.txt"), "must-not-be-read");
     const policy = validatePermissionPolicy({

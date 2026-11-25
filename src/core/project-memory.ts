@@ -39,9 +39,6 @@ const SECRET_PATTERN = /(?:api[_-]?key|secret|password|access[_-]?token)\s*[:=]\
 function memoryPath(projectPath: string): string {
   const root = path.resolve(projectPath);
   const anvilFile = path.join(root, ".anvil", "memory.json");
-  if (existsSync(anvilFile)) return anvilFile;
-  const forgeFile = path.join(root, ".forge", "memory.json");
-  if (existsSync(forgeFile)) return forgeFile;
   return anvilFile;
 }
 
@@ -257,7 +254,7 @@ export async function buildProjectMemoryContext(
 }
 
 export function globalMemoryRoot(): string {
-  return path.resolve(process.env.ANVIL_HOME ?? process.env.FORGE_HOME ?? homedir());
+  return path.resolve(process.env.ANVIL_HOME ?? homedir());
 }
 
 export interface MemorySearchHit {

@@ -72,7 +72,7 @@ export class HostedAgentProvider implements AgentProvider {
     if (options.provider !== "ollama" && !options.apiKey?.trim()) {
       const credential =
         options.provider === "openai"
-          ? "ANVIL_API_KEY, FORGE_API_KEY or OPENAI_API_KEY"
+          ? "ANVIL_API_KEY or OPENAI_API_KEY"
           : options.provider === "anthropic"
             ? "ANTHROPIC_API_KEY"
             : "GOOGLE_API_KEY";
@@ -157,12 +157,12 @@ export function createHostedAgentProvider(
   modelOverride?: string,
   runtime: Pick<HostedProviderOptions, "workspacePath" | "permissionPolicy"> = {}
 ): AgentProvider {
-  const provider = (env.ANVIL_AI_PROVIDER ?? env.FORGE_AI_PROVIDER ?? "openai").toLowerCase() as HostedProviderId;
+  const provider = (env.ANVIL_AI_PROVIDER ?? "openai").toLowerCase() as HostedProviderId;
   if (!["openai", "anthropic", "google", "ollama"].includes(provider))
     throw new Error("Hosted provider must be openai, anthropic, google or ollama.");
   const apiKey =
     provider === "openai"
-      ? (env.ANVIL_API_KEY ?? env.FORGE_API_KEY ?? env.OPENAI_API_KEY)
+      ? (env.ANVIL_API_KEY ?? env.OPENAI_API_KEY)
       : provider === "anthropic"
         ? env.ANTHROPIC_API_KEY
         : provider === "google"
@@ -171,9 +171,7 @@ export function createHostedAgentProvider(
   const model =
     modelOverride ??
     env.ANVIL_AI_MODEL ??
-    env.FORGE_AI_MODEL ??
     env.ANVIL_MODEL ??
-    env.FORGE_MODEL ??
     (provider === "openai"
       ? "gpt-4.1-mini"
       : provider === "anthropic"
@@ -181,7 +179,7 @@ export function createHostedAgentProvider(
         : provider === "google"
           ? "gemini-2.5-flash"
           : "llama3.2");
-  const baseUrl = env.ANVIL_BASE_URL ?? env.FORGE_BASE_URL ?? (provider === "ollama" ? env.OLLAMA_HOST : undefined);
+  const baseUrl = env.ANVIL_BASE_URL ?? (provider === "ollama" ? env.OLLAMA_HOST : undefined);
   return new HostedAgentProvider({
     provider,
     model,

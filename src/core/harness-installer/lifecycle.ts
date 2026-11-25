@@ -33,7 +33,6 @@ import {
   CLAUDE_SETTINGS_PATH,
   HARNESS_TARGETS,
   INSTALL_STATE_PATH,
-  LEGACY_INSTALL_STATE_PATH,
   LEGACY_STATE_SCHEMA_VERSION,
   STATE_SCHEMA_VERSION,
   sha256,
@@ -51,12 +50,8 @@ import {
 
 export async function loadInstallState(projectPath: string): Promise<InstallState | undefined> {
   const root = await realpath(path.resolve(projectPath));
-  let statePathLabel = INSTALL_STATE_PATH;
-  let raw = await readIfExists(await resolveInside(root, INSTALL_STATE_PATH));
-  if (raw === undefined) {
-    raw = await readIfExists(await resolveInside(root, LEGACY_INSTALL_STATE_PATH));
-    if (raw !== undefined) statePathLabel = LEGACY_INSTALL_STATE_PATH;
-  }
+  const statePathLabel = INSTALL_STATE_PATH;
+  const raw = await readIfExists(await resolveInside(root, INSTALL_STATE_PATH));
   if (raw === undefined) return undefined;
   let parsed: unknown;
   try {
@@ -94,7 +89,7 @@ export async function loadInstallState(projectPath: string): Promise<InstallStat
     );
   }
   const state = candidate as unknown as InstallState;
-  const recordedVersion = typeof state.anvilVersion === "string" ? state.anvilVersion : state.forgeVersion;
+  const recordedVersion = state.anvilVersion;
   if (
     typeof recordedVersion !== "string" ||
     typeof state.installedAt !== "string" ||
@@ -396,7 +391,7 @@ export async function installHarness(options: InstallOptions): Promise<InstallRe
 
   const conflicts = changes.filter((change) => change.action === "conflict").length;
   if (!dryRun) {
-    const version = options.anvilVersion ?? options.forgeVersion ?? "1.3.0";
+    const version = options.anvilVersion ?? "1.3.0";
     const state: InstallState = {
       schemaVersion: STATE_SCHEMA_VERSION,
       anvilVersion: version,
@@ -414,10 +409,6 @@ export async function installHarness(options: InstallOptions): Promise<InstallRe
       path: await resolveInside(root, INSTALL_STATE_PATH),
       content: `${JSON.stringify(state, null, 2)}\n`,
     });
-    const legacyStateAbsolute = await resolveInside(root, LEGACY_INSTALL_STATE_PATH);
-    if ((await readIfExists(legacyStateAbsolute)) !== undefined) {
-      writes.push({ path: legacyStateAbsolute, content: null });
-    }
     await applyDurableFileTransaction(root, writes);
   }
   return { dryRun, plan, changes, conflicts, statePath: INSTALL_STATE_PATH };
@@ -540,16 +531,11 @@ export async function uninstallHarness(options: {
       ...(remainingNativeHooks.length ? { nativeHooks: remainingNativeHooks } : {}),
     };
     const statePath = await resolveInside(root, INSTALL_STATE_PATH);
-    const legacyStatePath = await resolveInside(root, LEGACY_INSTALL_STATE_PATH);
     if (remainingFiles.length || remainingBlocks.length || remainingSettings || remainingNativeHooks.length) {
       operations.push({ path: statePath, content: `${JSON.stringify(remainingState, null, 2)}\n` });
     } else {
       operations.push({ path: statePath, content: null });
       pruneAfterCommit.push(statePath);
-    }
-    if ((await readIfExists(legacyStatePath)) !== undefined) {
-      operations.push({ path: legacyStatePath, content: null });
-      pruneAfterCommit.push(legacyStatePath);
     }
     await applyDurableFileTransaction(root, operations);
     for (const file of pruneAfterCommit) await pruneEmptyParents(root, file);
@@ -567,8 +553,6 @@ export interface DoctorReport {
   installed: boolean;
   healthy: boolean;
   anvilVersion?: string;
-  /** @deprecated Use `anvilVersion`. */
-  forgeVersion?: string;
   currentVersion: string;
   profile?: InstallProfile;
   targets?: HarnessTarget[];
@@ -586,11 +570,9 @@ export interface DoctorReport {
 export async function doctorHarness(options: {
   projectPath: string;
   anvilVersion?: string;
-  /** @deprecated Use `anvilVersion`. */
-  forgeVersion?: string;
   catalog?: HarnessCatalog;
 }): Promise<DoctorReport> {
-  const currentVersion = options.anvilVersion ?? options.forgeVersion ?? "1.3.0";
+  const currentVersion = options.anvilVersion ?? "1.3.0";
   const root = await realpath(path.resolve(options.projectPath));
   const state = await loadInstallState(root);
   const summary: Record<DoctorStatus, number> = { ok: 0, missing: 0, modified: 0, outdated: 0 };
@@ -604,7 +586,7 @@ export async function doctorHarness(options: {
       recommendations: ["Run `anvil install` to add ANVIL agents, skills, commands and rules to your harnesses."],
     };
   }
-  const installedVersion = state.anvilVersion ?? state.forgeVersion ?? currentVersion;
+  const installedVersion = state.anvilVersion ?? currentVersion;
   const plan = await buildInstallPlan({
     projectPath: root,
     anvilVersion: currentVersion,
@@ -713,7 +695,6 @@ export async function doctorHarness(options: {
     installed: true,
     healthy: summary.missing === 0 && summary.outdated === 0,
     anvilVersion: installedVersion,
-    forgeVersion: installedVersion,
     currentVersion,
     profile: state.profile,
     targets: state.targets,
@@ -774,7 +755,7 @@ export function formatDoctorReport(report: DoctorReport): string {
   if (!report.installed) {
     return ["ANVIL doctor: harness files not installed.", ...report.recommendations.map((r) => `  → ${r}`)].join("\n");
   }
-  const version = report.anvilVersion ?? report.forgeVersion ?? "unknown";
+  const version = report.anvilVersion ?? "unknown";
   const lines = [
     `ANVIL doctor: ${report.healthy ? "healthy" : "needs attention"}`,
     `  installed by ${version} · current ${report.currentVersion} · profile ${report.profile} · targets ${report.targets?.join(", ")}`,

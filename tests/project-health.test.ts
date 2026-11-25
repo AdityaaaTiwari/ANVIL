@@ -10,7 +10,7 @@ describe("project health report", () => {
     root = "";
   });
   it("combines project, quality, architecture and verification metrics and persists snapshots", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-health-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-health-"));
     const report = await generateProjectHealth(root);
     expect(report.current.quality.score).toBeGreaterThanOrEqual(0);
     expect(report.current.engineeringScore.score).toBeGreaterThanOrEqual(0);

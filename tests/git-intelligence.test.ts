@@ -13,12 +13,12 @@ describe("Git intelligence", () => {
     if (root) await safeRm(root);
   });
   it("reports modified and untracked files with test suggestions", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-git-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-git-"));
     await mkdir(path.join(root, "src"), { recursive: true });
     await writeFile(path.join(root, "src", "core.ts"), "export const value = 1;\n");
     await run("git", ["init", root]);
-    await run("git", ["-C", root, "config", "user.email", "forge@example.invalid"]);
-    await run("git", ["-C", root, "config", "user.name", "FORGE Tests"]);
+    await run("git", ["-C", root, "config", "user.email", "anvil@example.invalid"]);
+    await run("git", ["-C", root, "config", "user.name", "ANVIL Tests"]);
     await run("git", ["-C", root, "add", "."]);
     await run("git", ["-C", root, "commit", "-m", "initial"]);
     await writeFile(path.join(root, "src", "core.ts"), "export const value = 2;\n");
@@ -29,11 +29,11 @@ describe("Git intelligence", () => {
     expect(report.suggestedTests.length).toBeGreaterThan(0);
   });
   it("rejects option-like and invalid base revisions before invoking git diff", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-git-base-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-git-base-"));
     await writeFile(path.join(root, "README.md"), "sample\\n");
     await run("git", ["init", root]);
-    await run("git", ["-C", root, "config", "user.email", "forge@example.invalid"]);
-    await run("git", ["-C", root, "config", "user.name", "FORGE Tests"]);
+    await run("git", ["-C", root, "config", "user.email", "anvil@example.invalid"]);
+    await run("git", ["-C", root, "config", "user.name", "ANVIL Tests"]);
     await run("git", ["-C", root, "add", "."]);
     await run("git", ["-C", root, "commit", "-m", "initial"]);
     const marker = path.join(root, "should-not-be-created.txt");
@@ -43,12 +43,12 @@ describe("Git intelligence", () => {
   });
 
   it("does not execute repository-configured external diff drivers", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-git-extdiff-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-git-extdiff-"));
     await writeFile(path.join(root, "sample.txt"), "before\\n");
     await writeFile(path.join(root, ".gitattributes"), "*.txt diff=evil\\n");
     await run("git", ["init", root]);
-    await run("git", ["-C", root, "config", "user.email", "forge@example.invalid"]);
-    await run("git", ["-C", root, "config", "user.name", "FORGE Tests"]);
+    await run("git", ["-C", root, "config", "user.email", "anvil@example.invalid"]);
+    await run("git", ["-C", root, "config", "user.name", "ANVIL Tests"]);
     const marker = path.join(root, "external-diff-ran.txt");
     await run("git", ["-C", root, "config", "diff.evil.command", "touch " + marker]);
     await run("git", ["-C", root, "add", "."]);
@@ -60,11 +60,11 @@ describe("Git intelligence", () => {
   });
 
   it("flags deleted files as high risk", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-git-delete-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-git-delete-"));
     await writeFile(path.join(root, "package.json"), '{"name":"sample"}');
     await run("git", ["init", root]);
-    await run("git", ["-C", root, "config", "user.email", "forge@example.invalid"]);
-    await run("git", ["-C", root, "config", "user.name", "FORGE Tests"]);
+    await run("git", ["-C", root, "config", "user.email", "anvil@example.invalid"]);
+    await run("git", ["-C", root, "config", "user.name", "ANVIL Tests"]);
     await run("git", ["-C", root, "add", "."]);
     await run("git", ["-C", root, "commit", "-m", "initial"]);
     await rm(path.join(root, "package.json"));

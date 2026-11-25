@@ -11,7 +11,7 @@ describe("execution trace persistence", () => {
     root = "";
   });
   it("persists per-agent metrics and aggregate totals", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-trace-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-trace-"));
     const entries = [
       {
         taskId: "a",
@@ -26,13 +26,13 @@ describe("execution trace persistence", () => {
         outputTokensEstimate: 40,
       },
     ];
-    const file = await saveExecutionTrace(root, "forge-test-run", entries);
-    await saveExecutionTrace(root, "forge-test-run", [
+    const file = await saveExecutionTrace(root, "anvil-test-run", entries);
+    await saveExecutionTrace(root, "anvil-test-run", [
       { ...entries[0]!, taskId: "b", agent: "reviewer", inputTokensEstimate: 50, outputTokensEstimate: 20 },
     ]);
     const disk = JSON.parse(await readFile(file, "utf8")) as { entries: unknown[] };
     expect(disk.entries).toHaveLength(2);
-    const stored = await loadExecutionTrace(root, "forge-test-run");
+    const stored = await loadExecutionTrace(root, "anvil-test-run");
     expect(stored.totals.estimatedInputTokens).toBe(150);
     expect(stored.totals.estimatedOutputTokens).toBe(60);
     expect(stored.entries).toHaveLength(2);
@@ -48,7 +48,7 @@ describe("execution trace persistence", () => {
   });
 
   it("rejects competing writers instead of losing trace updates", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-trace-lock-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-trace-lock-"));
     const entry = {
       taskId: "a",
       agent: "planner",
@@ -62,26 +62,26 @@ describe("execution trace persistence", () => {
       outputTokensEstimate: 1,
     };
     const results = await Promise.allSettled([
-      saveExecutionTrace(root, "forge-concurrent-trace", [entry]),
-      saveExecutionTrace(root, "forge-concurrent-trace", [{ ...entry, taskId: "b" }]),
+      saveExecutionTrace(root, "anvil-concurrent-trace", [entry]),
+      saveExecutionTrace(root, "anvil-concurrent-trace", [{ ...entry, taskId: "b" }]),
     ]);
     expect(results.filter((result) => result.status === "fulfilled")).toHaveLength(1);
     expect(results.filter((result) => result.status === "rejected")).toHaveLength(1);
-    await expect(loadExecutionTrace(root, "forge-concurrent-trace")).resolves.toMatchObject({
+    await expect(loadExecutionTrace(root, "anvil-concurrent-trace")).resolves.toMatchObject({
       entries: [expect.objectContaining({ taskId: expect.stringMatching(/^(a|b)$/) })],
     });
   });
 
   it("rejects malformed persisted trace entries", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-trace-invalid-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-trace-invalid-"));
     const directory = path.join(root, ".anvil", "traces");
     await import("node:fs/promises").then((fs) => fs.mkdir(directory, { recursive: true }));
     await import("node:fs/promises").then((fs) =>
       fs.writeFile(
-        path.join(directory, "forge-bad-trace.json"),
+        path.join(directory, "anvil-bad-trace.json"),
         JSON.stringify({
           version: 1,
-          runId: "forge-bad-trace",
+          runId: "anvil-bad-trace",
           createdAt: new Date().toISOString(),
           entries: [{ taskId: "bad", outcome: "success", inputTokensEstimate: "not-a-number" }],
           totals: {},
@@ -89,6 +89,6 @@ describe("execution trace persistence", () => {
         })
       )
     );
-    await expect(loadExecutionTrace(root, "forge-bad-trace")).rejects.toThrow("invalid format");
+    await expect(loadExecutionTrace(root, "anvil-bad-trace")).rejects.toThrow("invalid format");
   });
 });

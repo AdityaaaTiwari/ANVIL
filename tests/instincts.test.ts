@@ -22,12 +22,12 @@ import { runHarnessHook } from "../src/core/harness-hooks.js";
 
 const directories: string[] = [];
 async function project(): Promise<string> {
-  const directory = await mkdtemp(path.join(os.tmpdir(), "forge-instinct-"));
+  const directory = await mkdtemp(path.join(os.tmpdir(), "anvil-instinct-"));
   directories.push(directory);
   return directory;
 }
 afterEach(async () => {
-  delete process.env.FORGE_HOME;
+  delete process.env.ANVIL_HOME;
   await Promise.all(directories.splice(0).map((directory) => rm(directory, { recursive: true, force: true })));
 });
 
@@ -138,7 +138,7 @@ describe("instinct store", () => {
 describe("instinct hooks", () => {
   it("records edits as observations and injects active instincts at session start", async () => {
     const root = await project();
-    process.env.FORGE_HOME = await project();
+    process.env.ANVIL_HOME = await project();
     await mkdir(path.join(root, "src"), { recursive: true });
     await runHarnessHook(
       "post-edit",

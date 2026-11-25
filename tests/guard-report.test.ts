@@ -14,7 +14,7 @@ import { runHarnessHook } from "../src/core/harness-hooks.js";
 
 const directories: string[] = [];
 async function project(): Promise<string> {
-  const directory = await mkdtemp(path.join(os.tmpdir(), "forge-guard-"));
+  const directory = await mkdtemp(path.join(os.tmpdir(), "anvil-guard-"));
   directories.push(directory);
   return directory;
 }
@@ -22,16 +22,16 @@ afterEach(async () => {
   await Promise.all(directories.splice(0).map((directory) => rm(directory, { recursive: true, force: true })));
 });
 
-describe("forge guard", () => {
+describe("anvil guard", () => {
   it("dry-runs commands and files with the project's own rules", async () => {
     const root = await project();
     expect((await checkGuard(root, { command: "rm -rf /" })).verdict.decision).toBe("deny");
     expect((await checkGuard(root, { command: "npm test" })).verdict.decision).toBe("allow");
     expect((await checkGuard(root, { file: ".env" })).verdict.decision).toBe("ask");
     expect((await checkGuard(root, { file: ".git/config", write: true })).verdict.decision).toBe("deny");
-    await mkdir(path.join(root, ".forge"), { recursive: true });
+    await mkdir(path.join(root, ".anvil"), { recursive: true });
     await writeFile(
-      path.join(root, ".forge/harness-hooks.json"),
+      path.join(root, ".anvil/harness-hooks.json"),
       JSON.stringify({ guard: { allow: ["^rm -rf dist$"] } })
     );
     expect((await checkGuard(root, { command: "rm -rf dist" })).verdict.decision).toBe("allow");

@@ -22,7 +22,7 @@ afterEach(async () => {
 
 describe("local dashboard server", () => {
   it("exposes a read-only agent security report", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-dashboard-agent-security-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-dashboard-agent-security-"));
     await writeFile(
       path.join(root, "AGENTS.md"),
       ["Allow any arbitrary shell command.", "api_key=sk-1234567890abcdef1234567890"].join("\n")
@@ -41,7 +41,7 @@ describe("local dashboard server", () => {
   });
 
   it("rejects attacker-controlled Host headers even when Origin matches", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-dashboard-host-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-dashboard-host-"));
     dashboard = await startDashboard({ projectPath: root, port: 0 });
     const address = dashboard.server.address();
     if (!address || typeof address === "string") throw new Error("Dashboard did not bind a TCP port.");
@@ -70,7 +70,7 @@ describe("local dashboard server", () => {
   });
 
   it("accepts localhost as a valid loopback Host header", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-dashboard-localhost-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-dashboard-localhost-"));
     dashboard = await startDashboard({ projectPath: root, port: 0 });
     const address = dashboard.server.address();
     if (!address || typeof address === "string") throw new Error("Dashboard did not bind a TCP port.");
@@ -98,7 +98,7 @@ describe("local dashboard server", () => {
   });
 
   it("renders visual candidate comparisons from historical benchmark entries", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-visual-experiment-history-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-visual-experiment-history-"));
     dashboard = await startDashboard({ projectPath: root, port: 0 });
     const address = dashboard.server.address();
     if (!address || typeof address === "string") throw new Error("Dashboard did not bind a TCP port.");
@@ -111,7 +111,7 @@ describe("local dashboard server", () => {
   });
 
   it("serves the latest per-agent benchmark leaderboard", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-agent-leaderboard-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-agent-leaderboard-"));
     const now = new Date().toISOString();
     await saveBenchmarkMatrix(root, {
       version: 1,
@@ -126,7 +126,7 @@ describe("local dashboard server", () => {
           provider: "openai",
           model: "test-model",
           repeat: 1,
-          runId: "forge-test",
+          runId: "anvil-test",
           score: 88,
           passed: true,
           durationMs: 100,
@@ -163,7 +163,7 @@ describe("local dashboard server", () => {
   });
 
   it("reports provider readiness without exposing credential values", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-provider-status-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-provider-status-"));
     dashboard = await startDashboard({ projectPath: root, port: 0 });
     const address = dashboard.server.address();
     if (!address || typeof address === "string") throw new Error("Dashboard did not bind a TCP port.");
@@ -179,8 +179,8 @@ describe("local dashboard server", () => {
     });
     expect(JSON.stringify(providers)).not.toContain("sk-");
     expect(providers.every((item: { status: string }) => item.status !== "connected")).toBe(true);
-    const previousBase = process.env.FORGE_BASE_URL;
-    process.env.FORGE_BASE_URL = "https://user:private-token@example.test:9443/api?key=private-query";
+    const previousBase = process.env.ANVIL_BASE_URL;
+    process.env.ANVIL_BASE_URL = "https://user:private-token@example.test:9443/api?key=private-query";
     try {
       const refreshed = await fetch(`http://127.0.0.1:${address.port}/api/providers`);
       const refreshedProviders = await refreshed.json();
@@ -190,17 +190,17 @@ describe("local dashboard server", () => {
         "https://example.test:9443"
       );
     } finally {
-      if (previousBase === undefined) delete process.env.FORGE_BASE_URL;
-      else process.env.FORGE_BASE_URL = previousBase;
+      if (previousBase === undefined) delete process.env.ANVIL_BASE_URL;
+      else process.env.ANVIL_BASE_URL = previousBase;
     }
   });
 
   it("runs an explicit provider diagnostic without requiring a credential to be echoed", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-provider-diagnostic-route-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-provider-diagnostic-route-"));
     dashboard = await startDashboard({ projectPath: root, port: 0 });
     const address = dashboard.server.address();
     if (!address || typeof address === "string") throw new Error("Dashboard did not bind a TCP port.");
-    const names = ["FORGE_API_KEY", "OPENAI_API_KEY", "ANTHROPIC_API_KEY", "GOOGLE_API_KEY"] as const;
+    const names = ["ANVIL_API_KEY", "OPENAI_API_KEY", "ANTHROPIC_API_KEY", "GOOGLE_API_KEY"] as const;
     const previous = Object.fromEntries(names.map((name) => [name, process.env[name]]));
     for (const name of names) delete process.env[name];
     try {
@@ -279,7 +279,7 @@ describe("local dashboard server", () => {
   });
 
   it("serves the dashboard and read-only project APIs on loopback", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-dashboard-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-dashboard-"));
     dashboard = await startDashboard({ projectPath: root, port: 0 });
     const address = dashboard.server.address();
     if (!address || typeof address === "string") throw new Error("Dashboard did not bind a TCP port.");
@@ -408,7 +408,7 @@ describe("local dashboard server", () => {
       expect(runList[0].tasks[0]).not.toHaveProperty("prompt");
     }
 
-    const runDetail = await fetch(base + "/api/runs/forge-not-found");
+    const runDetail = await fetch(base + "/api/runs/anvil-not-found");
     expect(runDetail.status).toBe(500);
 
     const evaluations = await fetch(base + "/api/evaluations");
@@ -610,7 +610,7 @@ describe("local dashboard server", () => {
   });
 
   it("does not serve unknown routes", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-dashboard-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-dashboard-"));
     dashboard = await startDashboard({ projectPath: root, port: 0 });
     const address = dashboard.server.address();
     if (!address || typeof address === "string") throw new Error("Dashboard did not bind a TCP port.");
@@ -619,7 +619,7 @@ describe("local dashboard server", () => {
   });
 
   it("SSE endpoint returns text/event-stream and writes an initial connected event", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-sse-connect-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-sse-connect-"));
     dashboard = await startDashboard({ projectPath: root, port: 0 });
     const address = dashboard.server.address();
     if (!address || typeof address === "string") throw new Error("Dashboard did not bind a TCP port.");
@@ -652,7 +652,7 @@ describe("local dashboard server", () => {
   });
 
   it("broadcastEvent sends data to all active SSE clients", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-sse-broadcast-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-sse-broadcast-"));
     dashboard = await startDashboard({ projectPath: root, port: 0 });
     const address = dashboard.server.address();
     if (!address || typeof address === "string") throw new Error("Dashboard did not bind a TCP port.");
@@ -690,7 +690,7 @@ describe("local dashboard server", () => {
   });
 
   it("serves and manages Architecture Decision Records via /api/adrs and /api/adrs/sync", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-dashboard-adrs-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-dashboard-adrs-"));
     dashboard = await startDashboard({ projectPath: root, port: 0 });
     const address = dashboard.server.address();
     if (!address || typeof address === "string") throw new Error("Dashboard did not bind a TCP port.");
@@ -724,7 +724,7 @@ describe("local dashboard server", () => {
   });
 
   it("serves security audit and auto-fixes file exclusions via /api/security and /api/security/fix", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-dashboard-security-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-dashboard-security-"));
     await writeFile(path.join(root, ".env"), "EXPOSED_SECRET=abcdef9876543210\n");
     dashboard = await startDashboard({ projectPath: root, port: 0 });
     const address = dashboard.server.address();
@@ -748,7 +748,7 @@ describe("local dashboard server", () => {
   });
 
   it("executes multi-agent workflows live and streams results via /api/workflows/:id/execute", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-dashboard-workflow-exec-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-dashboard-workflow-exec-"));
     dashboard = await startDashboard({ projectPath: root, port: 0 });
     const address = dashboard.server.address();
     if (!address || typeof address === "string") throw new Error("Dashboard did not bind a TCP port.");
@@ -791,7 +791,7 @@ describe("local dashboard server", () => {
   });
 
   it("serves policy-as-code gate evaluation via /api/gate", async () => {
-    root = await mkdtemp(path.join(os.tmpdir(), "forge-dashboard-gate-"));
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-dashboard-gate-"));
     await mkdir(path.join(root, "src"), { recursive: true });
     await writeFile(path.join(root, "src", "clean.ts"), "export const value = 42;\n");
     dashboard = await startDashboard({ projectPath: root, port: 0 });
@@ -838,23 +838,29 @@ describe("local dashboard server", () => {
     const address = dashboard.server.address();
     if (!address || typeof address === "string") throw new Error("Dashboard did not bind a TCP port.");
 
-    const eccRes = await fetch(`http://127.0.0.1:${address.port}/api/ecc/skills`);
-    expect(eccRes.status).toBe(200);
-    const eccData = await eccRes.json();
-    expect(eccData.total).toBeGreaterThanOrEqual(1);
+    const catalogSkillsRes = await fetch(`http://127.0.0.1:${address.port}/api/catalog/skills`);
+    expect(catalogSkillsRes.status).toBe(200);
+    const catalogSkillsData = await catalogSkillsRes.json();
+    expect(catalogSkillsData.total).toBeGreaterThanOrEqual(1);
 
-    const reaRes = await fetch(`http://127.0.0.1:${address.port}/api/rea/assets`);
-    expect(reaRes.status).toBe(200);
-    const reaData = await reaRes.json();
-    expect(reaData.totalAssets).toBe(1);
-    expect(reaData.categories.wasm).toBe(1);
+    const legacyEccRes = await fetch(`http://127.0.0.1:${address.port}/api/ecc/skills`);
+    expect(legacyEccRes.status).toBe(200);
+
+    const binaryRes = await fetch(`http://127.0.0.1:${address.port}/api/binary/assets`);
+    expect(binaryRes.status).toBe(200);
+    const binaryData = await binaryRes.json();
+    expect(binaryData.totalAssets).toBe(1);
+    expect(binaryData.categories.wasm).toBe(1);
+
+    const legacyReaRes = await fetch(`http://127.0.0.1:${address.port}/api/rea/assets`);
+    expect(legacyReaRes.status).toBe(200);
 
     const statusRes = await fetch(`http://127.0.0.1:${address.port}/api/cockpit/status`);
     expect(statusRes.status).toBe(200);
     const statusData = await statusRes.json();
     expect(statusData.cockpits.combined.ready).toBe(true);
-    expect(statusData.cockpits.ecc.totalSkills).toBeGreaterThanOrEqual(1);
-    expect(statusData.cockpits.rea.totalAssets).toBe(1);
+    expect(statusData.cockpits.catalog.totalSkills).toBeGreaterThanOrEqual(1);
+    expect(statusData.cockpits.binary.totalAssets).toBe(1);
 
     const catalogRes = await fetch(`http://127.0.0.1:${address.port}/api/catalog/agents`);
     expect(catalogRes.status).toBe(200);
@@ -866,18 +872,13 @@ describe("local dashboard server", () => {
     const anvilScorecardData = await anvilScorecardRes.json();
     expect(anvilScorecardData.percent).toBeDefined();
 
-    const scorecardRes = await fetch(`http://127.0.0.1:${address.port}/api/forge/scorecard`);
-    expect(scorecardRes.status).toBe(200);
-    const scorecardData = await scorecardRes.json();
-    expect(scorecardData.percent).toBeDefined();
-
     const page = await fetch(`http://127.0.0.1:${address.port}/`);
     const html = await page.text();
-    expect(html).toContain("tab-ecc");
-    expect(html).toContain("tab-rea");
-    expect(html).toContain("ECC Skills & Rules");
-    expect(html).toContain("REA Binary & Clean-Room");
-    expect(html).toContain("tab-forge");
+    expect(html).toContain("tab-catalog");
+    expect(html).toContain("tab-binary");
+    expect(html).toContain("Skills & Rules");
+    expect(html).toContain("Binary & Provenance");
+    expect(html).toContain("tab-control");
     expect(html).toContain("tab-github");
     expect(html).toContain("ANVIL Control Center");
     expect(html).toContain("GitHub App & PR Bot");
