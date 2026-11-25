@@ -1,0 +1,25 @@
+title: "[Q&A]: "
+labels: ["q&a", "community"]
+category: "Q&A"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for asking a question about the ANVIL Engineering Workbench!
+        Please describe your question, architecture inquiry, or verification issue below.
+  - type: textarea
+    id: question
+    attributes:
+      label: Your Question
+      description: What would you like help with or clarification on?
+      placeholder: E.g., How do I configure policy.json for a monorepo?
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context & Environment
+      description: Which version of ANVIL, Node.js, and OS are you using?
+      placeholder: ANVIL v1.4.0, Node 22, Ubuntu 24.04
+    validations:
+      required: false

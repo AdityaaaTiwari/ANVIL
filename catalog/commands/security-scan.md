@@ -1,0 +1,10 @@
+---
+description: Audit agent configuration, hooks, MCP servers and code for security risks
+profile: minimal
+---
+
+# /security-scan
+
+1. If the ANVIL CLI is available run `anvil shield .` and include its findings.
+2. Act as the ANVIL **Security Reviewer** on the current changes and on agent surfaces: `.claude/settings*.json`, hooks, `.mcp.json`, `.cursor/`, `AGENTS.md`, CI workflows.
+3. Report exploitable findings with severity, exploit scenario, fix and verification.

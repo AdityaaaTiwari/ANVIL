@@ -1,0 +1,64 @@
+# ANVIL Engineering Workbench
+> The Deterministic Verification Layer for AI Coding Agents.
+
+ANVIL is an open-source, local-first verification harness and Model Context Protocol (MCP) server. Any AI coding agent — Claude Code, Codex, Cursor, Antigravity, OpenCode — writes the code; ANVIL verifies it locally (blast radius, policy-as-code, secrets, tests) before it merges. Zero source code or tokens are sent to third-party LLMs.
+
+## Core Capabilities
+- **Universal Tool Installer:** 1-command connection (`anvil install .`) registering ANVIL in Claude Code, Codex, Cursor, VS Code (Copilot), Windsurf, Google Antigravity, Gemini CLI, and OpenCode.
+- **Deterministic Architecture Mapping:** Multi-language import graph across TypeScript, JavaScript, Python, Go, Rust, Java, Kotlin, C/C++, C#, Ruby, PHP; TypeScript AST symbol analysis in <1,400 compact tokens.
+- **Change Risk & Blast Radius:** AST-backed dependency tracing from uncommitted git diffs to downstream impacted modules and recommended test candidates.
+- **Pre-Commit Quality & Security Gate:** Local policy-as-code gate (`anvil gate`) with content-hash baselines (`.anvil/baseline.json`), secret entropy scanning, inline suppression governance, and SARIF export.
+- **Shield v3 & Harness Control Center:** 60+ static agent security rules (`anvil shield`), deterministic 9-category readiness scorecard (`anvil scorecard`), context budget analyzer (`anvil context`), anti-tamper verification loops (`anvil loop`), worktree agent races (`anvil race`), and local state stored in `.anvil/`.
+- **Git Pre-Commit Hook:** 1-command hook management (`anvil hook install` / `anvil hook remove`) ensuring code is verified before every commit.
+- **Transactional Workspace Cleanup:** Dry-run preview and cleanup of build caches, temp files, and orphan source modules with atomic snapshot rollback (`anvil clean --undo <backupId>`).
+- **Context Budget Protection:** Compact summaries by default (`detail: false`) with structured `_meta` token estimations saving 96–99% context tokens compared to raw file reads.
+- **Native Binary & Provenance Engine:** Pure TypeScript binary, WASM, source map, database, and capture scanner (`anvil binary`, `anvil_binary_intelligence`) with magic-byte format detection and `ANVIL-BIN-001`..`003` provenance checks.
+
+## Quick Start
+```bash
+# Connect ANVIL to every AI tool in one command
+npx -y anvil-engineering-workbench install .
+
+# Run one-shot gate check (no install needed)
+npx -y anvil-engineering-workbench@1.4.0 gate
+
+# Install globally
+npm install -g anvil-engineering-workbench
+
+# Initialize repository baseline and policy
+anvil init
+
+# Inspect project tech stack & scripts
+anvil inspect
+
+# Map architecture & circular dependencies
+anvil map
+
+# Check change risk of working tree
+anvil git
+
+# Install git pre-commit hook
+anvil hook install
+
+# Start MCP server for AI assistants
+anvil mcp start
+```
+
+## MCP Setup for Coding Agents
+- **One command for all tools:** `npx -y anvil-engineering-workbench install .`
+- **Claude Code:** `claude mcp add anvil -- npx -y anvil-engineering-workbench mcp start`
+- **Cursor:** Add command `npx -y anvil-engineering-workbench mcp start` in `.cursor/mcp.json`
+- **Antigravity:** Add server in `.agents/mcp_config.json` (see docs/integrations/antigravity.md)
+- **Windsurf:** Add server in `~/.codeium/windsurf/mcp_config.json`
+- **VS Code:** Add server in `.vscode/mcp.json`
+
+## Documentation Links
+- [GitHub Repository](https://github.com/anvil-workbench/ANVIL)
+- [Documentation Index](https://github.com/anvil-workbench/ANVIL/blob/main/docs/README.md)
+- [Universal Tool Installer](https://github.com/anvil-workbench/ANVIL/blob/main/docs/install.md)
+- [Getting Started Guide](https://github.com/anvil-workbench/ANVIL/blob/main/docs/getting-started.md)
+- [MCP Server Documentation](https://github.com/anvil-workbench/ANVIL/blob/main/docs/mcp-server.md)
+- [Antigravity Integration Guide](https://github.com/anvil-workbench/ANVIL/blob/main/docs/integrations/antigravity.md)
+- [Policy & Gate Guide](https://github.com/anvil-workbench/ANVIL/blob/main/docs/policy-as-code.md)
+- [CI Gate & SARIF Integration](https://github.com/anvil-workbench/ANVIL/blob/main/docs/ci-gate-and-sarif.md)
+- [Agent Operating Guidelines](https://github.com/anvil-workbench/ANVIL/blob/main/AGENTS.md)

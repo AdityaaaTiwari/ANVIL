@@ -1,0 +1,52 @@
+name: 🐛 Bug Report
+description: Create a report to help us improve ANVIL
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report an issue! Please provide as much detail as possible.
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is.
+      placeholder: What happened?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: How can the maintainer reproduce this behavior?
+      placeholder: |
+        1. Run `anvil ...`
+        2. Execute ...
+        3. See error ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment Info
+      description: Node version, OS, ANVIL version (e.g. Node 22.x, Windows 11 / Ubuntu 24.04, v1.0.6)
+      placeholder: Node v22.15.0, Windows 11
+    validations:
+      required: true
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I have verified this is not a duplicate of an existing issue.
+          required: true
+        - label: I did not include any private tokens, API keys, or confidential project secrets.
+          required: true

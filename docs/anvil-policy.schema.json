@@ -1,0 +1,113 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ANVIL Policy as Code Schema",
+  "description": "Declarative policy specification for ANVIL CI quality gates, security thresholds, and sandbox limits.",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": "integer",
+      "enum": [1],
+      "default": 1
+    },
+    "security": {
+      "type": "object",
+      "properties": {
+        "maxCritical": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0,
+          "description": "Maximum allowed critical security findings before gate failure."
+        },
+        "maxHigh": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0,
+          "description": "Maximum allowed high-severity security findings before gate failure."
+        },
+        "maxMedium": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 10,
+          "description": "Maximum allowed medium-severity security findings before gate failure."
+        },
+        "failOnSecrets": {
+          "type": "boolean",
+          "default": true,
+          "description": "Immediately fail gate if any hardcoded secret is detected."
+        }
+      },
+      "additionalProperties": false
+    },
+    "quality": {
+      "type": "object",
+      "properties": {
+        "maxReviewHigh": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0,
+          "description": "Maximum allowed high-risk code review findings (e.g., eval or unvetted sinks)."
+        },
+        "requireCleanGit": {
+          "type": "boolean",
+          "default": false,
+          "description": "Require a clean working tree without uncommitted changes."
+        },
+        "allowInlineSuppressions": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether inline suppression comments (anvil-disable-line, etc.) are permitted."
+        },
+        "requireSuppressionReason": {
+          "type": "boolean",
+          "default": false,
+          "description": "Require inline suppression comments to provide an explicit justification reason (e.g., '// anvil-disable-line RULE -- justification')."
+        }
+      },
+      "additionalProperties": false
+    },
+    "sandbox": {
+      "type": "object",
+      "properties": {
+        "required": {
+          "type": "boolean",
+          "default": false,
+          "description": "Require container sandbox execution for agent steps."
+        },
+        "disallowedTools": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "CLI utilities or binaries prohibited from package.json scripts and shell execution patterns (e.g. ['curl', 'wget', 'nc', 'rm']). Matched against executable command names and script invocations using exact command word boundaries."
+        },
+        "profile": {
+          "type": "string",
+          "enum": ["balanced", "hardened", "rootless-required"],
+          "default": "balanced",
+          "description": "Container security profile for dynamic verification runs (balanced, hardened, rootless-required). Advisory during static gate evaluation."
+        },
+        "requireRootless": {
+          "type": "boolean",
+          "default": false,
+          "description": "Require rootless Docker daemon for container verification runs. Advisory during static gate evaluation."
+        },
+        "maxMemory": {
+          "type": "string",
+          "default": "512m",
+          "description": "Maximum memory ceiling for containerized verification runs (e.g. '512m'). Advisory during static gate evaluation."
+        },
+        "maxCpus": {
+          "type": "number",
+          "default": 1.0,
+          "description": "Maximum CPU quota for containerized verification runs. Advisory during static gate evaluation."
+        },
+        "maxProcesses": {
+          "type": "integer",
+          "default": 128,
+          "description": "Maximum process limit for containerized verification runs. Advisory during static gate evaluation."
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,88 @@
+{
+  "$schema": "https://raw.githubusercontent.com/modelcontextprotocol/registry/main/schema/server.json",
+  "name": "anvil-engineering-workbench",
+  "version": "1.4.0",
+  "description": "Deterministic local code intelligence, architecture mapping, change risk analysis, and quality/security gating for AI coding assistants.",
+  "homepage": "https://github.com/anvil-workbench/ANVIL",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/anvil-workbench/ANVIL.git"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Aditya Tiwari",
+    "url": "https://github.com/AdityaaaTiwari"
+  },
+  "packages": [
+    {
+      "registry": "npm",
+      "package": "anvil-engineering-workbench",
+      "version": "1.4.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "entrypoint": ["npx", "-y", "anvil-engineering-workbench", "mcp", "start"]
+    }
+  ],
+  "runtime": "node",
+  "transport": {
+    "type": "stdio"
+  },
+  "install": {
+    "npm": "npm install -g anvil-engineering-workbench"
+  },
+  "entrypoint": {
+    "command": "npx",
+    "args": ["-y", "anvil-engineering-workbench", "mcp", "start"]
+  },
+  "tools": [
+    {
+      "name": "anvil_inspect_project",
+      "description": "Inspect project structure, languages, frameworks, package managers, scripts, and dependencies. Call first when onboarding or checking stack."
+    },
+    {
+      "name": "anvil_map_architecture",
+      "description": "Map project architecture, entry points, module relationships, and external dependencies before modifying core architecture."
+    },
+    {
+      "name": "anvil_change_risk",
+      "description": "Analyze blast radius, downstream dependency impact, structural complexity, and suggested test targets for git changes."
+    },
+    {
+      "name": "anvil_git_intelligence",
+      "description": "Inspect working-tree git diff, uncommitted changes, affected modules, and heuristic commit risk."
+    },
+    {
+      "name": "anvil_quality_audit",
+      "description": "Fast static quality audit across manifests, test structure, security patterns, and workflow health."
+    },
+    {
+      "name": "anvil_security_audit",
+      "description": "Deep scan for hardcoded secrets, API keys, sensitive tokens, and dangerous script patterns."
+    },
+    {
+      "name": "anvil_clean_preview",
+      "description": "Preview safe cleanup of junk files, build caches, temp files, and unused orphan source files."
+    },
+    {
+      "name": "anvil_search_code",
+      "description": "Search identifiers, functions, and text across project source code within workspace security boundaries."
+    },
+    {
+      "name": "anvil_list_files",
+      "description": "List workspace source and config files (bounded to 200 entries, excludes .git, node_modules, secrets)."
+    },
+    {
+      "name": "anvil_read_file",
+      "description": "Read workspace source/config file with security guardrails (rejects files >128 KiB, traversal, secrets)."
+    },
+    {
+      "name": "anvil_project_health",
+      "description": "Generate a unified 0-100 project health score and grade (A-F) combining tooling, architecture, and quality."
+    },
+    {
+      "name": "anvil_doctor",
+      "description": "Run diagnostic system and workspace health checks on Node runtime, Git, Docker, and permissions."
+    }
+  ]
+}

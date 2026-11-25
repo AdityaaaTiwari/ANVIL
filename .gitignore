@@ -1,0 +1,39 @@
+node_modules/
+dist/
+coverage/
+.env
+.env.*
+!.env.example
+*.log
+*.sarif
+.DS_Store
+.vscode/
+.idea/
+.agents/
+
+# Local ANVIL runtime state (never commit memory, runs, or backups)
+.anvil/*
+!.anvil/policy.json
+!.anvil/baseline.json
+!.anvil/evals/
+!.anvil/evals/*.json
+.forge/memory.json
+.forge/runs/
+.forge/intelligence/
+.forge/health/
+
+# Legacy FORGE execution telemetry
+.forge/traces/
+
+# Legacy FORGE benchmark and evaluation reports
+.forge/benchmarks/
+.forge/evaluations/
+
+# Automated benchmark matrix reports
+.forge/benchmark-matrices/
+
+# Python bytecode & local caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.vercel

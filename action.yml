@@ -1,0 +1,164 @@
+name: ANVIL Engineering Workbench
+description: Install ANVIL and run local-first AI engineering checks on a repository
+author: Aditya Tiwari
+
+branding:
+  icon: terminal
+  color: orange
+
+inputs:
+  version:
+    description: ANVIL Git ref to install (tag, branch, commit, or 'local')
+    required: false
+    default: v1.4.0
+  project-path:
+    description: Repository directory to analyze
+    required: false
+    default: .
+  operation:
+    description: Safe built-in operation to run (gate, inspect, security, quality, health, review, doctor)
+    required: false
+    default: gate
+  sarif-file:
+    description: File path to write the OASIS SARIF v2.1.0 report (e.g. anvil-results.sarif)
+    required: false
+    default: anvil-results.sarif
+  policy-file:
+    description: Custom JSON policy file path (defaults to .anvil/policy.json if present)
+    required: false
+    default: ""
+  baseline-file:
+    description: Baseline JSON file to suppress known existing findings (defaults to .anvil/baseline.json if present)
+    required: false
+    default: ""
+  fail-on-warnings:
+    description: Whether the gate should fail on medium-severity warnings (true/false)
+    required: false
+    default: "false"
+  since:
+    description: Git revision to evaluate modified files against (e.g. origin/main, HEAD~1)
+    required: false
+    default: ""
+  min-confidence:
+    description: Minimum rule confidence to block gate (high, medium, low)
+    required: false
+    default: ""
+  import-sarif:
+    description: External SARIF report file path to ingest (e.g. semgrep.sarif, codeql.sarif)
+    required: false
+    default: ""
+  pr-comment:
+    description: Whether to post/update an automated ANVIL quality & risk summary comment on pull requests (true/false)
+    required: false
+    default: "false"
+  github-token:
+    description: GitHub Token (secrets.GITHUB_TOKEN) used to post the PR comment
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Node.js 22
+      uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+      with:
+        node-version: 22
+    - name: Install ANVIL
+      shell: bash
+      env:
+        ANVIL_VERSION: ${{ inputs.version }}
+      run: |
+        set -euo pipefail
+        NPM_PREFIX="$(npm config get prefix)"
+        echo "$NPM_PREFIX" >> "$GITHUB_PATH"
+        echo "$NPM_PREFIX/bin" >> "$GITHUB_PATH"
+        export PATH="$NPM_PREFIX/bin:$NPM_PREFIX:$PATH"
+
+        if [[ "$ANVIL_VERSION" == "local" || "$ANVIL_VERSION" == "workspace" || "$ANVIL_VERSION" == "." ]]; then
+          echo "Linking local repository build of ANVIL..."
+          npm link
+        elif command -v anvil >/dev/null 2>&1 && [[ -z "${ANVIL_VERSION:-}" || "$ANVIL_VERSION" == "existing" ]]; then
+          echo "Using existing ANVIL installation: $(anvil --version)"
+        else
+          echo "Installing ANVIL version ${ANVIL_VERSION}..."
+          npm install --global "git+https://github.com/anvil-workbench/ANVIL.git#${ANVIL_VERSION}"
+        fi
+
+        if command -v anvil >/dev/null 2>&1; then
+          ANVIL_BIN="anvil"
+        elif [[ -x "$NPM_PREFIX/bin/anvil" ]]; then
+          ANVIL_BIN="$NPM_PREFIX/bin/anvil"
+        elif [[ -x "$NPM_PREFIX/anvil" ]]; then
+          ANVIL_BIN="$NPM_PREFIX/anvil"
+        elif [[ -f "$NPM_PREFIX/anvil.cmd" ]]; then
+          ANVIL_BIN="$NPM_PREFIX/anvil.cmd"
+        else
+          ANVIL_BIN="anvil"
+        fi
+        echo "ANVIL_BIN=$ANVIL_BIN" >> "$GITHUB_ENV"
+        "$ANVIL_BIN" --version
+    - name: Run ANVIL
+      shell: bash
+      env:
+        ANVIL_PROJECT_PATH: ${{ inputs.project-path }}
+        ANVIL_OPERATION: ${{ inputs.operation }}
+        ANVIL_SARIF_FILE: ${{ inputs.sarif-file }}
+        ANVIL_POLICY_FILE: ${{ inputs.policy-file }}
+        ANVIL_BASELINE_FILE: ${{ inputs.baseline-file }}
+        ANVIL_FAIL_ON_WARNINGS: ${{ inputs.fail-on-warnings }}
+        ANVIL_SINCE: ${{ inputs.since }}
+        ANVIL_MIN_CONFIDENCE: ${{ inputs.min-confidence }}
+        ANVIL_IMPORT_SARIF: ${{ inputs.import-sarif }}
+      run: |
+        set -euo pipefail
+        NPM_PREFIX="$(npm config get prefix)"
+        export PATH="$NPM_PREFIX/bin:$NPM_PREFIX:$PATH"
+        RUN_BIN="${ANVIL_BIN:-anvil}"
+
+        case "$ANVIL_OPERATION" in
+          gate)
+            EXTRA_ARGS=()
+            if [[ -n "$ANVIL_SARIF_FILE" ]]; then EXTRA_ARGS+=(--sarif "$ANVIL_SARIF_FILE"); fi
+
+            # Resolve policy file
+            if [[ -n "$ANVIL_POLICY_FILE" ]]; then
+              EXTRA_ARGS+=(--policy "$ANVIL_POLICY_FILE")
+            elif [[ -f "$ANVIL_PROJECT_PATH/.anvil/policy.json" ]]; then
+              EXTRA_ARGS+=(--policy "$ANVIL_PROJECT_PATH/.anvil/policy.json")
+            fi
+
+            # Resolve baseline file
+            if [[ -n "$ANVIL_BASELINE_FILE" ]]; then
+              EXTRA_ARGS+=(--baseline "$ANVIL_BASELINE_FILE")
+            elif [[ -f "$ANVIL_PROJECT_PATH/.anvil/baseline.json" ]]; then
+              EXTRA_ARGS+=(--baseline "$ANVIL_PROJECT_PATH/.anvil/baseline.json")
+            fi
+
+            if [[ "$ANVIL_FAIL_ON_WARNINGS" == "true" ]]; then EXTRA_ARGS+=(--fail-on-warnings); fi
+            if [[ -n "$ANVIL_SINCE" ]]; then EXTRA_ARGS+=(--since "$ANVIL_SINCE"); fi
+            if [[ -n "$ANVIL_MIN_CONFIDENCE" ]]; then EXTRA_ARGS+=(--min-confidence "$ANVIL_MIN_CONFIDENCE"); fi
+            if [[ -n "$ANVIL_IMPORT_SARIF" ]]; then EXTRA_ARGS+=(--import-sarif "$ANVIL_IMPORT_SARIF"); fi
+            "$RUN_BIN" gate "$ANVIL_PROJECT_PATH" "${EXTRA_ARGS[@]}"
+            ;;
+          inspect) "$RUN_BIN" inspect "$ANVIL_PROJECT_PATH" ;;
+          security) "$RUN_BIN" security "$ANVIL_PROJECT_PATH" ;;
+          quality) "$RUN_BIN" quality "$ANVIL_PROJECT_PATH" ;;
+          health) "$RUN_BIN" health "$ANVIL_PROJECT_PATH" ;;
+          review) "$RUN_BIN" review "$ANVIL_PROJECT_PATH" ;;
+          doctor) "$RUN_BIN" doctor "$ANVIL_PROJECT_PATH" ;;
+          *) echo "Unsupported ANVIL operation: $ANVIL_OPERATION" >&2; exit 2 ;;
+        esac
+    - name: Post ANVIL PR Comment
+      if: ${{ always() && inputs.pr-comment == 'true' && inputs.github-token != '' }}
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        SARIF_FILE: ${{ inputs.sarif-file }}
+      run: |
+        SCRIPT_PATH="${GITHUB_ACTION_PATH}/scripts/post-pr-comment.cjs"
+        if [[ ! -f "$SCRIPT_PATH" ]]; then
+          SCRIPT_PATH="./scripts/post-pr-comment.cjs"
+        fi
+        if [[ -f "$SCRIPT_PATH" ]]; then
+          node "$SCRIPT_PATH" || true
+        fi
