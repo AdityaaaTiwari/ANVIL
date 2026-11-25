@@ -1,16 +1,8 @@
 ANVIL Engineering Workbench
 Copyright (c) 2026 Aditya Tiwari and ANVIL contributors.
 
-This product includes software, agent personas, rules, and engineering assets derived from or inspired by:
+This product includes software and architectural foundations derived from or inspired by:
 
 1. FORGE / FORGE-ECC (https://github.com/ansh44233/FORGE-ECC)
    Author: Ansh (https://github.com/ansh44233)
-   License: MIT License
-
-2. Everything Claude Code (ECC) (https://github.com/affaan-m/ECC)
-   Author: Affaan Mustafa (https://github.com/affaan-m)
-   License: MIT License
-
-3. Reverse Engineer Anything (REA) (https://github.com/morluto/rea)
-   Author: morluto (https://github.com/morluto)
    License: MIT License

@@ -239,7 +239,6 @@ export interface InstallOptions {
   server?: ServerMode;
   localServerScript?: string;
   instructions?: boolean;
-  rea?: boolean;
   homeDir?: string;
   platform?: NodeJS.Platform;
   appData?: string;

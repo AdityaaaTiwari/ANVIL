@@ -58,7 +58,7 @@ Its verified loop checks pre-execution git checksums against unstaged diffs. If 
 - **100% Local-First & Private:** Evaluates AST syntax trees, dependency graphs, and git diffs directly on your hardware. Zero proprietary source code or credentials are ever sent to third-party LLMs.
 - **Compact Agent Context (<1.5k Tokens):** Instead of forcing your agent to read hundreds of source files (burning 150k+ tokens), ANVIL's read-only Model Context Protocol (MCP) server supplies concise architecture summaries, entry points, and circular dependency maps in under 1,400 tokens.
 - **Deterministic Quality & Policy Gate:** Evaluates baseline content hashes, rule confidence, hardcoded secrets, and formatting before commit or in CI pull request checks.
-- **Complements Agent Libraries:** ANVIL complements prompt/skills libraries like [ECC](https://github.com/affaan-m/ECC) by providing the verification, blast-radius calculation, and policy enforcement engine.
+- **Native Catalog & Binary Provenance:** Includes a compact built-in catalog of 49 specialist agents, 76 catalog skills, 34 commands, and 26 rule sets plus pure TypeScript magic-byte binary inspection (`anvil binary`).
 
 ---
 
@@ -147,13 +147,14 @@ Every command and flag listed below is verified and supported in ANVIL v1.3.0:
 | `anvil shield [path]` | Runs ANVIL Shield v3 static harness audit across instructions, hooks, MCP, and CI | `--fix`, `--sarif <file>`, `--fail-on <level>`, `--json` | **Available** |
 | `anvil scorecard [path]` | Computes deterministic harness readiness scorecard across 9 engineering categories | `--verbose`, `--json` | **Available** |
 | `anvil consult "<task>"` | Finds catalog agents, skills, commands, rules, and MCP servers matching a task | `--json` | **Available** |
+| `anvil binary [path]` | Inspects native binaries, WASM, source maps, databases, and captures with magic-byte classification | `--findings-only`, `--json` | **Available** |
 | `anvil context [path]` | Measures pre-prompt token cost per AI harness and flags duplicate/sprawl waste | `--verbose`, `--max <tokens>`, `--json` | **Available** |
 | `anvil loop run` / `status` | Executes anti-tamper verification loop with pre/post checksums and `.anvil/loops/` receipts | `--goal`, `--check`, `--max-iterations` | **Available** |
 | `anvil race` | Races multiple coding agents in isolated Git worktrees and ranks verified diffs | `--agents`, `--goal`, `--check` | **Available** |
 | `anvil doctor [path]` | Verifies environment health (Node, Git, Docker, workspace permissions) | `--fix`, `--json` | **Available** |
 | `anvil mcp [setup\|start\|sync]` | Configures, runs, or cross-syncs the local Model Context Protocol server | `add`, `remove`, `sync`, `matrix` | **Available** |
 | `anvil dashboard [path]` | Launches unified multi-cockpit dashboard (Verification, Agent Toolkit, Binary Intelligence, Control Center) on loopback | `[path]` | **Available** |
-| `GitHub App Service` | GitHub App handlers & webhook bot (`/anvil analyze\|repair\|audit\|doctor\|risk`) | `/anvil`, `/forge` (legacy alias) | **Available** |
+| `GitHub App Service` | GitHub App handlers & webhook bot (`/anvil analyze\|repair\|audit\|doctor\|risk`) | `/anvil` | **Available** |
 | `cross-harness handoff` | Synchronize active session handoff state via `.anvil/memory.json` and hooks | `anvil memory handoff` | **Available** |
 
 ---
@@ -174,10 +175,8 @@ ANVIL acts as the local inspection and verification harness for your agent:
   Run `anvil install . --hooks --target claude`. Claude accesses read-only MCP tools (`anvil_map_architecture`, `anvil_change_risk`, `anvil_inspect_project`) to query repository structure without bloating context windows, while stop hooks automatically check changes on completion.
 - **Cursor IDE:**
   Run `anvil install . --hooks --target cursor`. Automatically configures `.cursor/mcp.json` and `.cursor/hooks.json` so Cursor's agent receives immediate gate feedback before stopping.
-- **ECC (affaan-m/ECC):**
-  Complements ECC's 1,500+ skills and prompt workflows with ANVIL's deterministic verification, blast radius, and agent security scanning. See the [ECC Integration Guide](docs/integrations/ecc.md).
-- **REA (morluto/rea):**
-  Powers an end-to-end reverse-engineering and binary analysis pipeline: use REA for binary/bundle inspection and ANVIL for safe patch verification and CI gating (`npm run test:rea` executes the cross-platform Python REA bridge suite in `catalog/rea/bridges/`). See the [REA Integration Guide](docs/integrations/rea.md).
+- **ANVIL Harness Catalog & Binary Intelligence:**
+  Ships a self-contained catalog of 49 specialist agents, 76 domain skills, 34 workflow commands, and 26 rule sets installable via `anvil install --profile standard`, alongside native TypeScript magic-byte binary and provenance inspection (`anvil binary` / `anvil_binary_intelligence`).
 - **Codex & OpenCode:**
   Use standard `AGENTS.md` instructions and run `anvil gate .` to verify changes before committing.
 - **Google Antigravity (AGY):**

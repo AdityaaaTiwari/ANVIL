@@ -56,7 +56,7 @@ jobs:
           echo "ref=$IMAGE_REF" >> "$GITHUB_OUTPUT"
       - name: Execute rootless container boundary tests
         env:
-          FORGE_DOCKER_IMAGE: ${{ steps.image.outputs.ref }}
-          FORGE_REQUIRE_ROOTLESS: "true"
-          FORGE_HOST_SECRET_SENTINEL: must-not-enter-container
+          ANVIL_DOCKER_IMAGE: ${{ steps.image.outputs.ref }}
+          ANVIL_REQUIRE_ROOTLESS: "true"
+          ANVIL_HOST_SECRET_SENTINEL: must-not-enter-container
         run: npx vitest run tests/container-sandbox.integration.test.ts

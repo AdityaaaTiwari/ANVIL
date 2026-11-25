@@ -38,8 +38,6 @@ Options:
                        local   node <this checkout>/dist/mcp/server.js
   --hooks            Also add stop/guard hooks to Claude Code, Cursor, Codex and Gemini
   --statusline       Add ANVIL status line to Claude Code settings (with --hooks)
-  --rea              Also register the REA reverse-engineering MCP server (npx -y rea-agents serve)
-                     for black-box binary analysis and bundle inspection.
   --force            Overwrite conflicting files during catalog install/repair
   --catalog-only     Only install/repair catalog files (skip MCP config files)
   --no-instructions  Do not touch AGENTS.md / CLAUDE.md / GEMINI.md.
@@ -131,7 +129,6 @@ export async function runInstall(command: string, rest: string[]): Promise<void>
         localServerScript: resolveMcpServerScript(),
         instructions: !rest.includes("--no-instructions"),
         hooks: rest.includes("--hooks"),
-        rea: rest.includes("--rea"),
         ...(process.env.APPDATA ? { appData: process.env.APPDATA } : {}),
       },
       remove

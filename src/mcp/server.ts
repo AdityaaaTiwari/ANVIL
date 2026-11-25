@@ -27,7 +27,7 @@ import { auditAgentConfiguration } from "../core/agent-security-audit.js";
 import { analyzeDependencyImpact } from "../core/dependency-impact.js";
 import { runDoctorChecks } from "../core/doctor.js";
 import { cleanProject } from "../core/project-cleaner.js";
-import { analyzeReaIntelligence } from "../core/rea-intelligence.js";
+import { analyzeBinaryIntelligence } from "../core/binary-intelligence.js";
 import { buildScorecard } from "../core/harness-scorecard.js";
 import { consult } from "../core/consult.js";
 import { analyzeContext } from "../core/context-budget.js";
@@ -889,7 +889,7 @@ registerToolWithAlias(
   {
     title: "Binary, Bundle & Provenance Analysis",
     description:
-      "Inspect workspace for compiled native binaries, web bundles, source maps, WASM, and capture files. Audits clean-room invariants and flags proprietary binary leaks. Returns compact summary by default; pass detail: true for full asset inventory.",
+      "Inspect workspace for compiled native binaries, web bundles, source maps, WASM, databases, and capture files using local magic-byte detection and provenance checks. Returns compact summary by default; pass detail: true for full asset inventory.",
     inputSchema: z.object({
       projectPath: z
         .string()
@@ -900,14 +900,14 @@ registerToolWithAlias(
         .optional()
         .default(false)
         .describe(
-          "When false (default), returns category counts and clean-room summary. Pass true for itemized asset lists."
+          "When false (default), returns category counts and provenance summary. Pass true for itemized asset lists."
         ),
     }),
   },
   async ({ projectPath, detail }) => {
     try {
       const root = await resolveWorkspace(projectPath);
-      const report = await auditReadOnlyMcpTool("anvil_binary_intelligence", () => analyzeReaIntelligence(root));
+      const report = await auditReadOnlyMcpTool("anvil_binary_intelligence", () => analyzeBinaryIntelligence(root));
       if (!detail) {
         const summary = {
           workspace: report.workspace,

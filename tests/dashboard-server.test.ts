@@ -824,7 +824,7 @@ describe("local dashboard server", () => {
     expect(html).toContain("gateMinConfidence");
   });
 
-  it("exposes ECC skills, REA assets, and combined cockpit status", async () => {
+  it("exposes catalog skills, binary assets, and combined cockpit status", async () => {
     root = await mkdtemp(path.join(os.tmpdir(), "anvil-dashboard-cockpit-"));
     const claudeDir = path.join(root, ".claude", "skills", "test-skill");
     await mkdir(claudeDir, { recursive: true });
@@ -843,17 +843,11 @@ describe("local dashboard server", () => {
     const catalogSkillsData = await catalogSkillsRes.json();
     expect(catalogSkillsData.total).toBeGreaterThanOrEqual(1);
 
-    const legacyEccRes = await fetch(`http://127.0.0.1:${address.port}/api/ecc/skills`);
-    expect(legacyEccRes.status).toBe(200);
-
     const binaryRes = await fetch(`http://127.0.0.1:${address.port}/api/binary/assets`);
     expect(binaryRes.status).toBe(200);
     const binaryData = await binaryRes.json();
     expect(binaryData.totalAssets).toBe(1);
     expect(binaryData.categories.wasm).toBe(1);
-
-    const legacyReaRes = await fetch(`http://127.0.0.1:${address.port}/api/rea/assets`);
-    expect(legacyReaRes.status).toBe(200);
 
     const statusRes = await fetch(`http://127.0.0.1:${address.port}/api/cockpit/status`);
     expect(statusRes.status).toBe(200);

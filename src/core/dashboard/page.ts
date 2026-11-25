@@ -923,15 +923,15 @@ ${DASHBOARD_STYLES}
 <div id="tab-binary" class="tab-pane">
   <section class="hero">
     <div class="eyebrow">ANVIL BINARY INTELLIGENCE / 09</div>
-    <h1>Binary, Bundle & Clean-Room Intelligence</h1>
-    <p>Inspection layer for native binaries, WASM, source maps, web bundles, and clean-room provenance verification.</p>
+    <h1>Binary, Bundle & Provenance Intelligence</h1>
+    <p>Native TypeScript inspection for compiled binaries, WASM, source maps, web bundles, databases, and network captures with magic-byte verification.</p>
   </section>
 
   <section class="grid" id="binaryMetrics">
     <div class="card"><div class="metric-label">Total Binary Assets</div><div class="metric" id="binaryTotalAssets">—</div><div class="metric-sub">Binaries, Maps, WASM</div></div>
-    <div class="card"><div class="metric-label">Clean-Room Status</div><div class="metric" id="binaryCleanStatus" style="color:var(--emerald)">COMPLIANT</div><div class="metric-sub">No proprietary leaks</div></div>
-    <div class="card"><div class="metric-label">Binary Inspector</div><div class="metric" style="color:var(--purple)">ANVIL Engine</div><div class="metric-sub">AST, WASM, Maps &amp; ELF/PE</div></div>
-    <div class="card"><div class="metric-label">Decompiler Guard</div><div class="metric" style="color:var(--emerald)">ACTIVE</div><div class="metric-sub">Enforces clean provenance</div></div>
+    <div class="card"><div class="metric-label">Provenance Status</div><div class="metric" id="binaryCleanStatus" style="color:var(--emerald)">COMPLIANT</div><div class="metric-sub">ANVIL-BIN-001..003 Verified</div></div>
+    <div class="card"><div class="metric-label">Binary Inspector</div><div class="metric" style="color:var(--purple)">ANVIL Engine</div><div class="metric-sub">Magic Headers: PE, ELF, Mach-O, WASM</div></div>
+    <div class="card"><div class="metric-label">Source Boundary</div><div class="metric" style="color:var(--emerald)">ACTIVE</div><div class="metric-sub">Enforces safe provenance</div></div>
   </section>
 
   <section class="section card">

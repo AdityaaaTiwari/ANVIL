@@ -10,16 +10,16 @@ import { runVerification } from "./verification.js";
 /**
  * Runtime hooks for agent harnesses (Claude Code hook protocol).
  *
- *   anvil hook pre-tool       PreToolUse  — ANVIL Guard: deny catastrophic, ask on risky actions
- *   anvil hook post-edit      PostToolUse — record edits; Shield-check edited agent configuration
- *   anvil hook stop           Stop        — optional verification gate before the agent finishes
- *   anvil hook session-start  SessionStart — inject latest handoff, project memory and approved instincts
- *   anvil hook prompt-submit  UserPromptSubmit — stop prompts that paste live credentials into the transcript
- *   anvil hook pre-compact    PreCompact  — save a handoff before context is compacted
- *   anvil hook session-end    SessionEnd  — record token usage and save a handoff
+ *   forge hook pre-tool       PreToolUse  — FORGE Guard: deny catastrophic, ask on risky actions
+ *   forge hook post-edit      PostToolUse — record edits; Shield-check edited agent configuration
+ *   forge hook stop           Stop        — optional verification gate before the agent finishes
+ *   forge hook session-start  SessionStart — inject latest handoff, project memory and approved instincts
+ *   forge hook prompt-submit  UserPromptSubmit — stop prompts that paste live credentials into the transcript
+ *   forge hook pre-compact    PreCompact  — save a handoff before context is compacted
+ *   forge hook session-end    SessionEnd  — record token usage and save a handoff
  *
  * Hooks read one JSON object from stdin and write one JSON object to stdout.
- * They fail open (allow) on internal errors so an ANVIL bug never bricks a session,
+ * They fail open (allow) on internal errors so a FORGE bug never bricks a session,
  * except for the explicit deny rules below.
  */
 
@@ -47,8 +47,10 @@ export interface HookInput {
   transcript_path?: string;
   trigger?: string;
   reason?: string;
-  /** Set by ANVIL's native adapters; absent for Claude Code. */
+  /** Set by FORGE's native adapters; absent for Claude Code. */
   anvil_harness?: string;
+  /** @deprecated Legacy alias accepted for backwards compatibility. */
+  forge_harness?: string;
 }
 
 export interface HookOutput {
@@ -64,7 +66,7 @@ export interface GuardVerdict {
 }
 
 export interface HarnessHookConfig {
-  /** `rules`: project-specific command rules (ANVIL's validated take on ECC hookify). */
+  /** `rules`: project-specific command rules guarded by ANVIL runtime hooks. */
   guard: { enabled: boolean; allow: string[]; rules: CommandRule[] };
   /** `protectQualityConfig`: ask before agents edit lint/format configs to make checks pass. */
   configGuard: { enabled: boolean; protectQualityConfig: boolean };
@@ -205,7 +207,7 @@ export const COMMAND_RULES: CommandRule[] = [
 const SECRET_FILE =
   /(?:^|\/)(?:\.env(?:\.(?!example$|sample$|template$)[\w.-]+)?|id_(?:rsa|ed25519|ecdsa|dsa)(?:\.pub)?|[^/]+\.(?:pem|key|p12|pfx)|credentials\.json|\.npmrc|\.pypirc|\.netrc)$/i;
 const AGENT_CONFIG =
-  /(?:^|\/)(?:\.claude\/settings(?:\.local)?\.json|\.mcp\.json|\.cursor\/mcp\.json|\.vscode\/mcp\.json|\.gemini\/settings\.json|\.github\/workflows\/[^/]+\.ya?ml|\.anvil\/(?:harness-hooks|permissions)\.json)$/;
+  /(?:^|\/)(?:\.claude\/settings(?:\.local)?\.json|\.mcp\.json|\.cursor\/mcp\.json|\.vscode\/mcp\.json|\.gemini\/settings\.json|\.github\/workflows\/[^/]+\.ya?ml|\.(?:anvil|forge)\/(?:harness-hooks|permissions)\.json)$/;
 
 export const QUALITY_CONFIG =
   /(?:^|\/)(?:\.eslintrc(?:\.[\w]+)?|eslint\.config\.[cm]?[jt]s|\.prettierrc(?:\.[\w]+)?|prettier\.config\.[cm]?js|biome\.jsonc?|\.stylelintrc(?:\.[\w]+)?|ruff\.toml|\.ruff\.toml|\.flake8|\.pylintrc|mypy\.ini|\.golangci\.ya?ml|rustfmt\.toml|\.rustfmt\.toml|clippy\.toml|\.rubocop\.yml|\.editorconfig)$/;
@@ -227,7 +229,7 @@ export function evaluateCommand(
     try {
       if (new RegExp(entry).test(normalized)) return { decision: "allow" };
     } catch {
-      // Ignore invalid allow patterns; `anvil doctor` style validation reports them separately.
+      // Ignore invalid allow patterns; `forge doctor` style validation reports them separately.
     }
   }
   let ask: GuardVerdict | undefined;
@@ -309,7 +311,7 @@ function isMissing(error: unknown): boolean {
 }
 
 /**
- * Validate project command rules from .anvil/harness-hooks.json:
+ * Validate project command rules from .forge/harness-hooks.json:
  *   { "guard": { "rules": [{ "id": "USER-NO-PROD-DB", "decision": "deny", "pattern": "psql .*prod", "reason": "..." }] } }
  * Invalid entries are dropped rather than failing the hook.
  */
@@ -340,7 +342,12 @@ export function parseCustomRules(values: unknown[]): CommandRule[] {
 export async function loadHarnessHookConfig(root: string): Promise<HarnessHookConfig> {
   let raw: string;
   try {
-    raw = await readFile(path.join(root, HARNESS_HOOK_CONFIG_PATH), "utf8");
+    raw = await readFile(path.join(root, HARNESS_HOOK_CONFIG_PATH), "utf8").catch(async (error: unknown) => {
+      if ((error as NodeJS.ErrnoException)?.code === "ENOENT") {
+        return readFile(path.join(root, ".forge/harness-hooks.json"), "utf8");
+      }
+      throw error;
+    });
   } catch (error) {
     if (isMissing(error)) return structuredClone(DEFAULT_CONFIG);
     throw error;
@@ -455,7 +462,7 @@ async function preTool(root: string, input: HookInput, config: HarnessHookConfig
         : "";
   await logGuard(root, {
     at: now.toISOString(),
-    harness: input.anvil_harness ?? "claude",
+    harness: input.anvil_harness ?? input.forge_harness ?? "claude",
     session: input.session_id,
     tool: toolName,
     decision: verdict.decision,
@@ -603,7 +610,7 @@ async function promptSubmit(root: string, input: HookInput, config: HarnessHookC
   if (!match) return { exitCode: 0 };
   await logGuard(root, {
     at: now.toISOString(),
-    harness: input.anvil_harness ?? "claude",
+    harness: input.anvil_harness ?? input.forge_harness ?? "claude",
     session: input.session_id,
     tool: "prompt",
     decision: "deny",
@@ -695,7 +702,7 @@ export async function runHarnessHook(
         return await sessionEnd(root, input, config, now);
     }
   } catch (error) {
-    // Fail open on ANVIL internal errors, but surface them to the operator.
+    // Fail open on FORGE internal errors, but surface them to the operator.
     return {
       exitCode: 1,
       json: { systemMessage: `ANVIL hook ${event} failed: ${error instanceof Error ? error.message : String(error)}` },
@@ -704,7 +711,7 @@ export async function runHarnessHook(
 }
 
 // ---------------------------------------------------------------------------
-// Claude Code settings integration (used by `anvil install --hooks`)
+// Claude Code settings integration (used by `forge install --hooks`)
 // ---------------------------------------------------------------------------
 
 export interface ClaudeHookEntry {
@@ -754,7 +761,7 @@ function hookGroups(settings: Settings, event: string): Array<Record<string, unk
     : [];
 }
 
-/** Remove ANVIL-managed hook commands and deny rules from Claude settings. Returns a new object. */
+/** Remove FORGE-managed hook commands and deny rules from Claude settings. Returns a new object. */
 export function removeClaudeHooks(
   settings: Settings,
   commands: readonly string[],
@@ -802,7 +809,7 @@ export function removeClaudeHooks(
   return next;
 }
 
-/** Add ANVIL hook commands (idempotently) and secret deny rules. Returns the new settings and the deny rules ANVIL added. */
+/** Add FORGE hook commands (idempotently) and secret deny rules. Returns the new settings and the deny rules FORGE added. */
 export function addClaudeHooks(
   settings: Settings,
   entries: readonly ClaudeHookEntry[],

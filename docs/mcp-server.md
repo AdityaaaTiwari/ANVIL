@@ -88,7 +88,7 @@ All tools are bounded, run locally within your workspace boundaries, and expose 
 | `anvil_project_memory` | Read saved project decisions and architecture constraints within a token budget. | - |
 | `anvil_agent_security_audit` | Audit agent instructions, skills, hooks, and permissions for prompt injection and secret leaks. | - |
 | `anvil_dependency_impact` | Analyze manifest changes and undeclared imports against a git base revision. | - |
-| `anvil_binary_intelligence` | Inventory compiled binaries, source maps, WASM, and clean-room compliance in the workspace. | - |
+| `anvil_binary_intelligence` | Inventory compiled binaries, source maps, WASM, magic-byte headers, and provenance rules in the workspace. | - |
 | `anvil_scorecard` | Compute deterministic 9-category harness readiness scorecard across install, guards, gates, memory, learning, and CI. | - |
 | `anvil_consult` | Recommend catalog agents, skills, commands, rules, and MCP servers for a given task. | - |
 | `anvil_context_budget` | Measure pre-prompt context tokens loaded across configured harnesses. | - |

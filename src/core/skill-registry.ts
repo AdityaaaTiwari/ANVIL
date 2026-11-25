@@ -119,12 +119,12 @@ const BUILTIN_SKILLS: SkillDefinition[] = [
   },
   {
     id: "binary-analysis-reimplementation",
-    name: "Binary Analysis & Reimplementation",
+    name: "Binary Analysis & Provenance Verification",
     description:
-      "Inspect closed binaries/bundles using REA, generate behavioral evidence, and write clean reimplementations.",
-    triggers: ["rea", "reverse-engineering", "decompilation", "binary", "bundle", "disassembly", "reimplementation"],
+      "Inventory compiled binaries, bundles, WASM, and source maps locally with ANVIL Binary Intelligence and verify provenance rules.",
+    triggers: ["binary", "wasm", "source-map", "provenance", "bundle", "reimplementation"],
     instructions:
-      "Use REA tools to extract public interfaces, protocol schemas, and behavior. Isolate decompiled code from the authoring agent. Write clean source solely from functional specifications and verify against the ANVIL gate.",
+      "Use `anvil binary` or `anvil_binary_intelligence` to inventory native binaries, WASM, source maps, and captures. Ensure compiled binaries and embedded secrets are kept out of tracked source directories and verify all changes against `anvil gate`.",
     source: "builtin",
   },
   {

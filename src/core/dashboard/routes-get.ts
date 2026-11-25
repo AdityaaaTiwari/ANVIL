@@ -29,7 +29,7 @@ import { generateProjectHealth } from "../project-health.js";
 import { inspectProject } from "../project-inspector.js";
 import { listProjectMemory } from "../project-memory.js";
 import { auditProject } from "../quality-audit.js";
-import { analyzeReaIntelligence } from "../rea-intelligence.js";
+import { analyzeBinaryIntelligence } from "../binary-intelligence.js";
 import { generateRegressionReport } from "../regression-intelligence.js";
 import { listReviews } from "../review-history.js";
 import { listRuns, loadRun } from "../run-store.js";
@@ -745,21 +745,21 @@ export async function handleDashboardGet(
     return true;
   }
 
-  if (requestUrl.pathname === "/api/catalog/skills" || requestUrl.pathname === "/api/ecc/skills") {
+  if (requestUrl.pathname === "/api/catalog/skills") {
     const skills = await loadSkillRegistry(projectPath);
     sendJson(response, 200, { skills, total: skills.length });
     return true;
   }
 
-  if (requestUrl.pathname === "/api/binary/assets" || requestUrl.pathname === "/api/rea/assets") {
-    sendJson(response, 200, await analyzeReaIntelligence(projectPath));
+  if (requestUrl.pathname === "/api/binary/assets") {
+    sendJson(response, 200, await analyzeBinaryIntelligence(projectPath));
     return true;
   }
 
   if (requestUrl.pathname === "/api/cockpit/status") {
     const [skills, binaryReport, gateEval] = await Promise.all([
       loadSkillRegistry(projectPath).catch(() => []),
-      analyzeReaIntelligence(projectPath).catch(() => null),
+      analyzeBinaryIntelligence(projectPath).catch(() => null),
       evaluateGate(projectPath).catch(() => null),
     ]);
     sendJson(response, 200, {

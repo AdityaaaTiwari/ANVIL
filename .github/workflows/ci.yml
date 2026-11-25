@@ -48,13 +48,6 @@ jobs:
         run: npm run typecheck
       - name: Run tests with coverage
         run: npm run test:coverage
-      - name: Run Python REA bridge tests
-        run: |
-          if [ "${{ runner.os }}" = "Windows" ]; then
-            npm run test:rea
-          else
-            npm run test:rea -- --require-posix
-          fi
       - name: Build
         run: npm run build
       - name: Test ANVIL GitHub Action
@@ -104,7 +97,5 @@ jobs:
         env:
           ANVIL_DOCKER_IMAGE: ${{ steps.image.outputs.ref }}
           ANVIL_HOST_SECRET_SENTINEL: must-not-enter-container
-          FORGE_DOCKER_IMAGE: ${{ steps.image.outputs.ref }}
-          FORGE_HOST_SECRET_SENTINEL: must-not-enter-container
         run: npx vitest run tests/container-sandbox.integration.test.ts
 

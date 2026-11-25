@@ -314,12 +314,6 @@ export async function planHarnessInstall(options: InstallOptions, remove = false
   const platform = options.platform ?? process.platform;
   const plans: PlannedMcpFile[] = [];
   const env = { ANVIL_WORKSPACE: project };
-  const reaLaunch = { command: "npx", args: ["-y", "rea-agents", "serve"] };
-  const reaPick = remove ? undefined : reaLaunch;
-  const serversWithRea = (anvilEntry: Record<string, unknown> | undefined) => ({
-    [SERVER_NAME]: anvilEntry,
-    ...(options.rea ? { rea: reaPick } : {}),
-  });
 
   const targets = options.targets ?? DEFAULT_TARGETS;
   for (const target of targets) {
@@ -328,43 +322,38 @@ export async function planHarnessInstall(options: InstallOptions, remove = false
     const pick = (entry: Record<string, unknown>) => (remove ? undefined : entry);
     switch (target) {
       case "claude":
-        plans.push(
-          await planJsonEntries(
-            target,
-            path.join(project, ".mcp.json"),
-            "project",
-            "mcpServers",
-            serversWithRea(pick(stdio))
-          )
-        );
+        plans.push(await planJsonEntry(target, path.join(project, ".mcp.json"), "project", "mcpServers", pick(stdio)));
         break;
       case "cursor":
         plans.push(
-          await planJsonEntries(
+          await planJsonEntry(
             target,
             path.join(project, ".cursor", "mcp.json"),
             "project",
             "mcpServers",
-            serversWithRea(pick({ ...stdio, env: { ANVIL_WORKSPACE: "${workspaceFolder}" } }))
+            pick({ ...stdio, env: { ANVIL_WORKSPACE: "${workspaceFolder}" } })
           )
         );
         break;
       case "vscode":
         plans.push(
-          await planJsonEntries(target, path.join(project, ".vscode", "mcp.json"), "project", "servers", {
-            [SERVER_NAME]: pick({ type: "stdio", ...stdio, env: { ANVIL_WORKSPACE: "${workspaceFolder}" } }),
-            ...(options.rea ? { rea: remove ? undefined : { type: "stdio", ...reaLaunch } } : {}),
-          })
+          await planJsonEntry(
+            target,
+            path.join(project, ".vscode", "mcp.json"),
+            "project",
+            "servers",
+            pick({ type: "stdio", ...stdio, env: { ANVIL_WORKSPACE: "${workspaceFolder}" } })
+          )
         );
         break;
       case "antigravity":
         plans.push(
-          await planJsonEntries(
+          await planJsonEntry(
             target,
             path.join(project, ".agents", "mcp_config.json"),
             "project",
             "mcpServers",
-            serversWithRea(pick({ ...stdio, env }))
+            pick({ ...stdio, env })
           )
         );
         break;

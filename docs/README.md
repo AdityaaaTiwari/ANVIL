@@ -16,14 +16,12 @@ Welcome to the ANVIL documentation. ANVIL is the deterministic **verification la
 ## 🔌 Agent Integrations
 - [Claude Code Integration](integrations/claude-code.md) — Using ANVIL MCP tools with Claude Code and proposal-only provider adapter.
 - [Antigravity Integration](integrations/antigravity.md) — MCP configuration, exact config file paths, and workflow guide for Google Antigravity.
-- [Everything Claude Code (ECC) Integration](integrations/ecc.md) — Pairing ECC's 1,500+ skills and lifecycle with ANVIL's verification gate.
-- [REA Reverse-Engineering Integration](integrations/rea.md) — Clean-room reverse engineering and binary analysis pipeline with morluto/rea.
 - [GitHub App Integration](integrations/github-app.md) — GitHub App setup, webhooks, and repository access.
 
 ---
 
 ## 🛡️ Policy, Verification & CI/CD
-- [Unified Multi-Cockpit Dashboard](unified-dashboard-architecture.md) — Unified control center combining Verification (ANVIL), Skills (ECC), Binary Inspection (REA), and Harness Scorecard/Benchmarks.
+- [Unified Multi-Cockpit Dashboard](unified-dashboard-architecture.md) — Unified control center combining Verification Gate, Agent Toolkit, Binary Intelligence, and Control Center Scorecard/Benchmarks.
 - [Policy as Code](policy-as-code.md) — Declare governance, security thresholds, and sandbox execution limits in `.anvil/policy.json`.
 - [CI Quality Gate & SARIF Integration](ci-gate-and-sarif.md) — Running `anvil gate` in GitHub Actions, PR diff mode, SARIF export/import, and baseline snapshots.
 - [Policy Schema](anvil-policy.schema.json) — JSON schema definition for ANVIL policy configurations.
