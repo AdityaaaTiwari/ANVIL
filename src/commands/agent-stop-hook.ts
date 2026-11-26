@@ -20,7 +20,7 @@ yourself.
 It never traps the agent: it lets the agent stop after one follow-up (Claude
 Code) or two (Cursor), and if ANVIL itself fails it lets the agent stop.`;
 
-function readStdin(timeoutMs: number): Promise<string> {
+export function readStdin(timeoutMs: number): Promise<string> {
   if (process.stdin.isTTY) return Promise.resolve("");
   return new Promise((resolve) => {
     let data = "";

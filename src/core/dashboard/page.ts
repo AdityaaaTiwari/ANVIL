@@ -585,6 +585,19 @@ ${DASHBOARD_STYLES}
 
   <section class="section card">
     <div class="section-head">
+      <h2>Symbol call-graph &amp; hotspots</h2>
+      <div class="actions">
+        <span class="pill pill-purple">AST CALL GRAPH</span>
+        <input id="callGraphFilter" type="search" placeholder="Trace symbol (e.g. evaluateGate)…" style="background:#0b1018;color:var(--text);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font:inherit;font-size:12px">
+        <button class="btn" id="refreshCallGraph">Trace</button>
+      </div>
+    </div>
+    <div id="callGraphSummary" class="grid"><div class="loading">Building AST symbol call graph…</div></div>
+    <div id="callGraphList" class="list" style="margin-top:12px"><div class="loading">Resolving cross-file callers &amp; callees…</div></div>
+  </section>
+
+  <section class="section card">
+    <div class="section-head">
       <h2>Dependency risk explorer</h2>
       <div class="actions">
         <span class="pill pill-accent">INTERACTIVE PACKAGE GRAPH</span>

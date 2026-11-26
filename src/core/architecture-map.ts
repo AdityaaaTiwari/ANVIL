@@ -212,7 +212,7 @@ function extractImports(file: string, content: string): string[] {
   return unique(imports);
 }
 
-function resolveInternal(from: string, rawSpecifier: string, knownFiles: Set<string>): string | null {
+export function resolveInternal(from: string, rawSpecifier: string, knownFiles: Set<string>): string | null {
   const fromDir = path.posix.dirname(from);
   const candidates: string[] = [];
 

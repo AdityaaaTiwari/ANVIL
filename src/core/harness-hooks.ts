@@ -4,6 +4,7 @@ import { randomBytes } from "node:crypto";
 import path from "node:path";
 import { runShield } from "./anvil-shield.js";
 import { activeInstincts, formatInstinctContext, recordObservation } from "./instincts.js";
+import { injectJitSkills } from "./jit-skill-injector.js";
 import { addProjectMemory, buildProjectMemoryContext, listProjectMemory } from "./project-memory.js";
 import { parseRates, recordSessionCost, type ModelRate } from "./session-cost.js";
 import { runVerification } from "./verification.js";
@@ -79,6 +80,7 @@ export interface HarnessHookConfig {
   verifyOnStop: { scripts: string[]; timeoutMs: number; coChangeRules: CoChangeRule[] };
   sessionContext: { enabled: boolean; maxTokens: number };
   promptGuard: { enabled: boolean };
+  jitSkills: { enabled: boolean; maxTokens: number; maxSkills: number };
   autoHandoff: { enabled: boolean };
   cost: { enabled: boolean; pricing: Record<string, ModelRate> };
 }
@@ -91,6 +93,7 @@ const DEFAULT_CONFIG: HarnessHookConfig = {
   verifyOnStop: { scripts: [], timeoutMs: 180_000, coChangeRules: [] },
   sessionContext: { enabled: true, maxTokens: 900 },
   promptGuard: { enabled: true },
+  jitSkills: { enabled: true, maxTokens: 900, maxSkills: 3 },
   autoHandoff: { enabled: true },
   cost: { enabled: true, pricing: parseRates(undefined) },
 };
@@ -424,6 +427,7 @@ export async function loadHarnessHookConfig(root: string): Promise<HarnessHookCo
     verifyOnStop: Partial<Omit<HarnessHookConfig["verifyOnStop"], "coChangeRules">> & { coChangeRules?: unknown[] };
     sessionContext: Partial<HarnessHookConfig["sessionContext"]>;
     promptGuard: Partial<HarnessHookConfig["promptGuard"]>;
+    jitSkills: Partial<HarnessHookConfig["jitSkills"]>;
     autoHandoff: Partial<HarnessHookConfig["autoHandoff"]>;
     cost: { enabled?: boolean; pricing?: unknown };
   }>;
@@ -436,6 +440,11 @@ export async function loadHarnessHookConfig(root: string): Promise<HarnessHookCo
   if (typeof parsed.configGuard?.protectQualityConfig === "boolean")
     config.configGuard.protectQualityConfig = parsed.configGuard.protectQualityConfig;
   if (typeof parsed.promptGuard?.enabled === "boolean") config.promptGuard.enabled = parsed.promptGuard.enabled;
+  if (typeof parsed.jitSkills?.enabled === "boolean") config.jitSkills.enabled = parsed.jitSkills.enabled;
+  if (typeof parsed.jitSkills?.maxTokens === "number")
+    config.jitSkills.maxTokens = Math.max(120, Math.min(1000, Math.floor(parsed.jitSkills.maxTokens)));
+  if (typeof parsed.jitSkills?.maxSkills === "number")
+    config.jitSkills.maxSkills = Math.max(1, Math.min(6, Math.floor(parsed.jitSkills.maxSkills)));
   if (typeof parsed.autoHandoff?.enabled === "boolean") config.autoHandoff.enabled = parsed.autoHandoff.enabled;
   if (typeof parsed.cost?.enabled === "boolean") config.cost.enabled = parsed.cost.enabled;
   if (parsed.cost?.pricing !== undefined) config.cost.pricing = parseRates(parsed.cost.pricing);
@@ -680,25 +689,49 @@ const LIVE_SECRET =
   /\bsk-ant-[A-Za-z0-9_-]{20,}|\bsk-(?:proj-)?[A-Za-z0-9]{32,}|\bgh[pousr]_[A-Za-z0-9]{36,}|\bgithub_pat_[A-Za-z0-9_]{40,}|\bxox[baprs]-[A-Za-z0-9-]{20,}|\bAKIA[0-9A-Z]{16}\b|-----BEGIN (?:RSA |EC |OPENSSH |DSA )?PRIVATE KEY-----|\bAIza[0-9A-Za-z_-]{35}\b|\bsk_live_[0-9A-Za-z]{24,}/;
 
 async function promptSubmit(root: string, input: HookInput, config: HarnessHookConfig, now: Date): Promise<HookOutput> {
-  if (!config.promptGuard.enabled || typeof input.prompt !== "string") return { exitCode: 0 };
-  const match = LIVE_SECRET.exec(input.prompt.slice(0, 200_000));
-  if (!match) return { exitCode: 0 };
-  await logGuard(root, {
-    at: now.toISOString(),
-    harness: input.anvil_harness ?? "claude",
-    session: input.session_id,
-    tool: "prompt",
-    decision: "deny",
-    rule: "GUARD-PROMPT-SECRET",
-    target: "[credential in prompt]",
-  });
-  return {
-    exitCode: 0,
-    json: {
-      decision: "block",
-      reason: `ANVIL blocked this prompt: it contains what looks like a live credential (${match[0].slice(0, 8)}…). Remove it and reference it through an environment variable instead, then rotate the key if it was shared anywhere.`,
-    },
-  };
+  if (typeof input.prompt !== "string") return { exitCode: 0 };
+
+  if (config.promptGuard.enabled) {
+    const match = LIVE_SECRET.exec(input.prompt.slice(0, 200_000));
+    if (match) {
+      await logGuard(root, {
+        at: now.toISOString(),
+        harness: input.anvil_harness ?? "claude",
+        session: input.session_id,
+        tool: "prompt",
+        decision: "deny",
+        rule: "GUARD-PROMPT-SECRET",
+        target: "[credential in prompt]",
+      });
+      return {
+        exitCode: 0,
+        json: {
+          decision: "block",
+          reason: `ANVIL blocked this prompt: it contains what looks like a live credential (${match[0].slice(0, 8)}…). Remove it and reference it through an environment variable instead, then rotate the key if it was shared anywhere.`,
+        },
+      };
+    }
+  }
+
+  if (config.jitSkills.enabled) {
+    const injection = await injectJitSkills(root, input.prompt.slice(0, 20_000), {
+      maxTokens: config.jitSkills.maxTokens,
+      maxSkills: config.jitSkills.maxSkills,
+    }).catch(() => null);
+    if (injection?.formattedContext) {
+      return {
+        exitCode: 0,
+        json: {
+          hookSpecificOutput: {
+            hookEventName: "UserPromptSubmit",
+            additionalContext: injection.formattedContext,
+          },
+        },
+      };
+    }
+  }
+
+  return { exitCode: 0 };
 }
 
 async function saveHandoff(root: string, input: HookInput, now: Date, why: string): Promise<void> {

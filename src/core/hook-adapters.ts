@@ -213,7 +213,9 @@ export function translateOutput(harness: NativeHookHarness, event: string, verdi
           ? { permission: "allow" }
           : { permission: "deny", user_message: askAsDeny(verdict.reason) };
       case "beforeSubmitPrompt":
-        return verdict.block ? { continue: false, user_message: verdict.block } : { continue: true };
+        return verdict.block
+          ? { continue: false, user_message: verdict.block }
+          : { continue: true, ...(verdict.context ? { additional_context: verdict.context } : {}) };
       case "stop":
         return verdict.block ? { followup_message: verdict.block } : {};
       case "sessionStart":
@@ -237,6 +239,10 @@ export function translateOutput(harness: NativeHookHarness, event: string, verdi
       case "PostToolUse":
         return verdict.block ? { decision: "block", reason: verdict.block } : undefined;
       case "UserPromptSubmit":
+        if (verdict.block) return { decision: "block", reason: verdict.block };
+        return verdict.context
+          ? { hookSpecificOutput: { hookEventName: "UserPromptSubmit", additionalContext: verdict.context } }
+          : undefined;
       case "Stop":
         return verdict.block ? { decision: "block", reason: verdict.block } : undefined;
       case "SessionStart":
@@ -253,9 +259,13 @@ export function translateOutput(harness: NativeHookHarness, event: string, verdi
         ? { decision: "allow" }
         : { decision: "deny", reason: verdict.decision === "ask" ? askAsDeny(verdict.reason) : verdict.reason };
     case "AfterTool":
-    case "BeforeAgent":
     case "AfterAgent":
       return verdict.block ? { decision: "deny", reason: verdict.block } : {};
+    case "BeforeAgent":
+      if (verdict.block) return { decision: "deny", reason: verdict.block };
+      return verdict.context
+        ? { hookSpecificOutput: { hookEventName: "BeforeAgent", additionalContext: verdict.context } }
+        : {};
     case "SessionStart":
       return verdict.context
         ? { hookSpecificOutput: { hookEventName: "SessionStart", additionalContext: verdict.context } }

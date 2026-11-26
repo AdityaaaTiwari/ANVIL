@@ -116,8 +116,19 @@ describe("ANVIL MCP stdio protocol integration", () => {
     expect(toolNames).toContain("anvil_dependency_impact");
     expect(toolNames).toContain("anvil_binary_intelligence");
     expect(toolNames).toContain("anvil_supply_chain_audit");
+    expect(toolNames).toContain("anvil_call_graph");
+    expect(toolNames).toContain("anvil_jit_skills");
     expect(toolNames).toContain("anvil_doctor");
     expect(toolNames).toContain("anvil_clean_preview");
+
+    const jitCall = await request("tools/call", {
+      name: "anvil_jit_skills",
+      arguments: { prompt: "Inspect binary provenance and verify supply chain hashes", maxTokens: 500 },
+    });
+    expect(jitCall.error).toBeUndefined();
+    expect(jitCall.result?.isError).not.toBe(true);
+    const jitText = jitCall.result.content.find((part: { type: string }) => part.type === "text")?.text ?? "";
+    expect(jitText).toContain('"withinBudget": true');
 
     const supplyChainCall = await request("tools/call", {
       name: "anvil_supply_chain_audit",

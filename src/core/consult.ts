@@ -8,7 +8,7 @@ import { MCP_CATALOG, type McpCatalogEntry } from "./mcp-sync.js";
  * and headings, plus a small synonym table. No model call, no network.
  */
 
-const SYNONYMS: Record<string, string[]> = {
+export const SYNONYMS: Record<string, string[]> = {
   test: ["tdd", "testing", "tests", "unit", "e2e", "coverage", "vitest", "jest", "pytest"],
   tdd: ["test", "testing"],
   e2e: ["playwright", "browser", "end-to-end", "test"],

@@ -1166,13 +1166,41 @@ async function loadBinaryAssets(){
   }catch{}
 }
 
+async function loadCallGraph(){
+  try{
+    const filter = el("callGraphFilter");
+    const q = filter && filter.value ? filter.value.trim() : "";
+    const url = q ? "/api/call-graph?symbol=" + encodeURIComponent(q) : "/api/call-graph";
+    const data = await api(url);
+    const s = data.summary || {};
+    const sumNode = el("callGraphSummary");
+    if(sumNode){
+      renderHtml(sumNode, metric("Symbols", s.totalSymbols ?? 0, (s.exportedSymbols ?? 0) + " exported") + metric("Call Edges", s.totalEdges ?? 0, (s.crossFileEdges ?? 0) + " cross-file") + metric("Local Calls", s.localEdges ?? 0, "Within same module") + metric("Orphan Exports", (data.orphanExportedSymbols || []).length, "No internal callers"));
+    }
+    const list = el("callGraphList");
+    if(!list) return;
+    if(data.trace){
+      const rows = []
+        .concat((data.trace.callers || []).map(c => '<div class="rowitem"><div><b>Caller [hop ' + esc(String(c.depth)) + ']</b> ' + esc(c.edge.from) + ' → ' + esc(c.edge.to) + '<div class="run-meta">' + esc(c.edge.fromFile) + ':' + esc(String(c.edge.line)) + '</div></div><span class="pill pill-cyan">' + esc(c.edge.kind) + '</span></div>'))
+        .concat((data.trace.callees || []).map(c => '<div class="rowitem"><div><b>Callee [hop ' + esc(String(c.depth)) + ']</b> ' + esc(c.edge.from) + ' → ' + esc(c.edge.to) + '<div class="run-meta">' + esc(c.edge.toFile) + ':' + esc(String(c.edge.line)) + '</div></div><span class="pill pill-purple">' + esc(c.edge.kind) + '</span></div>'));
+      renderHtml(list, rows.length ? rows.join("") : '<div class="empty">No caller/callee edges found for ' + esc(q) + '.</div>');
+      return;
+    }
+    const top = data.topCalledSymbols || [];
+    renderHtml(list, top.length ? top.slice(0, 15).map(sym => '<div class="rowitem"><div><b>' + esc(sym.name) + '</b><div class="run-meta">' + esc(sym.file) + '</div></div><span class="pill pill-cyan">in: ' + esc(String(sym.inDegree)) + ' · out: ' + esc(String(sym.outDegree)) + '</span></div>').join("") : '<div class="empty">No AST symbol edges resolved.</div>');
+  }catch(error){renderHtml(el("callGraphList"), '<div class="error">' + esc(error.message) + '</div>');}
+}
+
+const refreshCgBtn = el("refreshCallGraph");
+if(refreshCgBtn) refreshCgBtn.onclick = loadCallGraph;
+
 function reloadAllViews(){
   loadOverview();loadAgents();loadRuns();loadActivity();loadObservability();
   loadEvaluationHistory();loadBenchmarkHistory();loadBenchmarkRegression();loadAgentPerformance();
   loadSkillExperiments();loadExperimentHistory();loadAgentOptimization();loadAgentIntelligence();
   loadHealth();loadRegression();loadReviews();loadQuality();loadVerifications();
   loadCleanerBackups();loadMemory();loadAdrs();loadSecurityAudit();loadGate();
-  loadCatalogSkills();loadBinaryAssets();
+  loadCatalogSkills();loadBinaryAssets();loadCallGraph();
 }
 
 reloadAllViews();

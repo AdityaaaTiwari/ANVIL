@@ -146,6 +146,7 @@ Every command and flag listed below is verified and supported in ANVIL v1.4.0:
 | `anvil gate [path]` | Deterministic CI quality & security gate with SARIF and policy enforcement | `--sarif <file>`, `--policy <file>`, `--policy-ref <ref>`, `--baseline <file>`, `--generate-baseline <file>`, `--since <ref>`, `--diff`, `--min-confidence <level>`, `--import-sarif <file>`, `--supply-chain`, `--skip-agent-config`, `--fail-on-warnings`, `--json` | **Available** |
 | `anvil inspect [path]` | Analyzes project languages, manifests, frameworks, dependencies, and scripts | `--json` | **Available** |
 | `anvil map [path]` | Maps module import relationships and candidate entry points | `--json` | **Available** |
+| `anvil call-graph [path]` | Builds deterministic TypeScript/JavaScript AST symbol call-graph (`caller -> callee`), traces upstream callers, and detects orphan exports | `--symbol <name>`, `--depth <n>`, `--mermaid`, `--json` | **Available** |
 | `anvil git [path]` | Calculates blast radius, downstream dependency impact, and suggested tests | `[base]` (e.g. `origin/main`, `HEAD~1`) | **Available** |
 | `anvil clean [path]` | Scans and deletes junk files/caches with transactional snapshot backups | `--apply`, `--fix`, `--json` | **Available** |
 | `anvil undo [path]` | Rolls back last clean operation with byte-accurate snapshot restoration | `<backupId>` | **Available** |
@@ -203,6 +204,8 @@ All ANVIL MCP tools are strictly read-only and enforce safety bounds:
 - `anvil_security_audit`: Entropy-based secret scanning with zero network calls.
 - `anvil_binary_intelligence`: Zero-dependency PE/ELF/Mach-O/WASM header, SHA-256, and binary-spoofing inspection.
 - `anvil_supply_chain_audit`: Offline audit of `node_modules` install hooks, `.node` addons, lockfile integrity, and typosquats.
+- `anvil_call_graph`: TypeScript/JavaScript AST symbol call-graph (`caller -> callee`), upstream traces, and orphan exports.
+- `anvil_jit_skills`: Sub-1k token task-scoped JIT skill & instinct selector for prompt hooks (`anvil hook prompt-submit`).
 - `anvil_clean_preview`: Safe dry-run inspection for caches and junk.
 - `anvil_doctor`: Diagnostic environment check for Node, Git, Docker, and permissions.
 
