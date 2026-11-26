@@ -291,7 +291,7 @@ function codexToml(launch: ServerLaunch): string {
 
 export const AGENT_INSTRUCTIONS = `## ANVIL verification (installed by \`anvil install\`)
 
-This project uses [ANVIL](https://github.com/anvil-workbench/ANVIL) to check AI-written changes locally.
+This project uses [ANVIL](https://github.com/AdityaaaTiwari/ANVIL) to check AI-written changes locally.
 
 - Before reading many files to understand the codebase, call the \`anvil_map_architecture\` and \`anvil_inspect_project\` MCP tools.
 - Before finishing a change, call \`anvil_change_risk\` to see the blast radius and which tests to run.

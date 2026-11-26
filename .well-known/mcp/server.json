@@ -3,10 +3,10 @@
   "name": "anvil-engineering-workbench",
   "version": "1.4.0",
   "description": "Deterministic local code intelligence, architecture mapping, change risk analysis, and quality/security gating for AI coding assistants.",
-  "homepage": "https://github.com/anvil-workbench/ANVIL",
+  "homepage": "https://github.com/AdityaaaTiwari/ANVIL",
   "repository": {
     "type": "git",
-    "url": "https://github.com/anvil-workbench/ANVIL.git"
+    "url": "https://github.com/AdityaaaTiwari/ANVIL.git"
   },
   "license": "MIT",
   "author": {

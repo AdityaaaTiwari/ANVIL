@@ -89,4 +89,4 @@ To adopt ANVIL's CI gate on an existing codebase without failing builds on exist
 ## Reporting Vulnerabilities
 
 To report a vulnerability in ANVIL confidentially, use GitHub Private Vulnerability Reporting at:
-👉 **[Open a Security Advisory on GitHub](https://github.com/anvil-workbench/ANVIL/security/advisories/new)**
+👉 **[Open a Security Advisory on GitHub](https://github.com/AdityaaaTiwari/ANVIL/security/advisories/new)**

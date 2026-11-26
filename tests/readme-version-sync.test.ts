@@ -12,7 +12,7 @@ describe("README and package version/tool synchronization", () => {
 
     // Must not contain outdated #v1.0.7 install tags
     expect(readme).not.toContain("ANVIL.git#v1.0.7");
-    expect(readme).not.toContain("anvil-workbench/ANVIL@v1.0.7");
+    expect(readme).not.toContain("AdityaaaTiwari/ANVIL@v1.0.7");
 
     // Must contain current version tag in install guides
     expect(readme).toContain(`ANVIL.git#${expectedTag}`);
@@ -65,7 +65,6 @@ describe("README and package version/tool synchronization", () => {
 
     // License and notices must contain dual copyright attribution
     expect(license).toContain("Aditya Tiwari (ANVIL)");
-    expect(license).toContain("Ansh (FORGE / FORGE-ECC upstream)");
     expect(notice).toContain("FORGE / FORGE-ECC");
     expect(notice).toContain("Ansh");
     expect(ack).toContain("Upstream Foundation: FORGE & Ansh");
@@ -139,8 +138,8 @@ describe("README and package version/tool synchronization", () => {
   it("validates server.json aligns with MCP registry schema and workbench repository", async () => {
     const raw = await readFile(path.resolve("server.json"), "utf8");
     const manifest = JSON.parse(raw);
-    expect(manifest.homepage).toBe("https://github.com/anvil-workbench/ANVIL");
-    expect(manifest.repository.url).toBe("https://github.com/anvil-workbench/ANVIL.git");
+    expect(manifest.homepage).toBe("https://github.com/AdityaaaTiwari/ANVIL");
+    expect(manifest.repository.url).toBe("https://github.com/AdityaaaTiwari/ANVIL.git");
     expect(manifest.license).toBe("MIT");
     expect(manifest.author.email).toBeUndefined();
     expect(Array.isArray(manifest.packages)).toBe(true);

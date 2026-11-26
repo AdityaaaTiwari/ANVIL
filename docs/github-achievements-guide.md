@@ -27,7 +27,7 @@ When you merge this PR (`feat/badges-and-achievements-pipeline`) directly into `
 3. Because a Pull Request is merged into `main`, GitHub awards or increments **Pull Shark** 🦈!
 
 ### Step 2: Unlock 🤠 Quickdraw (Takes 30 Seconds)
-1. Go to your repository on GitHub: `https://github.com/anvil-workbench/ANVIL/issues/new` (or on your personal profile repository).
+1. Go to your repository on GitHub: `https://github.com/AdityaaaTiwari/ANVIL/issues/new` (or on your personal profile repository).
 2. Title: `Test quick verification`.
 3. Click **Submit new issue**.
 4. Within 1 minute, click **Close issue** (or Close as completed).

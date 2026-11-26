@@ -68,7 +68,7 @@ async function main() {
 | **Downstream Risk** | 🔍 **Low** | AST module dependencies verified |
 | **SARIF Report** | 📄 Generated | \`${totalFindings}\` item(s) inspected in \`${sarifPath}\` |
 
-> ℹ️ *Evaluated deterministically on native AST syntax trees by [ANVIL Engineering Workbench](https://github.com/anvil-workbench/ANVIL). Zero proprietary code or secrets sent to third parties.*
+> ℹ️ *Evaluated deterministically on native AST syntax trees by [ANVIL Engineering Workbench](https://github.com/AdityaaaTiwari/ANVIL). Zero proprietary code or secrets sent to third parties.*
 `;
 
   const headers = {
