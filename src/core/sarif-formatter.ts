@@ -59,7 +59,7 @@ function resolvePackageVersion(): string {
     const parsed = JSON.parse(raw);
     if (typeof parsed.version === "string") return parsed.version;
   } catch {}
-  return "1.4.0";
+  return "1.5.0";
 }
 
 function mapSecuritySeverity(severity: string): "error" | "warning" | "note" {

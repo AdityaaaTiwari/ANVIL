@@ -1,5 +1,25 @@
 # ANVIL Changelog
 
+## 1.5.0 — Deep Supply-Chain Security, JIT Skill Injection, Symbol Call-Graph & GitHub App Automation (November 2026)
+
+### Added
+- **Zero-Dependency Deep Binary & `node_modules` Supply-Chain Scanner ([`src/core/supply-chain-scanner.ts`](src/core/supply-chain-scanner.ts), [`src/core/binary-intelligence.ts`](src/core/binary-intelligence.ts)):**
+  - Deep raw-byte header inspection for **PE/COFF**, **ELF**, **Mach-O**, **WASM** (WASI import hints), and **`.node` native addons** with SHA-256 digests and Shannon entropy analysis (`ANVIL-BIN-004` extension spoofing & `ANVIL-BIN-005` high-entropy detection).
+  - Offline `node_modules` and lockfile auditing (`anvil supply-chain [path]`, `anvil binary --supply-chain`, `anvil gate --supply-chain`, `anvil_supply_chain_audit`): detects malicious `preinstall`/`install`/`postinstall` hooks (`ANVIL-SUP-001`..`002`), `.node`/native binaries (`ANVIL-SUP-003`), env/credential exfiltration & obfuscated payloads (`ANVIL-SUP-004`..`005`), insecure/unpinned lockfiles (`ANVIL-SUP-006`), Damerau-Levenshtein typosquats (`ANVIL-SUP-007`), disguised executables (`ANVIL-SUP-008`), and symlink escapes (`ANVIL-SUP-009`).
+- **JIT `<1k` Token Skill Injector ([`src/core/jit-skill-injector.ts`](src/core/jit-skill-injector.ts)):**
+  - Prompt-triggered skill & active instinct selector enforcing a hard `<= 1000` token ceiling (default `900` tokens) in `prompt-submit` hooks across **Claude Code** (`UserPromptSubmit`), **Cursor** (`beforeSubmitPrompt`), **Codex** (`UserPromptSubmit`), and **Gemini** (`BeforeAgent`), plus MCP tool `anvil_jit_skills` and fixed CLI runtime hook dispatch in [`src/commands/hook.ts`](src/commands/hook.ts).
+- **TypeScript/JavaScript AST Symbol Call-Graph ([`src/core/call-graph.ts`](src/core/call-graph.ts)):**
+  - Cross-file `caller -> callee` graph across functions, arrow functions, classes, methods, and local `new Class()` instances (`anvil call-graph [path]`, `anvil deep --call-graph`, `anvil_call_graph`, and `/api/call-graph` in the local dashboard), with multi-hop upstream caller/downstream callee traces, orphan exported symbol detection, and Mermaid flowchart export.
+- **Instincts → Auto-Compiled Blocking Guard & Stop Co-Change Rules ([`src/core/instinct-enforcer.ts`](src/core/instinct-enforcer.ts)):**
+  - Compiles verified project habits into enforced pre-tool Guard patterns and stop-time co-change rules (`anvil instinct enforce`, `anvil instinct promote --enforce`).
+- **GitHub App PR Verification Bot & Live Shield SVG Badge ([`api/github/webhook.ts`](api/github/webhook.ts), [`api/app.ts`](api/app.ts)):**
+  - Automated sticky PR risk & Shield audit receipt (`<!-- anvil-pr-verification -->`) and public badge endpoint (`/api/app?op=badge&name=owner/repo`).
+- **MCP Directory Readiness ([`PRIVACY.md`](PRIVACY.md), [`src/mcp/server.ts`](src/mcp/server.ts)):**
+  - All read-only MCP tools declare explicit boolean hints (`readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint`) directly via `server.registerTool(...)`, paired with `PRIVACY.md` and package `homepage`.
+
+### Fixed
+- **Security Hardening (CodeQL):** Eliminated quadratic backtracking regexes in [`src/core/architecture-map.ts`](src/core/architecture-map.ts) and [`src/core/consult.ts`](src/core/consult.ts), enforced `https:` validation on Redis URLs in [`api/_lib/github-app.ts`](api/_lib/github-app.ts), and switched markdown comment stripping in [`src/core/jit-skill-injector.ts`](src/core/jit-skill-injector.ts) to linear fixed-point sanitization.
+
 ## 1.4.0 — Native Consolidation, Self-Contained Catalog & Cross-Platform CI Hardening (November 2026)
 
 ### Changed

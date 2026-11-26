@@ -14,7 +14,7 @@ import { handleGitHubEvent } from "../../src/github/app-handlers.js";
 import { parseRepoFullName } from "../../src/github/dashboard-service.js";
 import { GitHubClient } from "../../src/github/github-client.js";
 
-const ANVIL_VERSION = "1.4.0";
+const ANVIL_VERSION = "1.5.0";
 
 export const config = { api: { bodyParser: false } };
 
