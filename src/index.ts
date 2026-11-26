@@ -36,6 +36,7 @@ export * from "./core/workflow-store.js";
 // Codebase Intelligence & Graph
 export * from "./core/architecture-map.js";
 export * from "./core/binary-intelligence.js";
+export * from "./core/call-graph.js";
 export * from "./core/change-intelligence.js";
 export * from "./core/code-intelligence.js";
 export * from "./core/code-review.js";
@@ -43,6 +44,7 @@ export * from "./core/code-search.js";
 export * from "./core/dependency-graph.js";
 export * from "./core/dependency-impact.js";
 export * from "./core/dependency-intelligence.js";
+export * from "./core/jit-skill-injector.js";
 export * from "./core/supply-chain-scanner.js";
 export * from "./core/doctor.js";
 export * from "./core/engineering-risk.js";

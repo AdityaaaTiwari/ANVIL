@@ -9,6 +9,7 @@ import { buildAgentOptimizationPlan } from "../agent-optimization.js";
 import { loadAgentRegistry } from "../agent-registry.js";
 import { auditAgentConfiguration } from "../agent-security-audit.js";
 import { mapArchitecture } from "../architecture-map.js";
+import { buildSymbolCallGraph, querySymbolCallGraph } from "../call-graph.js";
 import { listBenchmarks } from "../benchmark-engine.js";
 import { listBenchmarkMatrices } from "../benchmark-matrix.js";
 import { loadBenchmarkRegression } from "../benchmark-regression.js";
@@ -759,6 +760,21 @@ export async function handleDashboardGet(
 
   if (requestUrl.pathname === "/api/supply-chain") {
     sendJson(response, 200, await scanSupplyChain(projectPath));
+    return true;
+  }
+
+  if (requestUrl.pathname === "/api/call-graph") {
+    const graph = await buildSymbolCallGraph(projectPath);
+    const symbolQuery = requestUrl.searchParams.get("symbol")?.trim();
+    const depth = Number(requestUrl.searchParams.get("depth") ?? "2");
+    if (symbolQuery) {
+      sendJson(response, 200, {
+        ...graph,
+        trace: querySymbolCallGraph(graph, symbolQuery, Number.isFinite(depth) ? depth : 2),
+      });
+    } else {
+      sendJson(response, 200, graph);
+    }
     return true;
   }
 

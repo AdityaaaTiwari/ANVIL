@@ -28,6 +28,8 @@ import { analyzeDependencyImpact } from "../core/dependency-impact.js";
 import { runDoctorChecks } from "../core/doctor.js";
 import { cleanProject } from "../core/project-cleaner.js";
 import { analyzeBinaryIntelligence } from "../core/binary-intelligence.js";
+import { buildSymbolCallGraph, querySymbolCallGraph } from "../core/call-graph.js";
+import { injectJitSkills } from "../core/jit-skill-injector.js";
 import { scanSupplyChain } from "../core/supply-chain-scanner.js";
 import { buildScorecard } from "../core/harness-scorecard.js";
 import { consult } from "../core/consult.js";
@@ -1290,6 +1292,141 @@ server.registerTool(
         );
       }
       return result(report, { compact: false });
+    } catch (error) {
+      return failure(error);
+    }
+  }
+);
+
+server.registerTool(
+  "anvil_call_graph",
+  {
+    title: "Inspect TypeScript/JavaScript Symbol Call Graph",
+    description:
+      "Builds a deterministic symbol-level call graph across functions, arrow functions, classes, and methods using TypeScript AST analysis. Traces cross-file callers/callees, fan-in hotspots, and orphan exported symbols.",
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
+    inputSchema: z.object({
+      projectPath: z
+        .string()
+        .optional()
+        .describe("Workspace-relative directory. Defaults to the configured workspace root."),
+      symbolName: z
+        .string()
+        .optional()
+        .describe(
+          "Optional function, class, method, or file#symbol name to trace upstream callers and downstream callees."
+        ),
+      depth: z
+        .number()
+        .int()
+        .min(1)
+        .max(5)
+        .optional()
+        .default(2)
+        .describe("Maximum traversal hops when symbolName is provided (default 2)."),
+      includeTests: z.boolean().optional().default(false).describe("Include test files in call-graph nodes."),
+      detail: z
+        .boolean()
+        .optional()
+        .default(false)
+        .describe("Pass true for full node and edge lists (large projects)."),
+    }),
+  },
+  async ({ projectPath, symbolName, depth, includeTests, detail }) => {
+    try {
+      const root = await resolveWorkspace(projectPath);
+      const graph = await auditReadOnlyMcpTool("anvil_call_graph", () => buildSymbolCallGraph(root, { includeTests }));
+      const trace = symbolName ? querySymbolCallGraph(graph, symbolName, depth) : undefined;
+      if (!detail) {
+        return result(
+          {
+            root: graph.root,
+            summary: graph.summary,
+            topCalledSymbols: graph.topCalledSymbols,
+            orphanExportedSymbols: graph.orphanExportedSymbols.slice(0, 15),
+            ...(trace ? { trace } : {}),
+          },
+          {
+            compact: true,
+            hint: "Pass symbolName to trace upstream callers & downstream callees, or detail: true for full nodes/edges.",
+          }
+        );
+      }
+      return result({ ...graph, ...(trace ? { trace } : {}) }, { compact: false });
+    } catch (error) {
+      return failure(error);
+    }
+  }
+);
+
+server.registerTool(
+  "anvil_jit_skills",
+  {
+    title: "Select Sub-1k Token JIT Skills for Prompt",
+    description:
+      "Selects only the highest-relevance workspace, builtin, catalog skills, and instincts for a user prompt under a hard <=1000 token budget (default 900) with zero network calls.",
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
+    inputSchema: z.object({
+      prompt: z.string().describe("Task description or user prompt to match skills against."),
+      projectPath: z
+        .string()
+        .optional()
+        .describe("Workspace-relative directory. Defaults to the configured workspace root."),
+      maxTokens: z
+        .number()
+        .int()
+        .min(120)
+        .max(1000)
+        .optional()
+        .default(900)
+        .describe("Hard token ceiling for injected context (120-1000 tokens, default 900)."),
+      maxSkills: z
+        .number()
+        .int()
+        .min(1)
+        .max(6)
+        .optional()
+        .default(3)
+        .describe("Maximum number of compact skills to pack within budget."),
+      detail: z
+        .boolean()
+        .optional()
+        .default(false)
+        .describe("Pass true for full formattedContext string alongside compact match scores."),
+    }),
+  },
+  async ({ prompt, projectPath, maxTokens, maxSkills, detail }) => {
+    try {
+      const root = await resolveWorkspace(projectPath);
+      const injection = await auditReadOnlyMcpTool("anvil_jit_skills", () =>
+        injectJitSkills(root, prompt, { maxTokens, maxSkills })
+      );
+      if (!detail) {
+        return result(
+          {
+            maxTokens: injection.maxTokens,
+            totalTokens: injection.totalTokens,
+            withinBudget: injection.withinBudget,
+            candidateCount: injection.candidateCount,
+            selected: injection.selected,
+          },
+          {
+            compact: true,
+            hint: "Pass detail: true to include formattedContext ready for UserPromptSubmit injection.",
+          }
+        );
+      }
+      return result(injection, { compact: false });
     } catch (error) {
       return failure(error);
     }

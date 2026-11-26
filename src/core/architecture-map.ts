@@ -212,20 +212,20 @@ function extractImports(file: string, content: string): string[] {
   return unique(imports);
 }
 
-function resolveInternal(from: string, rawSpecifier: string, knownFiles: Set<string>): string | null {
+export function resolveInternal(from: string, rawSpecifier: string, knownFiles: Set<string>): string | null {
   const fromDir = path.posix.dirname(from);
   const candidates: string[] = [];
 
   // Normalize Python relative imports: `.service` -> `./service`, `..service` -> `../service`, `.models.user` -> `./models/user`
   let specifier = rawSpecifier;
-  if (/^\.+[a-zA-Z0-9_]/.test(specifier)) {
-    const m = specifier.match(/^(\.+)(.*)$/);
-    if (m && m[1] && m[2] !== undefined) {
-      const dots = m[1].length;
-      const rest = m[2].replace(/\./g, "/");
-      const up = "../".repeat(dots - 1);
-      specifier = (up ? up : "./") + rest;
-    }
+  let dotCount = 0;
+  while (dotCount < specifier.length && specifier[dotCount] === ".") {
+    dotCount++;
+  }
+  if (dotCount > 0 && dotCount < specifier.length && /[a-zA-Z0-9_]/.test(specifier[dotCount]!)) {
+    const rest = specifier.slice(dotCount).replace(/\./g, "/");
+    const up = "../".repeat(dotCount - 1);
+    specifier = (up ? up : "./") + rest;
   }
 
   if (specifier.startsWith(".")) {
