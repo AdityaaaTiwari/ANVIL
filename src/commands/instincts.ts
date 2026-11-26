@@ -12,6 +12,7 @@ import {
   setInstinctStatus,
   type InstinctStatus,
 } from "../core/instincts.js";
+import { enforceInstincts, formatEnforceResult } from "../core/instinct-enforcer.js";
 import { findPositionalArgs } from "./shared.js";
 
 const VALUE_FLAGS = new Set(["--status", "--trigger", "--action", "--path"]);
@@ -37,7 +38,9 @@ export async function runInstincts(command: string, args: string[]): Promise<voi
 
   const [action = "list", ...rest] = args;
   if (action === "help" || action === "--help") {
-    process.stdout.write("Usage: anvil instinct <learn|list|add|promote|reject|remove|export|import> [options]\n");
+    process.stdout.write(
+      "Usage: anvil instinct <learn|list|add|promote|reject|enforce|remove|export|import> [options]\n"
+    );
     return;
   }
 
@@ -50,6 +53,9 @@ export async function runInstincts(command: string, args: string[]): Promise<voi
   const projectPath = path.resolve(candidatePath ?? ".");
   const isGlobal = rest.includes("--global");
   const isDryRun = rest.includes("--dry-run");
+  const isWrite = rest.includes("--write");
+  const isStrict = rest.includes("--strict");
+  const isEnforce = rest.includes("--enforce");
   const isJson = rest.includes("--json");
   const scope = isGlobal ? ("global" as const) : ("project" as const);
   const ids = rest.filter((a) => /^inst-[a-f0-9]{10}$/.test(a));
@@ -96,7 +102,35 @@ export async function runInstincts(command: string, args: string[]): Promise<voi
       const changed = await setInstinctStatus(projectPath, ids, action === "promote" ? "active" : "rejected", {
         scope,
       });
-      process.stdout.write(`${action === "promote" ? "Promoted" : "Rejected"} ${changed.length} instinct(s).\n`);
+      let enforced: Awaited<ReturnType<typeof enforceInstincts>> | undefined;
+      if (action === "promote" && isEnforce) {
+        enforced = await enforceInstincts(projectPath, {
+          write: !isDryRun,
+          includeGlobal: isGlobal,
+          ids,
+          strict: isStrict,
+        });
+      }
+      if (isJson) {
+        process.stdout.write(JSON.stringify(enforced ? { changed, enforced } : changed, null, 2) + "\n");
+      } else {
+        process.stdout.write(`${action === "promote" ? "Promoted" : "Rejected"} ${changed.length} instinct(s).\n`);
+        if (enforced) process.stdout.write(formatEnforceResult(enforced) + "\n");
+      }
+      break;
+    }
+    case "enforce": {
+      const enforced = await enforceInstincts(projectPath, {
+        write: isWrite && !isDryRun,
+        includeGlobal: isGlobal,
+        ...(ids.length ? { ids } : {}),
+        strict: isStrict,
+      });
+      if (isJson) {
+        process.stdout.write(JSON.stringify(enforced, null, 2) + "\n");
+      } else {
+        process.stdout.write(formatEnforceResult(enforced) + "\n");
+      }
       break;
     }
     case "remove": {
@@ -121,7 +155,7 @@ export async function runInstincts(command: string, args: string[]): Promise<voi
     }
     default:
       process.stdout.write(
-        `Unknown instinct action "${action}". Use learn, list, add, promote, reject, remove, export or import.\n`
+        `Unknown instinct action "${action}". Use learn, list, add, promote, reject, enforce, remove, export or import.\n`
       );
   }
 }
