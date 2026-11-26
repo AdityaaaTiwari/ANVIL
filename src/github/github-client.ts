@@ -170,6 +170,30 @@ export class GitHubClient {
     return (await response.json()) as T;
   }
 
+  static async getRepoInstallation(options: {
+    appId: number | string;
+    privateKey: string;
+    owner: string;
+    repo: string;
+    fetchImpl?: FetchLike;
+    now?: Date;
+  }): Promise<{ id: number } | undefined> {
+    const jwt = createAppJwt(options.appId, options.privateKey, options.now);
+    const appClient = new GitHubClient(jwt, options.fetchImpl);
+    try {
+      const installation = await appClient.request<{ id: number }>(
+        "GET",
+        `/repos/${encodeURIComponent(options.owner)}/${encodeURIComponent(options.repo)}/installation`,
+        undefined,
+        "bearer"
+      );
+      return Number.isSafeInteger(installation?.id) && installation.id > 0 ? { id: installation.id } : undefined;
+    } catch (error) {
+      if (error instanceof GitHubApiError && (error.status === 404 || error.status === 403)) return undefined;
+      throw error;
+    }
+  }
+
   static async forInstallation(options: {
     appId: number | string;
     privateKey: string;
@@ -268,8 +292,28 @@ export class GitHubClient {
     return result.permission;
   }
 
+  async listIssueComments(
+    owner: string,
+    repo: string,
+    issue: number,
+    perPage = 30
+  ): Promise<Array<{ id: number; body?: string; user?: { type?: string } }>> {
+    return this.request("GET", `${this.repo(owner, repo)}/issues/${issue}/comments?per_page=${Math.min(100, perPage)}`);
+  }
+
   async createIssueComment(owner: string, repo: string, issue: number, body: string): Promise<{ html_url: string }> {
     return this.request("POST", `${this.repo(owner, repo)}/issues/${issue}/comments`, { body: body.slice(0, 65_000) });
+  }
+
+  async updateIssueComment(
+    owner: string,
+    repo: string,
+    commentId: number,
+    body: string
+  ): Promise<{ html_url: string }> {
+    return this.request("PATCH", `${this.repo(owner, repo)}/issues/comments/${commentId}`, {
+      body: body.slice(0, 65_000),
+    });
   }
 
   async createCheckRun(

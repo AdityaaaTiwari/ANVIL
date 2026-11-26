@@ -1,7 +1,9 @@
 import path from "node:path";
 import type { VercelRequest, VercelResponse } from "./_lib/vercel-types.js";
 import { getQuery, getVerifiedInstallations, jsonError, readSession } from "./_lib/github-auth.js";
-import { redisCommand } from "./_lib/github-app.js";
+import { readRepoBadge, recordRepoEvent, redisCommand, saveRepoBadge } from "./_lib/github-app.js";
+import { remoteShield } from "../src/github/app-handlers.js";
+import { renderVerificationBadgeSvg, type BadgeMetric } from "../src/github/badge.js";
 import { GitHubClient } from "../src/github/github-client.js";
 import {
   buildRepoOverview,
@@ -12,9 +14,10 @@ import {
 
 /**
  * Hosted dashboard API (one function to stay within plan limits).
- *   GET  /api/app?op=session              signed-in user, installations and accessible repositories
- *   GET  /api/app?op=repo&name=owner/repo  live overview: profile, setup status, Shield, open PR risk, history
- *   POST /api/app?op=action               { name, action: "analyze" | "repair" } → setup pull request
+ *   GET  /api/app?op=badge&name=owner/repo  public SVG verification badge (public repos only)
+ *   GET  /api/app?op=session                signed-in user, installations and accessible repositories
+ *   GET  /api/app?op=repo&name=owner/repo   live overview: profile, setup status, Shield, open PR risk, history
+ *   POST /api/app?op=action                 { name, action: "analyze" | "repair" } → setup pull request
  */
 
 export const config = { api: { bodyParser: false } };
@@ -69,11 +72,88 @@ async function clientFor(installationId: number, repo: string): Promise<GitHubCl
   return GitHubClient.forInstallation({ appId, privateKey, installationId, repositories: [repo] });
 }
 
+function parseBadgeMetric(raw: string | undefined): BadgeMetric {
+  if (raw === "shield" || raw === "readiness" || raw === "pr" || raw === "verified") return raw;
+  return "verified";
+}
+
+async function serveBadge(req: VercelRequest, res: VercelResponse) {
+  const target = parseRepoFullName(getQuery(req, "name"));
+  if (!target) return jsonError(res, 400, "Use name=owner/repo");
+  const fullName = `${target.owner}/${target.repo}`;
+  const metric = parseBadgeMetric(getQuery(req, "metric"));
+  const label = getQuery(req, "label");
+
+  let record = await readRepoBadge(fullName);
+  let state: "not-installed" | "private" | "unavailable" | undefined;
+
+  if (record?.isPrivate) {
+    state = "private";
+  } else if (!record) {
+    const appId = Number(process.env.GITHUB_APP_ID);
+    const privateKey = process.env.GITHUB_APP_PRIVATE_KEY;
+    if (Number.isSafeInteger(appId) && appId > 0 && privateKey) {
+      try {
+        const installation = await GitHubClient.getRepoInstallation({
+          appId,
+          privateKey,
+          owner: target.owner,
+          repo: target.repo,
+        });
+        if (!installation) {
+          state = "not-installed";
+        } else {
+          const client = await GitHubClient.forInstallation({
+            appId,
+            privateKey,
+            installationId: installation.id,
+            repositories: [target.repo],
+          });
+          const repoInfo = await client.getRepository(target.owner, target.repo);
+          if (repoInfo.private) {
+            record = { fullName, isPrivate: true, updatedAt: new Date().toISOString() };
+            state = "private";
+            await saveRepoBadge(record, 600);
+          } else {
+            const shield = await remoteShield(client, target.owner, target.repo, repoInfo.default_branch);
+            record = {
+              fullName,
+              isPrivate: false,
+              shieldScore: shield.score,
+              shieldGrade: shield.grade,
+              updatedAt: new Date().toISOString(),
+            };
+            await saveRepoBadge(record, 600);
+          }
+        }
+      } catch {
+        state = "unavailable";
+      }
+    } else {
+      state = "unavailable";
+    }
+  }
+
+  const svg = renderVerificationBadgeSvg({ label, record, state, metric });
+  const cacheable = Boolean(record && !record.isPrivate);
+  res.setHeader("Content-Type", "image/svg+xml; charset=utf-8");
+  res.setHeader("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'");
+  res.setHeader(
+    "Cache-Control",
+    cacheable ? "public, max-age=300, s-maxage=300, stale-while-revalidate=600" : "no-store"
+  );
+  const out = res.status(200);
+  return out.send ? out.send(svg) : out.json({ svg });
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Cache-Control", "no-store");
   res.setHeader("X-Content-Type-Options", "nosniff");
   const op = getQuery(req, "op");
   try {
+    if (op === "badge" && req.method === "GET") {
+      return await serveBadge(req, res);
+    }
     const session = await readSession(req);
     if (!session) return jsonError(res, 401, "Sign in with GitHub to continue");
 
@@ -107,6 +187,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         target.repo,
         await history(allowed.fullName)
       );
+      await saveRepoBadge({
+        fullName: overview.repository.fullName,
+        isPrivate: overview.repository.private,
+        shieldScore: overview.shield.score,
+        shieldGrade: overview.shield.grade,
+        ...(overview.scorecard
+          ? { readinessPercent: overview.scorecard.percent, readinessGrade: overview.scorecard.grade }
+          : {}),
+      });
       return res.status(200).json(overview);
     }
 
@@ -137,12 +226,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         detail: result.upToDate ? "up to date" : `${result.created} new, ${result.updated} updated`,
         ...(result.url ? { url: result.url } : {}),
       };
-      await redisCommand(["LPUSH", `anvil:repo:${allowed.fullName.toLowerCase()}:events`, JSON.stringify(event)]).catch(
-        () => undefined
-      );
-      await redisCommand(["LTRIM", `anvil:repo:${allowed.fullName.toLowerCase()}:events`, 0, 49]).catch(
-        () => undefined
-      );
+      await recordRepoEvent(allowed.fullName, event);
       return res.status(200).json(result);
     }
 

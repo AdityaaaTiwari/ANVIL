@@ -8,5 +8,6 @@ export interface VercelResponse {
   setHeader(name: string, value: string | string[]): void;
   status(code: number): this;
   json(body: unknown): this;
+  send?(body: string | Buffer): this;
   redirect(statusCode: number, url: string): this;
 }

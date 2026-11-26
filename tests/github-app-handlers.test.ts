@@ -202,7 +202,7 @@ describe("GitHub App commands", () => {
     expect(client.comments.at(-1)).toContain("not installed");
   });
 
-  it("creates a failing check run when a PR introduces risky agent configuration", async () => {
+  it("creates a failing check run and sticky PR verification comment when a PR introduces risky agent configuration", async () => {
     const client = new FakeClient(
       {
         ...REPO,
@@ -228,6 +228,53 @@ describe("GitHub App commands", () => {
     const output = check.output as { annotations: Array<{ path: string }>; summary: string };
     expect(output.annotations[0]?.path).toBe(".claude/settings.json");
     expect(output.summary).toContain("Change risk");
+    expect(client.comments).toHaveLength(1);
+    expect(client.comments[0]).toContain("<!-- anvil-pr-verification -->");
+    expect(client.comments[0]).toContain("Receipt Digest");
+    expect(result.verification).toMatchObject({
+      shieldScore: expect.any(Number),
+      conclusion: "failure",
+      prNumber: 3,
+      headSha: "head123",
+    });
+  });
+
+  it("updates an existing sticky PR comment on synchronize and falls back cleanly when Checks permission returns 403", async () => {
+    const existing = [
+      { id: 91, body: "unrelated comment" },
+      { id: 92, body: "<!-- anvil-pr-verification -->\nold receipt" },
+    ];
+    const updatedBodies: Array<{ id: number; body: string }> = [];
+    const client = new FakeClient(
+      { ...REPO },
+      {
+        pullFiles: [{ filename: "tests/users.test.ts", status: "removed", additions: 0, deletions: 20, changes: 20 }],
+      }
+    ) as FakeClient & {
+      listIssueComments?: () => Promise<typeof existing>;
+      updateIssueComment?: (_o: string, _r: string, id: number, body: string) => Promise<{ html_url: string }>;
+    };
+    client.listIssueComments = async () => existing;
+    client.updateIssueComment = async (_o, _r, id, body) => {
+      updatedBodies.push({ id, body });
+      return { html_url: "https://github.com/acme/app/pull/4#issuecomment-92" };
+    };
+    client.createCheckRun = async () => {
+      throw new GitHubApiError(403, "Resource not accessible by integration");
+    };
+
+    const result = await handlePullRequest(context(client), {
+      action: "synchronize",
+      pull_request: { number: 4, head: { sha: "abc987654321" } },
+      repository: { name: "app", owner: { login: "acme" } },
+    });
+    expect(result.handled).toBe(true);
+    expect(result.action).toBe("pr-comment");
+    expect(result.url).toBe("https://github.com/acme/app/pull/4#issuecomment-92");
+    expect(updatedBodies).toHaveLength(1);
+    expect(updatedBodies[0]?.id).toBe(92);
+    expect(updatedBodies[0]?.body).toContain("Test files deleted in this PR");
+    expect(client.comments).toHaveLength(0);
   });
 });
 

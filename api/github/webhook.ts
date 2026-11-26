@@ -1,12 +1,20 @@
+import path from "node:path";
 import type { VercelRequest, VercelResponse } from "../_lib/vercel-types.js";
 import {
   installationRecord,
   parseInstallationRecord,
   isValidInstallationId,
+  recordRepoEvent,
   redisCommand,
+  saveRepoBadge,
   verifyGitHubSignature,
   type GitHubInstallation,
 } from "../_lib/github-app.js";
+import { handleGitHubEvent } from "../../src/github/app-handlers.js";
+import { parseRepoFullName } from "../../src/github/dashboard-service.js";
+import { GitHubClient } from "../../src/github/github-client.js";
+
+const ANVIL_VERSION = "1.4.0";
 
 export const config = { api: { bodyParser: false } };
 
@@ -52,6 +60,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   let payload: {
     action?: string;
     installation?: GitHubInstallation;
+    repository?: { full_name?: string; private?: boolean };
   };
   try {
     payload = JSON.parse(rawBody.toString("utf8"));
@@ -61,6 +70,57 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const event = req.headers["x-github-event"];
   if (typeof event !== "string") return res.status(400).json({ error: "Missing event header" });
+
+  if (event === "issue_comment" || event === "pull_request") {
+    const privateKey = process.env.GITHUB_APP_PRIVATE_KEY;
+    const installationId = payload.installation?.id;
+    const repoTarget = parseRepoFullName(payload.repository?.full_name);
+    if (!privateKey || !isValidInstallationId(installationId) || !repoTarget) {
+      return res.status(200).json({ received: true, ignored: true });
+    }
+    try {
+      const client = await GitHubClient.forInstallation({
+        appId,
+        privateKey,
+        installationId,
+        repositories: [repoTarget.repo],
+      });
+      const result = await handleGitHubEvent(
+        { client, anvilVersion: ANVIL_VERSION, catalogRoot: path.join(process.cwd(), "catalog") },
+        event,
+        payload
+      );
+      if (result.handled) {
+        const fullName = `${repoTarget.owner}/${repoTarget.repo}`;
+        await recordRepoEvent(fullName, {
+          at: new Date().toISOString(),
+          event,
+          action: result.action,
+          ...(result.detail ? { detail: result.detail } : {}),
+          ...(result.url ? { url: result.url } : {}),
+        });
+        if (result.verification) {
+          await saveRepoBadge({
+            fullName,
+            isPrivate: Boolean(payload.repository?.private),
+            shieldScore: result.verification.shieldScore,
+            shieldGrade: result.verification.shieldGrade,
+            ...(typeof result.verification.prNumber === "number" ? { lastPrNumber: result.verification.prNumber } : {}),
+            ...(result.verification.conclusion ? { lastPrConclusion: result.verification.conclusion } : {}),
+            ...(typeof result.verification.riskScore === "number"
+              ? { lastPrRiskScore: result.verification.riskScore }
+              : {}),
+            ...(result.verification.riskLevel ? { lastPrRiskLevel: result.verification.riskLevel } : {}),
+          });
+        }
+      }
+      return res.status(200).json({ received: true, ...result });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to process webhook event";
+      return res.status(502).json({ error: message.slice(0, 200) });
+    }
+  }
+
   if (event !== "installation" && event !== "installation_repositories") {
     return res.status(200).json({ received: true, ignored: true });
   }

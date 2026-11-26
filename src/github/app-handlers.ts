@@ -37,11 +37,23 @@ function resolveAppVersion(context: Pick<AppContext, "anvilVersion">): string {
   return context.anvilVersion ?? "0.0.0";
 }
 
+export interface VerificationSummary {
+  shieldScore: number;
+  shieldGrade: string;
+  riskScore?: number;
+  riskLevel?: string;
+  conclusion?: "success" | "neutral" | "failure";
+  prNumber?: number;
+  headSha?: string;
+  commentUrl?: string;
+}
+
 export interface HandlerResult {
   handled: boolean;
   action: string;
   detail?: string;
   url?: string;
+  verification?: VerificationSummary;
 }
 
 const COMMANDS = ["help", "analyze", "setup", "repair", "audit", "doctor", "risk"] as const;
@@ -589,7 +601,12 @@ export async function handleIssueComment(context: AppContext, payload: CommentPa
           issue,
           `${formatShieldMarkdown(report)}\n\n<sub>Scanned \`${ref.slice(0, 12)}\` · ${report.filesScanned} agent configuration files · ANVIL ${appVersion}</sub>`
         );
-        return { handled: true, action: "audit", detail: `score ${report.score}` };
+        return {
+          handled: true,
+          action: "audit",
+          detail: `score ${report.score}`,
+          verification: { shieldScore: report.score, shieldGrade: report.grade },
+        };
       }
       case "risk": {
         if (!isPull) {
@@ -707,6 +724,103 @@ export function buildCheckRun(
   };
 }
 
+export const PR_VERIFICATION_MARKER = "<!-- anvil-pr-verification -->";
+
+function receiptDigest(
+  headSha: string,
+  shield: ShieldReport,
+  risk: ReturnType<typeof assessPullRequestRisk>,
+  changed: Set<string>
+): string {
+  const payload = `${headSha}:${shield.score}:${shield.filesScanned}:${risk.score}:${[...changed].sort().join(",")}`;
+  return createHash("sha256").update(payload).digest("hex").slice(0, 16);
+}
+
+export function buildPullVerificationReceipt(
+  headSha: string,
+  shield: ShieldReport,
+  risk: ReturnType<typeof assessPullRequestRisk>,
+  changed: Set<string>,
+  anvilVersion: string
+): { conclusion: "success" | "neutral" | "failure"; markdown: string; digest: string } {
+  const introduced = shield.findings.filter((item) => changed.has(item.file));
+  const blocking = introduced.filter((item) => item.severity === "critical" || item.severity === "high");
+  const conclusion: "success" | "neutral" | "failure" = blocking.length
+    ? "failure"
+    : risk.level === "critical" || risk.level === "high" || introduced.length
+      ? "neutral"
+      : "success";
+  const deletedTests = risk.reasons.some((r) => /Deletes test files/i.test(r.reason));
+  const missingTests = risk.reasons.some((r) => /without any test changes/i.test(r.reason));
+  const testIntegrity = deletedTests
+    ? "❌ Test files deleted in this PR"
+    : missingTests
+      ? "⚠️ Source modified without corresponding test changes"
+      : "✅ Clean";
+  const statusLine =
+    conclusion === "failure"
+      ? `❌ **Action Required** — ${blocking.length} high-risk agent configuration issue(s) introduced in this PR`
+      : conclusion === "neutral"
+        ? `⚠️ **Review Recommended** — Risk \`${risk.level}\` (${risk.score}/100) · Shield ${shield.score}/100 (${shield.grade})`
+        : `✅ **ANVIL Verified** — Risk \`${risk.level}\` (${risk.score}/100) · Shield ${shield.score}/100 (${shield.grade})`;
+  const digest = receiptDigest(headSha, shield, risk, changed);
+  const markdown = [
+    PR_VERIFICATION_MARKER,
+    "## 🛡️ ANVIL Pull Request Verification",
+    "",
+    statusLine,
+    "",
+    `| Signal | Result |`,
+    `|---|---|`,
+    `| **Shield Score** | **${shield.score}/100** (Grade ${shield.grade}) · ${shield.filesScanned} config files |`,
+    `| **Change Risk** | **${risk.score}/100** (${risk.level}) |`,
+    `| **Test Integrity** | ${testIntegrity} |`,
+    `| **Receipt Digest** | \`sha256:${digest}\` · \`${headSha.slice(0, 10)}\` |`,
+    "",
+    formatRiskMarkdown(risk),
+    "",
+    formatShieldMarkdown(shield),
+    "",
+    introduced.length
+      ? `> **${introduced.length} Shield finding(s)** occur in files changed by this PR.`
+      : "> No Shield findings introduced in files changed by this PR.",
+    "",
+    `<sub>Evaluated deterministically by ANVIL ${anvilVersion} · Run \`/anvil risk\`, \`/anvil audit\`, or \`/anvil repair\` in a comment.</sub>`,
+  ]
+    .join("\n")
+    .slice(0, 64_000);
+  return { conclusion, markdown, digest };
+}
+
+async function upsertPullComment(
+  client: GitHubClient,
+  owner: string,
+  repo: string,
+  pullNumber: number,
+  body: string
+): Promise<string | undefined> {
+  try {
+    if (typeof client.listIssueComments === "function" && typeof client.updateIssueComment === "function") {
+      const comments = await client.listIssueComments(owner, repo, pullNumber, 30);
+      const existing = comments.find(
+        (item) => typeof item.body === "string" && item.body.includes(PR_VERIFICATION_MARKER)
+      );
+      if (existing) {
+        const updated = await client.updateIssueComment(owner, repo, existing.id, body);
+        return updated.html_url;
+      }
+    }
+    if (typeof client.createIssueComment === "function") {
+      const created = await client.createIssueComment(owner, repo, pullNumber, body);
+      return created.html_url;
+    }
+    return undefined;
+  } catch (error) {
+    if (error instanceof GitHubApiError && (error.status === 403 || error.status === 404)) return undefined;
+    throw error;
+  }
+}
+
 export async function handlePullRequest(context: AppContext, payload: PullPayload): Promise<HandlerResult> {
   if (!CHECK_ACTIONS.has(payload.action ?? ""))
     return { handled: false, action: "ignored", detail: `pull_request.${payload.action}` };
@@ -717,16 +831,43 @@ export async function handlePullRequest(context: AppContext, payload: PullPayloa
   if (!owner || !repo || !number || !headSha)
     return { handled: false, action: "ignored", detail: "incomplete payload" };
   const { client } = context;
+  const appVersion = resolveAppVersion(context);
   const files = await client.listPullFiles(owner, repo, number);
+  const changed = new Set(files.map((file) => file.filename));
   const risk = assessPullRequestRisk(files);
   const shield = await remoteShield(client, owner, repo, headSha);
-  const check = buildCheckRun(headSha, shield, risk, new Set(files.map((file) => file.filename)));
-  const created = await client.createCheckRun(owner, repo, check);
+  const check = buildCheckRun(headSha, shield, risk, changed);
+  const receipt = buildPullVerificationReceipt(headSha, shield, risk, changed, appVersion);
+  const commentUrl = await upsertPullComment(client, owner, repo, number, receipt.markdown);
+
+  let checkUrl: string | undefined;
+  let checkSucceeded = false;
+  try {
+    const created = await client.createCheckRun(owner, repo, check);
+    checkUrl = created.html_url;
+    checkSucceeded = true;
+  } catch (error) {
+    if (!(error instanceof GitHubApiError && (error.status === 403 || error.status === 404)) || !commentUrl) {
+      throw error;
+    }
+  }
+
+  const resolvedUrl = checkUrl ?? commentUrl;
   return {
     handled: true,
-    action: "check-run",
-    detail: String(check.conclusion),
-    ...(created.html_url ? { url: created.html_url } : {}),
+    action: checkSucceeded ? "check-run" : "pr-comment",
+    detail: receipt.conclusion,
+    ...(resolvedUrl ? { url: resolvedUrl } : {}),
+    verification: {
+      shieldScore: shield.score,
+      shieldGrade: shield.grade,
+      riskScore: risk.score,
+      riskLevel: risk.level,
+      conclusion: receipt.conclusion,
+      prNumber: number,
+      headSha,
+      ...(commentUrl ? { commentUrl } : {}),
+    },
   };
 }
 
