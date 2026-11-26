@@ -20,10 +20,10 @@ You can run ANVIL directly in any repository using `npx`:
 
 ```bash
 # Run the pre-commit policy & security gate
-npx -y anvil-engineering-workbench@1.4.0 gate
+npx -y anvil-engineering-workbench@1.5.0 gate
 
 # Inspect project stack, languages, and build scripts
-npx -y anvil-engineering-workbench@1.4.0 inspect
+npx -y anvil-engineering-workbench@1.5.0 inspect
 ```
 
 ---
@@ -189,7 +189,7 @@ jobs:
           node-version: 22
 
       - name: Run ANVIL Verification Gate
-        uses: AdityaaaTiwari/ANVIL@v1.4.0
+        uses: AdityaaaTiwari/ANVIL@v1.5.0
         with:
           since: origin/${{ github.base_ref || 'main' }}
           sarif: anvil-gate.sarif

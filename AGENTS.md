@@ -62,8 +62,8 @@ npm run build
 # 4. Run full Vitest test suite
 npx vitest run
 
-# 5. Run Python REA bridge test suite
-npm run test:rea
+# 5. Run deterministic CI quality & security gate
+node dist/cli.js gate .
 ```
 
 ---
