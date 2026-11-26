@@ -6,6 +6,9 @@
   "functions": {
     "api/app.ts": {
       "includeFiles": "catalog/{agents,commands,rules,skills}/**"
+    },
+    "api/github/webhook.ts": {
+      "includeFiles": "catalog/{agents,commands,rules,skills}/**"
     }
   }
 }

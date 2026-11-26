@@ -32,7 +32,8 @@ Open the local URL printed by `anvil dashboard`. The dashboard operates on the w
 - `GET /api/github/setup?installation_id=...` checks the signed-in user's installation access before completing setup.
 - `GET /api/github/me` returns the signed-in user's public login and verified installation metadata only.
 - `POST /api/github/logout` revokes the local server-side session.
-- `POST /api/github/webhook` verifies GitHub's `X-Hub-Signature-256` header and persists installation metadata.
+- `GET /api/app?op=badge&name=owner/repo` returns a live public SVG verification badge (`Shield` + `Readiness`) for installed public repositories (private repositories never expose scores).
+- `POST /api/github/webhook` verifies GitHub's `X-Hub-Signature-256` header, persists installation metadata, posts/updates sticky PR verification receipts (and Check Runs when permitted) on `pull_request` events, and runs `/anvil` comment commands on `issue_comment` events.
 
 ## Vercel environment variables
 

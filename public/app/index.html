@@ -606,6 +606,11 @@ function overviewTab(data) {
     h("div", { class: "grid2" },
       h("div", { class: "card" }, h("h3", {}, h("span", { class: "n" }, "06"), "Top Shield findings", h("a", { href: tabLink("shield") }, "All " + data.shield.findings.length + " →")), findingsTable(data.shield, 5)),
       h("div", { class: "card" }, h("h3", {}, h("span", { class: "n" }, "07"), "Change risk", h("a", { href: tabLink("pulls") }, "All →")), pullsList(data.pulls, 3))),
+    !data.repository.private ? h("div", { class: "card", style: "margin-top:14px" },
+      h("h3", {}, h("span", { class: "n" }, "08"), "Live Verification Badge"),
+      h("p", { class: "muted", style: "margin:0 0 10px;font-size:13px" }, "Embed ANVIL's deterministic Shield & Readiness status in this repository's README:"),
+      h("div", { style: "margin-bottom:10px" }, h("img", { src: "/api/app?op=badge&name=" + encodeURIComponent(data.repository.fullName), alt: "ANVIL Verified", height: "20" })),
+      copyCmd("[![ANVIL Verified](" + location.origin + "/api/app?op=badge&name=" + encodeURIComponent(data.repository.fullName) + ")](" + location.origin + "/app/)")) : null,
   ];
 }
 

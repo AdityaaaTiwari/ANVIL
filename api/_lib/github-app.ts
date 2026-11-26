@@ -1,4 +1,5 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
+import { badgeKey, type RepoBadgeRecord } from "../../src/github/badge.js";
 
 export type GitHubInstallation = {
   id: number;
@@ -101,4 +102,55 @@ export async function redisCommand<T = unknown>(command: unknown[]): Promise<T> 
   const payload = (await response.json()) as { result?: T; error?: string };
   if (payload.error) throw new Error(payload.error);
   return payload.result as T;
+}
+
+export async function recordRepoEvent(
+  fullName: string,
+  event: { at: string; event: string; action: string; detail?: string; url?: string }
+): Promise<void> {
+  const key = `anvil:repo:${fullName.toLowerCase()}:events`;
+  await redisCommand(["LPUSH", key, JSON.stringify(event)]).catch(() => undefined);
+  await redisCommand(["LTRIM", key, 0, 49]).catch(() => undefined);
+}
+
+export async function readRepoBadge(fullName: string): Promise<RepoBadgeRecord | undefined> {
+  try {
+    const raw = await redisCommand<string | null>(["GET", badgeKey(fullName)]);
+    if (!raw) return undefined;
+    const parsed = JSON.parse(raw) as Partial<RepoBadgeRecord>;
+    if (!parsed || typeof parsed !== "object" || typeof parsed.fullName !== "string") return undefined;
+    return {
+      fullName: parsed.fullName,
+      isPrivate: Boolean(parsed.isPrivate),
+      updatedAt: typeof parsed.updatedAt === "string" ? parsed.updatedAt : new Date().toISOString(),
+      ...(typeof parsed.shieldScore === "number" ? { shieldScore: parsed.shieldScore } : {}),
+      ...(typeof parsed.shieldGrade === "string" ? { shieldGrade: parsed.shieldGrade } : {}),
+      ...(typeof parsed.readinessPercent === "number" ? { readinessPercent: parsed.readinessPercent } : {}),
+      ...(typeof parsed.readinessGrade === "string" ? { readinessGrade: parsed.readinessGrade } : {}),
+      ...(typeof parsed.lastPrNumber === "number" ? { lastPrNumber: parsed.lastPrNumber } : {}),
+      ...(parsed.lastPrConclusion ? { lastPrConclusion: parsed.lastPrConclusion } : {}),
+      ...(typeof parsed.lastPrRiskScore === "number" ? { lastPrRiskScore: parsed.lastPrRiskScore } : {}),
+      ...(typeof parsed.lastPrRiskLevel === "string" ? { lastPrRiskLevel: parsed.lastPrRiskLevel } : {}),
+    };
+  } catch {
+    return undefined;
+  }
+}
+
+export async function saveRepoBadge(
+  update: Omit<Partial<RepoBadgeRecord>, "updatedAt"> & { fullName: string; isPrivate: boolean },
+  ttlSeconds = 30 * 24 * 60 * 60
+): Promise<void> {
+  const existing = await readRepoBadge(update.fullName);
+  const merged: RepoBadgeRecord = update.isPrivate
+    ? { fullName: update.fullName, isPrivate: true, updatedAt: new Date().toISOString() }
+    : {
+        ...(existing && !existing.isPrivate ? existing : {}),
+        ...update,
+        isPrivate: false,
+        updatedAt: new Date().toISOString(),
+      };
+  await redisCommand(["SET", badgeKey(update.fullName), JSON.stringify(merged), "EX", ttlSeconds]).catch(
+    () => undefined
+  );
 }
