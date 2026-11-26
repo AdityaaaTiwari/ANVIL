@@ -64,12 +64,19 @@ export interface GuardVerdict {
   reason?: string;
 }
 
+export interface CoChangeRule {
+  id: string;
+  whenEdited: string;
+  requireEdited: string;
+  reason: string;
+}
+
 export interface HarnessHookConfig {
   /** `rules`: project-specific command rules guarded by ANVIL runtime hooks. */
   guard: { enabled: boolean; allow: string[]; rules: CommandRule[] };
   /** `protectQualityConfig`: ask before agents edit lint/format configs to make checks pass. */
   configGuard: { enabled: boolean; protectQualityConfig: boolean };
-  verifyOnStop: { scripts: string[]; timeoutMs: number };
+  verifyOnStop: { scripts: string[]; timeoutMs: number; coChangeRules: CoChangeRule[] };
   sessionContext: { enabled: boolean; maxTokens: number };
   promptGuard: { enabled: boolean };
   autoHandoff: { enabled: boolean };
@@ -81,7 +88,7 @@ const SESSION_DIR = ".anvil/session";
 const DEFAULT_CONFIG: HarnessHookConfig = {
   guard: { enabled: true, allow: [], rules: [] },
   configGuard: { enabled: true, protectQualityConfig: true },
-  verifyOnStop: { scripts: [], timeoutMs: 180_000 },
+  verifyOnStop: { scripts: [], timeoutMs: 180_000, coChangeRules: [] },
   sessionContext: { enabled: true, maxTokens: 900 },
   promptGuard: { enabled: true },
   autoHandoff: { enabled: true },
@@ -361,15 +368,52 @@ export function parseCustomRules(values: unknown[]): CommandRule[] {
   return rules;
 }
 
+function validRelativeGlob(value: unknown): value is string {
+  return (
+    typeof value === "string" &&
+    value.length > 0 &&
+    value.length <= 260 &&
+    !path.isAbsolute(value) &&
+    !value.includes("..") &&
+    !/[\r\n\0]/.test(value)
+  );
+}
+
+export function parseCoChangeRules(values: unknown[]): CoChangeRule[] {
+  const rules: CoChangeRule[] = [];
+  for (const value of values.slice(0, 50)) {
+    if (!value || typeof value !== "object") continue;
+    const v = value as Record<string, unknown>;
+    if (typeof v.id !== "string" || !/^[A-Z][A-Z0-9-]{1,40}$/.test(v.id)) continue;
+    if (!validRelativeGlob(v.whenEdited) || !validRelativeGlob(v.requireEdited)) continue;
+    rules.push({
+      id: v.id,
+      whenEdited: v.whenEdited.replace(/\\/g, "/"),
+      requireEdited: v.requireEdited.replace(/\\/g, "/"),
+      reason:
+        typeof v.reason === "string" && v.reason.length <= 300
+          ? v.reason
+          : `Coupled file rule (${v.whenEdited} -> ${v.requireEdited}).`,
+    });
+  }
+  return rules;
+}
+
+export function matchesCoChangeTarget(editedFile: string, targetPattern: string): boolean {
+  const edited = editedFile.replace(/\\/g, "/").replace(/^\.\//, "");
+  const target = targetPattern.replace(/\\/g, "/").replace(/^\.\//, "");
+  if (edited === target) return true;
+  if (target.endsWith("/**")) {
+    const prefix = target.slice(0, -3);
+    return edited === prefix || edited.startsWith(prefix + "/");
+  }
+  return false;
+}
+
 export async function loadHarnessHookConfig(root: string): Promise<HarnessHookConfig> {
   let raw: string;
   try {
-    raw = await readFile(path.join(root, HARNESS_HOOK_CONFIG_PATH), "utf8").catch(async (error: unknown) => {
-      if ((error as NodeJS.ErrnoException)?.code === "ENOENT") {
-        return readFile(path.join(root, HARNESS_HOOK_CONFIG_PATH), "utf8");
-      }
-      throw error;
-    });
+    raw = await readFile(path.join(root, HARNESS_HOOK_CONFIG_PATH), "utf8");
   } catch (error) {
     if (isMissing(error)) return structuredClone(DEFAULT_CONFIG);
     throw error;
@@ -377,7 +421,7 @@ export async function loadHarnessHookConfig(root: string): Promise<HarnessHookCo
   const parsed = JSON.parse(raw) as Partial<{
     guard: Partial<Omit<HarnessHookConfig["guard"], "rules">> & { rules?: unknown[] };
     configGuard: Partial<HarnessHookConfig["configGuard"]>;
-    verifyOnStop: Partial<HarnessHookConfig["verifyOnStop"]>;
+    verifyOnStop: Partial<Omit<HarnessHookConfig["verifyOnStop"], "coChangeRules">> & { coChangeRules?: unknown[] };
     sessionContext: Partial<HarnessHookConfig["sessionContext"]>;
     promptGuard: Partial<HarnessHookConfig["promptGuard"]>;
     autoHandoff: Partial<HarnessHookConfig["autoHandoff"]>;
@@ -399,6 +443,8 @@ export async function loadHarnessHookConfig(root: string): Promise<HarnessHookCo
     config.verifyOnStop.scripts = parsed.verifyOnStop.scripts
       .filter((v): v is string => typeof v === "string" && /^[a-zA-Z0-9:_-]{1,64}$/.test(v))
       .slice(0, 5);
+  if (Array.isArray(parsed.verifyOnStop?.coChangeRules))
+    config.verifyOnStop.coChangeRules = parseCoChangeRules(parsed.verifyOnStop.coChangeRules);
   if (
     typeof parsed.verifyOnStop?.timeoutMs === "number" &&
     parsed.verifyOnStop.timeoutMs >= 1000 &&
@@ -546,7 +592,8 @@ async function postEdit(root: string, input: HookInput, config: HarnessHookConfi
 async function stop(root: string, input: HookInput, config: HarnessHookConfig, now: Date): Promise<HookOutput> {
   if (config.cost.enabled && input.session_id && typeof input.transcript_path === "string")
     await recordSessionCost(root, input.session_id, input.transcript_path, { now, rates: config.cost.pricing });
-  if (input.stop_hook_active || !config.verifyOnStop.scripts.length) return { exitCode: 0 };
+  if (input.stop_hook_active || (!config.verifyOnStop.scripts.length && !config.verifyOnStop.coChangeRules.length))
+    return { exitCode: 0 };
   const edits = await readEdits(root);
   if (!edits.files.length) return { exitCode: 0 };
   const failures: string[] = [];
@@ -562,6 +609,16 @@ async function stop(root: string, input: HookInput, config: HarnessHookConfig, n
     } catch (error) {
       results.push({ script, status: "error", durationMs: 0 });
       failures.push(`\`npm run ${script}\` could not run: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+  for (const rule of config.verifyOnStop.coChangeRules) {
+    const triggerFile = edits.files.find((file) => matchesCoChangeTarget(file, rule.whenEdited));
+    if (!triggerFile) continue;
+    const coupledUpdated = edits.files.some((file) => matchesCoChangeTarget(file, rule.requireEdited));
+    if (!coupledUpdated) {
+      failures.push(
+        `Co-change guard ${rule.id}: edited \`${triggerFile}\` without checking/updating \`${rule.requireEdited}\` (${rule.reason})`
+      );
     }
   }
   await writeJson(path.join(root, SESSION_DIR, "last-verification.json"), {

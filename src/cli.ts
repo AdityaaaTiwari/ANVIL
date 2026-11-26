@@ -104,7 +104,7 @@ Commands:
   context [path]   Estimate context budget and token consumption
   status [path]    Summarize harness install, guard, context and MCP health
   statusline [path] Output compact ANSI statusline for terminal and IDEs
-  instinct <learn|list|add|promote|reject> Continuous learning habits from git and session history
+  instinct <learn|list|add|promote|reject|enforce> Continuous learning habits and compiled Guard rules
   evolve [path]    Compile active learned instincts into workspace skills
   cost [path]      Report session and daily token spend and USD estimates
   race <run|list>  Competitive multi-agent race across isolated Git worktrees
