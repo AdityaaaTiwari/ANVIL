@@ -84,7 +84,9 @@ function redisConfig() {
   const url = process.env.KV_REST_API_URL ?? process.env.UPSTASH_REDIS_REST_URL;
   const token = process.env.KV_REST_API_TOKEN ?? process.env.UPSTASH_REDIS_REST_TOKEN;
   if (!url || !token) throw new Error("Redis REST configuration is missing");
-  return { url: url.replace(/\/$/, ""), token };
+  const parsed = new URL(url);
+  if (parsed.protocol !== "https:") throw new Error("Redis REST URL must use HTTPS");
+  return { url: parsed.origin, token };
 }
 
 export async function redisCommand<T = unknown>(command: unknown[]): Promise<T> {

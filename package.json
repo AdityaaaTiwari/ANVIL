@@ -10,6 +10,7 @@
     "access": "public"
   },
   "description": "ANVIL — An open-source AI engineering harness with codebase intelligence, review history, regression signals, and a local engineering dashboard.",
+  "homepage": "https://github.com/AdityaaaTiwari/ANVIL",
   "type": "module",
   "bin": {
     "anvil": "dist/cli.js"
@@ -80,6 +81,7 @@
     "skills",
     "README.md",
     "LICENSE",
+    "PRIVACY.md",
     "SECURITY.md",
     "CHANGELOG.md"
   ],
