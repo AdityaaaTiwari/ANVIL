@@ -1,16 +1,31 @@
 import path from "node:path";
 import { analyzeBinaryIntelligence } from "../core/binary-intelligence.js";
+import { formatSupplyChainReport, scanSupplyChain } from "../core/supply-chain-scanner.js";
 
 export async function runBinary(_command: string, rest: string[]): Promise<void> {
+  if (rest.includes("--help") || rest.includes("-h")) {
+    process.stdout.write(`Usage: anvil binary [path] [--supply-chain] [--findings-only] [--clean-room] [--json]\n`);
+    return;
+  }
+
   const target = path.resolve(rest.find((arg) => !arg.startsWith("--")) ?? ".");
   const isJson = rest.includes("--json");
   const findingsOnly = rest.includes("--findings-only") || rest.includes("--clean-room");
+  const withSupplyChain = rest.includes("--supply-chain");
 
   try {
-    const report = await analyzeBinaryIntelligence(target);
+    const [report, supplyChain] = await Promise.all([
+      analyzeBinaryIntelligence(target),
+      withSupplyChain ? scanSupplyChain(target) : Promise.resolve(undefined),
+    ]);
+
+    const payload = supplyChain ? { ...report, supplyChain } : report;
 
     if (isJson) {
-      process.stdout.write(JSON.stringify(report, null, 2) + "\n");
+      process.stdout.write(JSON.stringify(payload, null, 2) + "\n");
+      if (!report.cleanRoomReport.compliant || (supplyChain && !supplyChain.passed)) {
+        process.exitCode = 1;
+      }
       return;
     }
 
@@ -43,12 +58,18 @@ export async function runBinary(_command: string, rest: string[]): Promise<void>
       process.stdout.write(`\nTracked Assets (Sample):\n`);
       for (const asset of report.assets.slice(0, 15)) {
         const kb = (asset.sizeBytes / 1024).toFixed(1);
-        const fmt = asset.detectedFormat ? `, ${asset.detectedFormat}` : "";
-        process.stdout.write(`  ${asset.path} (${asset.category}${fmt}, ${kb} KB)\n`);
+        const arch = asset.binaryMetadata?.arch ? ` ${asset.binaryMetadata.arch}` : "";
+        const fmt = asset.detectedFormat ? `, ${asset.detectedFormat}${arch}` : "";
+        const hash = asset.sha256 ? `, sha256:${asset.sha256.slice(0, 10)}` : "";
+        process.stdout.write(`  ${asset.path} (${asset.category}${fmt}, ${kb} KB${hash})\n`);
       }
     }
 
-    if (!report.cleanRoomReport.compliant) {
+    if (supplyChain) {
+      process.stdout.write(formatSupplyChainReport(supplyChain, { findingsOnly }) + "\n");
+    }
+
+    if (!report.cleanRoomReport.compliant || (supplyChain && !supplyChain.passed)) {
       process.exitCode = 1;
     }
   } catch (error) {

@@ -6,6 +6,8 @@ import { scanProjectSecurity, type SecurityAuditReport } from "./security-scanne
 import { reviewProject, type CodeReviewReport, type InlineSuppressionRecord } from "./code-review.js";
 import { analyzeGitChanges } from "./git-intelligence.js";
 import { auditAgentConfiguration } from "./agent-security-audit.js";
+import { analyzeBinaryIntelligence } from "./binary-intelligence.js";
+import { scanSupplyChain } from "./supply-chain-scanner.js";
 import { importExternalSarif } from "./sarif-formatter.js";
 export { importExternalSarif } from "./sarif-formatter.js";
 
@@ -53,6 +55,14 @@ export const GatePolicySchema = z
         maxMemory: z.string().optional(),
         maxCpus: z.number().optional(),
         maxProcesses: z.number().int().optional(),
+      })
+      .strict()
+      .optional(),
+    supplyChain: z
+      .object({
+        enabled: z.boolean().default(false),
+        maxInstallHooks: z.number().int().min(0).optional(),
+        failOnBinarySpoofing: z.boolean().default(true),
       })
       .strict()
       .optional(),
@@ -316,6 +326,8 @@ export interface EvaluateGateOptions {
   externalSarifPaths?: string[] | undefined;
   /** Skip the AI-agent configuration scan (AGENTS.md, Claude settings/hooks, MCP configs). */
   skipAgentConfig?: boolean | undefined;
+  /** Include deep node_modules supply-chain and disguised binary inspection. */
+  includeSupplyChain?: boolean | undefined;
 }
 
 export async function evaluateGate(targetPath: string, options: EvaluateGateOptions = {}): Promise<GateEvaluation> {
@@ -474,6 +486,59 @@ export async function evaluateGate(targetPath: string, options: EvaluateGateOpti
       }
     } catch (err) {
       warnings.push(`Agent configuration scan skipped: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  }
+
+  // Supply-chain & binary provenance scan (explicit --supply-chain flag or policy.supplyChain.enabled)
+  if (options.includeSupplyChain || effectivePolicy.supplyChain?.enabled) {
+    try {
+      const [supplyReport, binaryReport] = await Promise.all([
+        scanSupplyChain(targetPath),
+        analyzeBinaryIntelligence(targetPath),
+      ]);
+      const failOnSpoof = effectivePolicy.supplyChain?.failOnBinarySpoofing !== false;
+      for (const s of supplyReport.findings) {
+        if (s.severity === "info") continue;
+        if (!failOnSpoof && s.ruleId === "ANVIL-SUP-008") continue;
+        const fp = computeFindingFingerprint("security", s.ruleId, s.file, 1, s.detail);
+        allFindings.push({
+          id: s.ruleId,
+          source: "security",
+          category: "supply-chain",
+          severity: s.severity,
+          confidence: "high",
+          file: s.file,
+          line: 1,
+          message: `${s.title}: ${s.detail}`,
+          snippet: s.detail,
+          fingerprint: fp,
+          legacyFingerprint: `security:${s.ruleId}:${s.file.replace(/\\/g, "/")}:1`,
+        });
+      }
+      for (const b of binaryReport.cleanRoomReport.findings) {
+        if (!failOnSpoof && b.ruleId === "ANVIL-BIN-004") continue;
+        const fp = computeFindingFingerprint("security", b.ruleId, b.file, 1, b.message);
+        allFindings.push({
+          id: b.ruleId,
+          source: "security",
+          category: "binary-provenance",
+          severity: b.severity,
+          confidence: "high",
+          file: b.file,
+          line: 1,
+          message: b.message,
+          fingerprint: fp,
+          legacyFingerprint: `security:${b.ruleId}:${b.file.replace(/\\/g, "/")}:1`,
+        });
+      }
+      const maxHooks = effectivePolicy.supplyChain?.maxInstallHooks;
+      if (maxHooks !== undefined && supplyReport.summary.lifecycleHooksCount > maxHooks) {
+        violations.push(
+          `Install lifecycle hooks exceeded limit (supplyChain.maxInstallHooks=${maxHooks}): found ${supplyReport.summary.lifecycleHooksCount}`
+        );
+      }
+    } catch (err) {
+      violations.push(`Supply-chain scanner execution failed: ${err instanceof Error ? err.message : String(err)}`);
     }
   }
 

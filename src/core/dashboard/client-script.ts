@@ -1097,32 +1097,72 @@ async function loadCatalogSkills(){
 
 async function loadBinaryAssets(){
   try{
-    const res = await fetch("/api/binary/assets");
-    if(!res.ok) return;
-    const data = await res.json();
-    const totalNode = el("binaryTotalAssets");
-    if(totalNode) totalNode.textContent = data.totalAssets ?? 0;
-    const cleanStatus = el("binaryCleanStatus");
-    if(cleanStatus){
-      cleanStatus.textContent = data.cleanRoomReport && data.cleanRoomReport.compliant ? "COMPLIANT" : "FLAGGED";
-      cleanStatus.style.color = data.cleanRoomReport && data.cleanRoomReport.compliant ? "var(--emerald)" : "var(--danger)";
+    const [res, scRes] = await Promise.all([
+      fetch("/api/binary/assets"),
+      fetch("/api/supply-chain").catch(() => null),
+    ]);
+    if(res && res.ok){
+      const data = await res.json();
+      const totalNode = el("binaryTotalAssets");
+      if(totalNode) totalNode.textContent = data.totalAssets ?? 0;
+      const cleanStatus = el("binaryCleanStatus");
+      if(cleanStatus){
+        cleanStatus.textContent = data.cleanRoomReport && data.cleanRoomReport.compliant ? "COMPLIANT" : "FLAGGED";
+        cleanStatus.style.color = data.cleanRoomReport && data.cleanRoomReport.compliant ? "var(--emerald)" : "var(--danger)";
+      }
+      const list = el("binaryAssetsList");
+      if(list){
+        if(!data.assets || !data.assets.length){
+          renderHtml(list, '<div class="empty">No compiled binaries or web bundles detected in root.</div>');
+        }else{
+          renderHtml(list, data.assets.map(a => {
+            const kb = (a.sizeBytes / 1024).toFixed(1);
+            const arch = a.binaryMetadata && a.binaryMetadata.arch ? ' (' + esc(a.binaryMetadata.arch) + ')' : '';
+            const hash = a.sha256 ? ' · ' + esc(a.sha256.slice(0, 10)) : '';
+            return '<div class="row" style="padding:10px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center">' +
+              '<div>' +
+                '<span style="font-family:monospace;color:var(--text)">' + esc(a.path) + '</span>' +
+                '<span class="pill pill-cyan" style="margin-left:8px;font-size:11px">' + esc(a.category) + arch + '</span>' +
+              '</div>' +
+              '<span style="color:var(--muted);font-size:12px">' + kb + ' KB' + hash + '</span>' +
+            '</div>';
+          }).join(""));
+        }
+      }
     }
-    const list = el("binaryAssetsList");
-    if(!list) return;
-    if(!data.assets || !data.assets.length){
-      renderHtml(list, '<div class="empty">No compiled binaries or web bundles detected in root.</div>');
-      return;
+    if(scRes && scRes.ok){
+      const sc = await scRes.json();
+      const gradeNode = el("supplyChainGrade");
+      if(gradeNode){
+        gradeNode.textContent = sc.grade || "—";
+        gradeNode.style.color = sc.passed ? "var(--emerald)" : "var(--danger)";
+      }
+      const pkgNode = el("supplyChainPackages");
+      if(pkgNode && sc.summary){
+        pkgNode.textContent = (sc.summary.packagesScanned ?? 0) + ' packages · ' + (sc.summary.lockfilePackagesChecked ?? 0) + ' locked';
+      }
+      const hnNode = el("supplyChainHooksNative");
+      if(hnNode && sc.summary){
+        hnNode.textContent = (sc.summary.lifecycleHooksCount ?? 0) + ' / ' + (sc.summary.nativeBinariesCount ?? 0);
+      }
+      const scList = el("supplyChainFindingsList");
+      if(scList){
+        const items = (sc.findings || []).filter(f => f.severity !== "info");
+        if(!items.length){
+          renderHtml(scList, '<div class="empty">Zero actionable supply-chain or spoofed-binary findings across ' + esc(String(sc.summary && sc.summary.packagesScanned || 0)) + ' scanned packages.</div>');
+        }else{
+          renderHtml(scList, items.slice(0, 30).map(f =>
+            '<div class="row" style="padding:10px;border-bottom:1px solid var(--line)">' +
+              '<div style="display:flex;justify-content:space-between;align-items:center">' +
+                '<strong style="color:var(--text)">[' + esc(String(f.severity).toUpperCase()) + '] ' + esc(f.ruleId) + ' · ' + esc(f.packageName) + '</strong>' +
+                '<span style="color:var(--muted);font-size:12px">' + esc(f.file) + '</span>' +
+              '</div>' +
+              '<div style="color:var(--muted);font-size:12px;margin-top:4px">' + esc(f.detail) + '</div>' +
+            '</div>'
+          ).join(""));
+        }
+      }
     }
-    renderHtml(list, data.assets.map(a => {
-      const kb = (a.sizeBytes / 1024).toFixed(1);
-      return '<div class="row" style="padding:10px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center">' +
-        '<div>' +
-          '<span style="font-family:monospace;color:var(--text)">' + esc(a.path) + '</span>' +
-          '<span class="pill pill-cyan" style="margin-left:8px;font-size:11px">' + esc(a.category) + '</span>' +
-        '</div>' +
-        '<span style="color:var(--muted);font-size:12px">' + kb + ' KB</span>' +
-      '</div>';
-    }).join(""));
   }catch{}
 }
 

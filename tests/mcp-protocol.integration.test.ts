@@ -115,8 +115,18 @@ describe("ANVIL MCP stdio protocol integration", () => {
     expect(toolNames).toContain("anvil_agent_security_audit");
     expect(toolNames).toContain("anvil_dependency_impact");
     expect(toolNames).toContain("anvil_binary_intelligence");
+    expect(toolNames).toContain("anvil_supply_chain_audit");
     expect(toolNames).toContain("anvil_doctor");
     expect(toolNames).toContain("anvil_clean_preview");
+
+    const supplyChainCall = await request("tools/call", {
+      name: "anvil_supply_chain_audit",
+      arguments: {},
+    });
+    expect(supplyChainCall.error).toBeUndefined();
+    expect(supplyChainCall.result?.isError).not.toBe(true);
+    const scText = supplyChainCall.result.content.find((part: { type: string }) => part.type === "text")?.text ?? "";
+    expect(scText).toContain('"grade":');
 
     const agentIntel = await request("tools/call", {
       name: "anvil_agent_intelligence",

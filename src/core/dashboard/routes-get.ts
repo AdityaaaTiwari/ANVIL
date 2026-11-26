@@ -30,6 +30,7 @@ import { inspectProject } from "../project-inspector.js";
 import { listProjectMemory } from "../project-memory.js";
 import { auditProject } from "../quality-audit.js";
 import { analyzeBinaryIntelligence } from "../binary-intelligence.js";
+import { scanSupplyChain } from "../supply-chain-scanner.js";
 import { generateRegressionReport } from "../regression-intelligence.js";
 import { listReviews } from "../review-history.js";
 import { listRuns, loadRun } from "../run-store.js";
@@ -753,6 +754,11 @@ export async function handleDashboardGet(
 
   if (requestUrl.pathname === "/api/binary/assets") {
     sendJson(response, 200, await analyzeBinaryIntelligence(projectPath));
+    return true;
+  }
+
+  if (requestUrl.pathname === "/api/supply-chain") {
+    sendJson(response, 200, await scanSupplyChain(projectPath));
     return true;
   }
 

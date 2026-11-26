@@ -28,6 +28,7 @@ import { analyzeDependencyImpact } from "../core/dependency-impact.js";
 import { runDoctorChecks } from "../core/doctor.js";
 import { cleanProject } from "../core/project-cleaner.js";
 import { analyzeBinaryIntelligence } from "../core/binary-intelligence.js";
+import { scanSupplyChain } from "../core/supply-chain-scanner.js";
 import { buildScorecard } from "../core/harness-scorecard.js";
 import { consult } from "../core/consult.js";
 import { analyzeContext } from "../core/context-budget.js";
@@ -1225,6 +1226,70 @@ server.registerTool(
         },
         { compact: true }
       );
+    } catch (error) {
+      return failure(error);
+    }
+  }
+);
+
+server.registerTool(
+  "anvil_supply_chain_audit",
+  {
+    title: "Audit node_modules Supply Chain & Binary Integrity",
+    description:
+      "Zero-dependency static audit of node_modules lifecycle hooks (preinstall/install/postinstall), native .node/PE/ELF/Mach-O/WASM addons, disguised binary extensions, exfiltration/obfuscated install scripts, lockfile integrity, and typosquatting.",
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
+    inputSchema: z.object({
+      projectPath: z
+        .string()
+        .optional()
+        .describe("Workspace-relative directory. Defaults to the configured workspace root."),
+      maxPackages: z
+        .number()
+        .int()
+        .min(1)
+        .max(5000)
+        .optional()
+        .describe("Optional maximum number of installed node_modules packages to inspect (default 1500)."),
+      detail: z
+        .boolean()
+        .optional()
+        .default(false)
+        .describe(
+          "When false (default), returns risk grade, summary counts, and actionable findings. Pass true for full lifecycle hook and native binary inventory."
+        ),
+    }),
+  },
+  async ({ projectPath, maxPackages, detail }) => {
+    try {
+      const root = await resolveWorkspace(projectPath);
+      const report = await auditReadOnlyMcpTool("anvil_supply_chain_audit", () =>
+        scanSupplyChain(root, { ...(maxPackages !== undefined ? { maxPackages } : {}) })
+      );
+      if (!detail) {
+        return result(
+          {
+            workspace: report.workspace,
+            passed: report.passed,
+            grade: report.grade,
+            riskScore: report.riskScore,
+            summary: report.summary,
+            actionableFindings: report.findings.filter((f) => f.severity !== "info").slice(0, 30),
+            nativeBinariesCount: report.nativeBinaries.length,
+            lifecycleHooksCount: report.lifecycleHooks.length,
+          },
+          {
+            compact: true,
+            hint: "Pass detail: true to inspect all lifecycle hooks, native binary SHA-256 checksums, and info-level inventory.",
+          }
+        );
+      }
+      return result(report, { compact: false });
     } catch (error) {
       return failure(error);
     }

@@ -68,6 +68,7 @@ import { runQuality } from "./quality.js";
 import { runInspect } from "./inspect.js";
 import { runDoctor } from "./doctor.js";
 import { runBinary } from "./binary.js";
+import { runSupplyChain } from "./supply-chain.js";
 import { runScorecard } from "./scorecard.js";
 import { runConsult } from "./consult.js";
 import { runContext } from "./context.js";
@@ -87,6 +88,7 @@ export const COMMANDS: ReadonlyMap<string, CommandHandler> = new Map<string, Com
   ["repair", runInstall],
   ["uninstall", runInstall],
   ["binary", runBinary],
+  ["supply-chain", runSupplyChain],
   ["scorecard", runScorecard],
   ["harness-audit", runScorecard],
   ["consult", runConsult],

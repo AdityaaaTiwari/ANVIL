@@ -143,7 +143,7 @@ Every command and flag listed below is verified and supported in ANVIL v1.4.0:
 | Command | Description | Verified Flags | Status |
 |---|---|---|---|
 | `anvil install [path]` / `uninstall` | Connects ANVIL to every AI tool config (Cursor, Claude, VS Code, Antigravity, etc.) | `--target <list>`, `--server <mode>`, `--dry-run`, `--no-instructions`, `--json` | **Available** |
-| `anvil gate [path]` | Deterministic CI quality & security gate with SARIF and policy enforcement | `--sarif <file>`, `--policy <file>`, `--policy-ref <ref>`, `--baseline <file>`, `--generate-baseline <file>`, `--since <ref>`, `--diff`, `--min-confidence <level>`, `--import-sarif <file>`, `--skip-agent-config`, `--fail-on-warnings`, `--json` | **Available** |
+| `anvil gate [path]` | Deterministic CI quality & security gate with SARIF and policy enforcement | `--sarif <file>`, `--policy <file>`, `--policy-ref <ref>`, `--baseline <file>`, `--generate-baseline <file>`, `--since <ref>`, `--diff`, `--min-confidence <level>`, `--import-sarif <file>`, `--supply-chain`, `--skip-agent-config`, `--fail-on-warnings`, `--json` | **Available** |
 | `anvil inspect [path]` | Analyzes project languages, manifests, frameworks, dependencies, and scripts | `--json` | **Available** |
 | `anvil map [path]` | Maps module import relationships and candidate entry points | `--json` | **Available** |
 | `anvil git [path]` | Calculates blast radius, downstream dependency impact, and suggested tests | `[base]` (e.g. `origin/main`, `HEAD~1`) | **Available** |
@@ -155,7 +155,8 @@ Every command and flag listed below is verified and supported in ANVIL v1.4.0:
 | `anvil shield [path]` | Runs ANVIL Shield v3 static harness audit across instructions, hooks, MCP, and CI | `--fix`, `--sarif <file>`, `--fail-on <level>`, `--json` | **Available** |
 | `anvil scorecard [path]` | Computes deterministic harness readiness scorecard across 9 engineering categories | `--verbose`, `--json` | **Available** |
 | `anvil consult "<task>"` | Finds catalog agents, skills, commands, rules, and MCP servers matching a task | `--json` | **Available** |
-| `anvil binary [path]` | Inspects native binaries, WASM, source maps, databases, and captures with magic-byte classification | `--findings-only`, `--json` | **Available** |
+| `anvil binary [path]` | Inspects native binaries (.node/PE/ELF/Mach-O/WASM), spoofed headers, source maps, and captures with SHA-256 checksums | `--supply-chain`, `--findings-only`, `--json` | **Available** |
+| `anvil supply-chain [path]` | Scans `node_modules` install hooks, native addons, disguised executables, lockfile integrity, and typosquats offline | `--findings-only`, `--max-packages <n>`, `--json` | **Available** |
 | `anvil context [path]` | Measures pre-prompt token cost per AI harness and flags duplicate/sprawl waste | `--verbose`, `--max <tokens>`, `--json` | **Available** |
 | `anvil loop run` / `status` | Executes anti-tamper verification loop with pre/post checksums and `.anvil/loops/` receipts | `--goal`, `--check`, `--max-iterations` | **Available** |
 | `anvil race` | Races multiple coding agents in isolated Git worktrees and ranks verified diffs | `--agents`, `--goal`, `--check` | **Available** |
@@ -184,7 +185,7 @@ ANVIL acts as the local inspection and verification harness for your agent:
 - **Cursor IDE:**
   Run `anvil install . --hooks --target cursor`. Automatically configures `.cursor/mcp.json` and `.cursor/hooks.json` so Cursor's agent receives immediate gate feedback before stopping.
 - **ANVIL Harness Catalog & Binary Intelligence:**
-  Ships a self-contained catalog of 49 specialist agents, 76 domain skills, 34 workflow commands, and 26 rule sets installable via `anvil install --profile standard`, alongside native TypeScript magic-byte binary and provenance inspection (`anvil binary` / `anvil_binary_intelligence`).
+  Ships a self-contained catalog of 49 specialist agents, 76 domain skills, 34 workflow commands, and 26 rule sets installable via `anvil install --profile standard`, alongside native TypeScript magic-byte binary, provenance, and zero-dependency `node_modules` supply-chain inspection (`anvil binary` / `anvil supply-chain` / `anvil_binary_intelligence` / `anvil_supply_chain_audit`).
 - **Codex & OpenCode:**
   Use standard `AGENTS.md` instructions and run `anvil gate .` to verify changes before committing.
 - **Google Antigravity (AGY):**
@@ -200,6 +201,8 @@ All ANVIL MCP tools are strictly read-only and enforce safety bounds:
 - `anvil_git_intelligence`: Working copy diff and affected modules.
 - `anvil_quality_audit`: Static project hygiene and workflow audit.
 - `anvil_security_audit`: Entropy-based secret scanning with zero network calls.
+- `anvil_binary_intelligence`: Zero-dependency PE/ELF/Mach-O/WASM header, SHA-256, and binary-spoofing inspection.
+- `anvil_supply_chain_audit`: Offline audit of `node_modules` install hooks, `.node` addons, lockfile integrity, and typosquats.
 - `anvil_clean_preview`: Safe dry-run inspection for caches and junk.
 - `anvil_doctor`: Diagnostic environment check for Node, Git, Docker, and permissions.
 
