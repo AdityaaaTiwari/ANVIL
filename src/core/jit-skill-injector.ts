@@ -154,13 +154,35 @@ function scoreCandidate(
   return { score, matchedTerms: [...matched].slice(0, 6), directHitCount: directHits, exactSkillMatch };
 }
 
+function stripHtmlCommentsAndCodeFences(input: string): string {
+  let out = "";
+  let i = 0;
+  while (i < input.length) {
+    if (input.startsWith("<!--", i)) {
+      const end = input.indexOf("-->", i + 4);
+      if (end === -1) break;
+      i = end + 3;
+    } else if (input.startsWith("```", i)) {
+      const end = input.indexOf("```", i + 3);
+      if (end === -1) break;
+      i = end + 3;
+    } else {
+      out += input[i]!;
+      i++;
+    }
+  }
+  // Iterate to fixed point so crafted overlapping sequences cannot re-form HTML comment delimiters.
+  while (out.includes("<!--") || out.includes("-->")) {
+    out = out.split("<!--").join("").split("-->").join("");
+  }
+  return out;
+}
+
 /**
  * Compresses skill markdown into dense, actionable directives bounded by charCap.
  */
 function compactDirective(body: string, charCap: number): string {
-  const cleaned = body
-    .replace(/<!--[\s\S]*?-->/g, "")
-    .replace(/```[\s\S]*?```/g, "")
+  const cleaned = stripHtmlCommentsAndCodeFences(body)
     .split(/\r?\n/)
     .map((line) => line.trim())
     .filter((line) => line.length > 0 && !line.startsWith("# "))

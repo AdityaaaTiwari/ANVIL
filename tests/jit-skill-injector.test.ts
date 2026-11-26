@@ -135,4 +135,34 @@ describe("JIT <1k Token Skill Injector & prompt-submit hook", () => {
     expect(blocked.json?.decision).toBe("block");
     expect(blocked.json?.hookSpecificOutput).toBeUndefined();
   });
+
+  it("strips nested/reconstructed HTML comments without ReDoS on pathological punctuation inputs", async () => {
+    const { resolveInternal } = await import("../src/core/architecture-map.js");
+    const { tokenize } = await import("../src/core/consult.js");
+
+    const root = await makeProject();
+    await mkdir(path.join(root, ".anvil", "skills"), { recursive: true });
+    await writeFile(
+      path.join(root, ".anvil", "skills", "clean-comments.md"),
+      [
+        "---",
+        "name: Clean Comment Skill",
+        "triggers: comment, strip, hardening",
+        "description: Verify recursive comment stripping.",
+        "---",
+        "Keep rule <!<!--secret-->-- and <!-<!--nested-->- out; always validate signature!",
+      ].join("\n")
+    );
+
+    const res = await injectJitSkills(root, "Apply comment strip hardening rule", { includeCatalog: false });
+    expect(res.formattedContext).toContain("Clean Comment Skill");
+    expect(res.formattedContext).not.toContain("<!--");
+    expect(res.formattedContext).not.toContain("-->");
+
+    // Verify linear-time behavior on CodeQL pathological strings
+    const t0 = Date.now();
+    expect(tokenize("-".repeat(20_000) + "oauth!token")).toContain("oauth");
+    expect(resolveInternal("src/a.ts", ".".repeat(20_000) + "!invalid", new Set(["src/a.ts"]))).toBeNull();
+    expect(Date.now() - t0).toBeLessThan(1000);
+  });
 });

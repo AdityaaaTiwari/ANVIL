@@ -113,11 +113,19 @@ const STOP = new Set([
   "from",
 ]);
 
+function trimEdgePunctuation(value: string): string {
+  let start = 0;
+  let end = value.length;
+  while (start < end && (value[start] === "." || value[start] === "-")) start++;
+  while (end > start && (value[end - 1] === "." || value[end - 1] === "-")) end--;
+  return value.slice(start, end);
+}
+
 export function tokenize(text: string): string[] {
   return text
     .toLowerCase()
     .split(/[^a-z0-9+#.-]+/)
-    .map((t) => t.replace(/^[.-]+|[.-]+$/g, ""))
+    .map(trimEdgePunctuation)
     .filter((t) => t.length > 1 && !STOP.has(t));
 }
 
