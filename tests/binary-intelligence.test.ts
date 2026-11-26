@@ -104,4 +104,93 @@ describe("ANVIL binary intelligence & provenance engine", () => {
     expect(report.assets.find((a) => a.path.endsWith("libbar.dylib"))?.detectedFormat).toBe("Mach-O (64-bit)");
     expect(report.cleanRoomReport.compliant).toBe(true);
   });
+
+  it("parses PE x86_64, ELF x86_64, Mach-O arm64, WASI hints, SHA-256 digests, and detects .node addons", async () => {
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-bin-deep-"));
+    const buildDir = path.join(root, "native-build");
+    await mkdir(buildDir, { recursive: true });
+
+    // Minimal valid PE32+ x86_64 DLL header at e_lfanew = 0x80
+    const peBuf = Buffer.alloc(0xc0, 0);
+    peBuf[0] = 0x4d;
+    peBuf[1] = 0x5a;
+    peBuf.writeUInt32LE(0x80, 0x3c);
+    peBuf.write("PE\0\0", 0x80, "latin1");
+    peBuf.writeUInt16LE(0x8664, 0x84); // Machine: x86_64
+    peBuf.writeUInt16LE(0x2000, 0x96); // Characteristics (e_lfanew + 22): DLL
+    peBuf.writeUInt16LE(0x20b, 0x98); // Optional header magic (e_lfanew + 24): PE32+
+    await writeFile(path.join(buildDir, "addon.node"), peBuf);
+
+    // Valid 64-bit little-endian ELF shared object for x86_64
+    const elfBuf = Buffer.alloc(64, 0);
+    elfBuf[0] = 0x7f;
+    elfBuf[1] = 0x45;
+    elfBuf[2] = 0x4c;
+    elfBuf[3] = 0x46;
+    elfBuf[4] = 2; // 64-bit
+    elfBuf[5] = 1; // LE
+    elfBuf.writeUInt16LE(3, 16); // ET_DYN
+    elfBuf.writeUInt16LE(62, 18); // EM_X86_64
+    await writeFile(path.join(buildDir, "mod.so"), elfBuf);
+
+    // Mach-O 64-bit LE arm64 dylib (0xcffaedfe, cpu=0x0100000c, filetype=6)
+    const machBuf = Buffer.alloc(32, 0);
+    machBuf.writeUInt32BE(0xcffaedfe, 0);
+    machBuf.writeUInt32LE(0x0100000c, 4);
+    machBuf.writeUInt32LE(6, 12);
+    await writeFile(path.join(buildDir, "libarm.dylib"), machBuf);
+
+    // WASM with WASI import token
+    const wasmBuf = Buffer.concat([
+      Buffer.from([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00]),
+      Buffer.from("wasi_snapshot_preview1"),
+    ]);
+    await writeFile(path.join(buildDir, "edge.wasm"), wasmBuf);
+
+    const report = await analyzeBinaryIntelligence(root);
+    const addon = report.assets.find((a) => a.path.endsWith("addon.node"));
+    expect(addon?.category).toBe("native-binary");
+    expect(addon?.binaryMetadata?.arch).toBe("x86_64");
+    expect(addon?.binaryMetadata?.objectKind).toBe("shared-library");
+    expect(addon?.sha256).toMatch(/^[0-9a-f]{64}$/);
+
+    const mod = report.assets.find((a) => a.path.endsWith("mod.so"));
+    expect(mod?.binaryMetadata?.bits).toBe(64);
+    expect(mod?.binaryMetadata?.endianness).toBe("little");
+    expect(mod?.binaryMetadata?.arch).toBe("x86_64");
+
+    const mach = report.assets.find((a) => a.path.endsWith("libarm.dylib"));
+    expect(mach?.binaryMetadata?.arch).toBe("arm64");
+    expect(mach?.binaryMetadata?.objectKind).toBe("shared-library");
+
+    const wasm = report.assets.find((a) => a.path.endsWith("edge.wasm"));
+    expect(wasm?.binaryMetadata?.wasiImports).toContain("wasi_snapshot_preview1");
+    expect(report.cleanRoomReport.compliant).toBe(true);
+  });
+
+  it("flags disguised native binaries (ANVIL-BIN-004) without false-triggering on plain text MZ files", async () => {
+    root = await mkdtemp(path.join(os.tmpdir(), "anvil-bin-spoof-"));
+    await mkdir(path.join(root, "public"), { recursive: true });
+
+    // Real ELF disguised as .png
+    const fakePng = Buffer.alloc(32, 0);
+    fakePng[0] = 0x7f;
+    fakePng[1] = 0x45;
+    fakePng[2] = 0x4c;
+    fakePng[3] = 0x46;
+    fakePng[4] = 2;
+    fakePng[5] = 1;
+    fakePng.writeUInt16LE(62, 18);
+    await writeFile(path.join(root, "public", "logo.png"), fakePng);
+
+    // Plain JS file starting with MZ comment/text (no valid PE\0\0 header) must NOT false positive
+    await writeFile(path.join(root, "public", "safe.js"), "MZ = { version: 1 }; // safe js");
+
+    const report = await analyzeBinaryIntelligence(root);
+    expect(report.cleanRoomReport.compliant).toBe(false);
+    const spoofFindings = report.cleanRoomReport.findings.filter((f) => f.ruleId === "ANVIL-BIN-004");
+    expect(spoofFindings).toHaveLength(1);
+    expect(spoofFindings[0]?.severity).toBe("critical");
+    expect(spoofFindings[0]?.file).toBe("public/logo.png");
+  });
 });

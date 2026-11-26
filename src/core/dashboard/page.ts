@@ -922,16 +922,16 @@ ${DASHBOARD_STYLES}
 <!-- ==================== TAB: ANVIL BINARY & PROVENANCE ==================== -->
 <div id="tab-binary" class="tab-pane">
   <section class="hero">
-    <div class="eyebrow">ANVIL BINARY INTELLIGENCE / 09</div>
-    <h1>Binary, Bundle & Provenance Intelligence</h1>
-    <p>Native TypeScript inspection for compiled binaries, WASM, source maps, web bundles, databases, and network captures with magic-byte verification.</p>
+    <div class="eyebrow">ANVIL BINARY &amp; SUPPLY-CHAIN INTELLIGENCE / 09</div>
+    <h1>Binary, Provenance &amp; node_modules Supply-Chain Scanner</h1>
+    <p>Zero-dependency inspection for compiled binaries (PE, ELF, Mach-O, WASM, .node addons), spoofed file headers, SHA-256 checksums, npm install hooks, and lockfile provenance.</p>
   </section>
 
   <section class="grid" id="binaryMetrics">
     <div class="card"><div class="metric-label">Total Binary Assets</div><div class="metric" id="binaryTotalAssets">—</div><div class="metric-sub">Binaries, Maps, WASM</div></div>
-    <div class="card"><div class="metric-label">Provenance Status</div><div class="metric" id="binaryCleanStatus" style="color:var(--emerald)">COMPLIANT</div><div class="metric-sub">ANVIL-BIN-001..003 Verified</div></div>
-    <div class="card"><div class="metric-label">Binary Inspector</div><div class="metric" style="color:var(--purple)">ANVIL Engine</div><div class="metric-sub">Magic Headers: PE, ELF, Mach-O, WASM</div></div>
-    <div class="card"><div class="metric-label">Source Boundary</div><div class="metric" style="color:var(--emerald)">ACTIVE</div><div class="metric-sub">Enforces safe provenance</div></div>
+    <div class="card"><div class="metric-label">Provenance Status</div><div class="metric" id="binaryCleanStatus" style="color:var(--emerald)">COMPLIANT</div><div class="metric-sub">ANVIL-BIN-001..005 Verified</div></div>
+    <div class="card"><div class="metric-label">Supply-Chain Grade</div><div class="metric" id="supplyChainGrade" style="color:var(--emerald)">—</div><div class="metric-sub" id="supplyChainPackages">Packages scanned locally</div></div>
+    <div class="card"><div class="metric-label">Install Hooks / Native</div><div class="metric" id="supplyChainHooksNative">—</div><div class="metric-sub">Lifecycle scripts &amp; .node addons</div></div>
   </section>
 
   <section class="section card">
@@ -940,6 +940,14 @@ ${DASHBOARD_STYLES}
       <span class="pill pill-purple">BINARY INVENTORY</span>
     </div>
     <div id="binaryAssetsList" class="list"><div class="loading">Scanning for compiled binaries and source maps…</div></div>
+  </section>
+
+  <section class="section card">
+    <div class="section-head">
+      <h2>node_modules Supply-Chain &amp; Lifecycle Hook Findings</h2>
+      <span class="pill pill-cyan">SUPPLY-CHAIN AUDIT</span>
+    </div>
+    <div id="supplyChainFindingsList" class="list"><div class="loading">Inspecting installed packages &amp; lockfiles…</div></div>
   </section>
 </div>
 
