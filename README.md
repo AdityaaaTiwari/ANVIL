@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/anvil-workbench/ANVIL/main/docs/anvil-dashboard.png?v=2" alt="ANVIL Verification Layer Dashboard" width="100%" />
+  <img src="https://raw.githubusercontent.com/AdityaaaTiwari/ANVIL/main/docs/anvil-dashboard.png?v=2" alt="ANVIL Verification Layer Dashboard" width="100%" />
 </p>
 
 <h1 align="center">ANVIL — The Deterministic Verification Layer for AI Coding Agents</h1>
@@ -10,9 +10,9 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="MIT License" /></a>
-  <a href="https://github.com/anvil-workbench/ANVIL/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/anvil-workbench/ANVIL/ci.yml?branch=main&style=flat&label=build" alt="Build status" /></a>
+  <a href="https://github.com/AdityaaaTiwari/ANVIL/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/AdityaaaTiwari/ANVIL/ci.yml?branch=main&style=flat&label=build" alt="Build status" /></a>
   <a href="https://www.npmjs.com/package/anvil-engineering-workbench"><img src="https://img.shields.io/npm/v/anvil-engineering-workbench?color=orange" alt="npm version" /></a>
-  <a href="https://github.com/anvil-workbench/ANVIL"><img src="https://img.shields.io/github/stars/anvil-workbench/ANVIL?style=flat" alt="GitHub stars" /></a>
+  <a href="https://github.com/AdityaaaTiwari/ANVIL"><img src="https://img.shields.io/github/stars/AdityaaaTiwari/ANVIL?style=flat" alt="GitHub stars" /></a>
   <a href="https://modelcontextprotocol.io/"><img src="https://img.shields.io/badge/MCP-Read--only%20Tools-0f766e" alt="MCP Tools" /></a>
 </p>
 
@@ -95,7 +95,7 @@ npm install --global anvil-engineering-workbench
 *Or install directly from the verified GitHub release:*
 
 ```bash
-npm install --global git+https://github.com/anvil-workbench/ANVIL.git#v1.4.0
+npm install --global git+https://github.com/AdityaaaTiwari/ANVIL.git#v1.4.0
 ```
 
 Verify your installation:
@@ -218,7 +218,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run ANVIL Quality & Security Gate
-        uses: anvil-workbench/ANVIL@v1.4.0
+        uses: AdityaaaTiwari/ANVIL@v1.4.0
         with:
           version: v1.4.0
           operation: gate

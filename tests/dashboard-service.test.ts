@@ -130,7 +130,7 @@ describe("dashboard data", () => {
     );
     expect(doctor).toMatchObject({ installed: true, hooks: true, targets: ["claude"] });
     expect(doctor.summary).toEqual({ ok: 0, missing: 1, modified: 0, outdated: 2 });
-    expect(parseRepoFullName("anvil-workbench/ANVIL")).toEqual({ owner: "anvil-workbench", repo: "ANVIL" });
+    expect(parseRepoFullName("AdityaaaTiwari/ANVIL")).toEqual({ owner: "AdityaaaTiwari", repo: "ANVIL" });
     expect(parseRepoFullName("../etc")).toBeUndefined();
   });
 

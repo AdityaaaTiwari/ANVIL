@@ -53,12 +53,12 @@ anvil mcp start
 - **VS Code:** Add server in `.vscode/mcp.json`
 
 ## Documentation Links
-- [GitHub Repository](https://github.com/anvil-workbench/ANVIL)
-- [Documentation Index](https://github.com/anvil-workbench/ANVIL/blob/main/docs/README.md)
-- [Universal Tool Installer](https://github.com/anvil-workbench/ANVIL/blob/main/docs/install.md)
-- [Getting Started Guide](https://github.com/anvil-workbench/ANVIL/blob/main/docs/getting-started.md)
-- [MCP Server Documentation](https://github.com/anvil-workbench/ANVIL/blob/main/docs/mcp-server.md)
-- [Antigravity Integration Guide](https://github.com/anvil-workbench/ANVIL/blob/main/docs/integrations/antigravity.md)
-- [Policy & Gate Guide](https://github.com/anvil-workbench/ANVIL/blob/main/docs/policy-as-code.md)
-- [CI Gate & SARIF Integration](https://github.com/anvil-workbench/ANVIL/blob/main/docs/ci-gate-and-sarif.md)
-- [Agent Operating Guidelines](https://github.com/anvil-workbench/ANVIL/blob/main/AGENTS.md)
+- [GitHub Repository](https://github.com/AdityaaaTiwari/ANVIL)
+- [Documentation Index](https://github.com/AdityaaaTiwari/ANVIL/blob/main/docs/README.md)
+- [Universal Tool Installer](https://github.com/AdityaaaTiwari/ANVIL/blob/main/docs/install.md)
+- [Getting Started Guide](https://github.com/AdityaaaTiwari/ANVIL/blob/main/docs/getting-started.md)
+- [MCP Server Documentation](https://github.com/AdityaaaTiwari/ANVIL/blob/main/docs/mcp-server.md)
+- [Antigravity Integration Guide](https://github.com/AdityaaaTiwari/ANVIL/blob/main/docs/integrations/antigravity.md)
+- [Policy & Gate Guide](https://github.com/AdityaaaTiwari/ANVIL/blob/main/docs/policy-as-code.md)
+- [CI Gate & SARIF Integration](https://github.com/AdityaaaTiwari/ANVIL/blob/main/docs/ci-gate-and-sarif.md)
+- [Agent Operating Guidelines](https://github.com/AdityaaaTiwari/ANVIL/blob/main/AGENTS.md)

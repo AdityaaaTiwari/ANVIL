@@ -81,7 +81,7 @@ runs:
           echo "Using existing ANVIL installation: $(anvil --version)"
         else
           echo "Installing ANVIL version ${ANVIL_VERSION}..."
-          npm install --global "git+https://github.com/anvil-workbench/ANVIL.git#${ANVIL_VERSION}"
+          npm install --global "git+https://github.com/AdityaaaTiwari/ANVIL.git#${ANVIL_VERSION}"
         fi
 
         if command -v anvil >/dev/null 2>&1; then

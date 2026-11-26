@@ -2,7 +2,7 @@
 
 ## Website installation flow
 
-1. Open the [ANVIL website](https://github.com/anvil-workbench/ANVIL) and select **Get App**.
+1. Open the [ANVIL website](https://github.com/AdityaaaTiwari/ANVIL) and select **Get App**.
 2. GitHub opens the ANVIL App installation page. Choose your personal account or organization.
 3. Choose **All repositories** or **Only select repositories**, then confirm **Install**.
 4. GitHub returns to the ANVIL setup page. The installation webhook records the installation metadata.
@@ -52,9 +52,9 @@ The Redis token must have write access. The read-only token is not sufficient.
 
 ## GitHub App settings
 
-- Homepage: `https://github.com/anvil-workbench/ANVIL`
-- Webhook: `https://anvil-workbench.vercel.app/api/github/webhook`
-- User authorization callback URL: `https://anvil-workbench.vercel.app/api/github/callback`
-- Setup URL: `https://anvil-workbench.vercel.app/api/github/setup`
+- Homepage: `https://github.com/AdityaaaTiwari/ANVIL`
+- Webhook: `https://anvil-virid-sigma.vercel.app/api/github/webhook`
+- User authorization callback URL: `https://anvil-virid-sigma.vercel.app/api/github/callback`
+- Setup URL: `https://anvil-virid-sigma.vercel.app/api/github/setup`
 - Subscribe to `installation` and `installation_repositories` webhook events.
 - Keep permissions least-privilege: repository Metadata read-only and Contents read-only.

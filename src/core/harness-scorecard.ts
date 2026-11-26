@@ -482,7 +482,9 @@ export async function buildScorecard(options: ScorecardOptions): Promise<Scoreca
       "Run the test suite in CI."
     );
     c.check(
-      /anvil(?:-engineering-workbench)?[^\n]*(?:shield|gate)|anvil-workbench\/ANVIL|anvil shield/i.test(workflowText),
+      /anvil(?:-engineering-workbench)?[^\n]*(?:shield|gate)|(?:AdityaaaTiwari|anvil-workbench)\/ANVIL|anvil shield/i.test(
+        workflowText
+      ),
       2,
       "ANVIL Shield runs in CI",
       "Add the ANVIL action / Shield step to CI (see README → GitHub Action)."

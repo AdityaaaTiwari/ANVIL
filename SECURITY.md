@@ -20,7 +20,7 @@ If you believe you have discovered a security vulnerability in ANVIL, **please d
 
 ### Preferred Method: GitHub Private Vulnerability Reporting
 Please submit a private advisory through GitHub:
-👉 **[Open a Security Advisory on GitHub](https://github.com/anvil-workbench/ANVIL/security/advisories/new)**
+👉 **[Open a Security Advisory on GitHub](https://github.com/AdityaaaTiwari/ANVIL/security/advisories/new)**
 
 This ensures your report is received securely and confidentially by the maintainers without exposing other users to risk.
 

@@ -124,7 +124,7 @@ export function oauthConfig() {
   const clientId = process.env.GITHUB_CLIENT_ID;
   const clientSecret = process.env.GITHUB_CLIENT_SECRET;
   const appId = Number(process.env.GITHUB_APP_ID);
-  const callbackUrl = process.env.GITHUB_CALLBACK_URL ?? "https://anvil-workbench.vercel.app/api/github/callback";
+  const callbackUrl = process.env.GITHUB_CALLBACK_URL ?? "https://anvil-virid-sigma.vercel.app/api/github/callback";
   if (!clientId || !clientSecret || !Number.isSafeInteger(appId) || appId <= 0) {
     throw new Error("GitHub OAuth configuration is incomplete (missing client ID, secret, or app ID)");
   }

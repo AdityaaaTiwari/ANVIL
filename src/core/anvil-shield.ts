@@ -1057,7 +1057,7 @@ export function toSarif(report: ShieldReport, version: string): Record<string, u
           driver: {
             name: "ANVIL Shield",
             version,
-            informationUri: "https://github.com/anvil-workbench/ANVIL",
+            informationUri: "https://github.com/AdityaaaTiwari/ANVIL",
             rules: usedRules.map((id) => {
               const rule = ruleFor(id);
               const severity = rule && "severity" in rule ? rule.severity : "medium";

@@ -108,7 +108,7 @@ export function generateSarif(options: SarifFormatOptions): string {
           id: finding.id,
           name: finding.source === "security" ? `Security_${finding.id}` : `Review_${finding.id}`,
           shortDescription: { text: finding.message },
-          helpUri: "https://github.com/anvil-workbench/ANVIL/blob/main/docs/security-model.md",
+          helpUri: "https://github.com/AdityaaaTiwari/ANVIL/blob/main/docs/security-model.md",
           defaultConfiguration: { level },
         });
       }
@@ -179,7 +179,7 @@ export function generateSarif(options: SarifFormatOptions): string {
             id: s.ruleId,
             name: `Review_${s.ruleId}`,
             shortDescription: { text: `Rule ${s.ruleId} suppressed in source code` },
-            helpUri: "https://github.com/anvil-workbench/ANVIL/blob/main/docs/security-model.md",
+            helpUri: "https://github.com/AdityaaaTiwari/ANVIL/blob/main/docs/security-model.md",
             defaultConfiguration: { level },
           });
         }
@@ -233,7 +233,7 @@ export function generateSarif(options: SarifFormatOptions): string {
             id: finding.rule,
             name: finding.category ? `Security_${finding.category}` : finding.rule,
             shortDescription: { text: finding.description || "Security finding" },
-            helpUri: "https://github.com/anvil-workbench/ANVIL/blob/main/docs/security-model.md",
+            helpUri: "https://github.com/AdityaaaTiwari/ANVIL/blob/main/docs/security-model.md",
             defaultConfiguration: { level },
           });
         }
@@ -289,7 +289,7 @@ export function generateSarif(options: SarifFormatOptions): string {
             name: finding.title.replace(/[^A-Za-z0-9_]/g, "_"),
             shortDescription: { text: finding.title },
             fullDescription: { text: finding.recommendation },
-            helpUri: "https://github.com/anvil-workbench/ANVIL/blob/main/docs/security-model.md",
+            helpUri: "https://github.com/AdityaaaTiwari/ANVIL/blob/main/docs/security-model.md",
             defaultConfiguration: { level },
           });
         }
@@ -341,7 +341,7 @@ export function generateSarif(options: SarifFormatOptions): string {
             id: s.ruleId,
             name: `Review_${s.ruleId}`,
             shortDescription: { text: `Rule ${s.ruleId} suppressed in source code` },
-            helpUri: "https://github.com/anvil-workbench/ANVIL/blob/main/docs/security-model.md",
+            helpUri: "https://github.com/AdityaaaTiwari/ANVIL/blob/main/docs/security-model.md",
             defaultConfiguration: { level },
           });
         }
@@ -388,7 +388,7 @@ export function generateSarif(options: SarifFormatOptions): string {
           driver: {
             name: "ANVIL",
             version,
-            informationUri: "https://github.com/anvil-workbench/ANVIL",
+            informationUri: "https://github.com/AdityaaaTiwari/ANVIL",
             rules: Array.from(rulesMap.values()),
           },
         },

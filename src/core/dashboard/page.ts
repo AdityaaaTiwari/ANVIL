@@ -112,8 +112,8 @@ ${DASHBOARD_STYLES}
       <h2>GitHub Community, CI Gate & Achievements</h2>
       <div class="actions">
         <span class="pill pill-purple">COMMUNITY & CI</span>
-        <a href="https://github.com/anvil-workbench/ANVIL/discussions" target="_blank" rel="noreferrer" class="btn btn-primary" style="text-decoration:none;font-size:11px">Open Discussions (#10 Q&A)</a>
-        <a href="https://github.com/anvil-workbench/ANVIL/actions" target="_blank" rel="noreferrer" class="btn" style="text-decoration:none;font-size:11px">GitHub Actions CI</a>
+        <a href="https://github.com/AdityaaaTiwari/ANVIL/discussions" target="_blank" rel="noreferrer" class="btn btn-primary" style="text-decoration:none;font-size:11px">Open Discussions (#10 Q&A)</a>
+        <a href="https://github.com/AdityaaaTiwari/ANVIL/actions" target="_blank" rel="noreferrer" class="btn" style="text-decoration:none;font-size:11px">GitHub Actions CI</a>
       </div>
     </div>
     <p class="run-meta">Official ANVIL engineering workbench community, discussions, PR verification workflows, and developer badges guide.</p>

@@ -189,7 +189,7 @@ jobs:
           node-version: 22
 
       - name: Run ANVIL Verification Gate
-        uses: anvil-workbench/ANVIL@v1.4.0
+        uses: AdityaaaTiwari/ANVIL@v1.4.0
         with:
           since: origin/${{ github.base_ref || 'main' }}
           sarif: anvil-gate.sarif
