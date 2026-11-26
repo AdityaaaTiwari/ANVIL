@@ -132,24 +132,18 @@ const server = new McpServer({
   version: resolveVersion(),
 });
 
-function registerToolWithAlias<T extends z.ZodRawShape>(
-  name: string,
-  config: {
-    title?: string;
-    description?: string;
-    inputSchema?: z.ZodObject<T>;
-  },
-  handler: (args: z.infer<z.ZodObject<T>>) => Promise<any>
-) {
-  (server.registerTool as any)(name, config, handler);
-}
-
-registerToolWithAlias(
+server.registerTool(
   "anvil_inspect_project",
   {
     title: "Inspect project",
     description:
       "Inspect project structure, languages, frameworks, package managers, scripts, and dependencies. Call this first when onboarding to an unfamiliar codebase or checking project stack before running builds or migrations. Does NOT execute project code. Returns compact summary by default; pass detail: true for full manifests.",
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
     inputSchema: z.object({
       projectPath: z
         .string()
@@ -192,12 +186,18 @@ registerToolWithAlias(
   }
 );
 
-registerToolWithAlias(
+server.registerTool(
   "anvil_map_architecture",
   {
     title: "Map architecture",
     description:
       "Map project architecture, entry points, module relationships, and external dependencies. Call this BEFORE modifying core architecture, planning refactors, or tracing imports across files instead of manually reading 20+ files. Does NOT execute project code. Returns compact summary by default; pass detail: true for full graph.",
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
     inputSchema: z.object({
       projectPath: z
         .string()
@@ -239,12 +239,18 @@ registerToolWithAlias(
   }
 );
 
-registerToolWithAlias(
+server.registerTool(
   "anvil_search_code",
   {
     title: "Search code",
     description:
       "Search identifiers, function names, and text in project source code within workspace security boundaries (excludes .env, secrets, node_modules, generated code). Call this for targeted symbol lookups instead of broad recursive greps.",
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
     inputSchema: z.object({
       query: z.string().min(2).max(120),
       projectPath: z
@@ -277,12 +283,18 @@ registerToolWithAlias(
   }
 );
 
-registerToolWithAlias(
+server.registerTool(
   "anvil_list_files",
   {
     title: "List workspace files",
     description:
       "Read-only directory listing for supported source and config files (bounded to 200 entries; excludes .git, node_modules, secrets, symlinks). Call this to explore directory structure safely.",
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
     inputSchema: z.object({
       projectPath: z
         .string()
@@ -314,12 +326,18 @@ registerToolWithAlias(
   }
 );
 
-registerToolWithAlias(
+server.registerTool(
   "anvil_read_file",
   {
     title: "Read workspace file",
     description:
       "Read a supported text/source file with security guardrails (rejects files >128 KiB, traversal, secrets, binary). Read-only; does not modify files.",
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
     inputSchema: z.object({
       projectPath: z
         .string()
@@ -351,12 +369,18 @@ registerToolWithAlias(
   }
 );
 
-registerToolWithAlias(
+server.registerTool(
   "anvil_quality_audit",
   {
     title: "Audit project quality",
     description:
       "Fast, local static quality audit across manifests, test structure, security patterns, and workflow health. Call this before submitting code to catch missing tests, package issues, and configuration bugs without LLM tokens. Returns compact summary by default; pass detail: true for all findings.",
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
     inputSchema: z.object({
       projectPath: z
         .string()
@@ -403,12 +427,18 @@ registerToolWithAlias(
   }
 );
 
-registerToolWithAlias(
+server.registerTool(
   "anvil_git_intelligence",
   {
     title: "Analyze Git changes",
     description:
       "Inspect working-tree git diff, uncommitted changes, affected modules, and heuristic commit risk. Call this to check what has changed in the working copy and which tests should be run. Returns compact summary by default; pass detail: true for full blast radius.",
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
     inputSchema: z.object({
       projectPath: z
         .string()
@@ -454,12 +484,18 @@ registerToolWithAlias(
   }
 );
 
-registerToolWithAlias(
+server.registerTool(
   "anvil_list_agents",
   {
     title: "List specialist agents",
     description:
       "List specialist engineering roles (architecture, reviewer, security, tester, debugger, release) and project-local .anvil/agents definitions. Call this to inspect available specialist personas.",
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
     inputSchema: z.object({ projectPath: z.string().optional() }),
   },
   async ({ projectPath }) => {
@@ -473,12 +509,18 @@ registerToolWithAlias(
   }
 );
 
-registerToolWithAlias(
+server.registerTool(
   "anvil_create_review_plan",
   {
     title: "Create engineering review plan",
     description:
       "Create a dependency-aware engineering workflow with architecture, planning, code review, security, performance, debugging, testing, documentation, delivery and release-readiness specialist tasks. This creates a draft only; it does not call an AI provider, modify files, or execute commands.",
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
     inputSchema: z.object({ goal: z.string().min(5).max(2000) }),
   },
   async ({ goal }) => {
@@ -490,7 +532,7 @@ registerToolWithAlias(
   }
 );
 
-registerToolWithAlias(
+server.registerTool(
   "anvil_agent_intelligence",
   {
     title: "Agent evaluation intelligence",
@@ -500,6 +542,12 @@ registerToolWithAlias(
       "Use this before editing agent prompts, skills, or configuration to understand what the data says about the agent's current strengths and weaknesses.",
       "Does not execute agents, modify files, or call any AI provider.",
     ].join(" "),
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
     inputSchema: z.object({
       projectPath: z
         .string()
@@ -552,12 +600,18 @@ registerToolWithAlias(
   }
 );
 
-registerToolWithAlias(
+server.registerTool(
   "anvil_project_health",
   {
     title: "Project health snapshot",
     description:
       "Generate a unified project health score (0–100), grade (A–F), and evidence-backed breakdowns across languages, tooling, architecture, and static quality.",
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
     inputSchema: z.object({
       projectPath: z
         .string()
@@ -575,12 +629,18 @@ registerToolWithAlias(
   }
 );
 
-registerToolWithAlias(
+server.registerTool(
   "anvil_change_risk",
   {
     title: "Change risk intelligence",
     description:
       "Analyze blast radius, downstream dependency impact, structural complexity, and suggested test targets for current git changes. Call this BEFORE committing or creating PRs to identify breaking changes and ensure adequate test coverage. Returns compact summary by default; pass detail: true for complete breakdown.",
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
     inputSchema: z.object({
       projectPath: z
         .string()
@@ -621,12 +681,18 @@ registerToolWithAlias(
   }
 );
 
-registerToolWithAlias(
+server.registerTool(
   "anvil_remediation_plan",
   {
     title: "Dependency remediation plan",
     description:
       "Generate an advisory remediation plan for vulnerable and outdated dependencies with human approval guardrails.",
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
     inputSchema: z.object({
       projectPath: z
         .string()
@@ -644,12 +710,18 @@ registerToolWithAlias(
   }
 );
 
-registerToolWithAlias(
+server.registerTool(
   "anvil_agent_optimization",
   {
     title: "Agent optimization recommendations",
     description:
       "Analyze historical benchmark matrices to generate advisory suggestions and checklists for tuning agent prompts and skills.",
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
     inputSchema: z.object({
       projectPath: z
         .string()
@@ -672,12 +744,18 @@ registerToolWithAlias(
   }
 );
 
-registerToolWithAlias(
+server.registerTool(
   "anvil_project_memory",
   {
     title: "Read project memory",
     description:
       "Read-only access to saved project decisions, architecture notes, constraints, and preferences within a token budget. Does not reveal secrets or modify memory.",
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
     inputSchema: z.object({
       projectPath: z
         .string()
@@ -710,12 +788,18 @@ registerToolWithAlias(
   }
 );
 
-registerToolWithAlias(
+server.registerTool(
   "anvil_agent_security_audit",
   {
     title: "Audit agent security configuration",
     description:
       "Audit workspace agent instructions, skills, lifecycle hooks, and permission policies for secret leakage, prompt injection risks, and excessive permissions.",
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
     inputSchema: z.object({
       projectPath: z
         .string()
@@ -733,12 +817,18 @@ registerToolWithAlias(
   }
 );
 
-registerToolWithAlias(
+server.registerTool(
   "anvil_dependency_impact",
   {
     title: "Analyze dependency impact",
     description:
       "Analyze dependency manifest changes, undeclared package imports, and transitive file impact against a git base revision.",
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
     inputSchema: z.object({
       projectPath: z
         .string()
@@ -759,12 +849,18 @@ registerToolWithAlias(
   }
 );
 
-registerToolWithAlias(
+server.registerTool(
   "anvil_security_audit",
   {
     title: "Audit repository security & secrets",
     description:
       "Deep scan repository for hardcoded secrets, API keys, sensitive tokens, and dangerous script patterns. Call this BEFORE pushing code or making public releases to guarantee no credentials leak. Returns compact summary by default; pass detail: true for snippets and evidence.",
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
     inputSchema: z.object({
       projectPath: z
         .string()
@@ -810,6 +906,12 @@ server.registerTool(
     title: "Run diagnostic system and workspace health checks",
     description:
       "Run comprehensive diagnostic checks on Node.js runtime, Git CLI, Docker daemon, provider credentials, and workspace configuration.",
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
     inputSchema: z.object({
       projectPath: z
         .string()
@@ -833,6 +935,12 @@ server.registerTool(
     title: "Preview workspace cleanup and dead code",
     description:
       "Perform a safe, read-only dry-run scan to identify junk files, cache files, build artifacts, temporary downloads, and unreferenced orphan source modules. Call this before releases or repo cleanup. Returns compact summary by default; pass detail: true for itemized list.",
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
     inputSchema: z.object({
       projectPath: z
         .string()
@@ -884,12 +992,18 @@ server.registerTool(
   }
 );
 
-registerToolWithAlias(
+server.registerTool(
   "anvil_binary_intelligence",
   {
     title: "Binary, Bundle & Provenance Analysis",
     description:
       "Inspect workspace for compiled native binaries, web bundles, source maps, WASM, databases, and capture files using local magic-byte detection and provenance checks. Returns compact summary by default; pass detail: true for full asset inventory.",
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
     inputSchema: z.object({
       projectPath: z
         .string()
@@ -930,12 +1044,18 @@ registerToolWithAlias(
   }
 );
 
-registerToolWithAlias(
+server.registerTool(
   "anvil_scorecard",
   {
     title: "Check Harness Readiness Scorecard",
     description:
       "Check repository readiness score (0-10) across harness installation, runtime guards, quality gates, project memory, continuous learning, and CI integration. Deterministic, local evaluation.",
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
     inputSchema: z.object({
       projectPath: z
         .string()
@@ -976,12 +1096,18 @@ registerToolWithAlias(
   }
 );
 
-registerToolWithAlias(
+server.registerTool(
   "anvil_consult",
   {
     title: "Consult Engineering Catalog",
     description:
       "Find specialist agents, skills, workflow commands, stack rules, and MCP servers tailored to a task or query. Deterministic ranking.",
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
     inputSchema: z.object({
       query: z.string().describe("Task description, e.g. 'security review of auth code' or 'e2e tests in browser'."),
       limit: z.number().optional().default(10).describe("Maximum matches to return (default: 10)."),
@@ -1012,11 +1138,17 @@ registerToolWithAlias(
   }
 );
 
-registerToolWithAlias(
+server.registerTool(
   "anvil_context_budget",
   {
     title: "Context Window Budget & Compaction",
     description: "Analyze project context consumption, component token sizes, and strategic compaction opportunities.",
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
     inputSchema: z.object({
       projectPath: z
         .string()
@@ -1055,12 +1187,18 @@ registerToolWithAlias(
   }
 );
 
-registerToolWithAlias(
+server.registerTool(
   "anvil_guard_check",
   {
     title: "Evaluate Tool Command or File Action with Guard",
     description:
       "Check whether a planned tool command or file path is allowed, requires confirmation, or is blocked under ANVIL Guard security rules.",
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
     inputSchema: z.object({
       toolName: z.string().describe("Tool name, e.g. 'Bash', 'Write', 'Edit', 'Read'."),
       command: z.string().optional().describe("Shell command string to evaluate (for Bash/PowerShell)."),

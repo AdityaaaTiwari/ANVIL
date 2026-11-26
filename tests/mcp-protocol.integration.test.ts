@@ -93,6 +93,15 @@ describe("ANVIL MCP stdio protocol integration", () => {
 
     const listed = await request("tools/list");
     expect(listed.error).toBeUndefined();
+    expect(listed.result.tools.length).toBeGreaterThanOrEqual(25);
+    for (const tool of listed.result.tools as Array<{ name: string; annotations?: Record<string, unknown> }>) {
+      expect(tool.annotations, `${tool.name} missing required MCP directory hints`).toMatchObject({
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      });
+    }
     const toolNames = listed.result.tools.map((tool: { name: string }) => tool.name);
     expect(toolNames.some((name: string) => name.startsWith("forge_"))).toBe(false);
     expect(toolNames).toContain("anvil_list_files");
