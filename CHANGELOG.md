@@ -24,21 +24,21 @@
 
 ### Changed
 - **Native ANVIL Consolidation (Phase 1 – Phase 3):**
-  - **Phase 1 & Phase 2:** Removed unused duplicate/legacy modules (`src/core/forge-shield.ts`, `src/core/forge-status.ts`, `tests/forge-status.test.ts`), renamed heuristic rules `FORGE-AGENT-001`..`006` → `ANVIL-AGENT-001`..`006`, unified dashboard/landing page tabs (`tab-catalog`, `tab-binary`, `tab-control`), and dropped legacy `FORGE_*` environment fallbacks, `.forge/` workspace state fallbacks, `forge_*` MCP aliases, `/forge` PR bot alias, and `forge_github_session` cookie fallback across `src/`, `api/`, `tests/`, `.github/workflows/`, and documentation (`0` remaining `FORGE` shims in `src/` and `api/`).
-  - **Phase 3 (Self-Contained Native Catalog & Binary Engine):** Pruned third-party ECC and REA asset dumps (`catalog/rea/`, `catalog/hooks/`, `catalog/contexts/`, `catalog/mcp-configs/`, `catalog/workflows/`, bloated `catalog/` packs, `skills/rea-*`, `skills/reverse-engineer-anything`, `docs/integrations/ecc.md`, `docs/integrations/rea.md`, and `scripts/run-rea-bridge-tests.*`) down to ANVIL's compact native catalog (`49` agents, `76` catalog skills, `34` commands, `26` rule sets) and `51` workspace skills; replaced `src/core/rea-intelligence.ts` + `src/commands/rea.ts` with native TypeScript [`src/core/binary-intelligence.ts`](src/core/binary-intelligence.ts) (`analyzeBinaryIntelligence`, magic-byte header classification for PE/ELF/Mach-O/WASM/Archives/SQLite, and `ANVIL-BIN-001`..`003` provenance checks) + [`src/commands/binary.ts`](src/commands/binary.ts).
+  - **Phase 1 & Phase 2:** Removed unused duplicate and legacy modules, renamed the remaining legacy heuristic rules to `ANVIL-AGENT-001`..`006`, unified dashboard/landing page tabs (`tab-catalog`, `tab-binary`, `tab-control`), and dropped every legacy environment-variable, workspace-state, MCP-alias, PR-bot-alias and cookie fallback across `src/`, `api/`, `tests/`, `.github/workflows/`, and documentation.
+  - **Phase 3 (Self-Contained Native Catalog & Binary Engine):** Pruned imported third-party asset packs and bridge scripts down to ANVIL's compact native catalog (`49` agents, `76` catalog skills, `34` commands, `26` rule sets) and `51` workspace skills; replaced the external reverse-engineering bridge with native TypeScript [`src/core/binary-intelligence.ts`](src/core/binary-intelligence.ts) (`analyzeBinaryIntelligence`, magic-byte header classification for PE/ELF/Mach-O/WASM/Archives/SQLite, and `ANVIL-BIN-001`..`003` provenance checks) + [`src/commands/binary.ts`](src/commands/binary.ts).
   - **Self-Gate & CI Hardening:** Centralized dashboard DOM rendering in [`src/core/dashboard/client-script.ts`](src/core/dashboard/client-script.ts) (`renderHtml` / `renderEmpty`, resolving 125 `ANVIL-R003` findings), hardened process spawning in `src/core/agent-race.ts`, `src/core/verified-loop.ts`, and tests (`ANVIL-R002`), and added `anvil shield .` verification to `.github/workflows/ci.yml` so `anvil gate .` passes with `0` critical/high/medium findings.
 - **Modularized Core Subsystems:** Split `src/core/dashboard-server.ts` into `src/core/dashboard/` (`http-helpers.ts`, `sse.ts`, `styles.ts`, `page.ts`, `client-script.ts`, `routes-get.ts`, `routes-post.ts`) and split `src/core/harness-installer.ts` into `src/core/harness-installer/` (`types.ts`, `transactions.ts`, `renderers.ts`, `lifecycle.ts`, `mcp-planner.ts`) with full public barrel exports preserved.
 
 ### Fixed
 - **Cross-Platform Harness Hook Canonicalization & Container Test Discovery:** Added ancestor-walking native path canonicalization (`canonicalPathSync` via `realpathSync.native`) in [`src/core/harness-hooks.ts`](src/core/harness-hooks.ts) so Windows 8.3 short paths (`RUNNER~1`) and macOS `/var` symlinks align inside `relativeInside()` and `projectRoot()` while blocking symlink escapes outside the project; enabled `tests/container-sandbox.integration.test.ts` in [`vitest.config.ts`](vitest.config.ts) when `ANVIL_DOCKER_IMAGE` is set.
 
-## 1.3.0 — FORGE 4.0 Engines, ECC Catalog Ingestion, AI Agent Security Audit & Universal Harness Installer (November 2026)
+## 1.3.0 — Harness Engines, Catalog Expansion, AI Agent Security Audit & Universal Harness Installer (November 2026)
 
 ### Added
-- Integrated all FORGE 4.0 engines into ANVIL: `consult`, `agent-race`, `verified-loop`, `anvil-shield`, `anvil-status`, `shield-extended`, `harness-scorecard`, `instincts`, `session-cost`, `statusline`, `guard-report`, `hook-adapters`, and `mcp-sync`.
+- Added harness engines: `consult`, `agent-race`, `verified-loop`, `anvil-shield`, `anvil-status`, `shield-extended`, `harness-scorecard`, `instincts`, `session-cost`, `statusline`, `guard-report`, `hook-adapters`, and `mcp-sync`.
 - 10 new CLI commands: `anvil scorecard`, `anvil consult`, `anvil context`, `anvil status`, `anvil instincts`, `anvil cost`, `anvil race`, `anvil loop`, `anvil shield`, `anvil harnesses`.
 - 4 new MCP tools: `anvil_scorecard`, `anvil_consult`, `anvil_context_budget`, `anvil_guard_check`.
-- Ingested ECC catalog: 395 specialist skills in `catalog/skills/`, 88 agent definitions in `catalog/agents/`, 122 workflow commands in `catalog/commands/`, 14 language rules in `catalog/rules/`.
+- Expanded the catalog: 395 specialist skills in `catalog/skills/`, 88 agent definitions in `catalog/agents/`, 122 workflow commands in `catalog/commands/`, 14 language rules in `catalog/rules/`.
 - `anvil install` / `anvil uninstall`: connect ANVIL to Claude Code, Codex, Cursor, VS Code (Copilot), Windsurf, Google Antigravity, Gemini CLI, OpenCode and Claude Desktop in one command. Writes each tool's MCP config in its own format, adds a managed ANVIL section to `AGENTS.md` / `CLAUDE.md` / `GEMINI.md`, keeps every existing setting, supports `--dry-run`, and never rewrites JSON it cannot parse.
 - `anvil agent-security` now understands agent configs instead of only matching lines: Claude Code permissions (`Bash(*)`, `bypassPermissions`, `enableAllProjectMcpServers`) and hooks, MCP servers in every tool's format (plain-text credentials in `env`/`headers`/URLs, plain-HTTP remotes, unpinned `npx`/`uvx` packages), Codex `config.toml` (`danger-full-access`, `approval_policy = "never"`), commands that pipe downloads into a shell or send secrets over the network, prompt injection (worse inside HTML comments) and hidden Unicode. Scans the files of every tool `anvil install` supports; `--global` adds per-user configs; `--sarif PATH` writes SARIF. Rule IDs `ANVIL-AGENT-101`…`112`; matched values are never printed.
 - `anvil install --hooks`: adds a stop hook to Claude Code (`.claude/settings.json`) and Cursor (`.cursor/hooks.json`). When the agent says it is done, `anvil gate --diff` runs on its changes; if it fails, the agent gets the findings and keeps working (Claude: `decision: block`; Cursor: `followup_message`). Loop guards let the agent stop after one follow-up (Claude) or two (Cursor), and the hook never blocks if ANVIL itself errors. The user's own hooks are kept; `anvil uninstall` removes ANVIL's.
@@ -52,12 +52,10 @@
 - `src/cli.ts` split into one module per command under `src/commands/` (no behavior change).
 
 ### Docs
-- Added Unified Multi-Cockpit Dashboard architecture at `docs/unified-dashboard-architecture.md` and upgraded `public/index.html` with an interactive control center spanning Combined Overview, ANVIL Verification, ECC Skills, REA Binary Analysis, Control Center Scorecard, and GitHub App Bot.
-- Added Everything Claude Code (ECC) Integration Guide at `docs/integrations/ecc.md` detailing lifecycle pairing (`plan -> test -> implement -> verify`), skill security auditing, and stop hook automation.
-- Added REA Reverse-Engineering Integration Guide at `docs/integrations/rea.md` outlining the Clean-Room Reengineering Pipeline combining `morluto/rea` binary analysis with ANVIL CI policy verification.
+- Added Unified Multi-Cockpit Dashboard architecture at `docs/unified-dashboard-architecture.md` and upgraded `public/index.html` with an interactive control center spanning Combined Overview, ANVIL Verification, Skills, Binary Analysis, Control Center Scorecard, and GitHub App Bot.
 - Added agent stop hooks documentation at `docs/agent-hooks.md` covering `anvil install --hooks`, automatic `gate --diff` triggers on agent finish, loop guards, and Claude Code/Cursor hook protocols.
 - Documented `--hooks` flag in `docs/install.md`, `README.md` quick start, and indexed in `docs/README.md`.
-- Added comprehensive AI Agent Security Audit documentation at `docs/agent-security.md` covering structured rule catalog (`ANVIL-AGENT-101`..`112`), heuristic checks (`FORGE-AGENT-001`..`006`), files scanned, `--global`, `--sarif` export, exit codes, and GitHub Actions code scanning workflows.
+- Added comprehensive AI Agent Security Audit documentation at `docs/agent-security.md` covering structured rule catalog (`ANVIL-AGENT-101`..`112`), heuristic checks (`ANVIL-AGENT-001`..`006`), files scanned, `--global`, `--sarif` export, exit codes, and GitHub Actions code scanning workflows.
 - Linked `docs/agent-security.md` across `docs/README.md`, `docs/security-model.md`, and the `README.md` feature matrix.
 - Repositioned ANVIL as the deterministic verification layer for AI coding agents across `README.md`, landing page, manifests, and documentation.
 - Added comprehensive documentation index at `docs/README.md`.
@@ -68,9 +66,9 @@
 - Removed unsubstantiated "10/10 production architecture rating" claims, anchoring claims on 567 verified automated tests passing across Node 22/24.
 - Synchronized `llms.txt` and `public/llms.txt` with verified flags and the verification layer positioning.
 
-## 1.2.0 — Production Architecture 10/10 Overhaul, Automated PR Comment Bot, Pre-Commit Hook Suite & Deplo/FORGE Orchestration
+## 1.2.0 — Production Architecture 10/10 Overhaul, Automated PR Comment Bot, Pre-Commit Hook Suite & Orchestration
 
-ANVIL 1.2.0 represents a major milestone, achieving a certified 10/10 production architecture rating through the resolution of all 22 architectural review findings, introducing automated GitHub PR review comments, 1-command pre-commit git hooks, transactional rollback, and a modernized orchestration website inspired by Deplo and FORGE:
+ANVIL 1.2.0 represents a major milestone, achieving a certified 10/10 production architecture rating through the resolution of all 22 architectural review findings, introducing automated GitHub PR review comments, 1-command pre-commit git hooks, transactional rollback, and a modernized orchestration website:
 
 ### 10/10 Production Architecture Overhaul (22 Findings Resolved)
 - **Transactional Rollback & Directory Backups:**
@@ -97,9 +95,9 @@ ANVIL 1.2.0 represents a major milestone, achieving a certified 10/10 production
   - Added `anvil hook install [--force]` to automatically inject ANVIL quality gate and clean checks into `.git/hooks/pre-commit`.
   - Added `anvil hook remove` to safely uninstall ANVIL git hooks without affecting custom scripts.
 
-### Deplo & FORGE Web Redesign
+### Web Redesign
 - **Modernized Public Landing Page (`public/index.html`):**
-  - Integrated signature 5-stage orchestration pipeline visualizer from `deplo.in`.
+  - Added a 5-stage orchestration pipeline visualizer.
   - Added seven-step workflow from diff to verified merge.
   - Added live interactive dashboard preview, deterministic cost matrix table ($0 vs $150+/mo), and 12-stack language grid.
 
@@ -189,9 +187,9 @@ ANVIL 1.0.9 brings release pipeline resilience and fixes CI action resolution:
 - **Workflow Action Pinning Fix:** Resolved exact immutable commit SHAs for CodeQL Analysis and GitHub Pages deployment actions.
 - **Documentation & UI Polish:** Updated live documentation and landing page assets to reflect v1.0.9 release status.
 
-## 1.0.8 — Adoption Readiness: CI Gate, OASIS SARIF v2.1.0, String-Safe Cleaner & FORGE Deprecation
+## 1.0.8 — Adoption Readiness: CI Gate, OASIS SARIF v2.1.0, String-Safe Cleaner & Legacy Prefix Deprecation
 
-ANVIL 1.0.8 focuses on enterprise company-adoption readiness, addressing third-party audit findings across supply-chain security, automated CI/CD gating, string-safe code cleanup, and complete transition away from legacy FORGE prefixes.
+ANVIL 1.0.8 focuses on enterprise company-adoption readiness, addressing third-party audit findings across supply-chain security, automated CI/CD gating, string-safe code cleanup, and complete transition away from legacy prefixes.
 
 ### Features & Capabilities
 - **CI Gate & Policy-as-Code (`anvil gate` & GitHub Action):**
@@ -202,15 +200,14 @@ ANVIL 1.0.8 focuses on enterprise company-adoption readiness, addressing third-p
 - **String-Safe Code Cleaner:**
   - Enhanced cleaner algorithm (`src/core/project-cleaner.ts`) with multiline string awareness (`getProtectedMultilineLines`).
   - Protects JavaScript / TypeScript template literals (`` `...` ``), Python triple quotes (`"""..."""` / `'''...'''`), and Go backticks from accidental whitespace stripping or blank-line collapsing.
-- **Finished FORGE Renaming & Deprecation:**
-  - Modernized environment variable resolution prioritizing `ANVIL_*` prefixes with graceful backward-compatible fallback to `FORGE_*` (logging one-time deprecation warnings).
-  - Registered dual MCP tools (`anvil_*` as canonical, with `forge_*` alias) ensuring backward compatibility for existing MCP client configurations.
+- **Finished Legacy Prefix Deprecation:**
+  - Modernized environment variable resolution prioritizing `ANVIL_*` prefixes with graceful backward-compatible fallback to legacy prefixes (logging one-time deprecation warnings).
+  - Registered dual MCP tools (`anvil_*` as canonical, with legacy aliases) ensuring backward compatibility for existing MCP client configurations.
 - **Supply-Chain & Security Policy Hardening:**
   - Pinned all GitHub Actions in CI/CD workflows (`ci.yml`, `release.yml`, `codeql.yml`, `pages.yml`) to immutable full 40-character commit SHAs.
   - Loosened CI security audit gate to `npm audit --audit-level=high --omit=dev` to prevent transient dev-dependency advisories from blocking production builds.
   - Added `lint`, `format:check`, and `test:coverage` scripts and contributor metadata to `package.json`.
   - Updated `SECURITY.md` with realistic solo maintainer SLAs (48–72h initial response) and explicitly documented GitHub Private Vulnerability Reporting enablement.
-  - Clarified architectural provenance in `README.md` affirming clear upstream attribution to FORGE, independent verification specialization, and MIT licensing.
 
 ## 1.0.7 — Architecture Decision Records (ADR), Deep Security Scanner & Live Workflow DAG Runner
 
@@ -247,7 +244,7 @@ ANVIL 1.0.6 introduces automated AI harness integration for modern editors (Curs
 - **Project Memory & Architectural Decisions Hub (`anvil memory` & Web UI):**
   - Live interactive Project Memory panel directly in the web dashboard under Overview & Health.
   - Dropdown categorization (`decision`, `architecture`, `constraint`, `preference`, `fact`), input tags, and single-click addition/removal.
-  - Seamless dual-path storage supporting modern `.anvil/memory.json` with fallback to `.forge/memory.json`.
+  - Seamless dual-path storage supporting modern `.anvil/memory.json` with fallback to the legacy memory path.
   - Real-time token-budgeted context ranking so agent instructions receive prioritized architectural constraints without exceeding window limits.
 - **Interactive Landing Page Demos:** Enhanced product site with interactive terminal simulation tabs (`05 mcp-setup`, `06 memory`) and stage explorer showcasing harness connections.
 

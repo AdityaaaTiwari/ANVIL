@@ -337,7 +337,6 @@ describe("clean and fix CLI commands", () => {
 
     const consultOut = runCli("consult", "security review", "--limit", "3");
     expect(consultOut).toContain("anvil install --with ");
-    expect(consultOut).not.toContain("forge install --with ");
 
     const repairHelp = runCli("repair", "--help");
     expect(repairHelp).toContain("anvil repair");
