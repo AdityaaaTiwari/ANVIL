@@ -21,6 +21,9 @@ export type HarnessTarget =
   | "kiro"
   | "cline"
   | "zed"
+  | "amp"
+  | "qoder"
+  | "pi"
   | "claude-desktop"
   | "vscode"
   | "antigravity";
@@ -52,6 +55,9 @@ const TARGET_MARKERS: Array<[HarnessTarget, string[]]> = [
   ["kiro", [".kiro"]],
   ["cline", [".clinerules"]],
   ["zed", [".zed", ".rules"]],
+  ["amp", [".amp"]],
+  ["qoder", [".qoder"]],
+  ["pi", [".pi"]],
 ];
 
 /** Harnesses beyond the defaults that the project already uses. */
@@ -78,6 +84,9 @@ export function normalizeHarnessTargets(targets: readonly string[]): HarnessTarg
     copilot: "vscode",
     "gemini-cli": "gemini",
     "google-antigravity": "antigravity",
+    ampcode: "amp",
+    "qoder-cli": "qoder",
+    "pi-coding-agent": "pi",
   };
   const resolved = targets.map((t) => aliases[t] ?? (t as HarnessTarget));
   for (const target of resolved) {
@@ -115,6 +124,9 @@ export const HARNESS_LABELS: Record<HarnessTarget, string> = {
   kiro: "Kiro",
   cline: "Cline",
   zed: "Zed",
+  amp: "Amp",
+  qoder: "Qoder",
+  pi: "Pi",
 };
 
 export type ServerMode = "npx" | "global" | "local";

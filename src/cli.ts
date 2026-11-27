@@ -115,7 +115,7 @@ Commands:
   race <run|list>  Competitive multi-agent race across isolated Git worktrees
   loop [path]      Autonomous self-healing verification loop
   shield [path]    Static security audit running 60 Shield rules across all harnesses
-  harnesses        List capability matrix of all 10 supported AI harnesses
+  harnesses        List the capability matrix of every supported AI coding tool
   dashboard [path] Start the local read-only web dashboard
   version          Print the installed version
   help             Show this help message

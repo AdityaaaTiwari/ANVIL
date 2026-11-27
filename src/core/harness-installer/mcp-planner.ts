@@ -357,6 +357,25 @@ export async function planHarnessInstall(options: InstallOptions, remove = false
           )
         );
         break;
+      case "amp":
+        plans.push(
+          await planJsonEntry(
+            target,
+            path.join(project, ".amp", "settings.json"),
+            "project",
+            "amp.mcpServers",
+            pick({ ...stdio, env })
+          )
+        );
+        break;
+      case "qoder":
+        // Qoder CLI reads project MCP servers from .mcp.json, the same file Claude Code uses.
+        if (!targets.includes("claude")) {
+          plans.push(
+            await planJsonEntry(target, path.join(project, ".mcp.json"), "project", "mcpServers", pick(stdio))
+          );
+        }
+        break;
       case "gemini":
         plans.push(
           await planJsonEntry(

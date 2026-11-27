@@ -107,7 +107,7 @@ describe("dashboard data", () => {
       ["claude", "cursor"]
     );
     const by = Object.fromEntries(cards.map((c) => [c.target, c]));
-    expect(cards).toHaveLength(10);
+    expect(cards).toHaveLength(13);
     expect(by.claude).toMatchObject({ detected: true, installed: true, guarded: true });
     expect(by.cursor).toMatchObject({ installed: true, guarded: true });
     expect(by.windsurf?.guarded).toBe(false);
