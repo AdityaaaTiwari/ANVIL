@@ -12,7 +12,6 @@ This document records the architecture, verification positioning, and collaborat
 Key architectural principles:
 - **Self-Contained Native Catalog:** ANVIL ships a compact, natively curated catalog under `catalog/` (`49` agents, `76` skills, `34` commands, `26` rule files) plus `51` workspace skills under `skills/` — eliminating third-party catalog bloat and external bridge dependencies.
 - **Native Binary & Provenance Engine:** `src/core/binary-intelligence.ts` (`anvil binary`, MCP tool `anvil_binary_intelligence`) inspects binaries, WASM, source maps, databases, and captures locally with magic-byte classification and `ANVIL-BIN-001..003` provenance checks.
-- **Upstream Attribution:** Maintains MIT attribution for foundational work in [FORGE / FORGE-ECC](https://github.com/ansh44233/FORGE-ECC) (`LICENSE`, `NOTICE`, `ACKNOWLEDGEMENTS.md`) while keeping ANVIL's codebase 100% native (`ANVIL_*` env vars, `.anvil/` state, `anvil_*` MCP tools).
 
 ---
 

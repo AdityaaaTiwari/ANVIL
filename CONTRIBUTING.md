@@ -23,7 +23,6 @@ To maintain code stability and security:
    npm run lint
    npm run build
    npm test
-   npm run test:rea
    ```
 4. **Commit Clearly:** Write concise, clear commit messages describing your changes.
 5. **Open a Pull Request:** Submit your PR against the `main` branch of the upstream repository. Complete the PR template checklist.

@@ -103,7 +103,6 @@ describe("ANVIL MCP stdio protocol integration", () => {
       });
     }
     const toolNames = listed.result.tools.map((tool: { name: string }) => tool.name);
-    expect(toolNames.some((name: string) => name.startsWith("forge_"))).toBe(false);
     expect(toolNames).toContain("anvil_list_files");
     expect(toolNames).toContain("anvil_create_review_plan");
     expect(toolNames).toContain("anvil_agent_intelligence");

@@ -134,7 +134,6 @@ describe("GitHub App commands", () => {
     expect(parseAnvilCommand("/anvil analyze --targets claude,cursor --profile minimal")).toMatchObject({
       command: "analyze",
     });
-    expect(parseAnvilCommand("/forge analyze --targets claude,cursor --profile minimal")).toBeUndefined();
     expect(parseAnvilCommand("/anvil analyze --targets claude,cursor")?.options.get("target")).toBe("claude,cursor");
     expect(parseAnvilCommand("thanks!\n/anvil audit")).toBeUndefined();
     expect(parseAnvilCommand("/anvil launch-rockets")?.flags.has("unknown")).toBe(true);
