@@ -1,4 +1,4 @@
-# Notes for Parallel Agent Collaboration
+# ANVIL Architecture Notes
 
 This document records the architecture, verification positioning, and collaboration guardrails for **ANVIL** across documentation, web assets, core TypeScript engines, and tests.
 
