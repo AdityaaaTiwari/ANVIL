@@ -21,14 +21,7 @@ import { isZip, readZip, type ZipArchive } from "./zip.js";
  */
 
 export type AppKind =
-  | "android-apk"
-  | "android-aab"
-  | "ios-ipa"
-  | "electron-asar"
-  | "zip"
-  | "wasm"
-  | "source-map"
-  | "js-bundle";
+  "android-apk" | "android-aab" | "ios-ipa" | "electron-asar" | "zip" | "wasm" | "source-map" | "js-bundle";
 
 export interface AppReport {
   file: string;

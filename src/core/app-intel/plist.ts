@@ -1,14 +1,7 @@
 /** Reader for Apple property lists: binary (`bplist00`) and XML. */
 
 export type PlistValue =
-  | string
-  | number
-  | boolean
-  | Date
-  | Buffer
-  | PlistValue[]
-  | { [key: string]: PlistValue }
-  | null;
+  string | number | boolean | Date | Buffer | PlistValue[] | { [key: string]: PlistValue } | null;
 
 function readUInt(buffer: Buffer, offset: number, size: number): number {
   let value = 0;
