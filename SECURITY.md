@@ -6,14 +6,17 @@ ANVIL takes security seriously. As a local-first engineering workbench that insp
 
 Only the latest minor release line receives security updates. We strongly encourage all users to keep their installation updated.
 
-| Version | Supported | Release Date |
-|:-------:|:---------:|:------------:|
-| 1.5.x   | ✅ Yes     | November 2026 |
-| 1.4.x   | ✅ Yes     | November 2026 |
-| 1.3.x   | ✅ Yes     | November 2026 |
-| 1.2.x   | ✅ Yes     | November 2026 |
-| 1.1.x   | ❌ No      | Superseded by 1.2.x |
-| < 1.0.0 | ❌ No      | Unsupported  |
+| Version | Supported |
+|:-------:|:---------:|
+| 1.5.x   | ✅ Yes     |
+| < 1.5.0 | ❌ No — upgrade to 1.5.x |
+
+### Supported runtimes
+
+| Component | Supported |
+|---|---|
+| Node.js | 22 and 24 (tested on Linux, macOS and Windows in CI) |
+| TypeScript (runtime dependency) | 5.x. TypeScript 7 is not supported yet because ANVIL uses the compiler API. |
 
 ## Reporting a Vulnerability
 

@@ -40,5 +40,4 @@ Welcome to the ANVIL documentation. ANVIL is the deterministic **verification la
 ## 🗺️ Reference & Developer Notes
 - [Capability Roadmap](ANVIL-CAPABILITY-ROADMAP.md) — Architectural roadmap, upcoming features, and development milestones.
 - [Provider Abstraction](providers.md) — Documentation of the AI provider subsystem.
-- [Notes for Claude](NOTES-for-claude.md) — Collaboration and handoff notes for parallel agent development.
-- [GitHub Achievements Guide](github-achievements-guide.md) — Reference guide for GitHub profile achievements and developer badges.
+- [Architecture Notes](architecture-notes.md) — Positioning, architecture principles and guardrails for contributors and coding agents.
