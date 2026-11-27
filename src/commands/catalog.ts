@@ -19,7 +19,13 @@ export async function runCatalog(_command: string, rest: string[]): Promise<void
     const catalog = await loadHarnessCatalog();
     const items = catalog.items.filter((item) => !kind || item.kind === kind);
     if (options.flags.has("--json")) {
-      process.stdout.write(JSON.stringify(items.map(({ body: _body, ...item }) => item), null, 2) + "\n");
+      process.stdout.write(
+        JSON.stringify(
+          items.map(({ body: _body, ...item }) => item),
+          null,
+          2
+        ) + "\n"
+      );
       return;
     }
     const counts = KINDS.map((k) => catalog.items.filter((item) => item.kind === k).length);
