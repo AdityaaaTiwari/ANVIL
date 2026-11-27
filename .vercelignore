@@ -4,7 +4,6 @@ docs/
 skills/
 scripts/
 .anvil/
-.forge/
 .vscode/
 .github/
 *.sarif

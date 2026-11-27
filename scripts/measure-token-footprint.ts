@@ -35,7 +35,7 @@ interface McpHandshakeOverhead {
 }
 
 function calculateMcpHandshakeOverhead(): McpHandshakeOverhead {
-  // 40 registered tools in src/mcp/server.ts (20 canonical anvil_* tools + 20 forge_* backward compatibility aliases)
+  // registered tools in src/mcp/server.ts
   // Measured via MCP stdio tools/list protocol request: 27,319 chars (~6,830 tokens)
   const fullChars = 27319;
   const canonicalChars = 13659;

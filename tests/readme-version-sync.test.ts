@@ -63,11 +63,11 @@ describe("README and package version/tool synchronization", () => {
     expect(readme).not.toContain("No Upstream License Baggage");
     expect(readme).toContain("MIT License");
 
-    // License and notices must contain dual copyright attribution
+    // License names ANVIL's copyright holder; NOTICE keeps the required
+    // MIT notice for third-party code; acknowledgements point to it.
     expect(license).toContain("Aditya Tiwari (ANVIL)");
-    expect(notice).toContain("FORGE / FORGE-ECC");
-    expect(notice).toContain("Ansh");
-    expect(ack).toContain("Upstream Foundation: FORGE & Ansh");
+    expect(notice).toContain("Permission is hereby granted, free of charge");
+    expect(ack).toContain("[NOTICE](NOTICE)");
   });
 
   it("ensures release.yml validates action.yml default version against package version", async () => {
