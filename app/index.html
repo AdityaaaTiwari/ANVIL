@@ -773,7 +773,7 @@ function setupCard(setup) {
   const section = (title, items) => items.length ? h("div", { style: "margin-top:10px" }, h("b", {}, title + " (" + items.length + ")"), h("ul", { class: "plain" }, items.slice(0, 8).map(p => h("li", {}, h("code", {}, p))), items.length > 8 ? h("li", { class: "muted" }, "…" + (items.length - 8) + " more") : null)) : null;
   return h("div", { class: "card" }, h("h3", {}, "Setup details"),
     !setup.installed ? h("p", { class: "muted" }, "ANVIL files are not on the default branch. “Open setup PR” analyzes this repository and proposes agents, skills, commands, rules and a project guide.")
-    : h("div", {}, h("div", { class: "muted", style: "font-size:13px" }, "Installed by ANVIL " + (setup.state.anvilVersion || setup.state.forgeVersion || "unknown") + " · " + ago(setup.state.installedAt) + " · " + setup.state.targets.join(", ")),
+    : h("div", {}, h("div", { class: "muted", style: "font-size:13px" }, "Installed by ANVIL " + (setup.state.anvilVersion || "unknown") + " · " + ago(setup.state.installedAt) + " · " + setup.state.targets.join(", ")),
         section("Missing", setup.missing), section("Changed or updatable", setup.outdated), section("New in catalog", setup.added),
         setup.healthy ? h("p", { class: "muted" }, "All ANVIL files match the current catalog.") : null));
 }

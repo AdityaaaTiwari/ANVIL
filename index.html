@@ -103,6 +103,7 @@
       border-radius: 999px;
       font-size: 11px;
       font-weight: 600;
+      white-space: nowrap;
     }
 
     /* Sticky Header Nav */
@@ -178,6 +179,93 @@
       display: flex;
       align-items: center;
       gap: 12px;
+    }
+
+    .announce-link {
+      color: #fff;
+      text-decoration: underline;
+      white-space: nowrap;
+    }
+
+    .nav-toggle {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.04);
+      color: #fff;
+      cursor: pointer;
+    }
+
+    @media (max-width: 1120px) {
+      .nav {
+        position: relative;
+      }
+
+      .nav-toggle {
+        display: inline-flex;
+      }
+
+      .nav-links {
+        display: none;
+        position: absolute;
+        top: calc(100% + 8px);
+        left: 0;
+        right: 0;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 2px;
+        padding: 10px;
+        background: rgba(10, 14, 22, 0.97);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5);
+      }
+
+      .nav-links.open {
+        display: flex;
+      }
+
+      .nav-links a {
+        padding: 11px 12px;
+        border-radius: 8px;
+        font-size: 15px;
+      }
+
+      .nav-links a:hover {
+        background: rgba(255, 255, 255, 0.05);
+      }
+    }
+
+    @media (max-width: 680px) {
+      .top-announcement {
+        font-size: 12px;
+        gap: 8px;
+      }
+
+      .top-announcement .announce-text {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        min-width: 0;
+      }
+
+      .announce-extra,
+      .brand .version-badge,
+      .nav-actions .btn-ghost {
+        display: none;
+      }
+
+      .nav {
+        padding: 0 12px;
+      }
+
+      .nav-actions {
+        gap: 8px;
+      }
     }
 
     .btn {
@@ -387,7 +475,7 @@
     }
 
     /* ========================================================
-       deplo.ai Signature Pipeline Orchestration Visualizer
+       Pipeline Orchestration Visualizer
        ======================================================== */
     .pipeline-container {
       background: #090c12;
@@ -1117,6 +1205,28 @@
     }
 
     /* Clean-Room Protocol Flow */
+    .cleanroom-flow-container.flow-cols-5 {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+
+    .cleanroom-flow-container.flow-cols-6 {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+
+    @media (max-width: 1024px) {
+      .cleanroom-flow-container.flow-cols-5,
+      .cleanroom-flow-container.flow-cols-6 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 680px) {
+      .cleanroom-flow-container.flow-cols-5,
+      .cleanroom-flow-container.flow-cols-6 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
     .cleanroom-flow-container {
       display: grid;
       grid-template-columns: 1fr auto 1fr auto 1fr;
@@ -1297,13 +1407,28 @@
     }
 
     /* ========================================================
-       Seven Steps Section (deplo.in How It Works pattern)
+       Seven Steps Section (How It Works)
        ======================================================== */
     .steps-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 16px;
       margin-top: 36px;
+    }
+
+    .quickstart-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      margin-top: 36px;
+    }
+
+    .quickstart-grid > *,
+    .bento-grid > * {
+      min-width: 0;
+    }
+
+    .quickstart-grid pre {
+      overflow-x: auto;
+      max-width: 100%;
     }
 
     .step-card {
@@ -1514,7 +1639,7 @@
     }
 
     /* ========================================================
-       CLI Showcase (deplo.in Never Leave The Terminal style)
+       CLI Showcase
        ======================================================== */
     .terminal-window {
       background: #090c12;
@@ -1896,10 +2021,6 @@
     }
 
     @media (max-width: 680px) {
-      .nav-links {
-        display: none;
-      }
-
       .steps-grid {
         grid-template-columns: 1fr;
       }
@@ -1916,12 +2037,34 @@
         grid-template-columns: repeat(2, 1fr);
       }
 
-      .bento-grid {
+      .bento-grid,
+      .quickstart-grid {
         grid-template-columns: 1fr;
       }
 
       .cli-ref-grid {
         grid-template-columns: 1fr;
+      }
+
+      .cleanroom-flow-container {
+        grid-template-columns: 1fr;
+      }
+
+      .cleanroom-flow-container .flow-arrow {
+        transform: rotate(90deg);
+        justify-self: center;
+      }
+
+      .compare-table-wrap {
+        overflow-x: auto;
+      }
+
+      .hero-cli {
+        max-width: 100%;
+      }
+
+      .hero-cli .cli-cmd {
+        min-width: 0;
       }
 
       .footer-grid {
@@ -1939,9 +2082,9 @@
 
   <!-- Top Announcement Bar -->
   <aside class="top-announcement" aria-label="Version announcement">
-    <span class="badge-mini">v1.5.0</span>
-    <span><strong>The Deterministic Verification Layer for AI Coding Agents</strong> · 680 Vitest Tests · 100% Local</span>
-    <a href="https://github.com/AdityaaaTiwari/ANVIL" target="_blank" rel="noopener" style="text-decoration: underline; color: #fff;">GitHub →</a>
+    <span class="badge-mini">New in 1.5</span>
+    <span class="announce-text"><strong>Supply-chain scanner, symbol call-graph and JIT skill injection</strong><span class="announce-extra"> · all local, no code leaves your machine</span></span>
+    <a href="https://github.com/AdityaaaTiwari/ANVIL/blob/main/CHANGELOG.md" target="_blank" rel="noopener" class="announce-link">What's new →</a>
   </aside>
 
   <!-- Sticky Glassmorphic Header -->
@@ -1974,15 +2117,13 @@
         <span class="version-badge">v1.5.0</span>
       </a>
 
-      <nav class="nav-links">
-        <a href="#how-it-works">How It Works</a>
-        <a href="#dashboard">Live Cockpit</a>
-        <a href="#agent-toolkit">Agent Toolkit</a>
-        <a href="#binary-intel">Binary Intelligence</a>
-        <a href="#control-center">Control Center</a>
+      <nav class="nav-links" id="navLinks" aria-label="Primary">
+        <a href="#how-it-works">How it works</a>
+        <a href="#control-center">Guard &amp; loop</a>
+        <a href="#agent-toolkit">Toolkit</a>
+        <a href="#binary-intel">Binary</a>
         <a href="#github-app">GitHub App</a>
         <a href="#terminal">CLI</a>
-        <a href="#quickstart">Quick Start</a>
         <a href="#faq">FAQ</a>
       </nav>
 
@@ -1991,11 +2132,14 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
             <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
           </svg>
-          <span>Star on GitHub</span>
+          <span class="star-label">Star on GitHub</span>
         </a>
-        <a class="btn btn-primary" href="#quickstart">
-          <span>Get Started Free</span>
+        <a class="btn btn-primary nav-cta" href="#quickstart">
+          <span>Get started</span>
         </a>
+        <button class="nav-toggle" id="navToggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="navLinks">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </button>
       </div>
     </div>
   </header>
@@ -2005,13 +2149,13 @@
     <section class="wrap hero">
       <div class="hero-eyebrow">
         <span class="dot"></span>
-        <span>THE DETERMINISTIC VERIFICATION LAYER FOR AI CODING AGENTS · v1.5.0</span>
+        <span>Open source · MIT · runs 100% on your machine</span>
       </div>
 
       <h1>Any agent writes the code. <br><span class="gradient-text">ANVIL verifies it before merge.</span></h1>
 
       <p class="hero-subtitle">
-        Claude Code, Codex, Cursor, Antigravity, or OpenCode write the changes. ANVIL checks blast radius, policy-as-code, secret scans, and test impact locally on your machine — before code reaches a pull request. Deterministic, local-first, zero code sent to LLMs.
+        Claude Code, Codex, Cursor, Gemini CLI or Copilot write the changes. ANVIL checks blast radius, policy-as-code, secret scans, and test impact locally on your machine — before code reaches a pull request. Deterministic, local-first, zero code sent to LLMs.
       </p>
 
       <div class="hero-ctas">
@@ -2019,7 +2163,7 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <path d="M5 12h14M12 5l7 7-7 7"/>
           </svg>
-          <span>Get Started Free</span>
+          <span>Get started</span>
         </a>
         <a class="btn btn-ghost btn-large" href="#how-it-works">
           <span>How It Works ↓</span>
@@ -2043,17 +2187,23 @@
 
       <!-- Harness Support Strip -->
       <div class="harness-strip">
-        <span class="harness-strip-title">Compatible with every agent:</span>
+        <span class="harness-strip-title">Works with</span>
         <span class="harness-pill">Claude Code</span>
         <span class="harness-pill">Codex</span>
         <span class="harness-pill">Cursor</span>
-        <span class="harness-pill">Antigravity (AGY)</span>
+        <span class="harness-pill">Gemini CLI</span>
+        <span class="harness-pill">GitHub Copilot</span>
         <span class="harness-pill">OpenCode</span>
+        <span class="harness-pill">Kiro</span>
+        <span class="harness-pill">Windsurf</span>
+        <span class="harness-pill">Zed</span>
+        <span class="harness-pill">Cline</span>
+        <span class="harness-pill">Antigravity</span>
         <span class="harness-pill">GitHub Actions</span>
       </div>
 
       <!-- ========================================================
-           deplo.ai Signature Pipeline Orchestration Visualizer
+           Pipeline Orchestration Visualizer
            ======================================================== -->
       <div class="pipeline-container" id="pipeline">
         <div class="pipeline-head">
@@ -2177,9 +2327,9 @@
           <div class="sub">Zero external tracking or code phoning home</div>
         </div>
         <div class="stat-box">
-          <div class="val val-amber">680</div>
+          <div class="val val-amber">700+</div>
           <div class="title">Verified Unit &amp; Integration Tests</div>
-          <div class="sub">101 Vitest suites passing across CI matrix</div>
+          <div class="sub">100+ Vitest files passing across the CI matrix</div>
         </div>
         <div class="stat-box">
           <div class="val val-cyan">1</div>
@@ -2267,10 +2417,10 @@
               <div class="dash-metric-card">
                 <div class="dash-metric-label">TEST VERIFICATION SUITE</div>
                 <div class="dash-metric-val">
-                  <span class="dash-metric-num" style="color: var(--cyan);">680</span>
+                  <span class="dash-metric-num" style="color: var(--cyan);">706</span>
                   <span style="font-size: 13px; color: var(--text-subtle);">passed</span>
                 </div>
-                <div class="dash-metric-sub">101 Vitest suites across Node 22 &amp; 24</div>
+                <div class="dash-metric-sub">106 Vitest files across Node 22 &amp; 24</div>
               </div>
             </div>
 
@@ -2886,7 +3036,7 @@
                 <div class="dash-metric-val">
                   <span class="dash-metric-num" style="color: var(--emerald);">98.4%</span>
                 </div>
-                <div class="dash-metric-sub">Across 101 Vitest suites (680 tests)</div>
+                <div class="dash-metric-sub">Across 106 Vitest files (706 tests)</div>
               </div>
 
               <div class="dash-metric-card">
@@ -2948,7 +3098,7 @@
                 5-STAGE VERIFIED LOOP SIMULATOR
                 <span>Continuous Anti-Tamper Execution</span>
               </div>
-              <div class="cleanroom-flow-container" style="grid-template-columns: repeat(5, 1fr); text-align: center;">
+              <div class="cleanroom-flow-container flow-cols-5" style="text-align: center;">
                 <div class="flow-box">
                   <div class="flow-box-title" style="justify-content: center; color: var(--cyan);">1. Scope &amp; Plan</div>
                   <div class="flow-box-desc">AST context mapped in 1,380 tokens.</div>
@@ -2963,7 +3113,7 @@
                 </div>
                 <div class="flow-box">
                   <div class="flow-box-title" style="justify-content: center; color: #a855f7;">4. Local Gate</div>
-                  <div class="flow-box-desc">Zero secrets · 680 Vitest tests.</div>
+                  <div class="flow-box-desc">Zero secrets · 700+ Vitest tests.</div>
                 </div>
                 <div class="flow-box">
                   <div class="flow-box-title" style="justify-content: center; color: var(--emerald);">5. Receipt Hash</div>
@@ -2976,27 +3126,27 @@
             <div class="dash-grid">
               <div class="dash-pane">
                 <div class="dash-pane-title">
-                  AGENT MODEL BENCHMARK LEADERBOARD
-                  <span>Deterministic Accuracy &amp; Tokens</span>
+                  ANVIL RACE LEADERBOARD
+                  <span>Example output · scores come from your own checks</span>
                 </div>
                 <div class="finding-row">
                   <span class="finding-badge badge-pass">#1 RANK</span>
                   <div class="finding-text">
-                    <div class="finding-title">Claude 3.7 Sonnet (Anthropic) <span class="finding-loc">99.2/100</span></div>
+                    <div class="finding-title">Claude Code <span class="finding-loc">99.2/100</span></div>
                     <div class="finding-desc">Pass rate: 100% · Duration: 820ms · Token usage: 1,380 tokens · 0 retries.</div>
                   </div>
                 </div>
                 <div class="finding-row">
                   <span class="finding-badge badge-pass">#2 RANK</span>
                   <div class="finding-text">
-                    <div class="finding-title">Gemini 2.0 Pro (Google) <span class="finding-loc">98.1/100</span></div>
+                    <div class="finding-title">Gemini CLI <span class="finding-loc">98.1/100</span></div>
                     <div class="finding-desc">Pass rate: 98% · Duration: 740ms · Token usage: 1,410 tokens · 1 retry.</div>
                   </div>
                 </div>
                 <div class="finding-row">
                   <span class="finding-badge badge-pass">#3 RANK</span>
                   <div class="finding-text">
-                    <div class="finding-title">GPT-4.5 / GPT-4o (OpenAI) <span class="finding-loc">97.8/100</span></div>
+                    <div class="finding-title">Codex <span class="finding-loc">97.8/100</span></div>
                     <div class="finding-desc">Pass rate: 98% · Duration: 910ms · Token usage: 1,520 tokens · 0 retries.</div>
                   </div>
                 </div>
@@ -3132,7 +3282,7 @@
                     <tr style="border-bottom: 1px solid #21262d;">
                       <td style="padding: 6px 8px;"><b>Regression Tests</b></td>
                       <td style="padding: 6px 8px; color: #3fb950;">✓ Passing</td>
-                      <td style="padding: 6px 8px; color: #8b949e;">680 Vitest tests (101 suites)</td>
+                      <td style="padding: 6px 8px; color: #8b949e;">700+ Vitest tests (100+ files)</td>
                     </tr>
                   </tbody>
                 </table>
@@ -3288,7 +3438,7 @@ jobs:
           <div style="font-size: 13px; font-weight: 700; color: var(--cyan); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px;">
             THE 6-STAGE VERIFIED AGENT WORKFLOW
           </div>
-          <div class="cleanroom-flow-container" style="grid-template-columns: repeat(6, 1fr); text-align: center; gap: 8px; padding: 14px;">
+          <div class="cleanroom-flow-container flow-cols-6" style="text-align: center; gap: 8px; padding: 14px;">
             <div class="flow-box">
               <div class="flow-box-title" style="justify-content: center; color: var(--cyan); font-size: 11.5px;">01 PLAN</div>
               <div class="flow-box-desc" style="font-size: 11px;">Map AST context in &lt;1.4k tokens.</div>
@@ -3387,7 +3537,7 @@ jobs:
             <div>
               <div class="bento-icon" style="color: #c084fc; border-color: rgba(168, 85, 247, 0.3); background: rgba(168, 85, 247, 0.1);">04</div>
               <h3>4. Agent Race</h3>
-              <p>Races multiple coding agents (Claude 3.7 vs GPT-4.5 vs Gemini) on the exact same task in isolated Git worktrees. Ranks candidates deterministically based on test passes and speed.</p>
+              <p>Races coding agents (Claude Code, Codex, Gemini CLI) on the exact same task in isolated Git worktrees. Ranks candidates deterministically based on test passes and speed.</p>
             </div>
             <span class="bento-tag" style="background: rgba(168, 85, 247, 0.15); color: #c084fc; border-color: rgba(168, 85, 247, 0.3);">anvil race</span>
           </div>
@@ -3548,7 +3698,7 @@ jobs:
       </div>
     </section>
 
-    <!-- Comparison Section: Deplo-style Cost Matrix -->
+    <!-- Comparison Section: Cost Matrix -->
     <section class="section" id="comparison">
       <div class="wrap">
         <div class="section-eyebrow">DETERMINISTIC VS BLACK-BOX</div>
@@ -3760,7 +3910,7 @@ jobs:
     </section>
 
     <!-- ========================================================
-         deplo.ai "Never Leave The Terminal" CLI Section
+         "Never Leave The Terminal" CLI Section
          ======================================================== -->
     <section class="section" id="terminal">
       <div class="wrap">
@@ -3794,7 +3944,7 @@ jobs:
           </div>
         </div>
 
-        <!-- CLI Command Quick Reference Grid (deplo.in pattern) -->
+        <!-- CLI Command Quick Reference Grid -->
         <div class="cli-ref-grid">
           <div class="cli-ref-item">
             <div class="cli-ref-cmd">anvil init</div>
@@ -3833,7 +3983,7 @@ jobs:
           Test your repo right now with npx, install globally, configure your agent MCP server, or drop the verification gate directly into your GitHub Actions workflow.
         </p>
 
-        <div class="bento-grid" style="grid-template-columns: repeat(2, 1fr); margin-top: 36px;">
+        <div class="bento-grid quickstart-grid">
           <div class="step-card">
             <div class="step-title">1. One-Line Gate Check (No Install Needed)</div>
             <p class="step-desc" style="margin-bottom: 14px;">Run the policy and security gate on any repo instantly:</p>
@@ -3869,13 +4019,13 @@ jobs:
       </div>
     </section>
 
-    <!-- Pricing Grid (Deplo Style) -->
+    <!-- Pricing Grid -->
     <section class="section" id="pricing">
       <div class="wrap">
         <div class="section-eyebrow">TRANSPARENT DISTRIBUTION</div>
         <h2 class="section-title">Start free. <span class="gradient-text">Stay in control.</span></h2>
         <p class="section-lead">
-          ANVIL is 100% open source under permissive MIT/Apache licenses. Run it locally or self-host without subscription lock-in.
+          ANVIL is 100% open source under the MIT License. Run it locally or self-host without subscription lock-in.
         </p>
 
         <div class="pricing-grid">
@@ -3985,7 +4135,7 @@ jobs:
               <span class="faq-arrow">▼</span>
             </button>
             <div class="faq-a">
-              Yes. ANVIL is backed by 680 Vitest unit and integration tests across 101 suites passing on Node 22 and Node 24 across macOS, Ubuntu, and Windows runners in GitHub Actions CI. It provides deterministic, zero-hallucination AST inspection, blast radius evaluation, and pre-commit verification without external network calls.
+              Yes. ANVIL is backed by 700+ Vitest unit and integration tests across 100+ test files, passing on Node 22 and Node 24 across macOS, Ubuntu, and Windows runners in GitHub Actions CI. It provides deterministic, zero-hallucination AST inspection, blast radius evaluation, and pre-commit verification without external network calls.
             </div>
           </div>
         </div>
@@ -4064,6 +4214,24 @@ jobs:
 
   <!-- Vanilla JavaScript Interactivity -->
   <script>
+    // Mobile / tablet menu
+    const navToggle = document.getElementById('navToggle');
+    const navLinks = document.getElementById('navLinks');
+    if (navToggle && navLinks) {
+      const setMenu = (open) => {
+        navLinks.classList.toggle('open', open);
+        navToggle.setAttribute('aria-expanded', String(open));
+        navToggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+      };
+      navToggle.addEventListener('click', () => setMenu(!navLinks.classList.contains('open')));
+      navLinks.addEventListener('click', (event) => {
+        if (event.target.closest('a')) setMenu(false);
+      });
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') setMenu(false);
+      });
+    }
+
     // Copy Command Pill
     const copyHeroBtn = document.getElementById('copyHeroBtn');
     const copyHeroText = document.getElementById('copyHeroText');
@@ -4164,7 +4332,7 @@ jobs:
   <span class="term-green">✓</span> Import hygiene: 0 circular dependency rings found
   <span class="term-green">✓</span> Policy enforcement: strict typecheck & lint rules active
   <span class="term-green">✓</span> Baseline check: 0 unapproved structural violations
-  <span class="term-green">✓</span> Regression guard: 680 Vitest tests verified clean
+  <span class="term-green">✓</span> Regression guard: 700+ Vitest tests verified clean
 
 <span class="term-green">▶ GATE PASSED:</span> Score 100/100 (Grade A)
 <span class="term-dim">Summary written to test-action-gate.sarif (0 alerts)</span>`,
@@ -4176,14 +4344,14 @@ jobs:
   • Primary Language: TypeScript (88.4%)
   • Secondary: Python (7.8%), Docker / YAML (3.8%)
   • Package Manager: npm (package-lock.json v3)
-  • Test Harness: Vitest (101 suites, 680 tests)
+  • Test Harness: Vitest (106 files, 706 tests)
   • Build Target: TypeScript 5.8 -> dist/ (ES2022)
 
 <span class="term-amber">VERIFY COMMANDS DETECTED:</span>
   • npm run format:check (Prettier 3.4)
   • npm run lint (tsc --noEmit &amp; Prettier check)
   • npm run build (tsc -p tsconfig.json)
-  • npx vitest run (101 suites, 680 tests)
+  • npx vitest run (106 files, 706 tests)
 <span class="term-green">▶ Status: Clean project structure ready for AI agent integration</span>`,
 
       clean: `<span class="term-cyan">$ anvil clean --fix --dry-run</span>
