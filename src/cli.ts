@@ -98,6 +98,7 @@ Commands:
   hook [install|remove]  Install or remove ANVIL automated pre-commit hook in Git (use --force to overwrite)
   hook stop --harness claude|cursor  Agent stop hook: gate the agent's changes (installed by anvil install --hooks)
   binary [path]    Inspect binary assets, bundles, WASM, magic headers, and provenance compliance
+  app <file>       Look inside an APK, IPA, Electron asar, WASM, source map or JS bundle (no external tools)
   doctor [path]    Run environment health checks; add --fix to auto-scaffold config
   scorecard [path] Check harness readiness (0-10) across install, guards, quality, memory, CI
   consult QUERY    Find matching skills, agents, commands, rules, and MCP servers
