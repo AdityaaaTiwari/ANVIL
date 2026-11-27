@@ -10,7 +10,21 @@ import {
 describe("harness capability manifest", () => {
   it("has one versioned entry for every supported installer target", () => {
     expect(HARNESS_CAPABILITIES.map((item) => item.target).sort()).toEqual(
-      ["claude", "cline", "codex", "copilot", "cursor", "gemini", "kiro", "opencode", "windsurf", "zed"].sort()
+      [
+        "amp",
+        "claude",
+        "cline",
+        "codex",
+        "copilot",
+        "cursor",
+        "gemini",
+        "kiro",
+        "opencode",
+        "pi",
+        "qoder",
+        "windsurf",
+        "zed",
+      ].sort()
     );
     for (const item of HARNESS_CAPABILITIES) {
       expect(item.schemaVersion).toBe(HARNESS_CAPABILITY_SCHEMA_VERSION);
@@ -24,7 +38,7 @@ describe("harness capability manifest", () => {
   it("does not overstate the current hook integration", () => {
     for (const target of ["claude", "cursor", "codex", "gemini"] as const)
       expect(getHarnessCapability(target).capabilities.hooks).toBe("native");
-    for (const target of ["opencode", "copilot", "windsurf", "kiro", "cline", "zed"] as const) {
+    for (const target of ["opencode", "copilot", "windsurf", "kiro", "cline", "zed", "amp", "qoder", "pi"] as const) {
       expect(getHarnessCapability(target).capabilities.hooks).toBe("unsupported");
     }
   });

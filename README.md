@@ -204,6 +204,8 @@ ANVIL acts as the local inspection and verification harness for your agent:
   Use standard `AGENTS.md` instructions and run `anvil gate .` to verify changes before committing.
 - **Google Antigravity (AGY):**
   Integrates seamlessly with AGY workspace configurations and rules. See the [Antigravity Integration Guide](docs/integrations/antigravity.md).
+- **Amp, Qoder & Pi:**
+  `anvil install . --target amp,qoder,pi` (added automatically when `.amp/`, `.qoder/` or `.pi/` exists). All three read the managed `AGENTS.md` block; Amp and Pi load ANVIL skills natively from `.agents/skills/`. The MCP server goes in `.amp/settings.json` for Amp (run `amp mcp approve anvil` once) and `.mcp.json` for Qoder CLI. Pi has no built-in MCP client, so it uses the ANVIL CLI.
 
 ### Canonical MCP Tools
 

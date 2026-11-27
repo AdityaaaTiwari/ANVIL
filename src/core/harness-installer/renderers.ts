@@ -344,6 +344,9 @@ const TARGET_BLOCK_FILES: Partial<Record<HarnessTarget, string[]>> = {
   kiro: [".kiro/steering/anvil-harness.md"],
   cline: [".clinerules/anvil-harness.md"],
   zed: ["AGENTS.md"],
+  amp: ["AGENTS.md"],
+  qoder: ["AGENTS.md"],
+  pi: ["AGENTS.md"],
 };
 
 /** First clause of a description, capped, for always-loaded indexes. */

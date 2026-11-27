@@ -159,7 +159,25 @@ describe("anvil install (harness installer)", () => {
     expect(JSON.parse(win[0]!.content!).mcpServers.anvil.command).toBe("cmd");
   });
 
+  it("registers the MCP server for Amp and Qoder, and installs AGENTS.md for Pi", async () => {
+    const { project, options } = await setup();
+    const npx = { command: "npx", args: ["-y", "anvil-engineering-workbench", "mcp", "start"] };
+    await install({ ...options, targets: ["amp", "qoder", "pi"] });
+    const amp = await readJson(path.join(project, ".amp/settings.json"));
+    expect(amp["amp.mcpServers"].anvil).toEqual({ ...npx, env: { ANVIL_WORKSPACE: project } });
+    expect((await readJson(path.join(project, ".mcp.json"))).mcpServers.anvil).toEqual(npx);
+    expect(await readFile(path.join(project, "AGENTS.md"), "utf8")).toContain("anvil gate");
+    expect(await exists(path.join(project, ".pi"))).toBe(false);
+  });
+
+  it("writes .mcp.json once when Claude Code and Qoder are both targets", async () => {
+    const { options } = await setup();
+    const plans = await planHarnessInstall({ ...options, targets: ["claude", "qoder"] });
+    expect(plans.filter((plan) => plan.path.endsWith(".mcp.json"))).toHaveLength(1);
+  });
+
   it("parses target lists and aliases", () => {
+    expect(parseTargets("ampcode,qoder-cli,pi-coding-agent")).toEqual(["amp", "qoder", "pi"]);
     expect(parseTargets(undefined)).toEqual([...DEFAULT_TARGETS]);
     expect(parseTargets("claude-code,copilot,cursor,cursor")).toEqual(["claude", "vscode", "cursor"]);
     expect(() => parseTargets("chatgpt")).toThrow(/Unknown target/);

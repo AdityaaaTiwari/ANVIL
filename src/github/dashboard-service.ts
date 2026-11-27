@@ -187,6 +187,9 @@ const HARNESS_MARKERS: Record<string, RegExp> = {
   kiro: /^\.kiro\//,
   cline: /^\.clinerules(?:\/|$)/,
   zed: /^(?:\.zed\/|\.rules$)/,
+  amp: /^\.amp\//,
+  qoder: /^\.qoder\//,
+  pi: /^\.pi\//,
 };
 
 export function harnessCoverage(

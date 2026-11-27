@@ -129,6 +129,39 @@ export const HARNESS_CAPABILITIES: readonly HarnessCapability[] = [
       "Opt-in target: ANVIL adds it when .zed/ or .rules exists.",
     ],
   },
+  {
+    target: "amp",
+    displayName: "Amp",
+    schemaVersion: HARNESS_CAPABILITY_SCHEMA_VERSION,
+    capabilities: { agents: "shared", skills: "native", commands: "shared", rules: "shared", hooks: "unsupported" },
+    notes: [
+      "Amp reads AGENTS.md and loads skills natively from .agents/skills/.",
+      "The ANVIL MCP server goes in .amp/settings.json (amp.mcpServers); run `amp mcp approve anvil` once, since Amp asks before starting workspace servers.",
+      "Opt-in target: ANVIL adds it when .amp/ exists.",
+    ],
+  },
+  {
+    target: "qoder",
+    displayName: "Qoder",
+    schemaVersion: HARNESS_CAPABILITY_SCHEMA_VERSION,
+    capabilities: { agents: "shared", skills: "shared", commands: "shared", rules: "shared", hooks: "unsupported" },
+    notes: [
+      "Qoder reads AGENTS.md, so ANVIL installs the shared harness and its managed AGENTS.md block.",
+      "Qoder CLI reads project MCP servers from .mcp.json, where ANVIL registers its server.",
+      "Opt-in target: ANVIL adds it when .qoder/ exists.",
+    ],
+  },
+  {
+    target: "pi",
+    displayName: "Pi",
+    schemaVersion: HARNESS_CAPABILITY_SCHEMA_VERSION,
+    capabilities: { agents: "shared", skills: "native", commands: "shared", rules: "shared", hooks: "unsupported" },
+    notes: [
+      "Pi reads AGENTS.md and loads skills natively from .agents/skills/.",
+      "Pi has no built-in MCP client, so use the ANVIL CLI (anvil gate, anvil guard check) from Pi's bash tool.",
+      "Opt-in target: ANVIL adds it when .pi/ exists.",
+    ],
+  },
 ] as const;
 
 export function getHarnessCapability(target: HarnessTarget): HarnessCapability {
