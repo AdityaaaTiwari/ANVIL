@@ -74,6 +74,9 @@ import { runScorecard } from "./scorecard.js";
 import { runConsult } from "./consult.js";
 import { runContext } from "./context.js";
 import { runStatus } from "./status.js";
+import { runGuard } from "./guard.js";
+import { runCatalog } from "./catalog.js";
+import { runAnalyze } from "./analyze.js";
 import { runInstincts } from "./instincts.js";
 import { runCost } from "./cost.js";
 import { runRaceCommand } from "./race.js";
@@ -96,6 +99,9 @@ export const COMMANDS: ReadonlyMap<string, CommandHandler> = new Map<string, Com
   ["consult", runConsult],
   ["context", runContext],
   ["status", runStatus],
+  ["guard", runGuard],
+  ["catalog", runCatalog],
+  ["analyze", runAnalyze],
   ["statusline", runStatus],
   ["instinct", runInstincts],
   ["instincts", runInstincts],
