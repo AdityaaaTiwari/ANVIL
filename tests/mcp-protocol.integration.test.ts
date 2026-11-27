@@ -114,6 +114,7 @@ describe("ANVIL MCP stdio protocol integration", () => {
     expect(toolNames).toContain("anvil_agent_security_audit");
     expect(toolNames).toContain("anvil_dependency_impact");
     expect(toolNames).toContain("anvil_binary_intelligence");
+    expect(toolNames).toContain("anvil_app_inspect");
     expect(toolNames).toContain("anvil_supply_chain_audit");
     expect(toolNames).toContain("anvil_call_graph");
     expect(toolNames).toContain("anvil_jit_skills");

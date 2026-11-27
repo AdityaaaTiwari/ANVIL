@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { realpath } from "node:fs/promises";
+import path from "node:path";
 import { readFileSync } from "node:fs";
 import { McpServer } from "@modelcontextprotocol/server";
 import { StdioServerTransport } from "@modelcontextprotocol/server/stdio";
@@ -27,7 +28,8 @@ import { auditAgentConfiguration } from "../core/agent-security-audit.js";
 import { analyzeDependencyImpact } from "../core/dependency-impact.js";
 import { runDoctorChecks } from "../core/doctor.js";
 import { cleanProject } from "../core/project-cleaner.js";
-import { analyzeBinaryIntelligence } from "../core/binary-intelligence.js";
+import { analyzeBinaryIntelligence, isPathInsideRoot } from "../core/binary-intelligence.js";
+import { inspectApp } from "../core/app-intel/app-inspector.js";
 import { buildSymbolCallGraph, querySymbolCallGraph } from "../core/call-graph.js";
 import { injectJitSkills } from "../core/jit-skill-injector.js";
 import { scanSupplyChain } from "../core/supply-chain-scanner.js";
@@ -1041,6 +1043,40 @@ server.registerTool(
         });
       }
       return result(report, { compact: false });
+    } catch (error) {
+      return failure(error);
+    }
+  }
+);
+
+server.registerTool(
+  "anvil_app_inspect",
+  {
+    title: "App Package Inspection (APK, IPA, Electron, WASM, Source Maps)",
+    description:
+      "Look inside one shipped app artifact in the workspace without external reverse-engineering tools: Android APK/AAB (manifest, permissions, exported components, signing), iOS IPA (Info.plist, ATS), Electron app.asar (insecure BrowserWindow settings), WebAssembly (imports/exports), source maps (recoverable sources) and JS bundles. Also reports embedded credentials (masked) and network endpoints. Read-only.",
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
+    inputSchema: z.object({
+      projectPath: z
+        .string()
+        .optional()
+        .describe("Workspace-relative directory. Defaults to the configured workspace root."),
+      relativePath: z.string().min(1).max(500).describe("Path of the app file, relative to the project root."),
+    }),
+  },
+  async ({ projectPath, relativePath }) => {
+    try {
+      const root = await resolveWorkspace(projectPath);
+      const target = path.resolve(root, relativePath);
+      const [realRoot, realTarget] = await Promise.all([realpath(root), realpath(target)]);
+      if (!isPathInsideRoot(realRoot, realTarget)) throw new Error("relativePath must stay inside the project root.");
+      const report = await auditReadOnlyMcpTool("anvil_app_inspect", () => inspectApp(realTarget));
+      return result({ ...report, file: path.relative(realRoot, realTarget) });
     } catch (error) {
       return failure(error);
     }
