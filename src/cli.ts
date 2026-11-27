@@ -106,6 +106,7 @@ Commands:
   guard <check|log|status>  Dry-run Guard on a command or file, and see what it blocked
   catalog          List installable agents, skills, commands and rules (--kind, --json)
   analyze [path]   Profile the repo and save an anvil-project skill for agents (--write)
+  plugin build     Generate the Claude Code plugin from the catalog (--check in CI)
   statusline [path] Output compact ANSI statusline for terminal and IDEs
   instinct <learn|list|add|promote|reject|enforce> Continuous learning habits and compiled Guard rules
   evolve [path]    Compile active learned instincts into workspace skills

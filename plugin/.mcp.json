@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "anvil": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "anvil-engineering-workbench@1.5.0",
+        "mcp",
+        "start"
+      ]
+    }
+  }
+}

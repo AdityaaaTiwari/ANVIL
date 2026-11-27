@@ -81,6 +81,15 @@ npx -y anvil-engineering-workbench install . --hooks
 
 *See the [Universal Tool Installer Guide](docs/install.md) and [Agent Stop Hooks Guide](docs/agent-hooks.md) for tool-specific targets (`--target`), dry-run preview, and uninstall.*
 
+**Claude Code plugin:** install every ANVIL agent, skill, command, rule, Guard hook and the MCP server as one plugin:
+
+```text
+/plugin marketplace add AdityaaaTiwari/ANVIL
+/plugin install anvil@anvil
+```
+
+On Claude Code 2.1.275 or later this is one step: `/plugin install anvil --marketplace AdityaaaTiwari/ANVIL`. Everything is namespaced, e.g. `/anvil:code-review`, `/anvil:security-review`, `anvil:security-reviewer`.
+
 ### 2. Run verification gate instantly with npx
 
 ```bash

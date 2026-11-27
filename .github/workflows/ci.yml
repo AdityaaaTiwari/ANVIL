@@ -52,6 +52,8 @@ jobs:
         run: npm run build
       - name: Run ANVIL Shield
         run: node dist/cli.js shield .
+      - name: Claude Code plugin is in sync with the catalog
+        run: node dist/cli.js plugin build --check
       - name: Test ANVIL GitHub Action
         uses: ./
         with:

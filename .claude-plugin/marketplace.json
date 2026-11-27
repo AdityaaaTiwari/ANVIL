@@ -1,0 +1,19 @@
+{
+  "name": "anvil",
+  "owner": {
+    "name": "Aditya Tiwari",
+    "url": "https://github.com/AdityaaaTiwari"
+  },
+  "metadata": {
+    "description": "ANVIL: the deterministic verification layer for AI coding agents."
+  },
+  "plugins": [
+    {
+      "name": "anvil",
+      "source": "./plugin",
+      "description": "Guard hooks, a pre-stop quality gate, specialist agents, skills, commands and the ANVIL MCP server.",
+      "version": "1.5.0",
+      "category": "development"
+    }
+  ]
+}
