@@ -170,7 +170,10 @@ export function renderClaudePlugin(catalog: HarnessCatalog, version: string): Pl
   ];
 
   return {
-    files: files.sort((a, b) => a.path.localeCompare(b.path)),
+    // Catalog files are checked out with CRLF on Windows; always emit LF so every OS builds the same plugin.
+    files: files
+      .map((file) => ({ ...file, content: file.content.replace(/\r\n/g, "\n") }))
+      .sort((a, b) => a.path.localeCompare(b.path)),
     counts: { agents: agents.length, skills: skills.length, commands: commands.length, ruleSkills: rules.length },
   };
 }

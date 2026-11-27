@@ -55,6 +55,28 @@ describe("Claude Code plugin", () => {
     expect(agent?.content).toMatch(/^---\nname: [a-z0-9-]+\ndescription: /);
   });
 
+  it("emits LF even when catalog files use CRLF", () => {
+    const build = renderClaudePlugin(
+      {
+        root: "",
+        items: [
+          {
+            kind: "skill",
+            id: "crlf-skill",
+            name: "CRLF skill",
+            description: "A skill checked out with Windows line endings",
+            profile: "minimal",
+            tags: [],
+            body: "# Title\r\n\r\nLine one\r\nLine two",
+            sourcePath: "skills/crlf-skill.md",
+          },
+        ],
+      },
+      "1.0.0"
+    );
+    expect(build.files.every((file) => !file.content.includes("\r"))).toBe(true);
+  });
+
   it("points the marketplace at the plugin folder", () => {
     const marketplace = JSON.parse(renderMarketplace("1.2.3"));
     expect(marketplace.name).toBe("anvil");
