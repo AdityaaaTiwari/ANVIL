@@ -1,0 +1,22 @@
+{
+  "name": "anvil",
+  "displayName": "ANVIL",
+  "version": "1.5.0",
+  "description": "Deterministic verification layer for AI coding agents: Guard hooks, a pre-stop quality gate, 49 specialist agents, 90 skills, 34 commands and the read-only ANVIL MCP server.",
+  "author": {
+    "name": "Aditya Tiwari",
+    "url": "https://github.com/AdityaaaTiwari"
+  },
+  "homepage": "https://github.com/AdityaaaTiwari/ANVIL",
+  "repository": "https://github.com/AdityaaaTiwari/ANVIL",
+  "license": "MIT",
+  "keywords": [
+    "verification",
+    "guard",
+    "security",
+    "code-review",
+    "agents",
+    "skills",
+    "mcp"
+  ]
+}

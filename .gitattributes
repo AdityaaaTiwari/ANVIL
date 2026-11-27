@@ -1,3 +1,5 @@
 catalog/** linguist-vendored
 skills/** linguist-vendored
 docs/** linguist-vendored
+plugin/** text eol=lf linguist-generated
+.claude-plugin/** text eol=lf

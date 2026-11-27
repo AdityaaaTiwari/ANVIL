@@ -24,6 +24,7 @@ To maintain code stability and security:
    npm run build
    npm test
    ```
+   If you changed `catalog/` or bumped the version, regenerate the Claude Code plugin with `npm run build && node dist/cli.js plugin build` and commit `plugin/`. CI fails when it is stale.
 4. **Commit Clearly:** Write concise, clear commit messages describing your changes.
 5. **Open a Pull Request:** Submit your PR against the `main` branch of the upstream repository. Complete the PR template checklist.
 
