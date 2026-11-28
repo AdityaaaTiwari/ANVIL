@@ -947,6 +947,24 @@ ${DASHBOARD_STYLES}
     <div class="card"><div class="metric-label">Install Hooks / Native</div><div class="metric" id="supplyChainHooksNative">—</div><div class="metric-sub">Lifecycle scripts &amp; .node addons</div></div>
   </section>
 
+  <section class="section card" id="appInspector">
+    <div class="section-head">
+      <h2>Inspect an App</h2>
+      <span class="pill pill-accent">ANVIL APP</span>
+    </div>
+    <p class="run-meta" style="margin:0 0 12px">APK, IPA, Electron app.asar, WASM, source maps, JS bundles and native .exe / .dll / .so / .dylib files. Everything runs on this machine; nothing is uploaded anywhere else.</p>
+    <div id="appDropZone" tabindex="0" role="button" aria-label="Choose or drop an app file to inspect" style="border:1px dashed var(--border);border-radius:10px;padding:22px;text-align:center;cursor:pointer;color:var(--muted)">
+      <b style="color:var(--text)">Drop a file here</b> or click to choose one (up to 256 MiB)
+      <input type="file" id="appFileInput" style="display:none">
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px">
+      <span class="run-meta">or pick one from this workspace:</span>
+      <select id="appCandidateSelect" class="btn" style="padding:6px 10px;font-size:12px;max-width:420px"><option value="">Loading…</option></select>
+      <button class="btn btn-cyan" id="appInspectBtn" type="button">Inspect</button>
+    </div>
+    <div id="appInspectResult" class="list" style="margin-top:14px" aria-live="polite"></div>
+  </section>
+
   <section class="section card">
     <div class="section-head">
       <h2>Detected Compiled Assets</h2>

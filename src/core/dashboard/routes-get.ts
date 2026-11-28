@@ -31,6 +31,7 @@ import { inspectProject } from "../project-inspector.js";
 import { listProjectMemory } from "../project-memory.js";
 import { auditProject } from "../quality-audit.js";
 import { analyzeBinaryIntelligence } from "../binary-intelligence.js";
+import { handleAppGet } from "./app-routes.js";
 import { scanSupplyChain } from "../supply-chain-scanner.js";
 import { generateRegressionReport } from "../regression-intelligence.js";
 import { listReviews } from "../review-history.js";
@@ -750,6 +751,10 @@ export async function handleDashboardGet(
   if (requestUrl.pathname === "/api/catalog/skills") {
     const skills = await loadSkillRegistry(projectPath);
     sendJson(response, 200, { skills, total: skills.length });
+    return true;
+  }
+
+  if (requestUrl.pathname.startsWith("/api/app/") && (await handleAppGet(requestUrl, response, projectPath))) {
     return true;
   }
 

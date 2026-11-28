@@ -14,6 +14,7 @@ import { decideTaskApproval, loadRun, saveRun } from "../run-store.js";
 import { applySecurityFixes, scanProjectSecurity } from "../security-scanner.js";
 import { createRunFromWorkflow, loadWorkflow, saveWorkflow } from "../workflow-store.js";
 import { ANVIL_STATE_DIR } from "../workspace-paths.js";
+import { handleAppUpload } from "./app-routes.js";
 import { readJsonBody, rejectDisallowedPostHeaders, sendJson } from "./http-helpers.js";
 import { broadcastEvent } from "./sse.js";
 
@@ -49,6 +50,11 @@ export async function handleDashboardPost(
   requestUrl: URL,
   projectPath: string
 ): Promise<boolean> {
+  if (requestUrl.pathname === "/api/app/upload") {
+    await handleAppUpload(request, response);
+    return true;
+  }
+
   if (isStandardDashboardPostPath(requestUrl.pathname)) {
     if (rejectDisallowedPostHeaders(request, response)) return true;
     const maxBytes = requestUrl.pathname === "/api/config-files" ? 140000 : 16384;
