@@ -225,10 +225,14 @@ export class GitHubClient {
     return this.request("GET", this.repo(owner, repo));
   }
 
+  private branchPath(branch: string): string {
+    return branch.split("/").map(encodeURIComponent).join("/");
+  }
+
   async getBranchSha(owner: string, repo: string, branch: string): Promise<string> {
     const ref = await this.request<{ object: { sha: string } }>(
       "GET",
-      `${this.repo(owner, repo)}/git/ref/heads/${encodeURIComponent(branch)}`
+      `${this.repo(owner, repo)}/git/ref/heads/${this.branchPath(branch)}`
     );
     return ref.object.sha;
   }
@@ -358,7 +362,7 @@ export class GitHubClient {
     } catch (error) {
       if (!(error instanceof GitHubApiError && error.status === 422)) throw error;
       // Branch exists from an earlier request: move it to the new commit.
-      await this.request("PATCH", `${this.repo(owner, repo)}/git/refs/heads/${encodeURIComponent(options.branch)}`, {
+      await this.request("PATCH", `${this.repo(owner, repo)}/git/refs/heads/${this.branchPath(options.branch)}`, {
         sha: commit.sha,
         force: true,
       });
