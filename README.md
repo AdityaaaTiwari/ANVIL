@@ -1,4 +1,8 @@
 <p align="center">
+  English | <a href="docs/i18n/README.hi.md">हिन्दी</a> | <a href="docs/i18n/README.es.md">Español</a>
+</p>
+
+<p align="center">
   <img src="https://raw.githubusercontent.com/AdityaaaTiwari/ANVIL/main/docs/anvil-dashboard.png?v=2" alt="ANVIL Verification Layer Dashboard" width="100%" />
 </p>
 
