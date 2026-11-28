@@ -13,8 +13,8 @@
 </p>
 
 <p align="center">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="MIT License" /></a>
-  <a href="PRIVACY.md"><img src="https://img.shields.io/badge/Privacy-Local--First-10b981" alt="Privacy Policy" /></a>
+  <a href="../../LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="MIT License" /></a>
+  <a href="../../PRIVACY.md"><img src="https://img.shields.io/badge/Privacy-Local--First-10b981" alt="Privacy Policy" /></a>
   <a href="https://github.com/AdityaaaTiwari/ANVIL/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/AdityaaaTiwari/ANVIL/ci.yml?branch=main&style=flat&label=build" alt="Build status" /></a>
   <a href="https://www.npmjs.com/package/anvil-engineering-workbench"><img src="https://img.shields.io/npm/v/anvil-engineering-workbench?color=orange" alt="npm version" /></a>
   <a href="https://github.com/AdityaaaTiwari/ANVIL"><img src="https://img.shields.io/github/stars/AdityaaaTiwari/ANVIL?style=flat" alt="GitHub stars" /></a>
@@ -87,7 +87,7 @@ Su bucle verificado compara sumas de verificación de Git previas a la ejecució
 npx -y anvil-engineering-workbench install . --hooks
 ```
 
-*Consulta la [Universal Tool Installer Guide](docs/install.md) y la [Agent Stop Hooks Guide](docs/agent-hooks.md) para destinos específicos por herramienta (`--target`), vista previa dry-run y desinstalación.*
+*Consulta la [Universal Tool Installer Guide](../../docs/install.md) y la [Agent Stop Hooks Guide](../../docs/agent-hooks.md) para destinos específicos por herramienta (`--target`), vista previa dry-run y desinstalación.*
 
 **Plugin de Claude Code:** instala todos los agentes, habilidades, comandos, reglas, Guard hooks y el servidor MCP de ANVIL como un solo plugin:
 
@@ -215,7 +215,7 @@ ANVIL actúa como el arnés local de inspección y verificación para tu agente:
 - **Codex & OpenCode:**
   Utiliza las instrucciones estándar de `AGENTS.md` y ejecuta `anvil gate .` para verificar cambios antes de hacer commit.
 - **Google Antigravity (AGY):**
-  Se integra de forma fluida con las configuraciones y reglas de espacio de trabajo de AGY. Consulta la [Antigravity Integration Guide](docs/integrations/antigravity.md).
+  Se integra de forma fluida con las configuraciones y reglas de espacio de trabajo de AGY. Consulta la [Antigravity Integration Guide](../../docs/integrations/antigravity.md).
 - **Amp, Qoder & Pi:**
   `anvil install . --target amp,qoder,pi` (se añade automáticamente cuando existen `.amp/`, `.qoder/` o `.pi/`). Los tres leen el bloque gestionado en `AGENTS.md`; Amp y Pi cargan habilidades de ANVIL de forma nativa desde `.agents/skills/`. El servidor MCP va en `.amp/settings.json` para Amp (ejecuta `amp mcp approve anvil` una vez) y en `.mcp.json` para Qoder CLI. Pi no tiene cliente MCP integrado, por lo que usa la CLI de ANVIL.
 
@@ -287,11 +287,11 @@ jobs:
 
 Explora las guías detalladas en el directorio `docs/`:
 
-- 📖 **[Documentation Index](docs/README.md)**: Directorio completo de guías.
-- 🚀 **[Getting Started](docs/getting-started.md)**: Recorrido paso a paso de incorporación.
-- 🔌 **[Antigravity Integration](docs/integrations/antigravity.md)**: Configura ANVIL con Google Antigravity.
-- 🤖 **[Claude Code Integration](docs/integrations/claude-code.md)**: Adaptador de CLI de Claude Code.
-- 🛠️ **[MCP Server Guide](docs/mcp-server.md)**: Configuración de Model Context Protocol y esquemas de herramientas.
-- 📋 **[Policy-as-Code](docs/policy-as-code.md)**: Configura reglas y líneas base en `.anvil/policy.json`.
-- 🛡️ **[CI Gate & SARIF Integration](docs/ci-gate-and-sarif.md)**: GitHub Actions e informes SARIF.
-- ⚡ **[Token Benchmark Results](docs/token-benchmark-results.md)**: Comparación empírica que mide más del 96% de ahorro de tokens.
+- 📖 **[Documentation Index](../../docs/README.md)**: Directorio completo de guías.
+- 🚀 **[Getting Started](../../docs/getting-started.md)**: Recorrido paso a paso de incorporación.
+- 🔌 **[Antigravity Integration](../../docs/integrations/antigravity.md)**: Configura ANVIL con Google Antigravity.
+- 🤖 **[Claude Code Integration](../../docs/integrations/claude-code.md)**: Adaptador de CLI de Claude Code.
+- 🛠️ **[MCP Server Guide](../../docs/mcp-server.md)**: Configuración de Model Context Protocol y esquemas de herramientas.
+- 📋 **[Policy-as-Code](../../docs/policy-as-code.md)**: Configura reglas y líneas base en `.anvil/policy.json`.
+- 🛡️ **[CI Gate & SARIF Integration](../../docs/ci-gate-and-sarif.md)**: GitHub Actions e informes SARIF.
+- ⚡ **[Token Benchmark Results](../../docs/token-benchmark-results.md)**: Comparación empírica que mide más del 96% de ahorro de tokens.

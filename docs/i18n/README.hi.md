@@ -13,8 +13,8 @@
 </p>
 
 <p align="center">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="MIT License" /></a>
-  <a href="PRIVACY.md"><img src="https://img.shields.io/badge/Privacy-Local--First-10b981" alt="Privacy Policy" /></a>
+  <a href="../../LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="MIT License" /></a>
+  <a href="../../PRIVACY.md"><img src="https://img.shields.io/badge/Privacy-Local--First-10b981" alt="Privacy Policy" /></a>
   <a href="https://github.com/AdityaaaTiwari/ANVIL/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/AdityaaaTiwari/ANVIL/ci.yml?branch=main&style=flat&label=build" alt="Build status" /></a>
   <a href="https://www.npmjs.com/package/anvil-engineering-workbench"><img src="https://img.shields.io/npm/v/anvil-engineering-workbench?color=orange" alt="npm version" /></a>
   <a href="https://github.com/AdityaaaTiwari/ANVIL"><img src="https://img.shields.io/github/stars/AdityaaaTiwari/ANVIL?style=flat" alt="GitHub stars" /></a>
@@ -87,7 +87,7 @@ AI कोडिंग एजेंट्स महत्वाकांक्ष
 npx -y anvil-engineering-workbench install . --hooks
 ```
 
-*टूल-विशिष्ट टारगेट्स (`--target`), ड्राई-रन प्रीव्यू और अनइंस्टॉल के लिए [Universal Tool Installer Guide](docs/install.md) और [Agent Stop Hooks Guide](docs/agent-hooks.md) देखें।*
+*टूल-विशिष्ट टारगेट्स (`--target`), ड्राई-रन प्रीव्यू और अनइंस्टॉल के लिए [Universal Tool Installer Guide](../../docs/install.md) और [Agent Stop Hooks Guide](../../docs/agent-hooks.md) देखें।*
 
 **Claude Code प्लगइन:** हर ANVIL एजेंट, स्किल, कमांड, रूल, Guard हुक और MCP सर्वर को एक ही प्लगइन के रूप में इंस्टॉल करें:
 
@@ -215,7 +215,7 @@ ANVIL आपके एजेंट के लिए लोकल इंस्प
 - **Codex & OpenCode:**
   मानक `AGENTS.md` निर्देशों का उपयोग करें और कमिट करने से पहले बदलावों को वेरिफाई करने के लिए `anvil gate .` चलाएं।
 - **Google Antigravity (AGY):**
-  AGY वर्कस्पेस कॉन्फ़िगरेशन और रूल्स के साथ सहजता से एकीकृत होता है। [Antigravity Integration Guide](docs/integrations/antigravity.md) देखें।
+  AGY वर्कस्पेस कॉन्फ़िगरेशन और रूल्स के साथ सहजता से एकीकृत होता है। [Antigravity Integration Guide](../../docs/integrations/antigravity.md) देखें।
 - **Amp, Qoder & Pi:**
   `anvil install . --target amp,qoder,pi` (`.amp/`, `.qoder/` या `.pi/` मौजूद होने पर अपने आप जुड़ जाता है)। तीनों मैनेज्ड `AGENTS.md` ब्लॉक पढ़ते हैं; Amp और Pi `.agents/skills/` से ANVIL स्किल्स नेटिव रूप से लोड करते हैं। MCP सर्वर Amp के लिए `.amp/settings.json` में (एक बार `amp mcp approve anvil` चलाएं) और Qoder CLI के लिए `.mcp.json` में जाता है। Pi में बिल्ट-इन MCP क्लाइंट नहीं है, इसलिए यह ANVIL CLI का उपयोग करता है।
 
@@ -287,11 +287,11 @@ jobs:
 
 `docs/` डायरेक्टरी में विस्तृत गाइड्स देखें:
 
-- 📖 **[Documentation Index](docs/README.md)**: पूरी गाइड डायरेक्टरी।
-- 🚀 **[Getting Started](docs/getting-started.md)**: स्टेप-बाय-स्टेप ऑनबोर्डिंग वॉकथ्रू।
-- 🔌 **[Antigravity Integration](docs/integrations/antigravity.md)**: Google Antigravity के साथ ANVIL सेटअप करें।
-- 🤖 **[Claude Code Integration](docs/integrations/claude-code.md)**: Claude Code CLI एडैप्टर।
-- 🛠️ **[MCP Server Guide](docs/mcp-server.md)**: Model Context Protocol सेटअप और टूल स्कीमा।
-- 📋 **[Policy-as-Code](docs/policy-as-code.md)**: `.anvil/policy.json` रूल्स और बेसलाइन कॉन्फ़िगर करें।
-- 🛡️ **[CI Gate & SARIF Integration](docs/ci-gate-and-sarif.md)**: GitHub Actions और SARIF रिपोर्ट्स।
-- ⚡ **[Token Benchmark Results](docs/token-benchmark-results.md)**: 96%+ टोकन बचत मापने वाली अनुभवजन्य तुलना।
+- 📖 **[Documentation Index](../../docs/README.md)**: पूरी गाइड डायरेक्टरी।
+- 🚀 **[Getting Started](../../docs/getting-started.md)**: स्टेप-बाय-स्टेप ऑनबोर्डिंग वॉकथ्रू।
+- 🔌 **[Antigravity Integration](../../docs/integrations/antigravity.md)**: Google Antigravity के साथ ANVIL सेटअप करें।
+- 🤖 **[Claude Code Integration](../../docs/integrations/claude-code.md)**: Claude Code CLI एडैप्टर।
+- 🛠️ **[MCP Server Guide](../../docs/mcp-server.md)**: Model Context Protocol सेटअप और टूल स्कीमा।
+- 📋 **[Policy-as-Code](../../docs/policy-as-code.md)**: `.anvil/policy.json` रूल्स और बेसलाइन कॉन्फ़िगर करें।
+- 🛡️ **[CI Gate & SARIF Integration](../../docs/ci-gate-and-sarif.md)**: GitHub Actions और SARIF रिपोर्ट्स।
+- ⚡ **[Token Benchmark Results](../../docs/token-benchmark-results.md)**: 96%+ टोकन बचत मापने वाली अनुभवजन्य तुलना।
