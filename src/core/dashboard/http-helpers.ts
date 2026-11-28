@@ -8,9 +8,18 @@ export function sendJson(response: ServerResponse, statusCode: number, data: unk
 /** Validates Origin and Content-Type for mutating dashboard POST routes. */
 export function rejectDisallowedPostHeaders(request: IncomingMessage, response: ServerResponse): boolean {
   const origin = request.headers.origin;
-  if (origin && new URL(origin).host !== request.headers.host) {
-    sendJson(response, 403, { error: "Cross-origin requests are not allowed." });
-    return true;
+  if (origin) {
+    let originHost: string;
+    try {
+      originHost = new URL(origin).host;
+    } catch {
+      sendJson(response, 403, { error: "Cross-origin requests are not allowed." });
+      return true;
+    }
+    if (originHost !== request.headers.host) {
+      sendJson(response, 403, { error: "Cross-origin requests are not allowed." });
+      return true;
+    }
   }
   if (!request.headers["content-type"]?.includes("application/json")) {
     sendJson(response, 415, { error: "Expected application/json." });

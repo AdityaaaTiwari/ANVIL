@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { lstat, readFile, realpath, writeFile, mkdir } from "node:fs/promises";
+import { lstat, mkdir, readFile, realpath, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 export type VerificationStatus = "passed" | "failed" | "timed_out" | "spawn_error";
@@ -260,77 +260,81 @@ export async function installVerificationDependencies(
     writeFile(userConfig, "", { flag: "wx", mode: 0o600 }),
     writeFile(globalConfig, "", { flag: "wx", mode: 0o600 }),
   ]);
-  const env: NodeJS.ProcessEnv = {
-    PATH: process.env.PATH ?? "",
-    CI: "1",
-    NODE_ENV: "test",
-    ANVIL_VERIFICATION: "1",
-    HOME: root,
-    USERPROFILE: root,
-    ...(process.env.SystemRoot ? { SystemRoot: process.env.SystemRoot } : {}),
-    ...(process.env.WINDIR ? { WINDIR: process.env.WINDIR } : {}),
-    ...(process.env.TEMP ? { TEMP: process.env.TEMP } : {}),
-    ...(process.env.TMP ? { TMP: process.env.TMP } : {}),
-  };
-  const command =
-    "npm ci --ignore-scripts --no-audit --no-fund --userconfig <temporary-empty-config> --globalconfig <temporary-empty-config>";
-  // anvil-disable-next-line ANVIL-R002 -- fixed argument list; shell is only used on Windows to launch npm.cmd, and the two paths are ANVIL-created temp files
-  const child = spawn(
-    windows ? "npm.cmd" : "npm",
-    ["ci", "--ignore-scripts", "--no-audit", "--no-fund", "--userconfig", userConfig, "--globalconfig", globalConfig],
-    {
-      cwd: root,
-      shell: windows,
-      windowsHide: true,
-      env,
-      stdio: ["ignore", "pipe", "pipe"],
-      detached: !windows,
-    }
-  );
-  child.stdout.on("data", append);
-  child.stderr.on("data", append);
-  let timedOut = false;
-  let forceKillTimer: NodeJS.Timeout | null = null;
-  const outcome = await new Promise<{ exitCode: number | null; error?: string }>((resolve) => {
-    let settled = false;
-    const finish = (value: { exitCode: number | null; error?: string }) => {
-      if (settled) return;
-      settled = true;
-      clearTimeout(timer);
-      if (forceKillTimer) clearTimeout(forceKillTimer);
-      resolve(value);
+  try {
+    const env: NodeJS.ProcessEnv = {
+      PATH: process.env.PATH ?? "",
+      CI: "1",
+      NODE_ENV: "test",
+      ANVIL_VERIFICATION: "1",
+      HOME: root,
+      USERPROFILE: root,
+      ...(process.env.SystemRoot ? { SystemRoot: process.env.SystemRoot } : {}),
+      ...(process.env.WINDIR ? { WINDIR: process.env.WINDIR } : {}),
+      ...(process.env.TEMP ? { TEMP: process.env.TEMP } : {}),
+      ...(process.env.TMP ? { TMP: process.env.TMP } : {}),
     };
-    const timer = setTimeout(() => {
-      timedOut = true;
-      if (!windows && child.pid) {
-        try {
-          process.kill(-child.pid, "SIGTERM");
-        } catch {
-          child.kill("SIGTERM");
-        }
-      } else child.kill("SIGTERM");
-
-      forceKillTimer = setTimeout(() => {
-        try {
-          if (!windows && child.pid) {
-            process.kill(-child.pid, "SIGKILL");
-          } else {
-            child.kill("SIGKILL");
+    const command =
+      "npm ci --ignore-scripts --no-audit --no-fund --userconfig <temporary-empty-config> --globalconfig <temporary-empty-config>";
+    // anvil-disable-next-line ANVIL-R002 -- fixed argument list; shell is only used on Windows to launch npm.cmd, and the two paths are ANVIL-created temp files
+    const child = spawn(
+      windows ? "npm.cmd" : "npm",
+      ["ci", "--ignore-scripts", "--no-audit", "--no-fund", "--userconfig", userConfig, "--globalconfig", globalConfig],
+      {
+        cwd: root,
+        shell: windows,
+        windowsHide: true,
+        env,
+        stdio: ["ignore", "pipe", "pipe"],
+        detached: !windows,
+      }
+    );
+    child.stdout.on("data", append);
+    child.stderr.on("data", append);
+    let timedOut = false;
+    let forceKillTimer: NodeJS.Timeout | null = null;
+    const outcome = await new Promise<{ exitCode: number | null; error?: string }>((resolve) => {
+      let settled = false;
+      const finish = (value: { exitCode: number | null; error?: string }) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        if (forceKillTimer) clearTimeout(forceKillTimer);
+        resolve(value);
+      };
+      const timer = setTimeout(() => {
+        timedOut = true;
+        if (!windows && child.pid) {
+          try {
+            process.kill(-child.pid, "SIGTERM");
+          } catch {
+            child.kill("SIGTERM");
           }
-        } catch {}
-      }, 5000);
-    }, timeoutMs);
-    child.once("error", (error) => finish({ exitCode: null, error: error.message }));
-    child.once("close", (code) => finish({ exitCode: code }));
-  });
-  if (forceKillTimer) clearTimeout(forceKillTimer);
-  if (outcome.error) append("\nANVIL could not start npm: " + outcome.error + "\n");
-  return {
-    status: outcome.error ? "spawn_error" : timedOut ? "timed_out" : outcome.exitCode === 0 ? "passed" : "failed",
-    exitCode: outcome.exitCode,
-    durationMs: Date.now() - startedAt,
-    output: chunks.join(""),
-    outputTruncated,
-    command,
-  };
+        } else child.kill("SIGTERM");
+
+        forceKillTimer = setTimeout(() => {
+          try {
+            if (!windows && child.pid) {
+              process.kill(-child.pid, "SIGKILL");
+            } else {
+              child.kill("SIGKILL");
+            }
+          } catch {}
+        }, 5000);
+      }, timeoutMs);
+      child.once("error", (error) => finish({ exitCode: null, error: error.message }));
+      child.once("close", (code) => finish({ exitCode: code }));
+    });
+    if (forceKillTimer) clearTimeout(forceKillTimer);
+    if (outcome.error) append("\nANVIL could not start npm: " + outcome.error + "\n");
+    return {
+      status: outcome.error ? "spawn_error" : timedOut ? "timed_out" : outcome.exitCode === 0 ? "passed" : "failed",
+      exitCode: outcome.exitCode,
+      durationMs: Date.now() - startedAt,
+      output: chunks.join(""),
+      outputTruncated,
+      command,
+    };
+  } finally {
+    await Promise.allSettled([rm(userConfig, { force: true }), rm(globalConfig, { force: true })]);
+  }
 }

@@ -812,13 +812,13 @@ function scanWorkflow(file: string, content: string): ShieldFinding[] {
       )
     );
   }
-  const writeAll = content.search(/^\s*permissions\s*:\s*write-all\s*$/m);
-  if (writeAll >= 0)
+  const writeAll = /^\s*permissions\s*:\s*write-all\s*$/m;
+  if (writeAll.test(content))
     findings.push(
       finding(
         "SHIELD-CI-002",
         file,
-        content.slice(0, writeAll).split("\n").length + 1,
+        lineOf(content, writeAll),
         "`permissions: write-all` grants every scope to GITHUB_TOKEN."
       )
     );
