@@ -1,5 +1,5 @@
 <p align="center">
-  English | <a href="docs/i18n/README.hi.md">हिन्दी</a> | <a href="docs/i18n/README.es.md">Español</a>
+  English | <a href="docs/i18n/README.hi.md">हिन्दी</a> | <a href="docs/i18n/README.es.md">Español</a> | <a href="docs/i18n/README.zh-CN.md">简体中文</a> | <a href="docs/i18n/README.ja.md">日本語</a> | <a href="docs/i18n/README.pt-BR.md">Português (BR)</a>
 </p>
 
 <p align="center">
