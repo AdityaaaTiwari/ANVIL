@@ -1,0 +1,25 @@
+---
+description: Use RabbitMQ reliably: durable exchanges, explicit acks, prefetch limits, dead-letter queues and confirms
+profile: standard
+tags: rabbitmq, amqp, messaging, backend
+---
+
+# RabbitMQ queues
+
+Use when configuring AMQP exchanges, bindings, producers, or consumers with RabbitMQ.
+
+## Topology and durability
+- Declare exchanges and queues as `durable: true` and publish persistent messages (`persistent: true` / `deliveryMode: 2`) when broker restarts must not drop jobs.
+- Bind queues through explicit direct, topic, or fanout exchanges instead of coupling publishers directly to default queue names whenever multiple consumers may subscribe later.
+- Configure explicit dead-letter exchanges (`x-dead-letter-exchange`) and queue TTL/length bounds so poisoned messages never fill broker memory unboundedly.
+
+## Producer reliability
+- Enable **Publisher Confirms** (`confirmChannel` + `waitForConfirms`) for critical events rather than fire-and-forget writes, and reuse long-lived connections/channels cleanly (open channels per worker task, not per message).
+- Reconnect cleanly with jittered backoff and re-assert topology on channel/connection close errors.
+
+## Consumer correctness
+- Never use `noAck: true` for work that cannot be lost. Call `basicAck` only after persistence succeeds, and `basicNack(..., requeue: false)` on malformed messages so they route to the DLQ instead of hot-looping.
+- Always set `basicQos(prefetch)` (`10–50`, or `1` for heavy jobs) so fast prefetch does not starve sibling consumers or OOM a worker; keep handlers idempotent.
+
+## Verify
+Integration tests verifying publisher confirms, `prefetch` backpressure, negative-ack routing to the DLQ, and idempotent duplicate delivery handling.

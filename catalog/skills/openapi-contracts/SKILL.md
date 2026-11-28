@@ -1,0 +1,21 @@
+---
+description: Maintain OpenAPI 3.1 contracts cleanly: schema single source of truth, linting, breaking-change checks and codegen
+profile: standard
+tags: openapi, api, contracts, backend
+---
+
+# OpenAPI contracts
+
+Use when writing or updating `openapi.yaml`/`openapi.json` specs, generated API clients, or contract tests.
+
+## Contract hygiene
+- Keep OpenAPI specs as the single source of truth (either spec-first with generated server stubs/types, or schema-derived from server Zod/Pydantic models checked into git—never maintain disconnected hand-edited docs alongside code).
+- Use explicit `$ref` components under `components.schemas`, `components.responses`, and `components.securitySchemes` (`bearerAuth` / `oauth2`) instead of duplicating inline object shapes everywhere.
+- Document every error response (`400`, `401`, `403`, `404`, `429`) with a shared error envelope (`ProblemDetails` / `{ code, message, requestId }`) and concrete schema constraints (`format`, `minLength`, `enum`, `additionalProperties`).
+
+## Compatibility and tooling
+- Treat removing endpoints, renaming fields, tightening request constraints, adding required request fields, or removing enum values as **breaking changes** requiring version negotiation or expand-contract rollout.
+- Generate typed client SDKs cleanly in CI and commit or publish build artifacts deterministically with pinned generator versions.
+
+## Verify
+Run OpenAPI validation and linting (`spectral lint` / `redocly lint`), breaking-change diff against `main` (`oasdiff breaking`), and contract tests validating live server responses against the spec.

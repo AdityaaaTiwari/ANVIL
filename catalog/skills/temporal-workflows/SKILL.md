@@ -1,0 +1,25 @@
+---
+description: Author durable Temporal workflows safely: determinism constraints, idempotent activities, versioning and retries
+profile: standard
+tags: temporal, workflows, backend, distributed-systems
+---
+
+# Temporal workflows
+
+Use when writing or modifying Temporal workflow definitions, activities, task queues, or worker setups.
+
+## Workflow determinism (non-negotiable)
+Workflow replay re-executes your workflow function from event history:
+- Never use `Date.now()`, `Math.random()`, `crypto.randomUUID()`, network calls, filesystem I/O, or non-deterministic map iteration inside workflow code. Use Temporal's deterministic SDK APIs (`workflow.uuid4`, `sleep`, `condition`).
+- Isolate every external API call, DB write, and side effect inside **Activities** executed via `proxyActivities`.
+
+## Activities, timeouts and heartbeats
+- Set explicit `startToCloseTimeout` on every activity (and `scheduleToCloseTimeout` where queue lag matters). Send `heartbeat()` inside long-running loops so workers detect stalls promptly.
+- Make every activity idempotent (keyed by workflow ID + activity ID or business key) because Temporal retries activities at-least-once on transient failures.
+- Throw `ApplicationFailure.nonRetryable(...)` for permanent validation or business errors so workers do not retry dead requests until expiry.
+
+## Evolution and deployment
+Wrap breaking control-flow edits on live running workflows in `patched(...)` / `getVersion(...)` gates and drain workers carefully before removing old branches.
+
+## Verify
+Replay existing production/fixture event histories with `TestWorkflowEnvironment` / workflow replayer to catch non-determinism before deploying.

@@ -1,0 +1,24 @@
+---
+description: Build secure Supabase apps: Row-Level Security policies, auth client separation, migrations and edge functions
+profile: standard
+tags: supabase, postgres, auth, backend
+---
+
+# Supabase apps
+
+Use when configuring Supabase Auth, Postgres RLS policies, storage buckets, or Edge Functions.
+
+## Row-Level Security (non-negotiable)
+- Enable `ALTER TABLE ... ENABLE ROW LEVEL SECURITY;` on **every table** in exposed schemas (`public`); tables without RLS allow unrestricted reads/writes via the public `anon` key.
+- Write explicit `USING` and `WITH CHECK` policies using `(SELECT auth.uid()) = user_id` (wrapped in scalar `SELECT` so Postgres evaluates the plan once instead of per row), and index all policy columns (`user_id`, `org_id`).
+- Never silently pass permissive `USING (true)` policies on write operations; restrict role targets explicitly (`TO authenticated`).
+
+## Keys and client usage
+- Keep `SUPABASE_SERVICE_ROLE_KEY` strictly server-side (bypasses all RLS). Never expose it via `NEXT_PUBLIC_*`, `VITE_*`, or client bundles.
+- Use `@supabase/ssr` with cookie-based server clients for SSR frameworks, always validating identity via `supabase.auth.getUser()` on the server rather than trusting `getSession()` cookies alone.
+
+## Storage and schema changes
+Enforce RLS policies on `storage.objects` checking `bucket_id` and path owner prefix, and author schema/policy edits as reviewed SQL migrations under `supabase/migrations/` (`supabase db diff`).
+
+## Verify
+Run tests asserting cross-tenant queries fail under real `anon`/`authenticated` JWTs (zero rows returned), check linter advisors (`supabase db lint`), and inspect migration diffs.
