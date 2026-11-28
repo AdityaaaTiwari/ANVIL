@@ -1,0 +1,25 @@
+---
+description: Design and query Elasticsearch or OpenSearch indexes reliably: mappings, aliases, bulk indexing and pagination
+profile: standard
+tags: search, elasticsearch, database, backend
+---
+
+# Elasticsearch search
+
+Use when defining index mappings, writing search queries, or scaling bulk indexing pipelines.
+
+## Mappings and index design
+- Define explicit mappings and set `dynamic: "strict"` or `"runtime"` for core indexes so unexpected field types do not cause mapping explosions.
+- Store exact IDs, enums, and sort/aggregation fields as `keyword`, and full-text searchable fields as `text` with tested analyzers. Never rely on `.keyword` defaults everywhere.
+- Use index aliases (`orders-read`, `orders-write`) from day one so reindexing into a new mapping happens with zero downtime.
+
+## Querying and pagination
+- Put exact conditions (tenant ID, status, date ranges) inside `bool.filter` rather than `bool.must` so Elasticsearch skips scoring and caches bitsets.
+- Avoid deep `from + size` pagination beyond a few thousand hits; use `search_after` paired with a Point in Time (`PIT`) and a unique tie-breaker field.
+
+## Bulk indexing
+- Batch writes through `_bulk` (5-15 MB per request), honoring 429 rejections with exponential backoff for rejected items inside the 200 response array.
+- Set `refresh_interval` higher during large backfills, then restore it once caught up.
+
+## Verify
+Tests checking analyzer tokenization, filter isolation across tenants, zero-downtime alias swap, and search latency on realistic document counts.
