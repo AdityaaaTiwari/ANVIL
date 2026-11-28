@@ -1,0 +1,24 @@
+---
+description: Write reliable, fast Playwright tests: user-facing locators, web-first assertions, auth storageState and tracing
+profile: standard
+tags: playwright, testing, e2e, frontend
+---
+
+# Playwright testing
+
+Use when writing or debugging Playwright specs, page fixtures, or browser CI pipelines.
+
+## Locators and auto-waiting
+- Pick resilient user-facing locators in order: `getByRole`, `getByLabel`, `getByPlaceholder`, `getByText`, and explicit `getByTestId` last. Never anchor selectors on generated CSS classes or brittle DOM hierarchy (`div > div:nth-child(3)`).
+- Always use async web-first assertions (`await expect(locator).toBeVisible()`, `toHaveText(...)`, `toHaveURL(...)`) which retry automatically until timeout. Never read synchronous `.isVisible()` or `.textContent()` before settling, and never add `page.waitForTimeout(...)`.
+
+## Isolation and authentication
+- Keep every test self-contained with isolated test accounts/records and zero cross-test ordering assumptions.
+- Authenticate once in a setup project (`storageState: ".auth/user.json"`, gitignored) instead of signing in through the UI before every single spec; use separate storage states for role/admin comparisons.
+- Use `page.route(...)` selectively for deterministic third-party API stubs, never to mock away your own failing backend without contract coverage.
+
+## CI diagnostics
+Configure `trace: "on-first-retry"`, `screenshot: "only-on-failure"`, `retries: process.env.CI ? 2 : 0`, and shard suites across workers (`--shard=1/4`) in CI.
+
+## Verify
+Run changed specs with `--repeat-each=5` locally to catch flakiness before merging, and inspect trace zips (`playwright show-trace`) on any CI failure.

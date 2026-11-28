@@ -1,0 +1,24 @@
+---
+description: Design and query ClickHouse schemas fast: MergeTree ordering keys, partitioning, batch inserts and materialized views
+profile: standard
+tags: clickhouse, analytics, database, performance
+---
+
+# ClickHouse analytics
+
+Use when designing ClickHouse tables, materialized views, ingestion pipelines, or analytical SQL queries.
+
+## MergeTree design
+- Pick the **`ORDER BY`** tuple carefully around high-frequency filter columns from **lowest to highest cardinality** (e.g., `(tenant_id, event_type, toStartOfHour(ts), user_id)`). `ORDER BY` determines the physical sort and sparse primary index.
+- Partition **`PARTITION BY`** coarsely (typically `toYYYYMM(ts)`, never by user ID or hour) so parts do not explode beyond limits and drops/TTLs run instantaneously.
+- Avoid nullable columns (`Nullable(T)`) in `ORDER BY` or heavy scan columns when a sentinel/default (`LowCardinality(String)`) suffices; `Nullable` adds a separate null-mask file and slows scans.
+
+## Ingestion and mutations
+- Batch inserts (`10k–100k` rows per `INSERT` block or async inserts); never execute row-by-row HTTP `INSERT`s, which create excessive small parts and trigger `Too many parts`.
+- Remember ClickHouse is append-optimized: avoid frequent `ALTER TABLE ... UPDATE/DELETE` mutations. Use **`ReplacingMergeTree`** (deduplicated with `FINAL` or `argMax` at query time) or TTL eviction instead.
+
+## Materialized views
+Pre-aggregate dashboard rollups via incremental **`Materialized View`** (`SummingMergeTree` / `AggregatingMergeTree` using `-State`/`-Merge` combinators) triggered on inserts.
+
+## Verify
+Benchmark bulk insert part count, inspect `EXPLAIN indexes = 1` for primary key pruning (`Granules`), and check query memory via `system.query_log`.
