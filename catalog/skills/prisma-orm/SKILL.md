@@ -1,0 +1,25 @@
+---
+description: Use Prisma ORM safely in production: client singleton, migrations, lean selects, transactions and pooling
+profile: standard
+tags: prisma, database, orm, typescript
+---
+
+# Prisma ORM
+
+Use when editing `schema.prisma`, writing queries, or deploying Prisma migrations.
+
+## Client lifecycle and pooling
+- Reuse a single `PrismaClient` instance cached on `globalThis` in development so hot reloads do not exhaust database connections.
+- In serverless functions, keep connection limits tight (`connection_limit`) or route through PgBouncer/Prisma Accelerate (`directUrl` for migrations vs pooled `DATABASE_URL`).
+
+## Migrations
+- Author schema updates with `prisma migrate dev --name <change>` locally and commit the SQL migration file after reading it.
+- Run `prisma migrate deploy` in CI/release jobs. Never run `prisma db push` or `migrate reset` against production or shared staging databases.
+
+## Queries and N+1 safety
+- Always narrow payloads with `select` (especially when user/secret columns exist) rather than returning full models to API responses.
+- Batch related lookups or use nested `include` / `where: { id: { in: ids } }` instead of `findUnique` loops (avoid triggering N+1 queries on relations).
+- Use `prisma.$transaction([...])` for atomic updates; keep interactive `prisma.$transaction(async (tx) => ...)` short and free of external HTTP calls.
+
+## Verify
+Run `npx prisma validate`, `prisma generate`, and integration tests against a test database checking migrations, selected fields, and transaction rollback.

@@ -1,0 +1,26 @@
+---
+description: Implement OAuth 2.1 and OpenID Connect securely: PKCE, state/nonce validation, JWT verification and token lifecycle
+profile: standard
+tags: auth, security, oauth, oidc
+---
+
+# OAuth and OIDC integration
+
+Use when adding SSO login, social login, or service authorization with OAuth 2.0 / OIDC.
+
+## Authorization flow
+- Use Authorization Code flow with PKCE (`code_challenge_method=S256`) for all web, mobile, and CLI clients. Never use the legacy Implicit flow or pass tokens in URL fragments.
+- Generate high-entropy `state` (bound to the user's browser session) to stop login CSRF, and verify `nonce` in the OIDC `id_token` to prevent token replay.
+- Register exact `redirect_uri` values; reject wildcards or open redirect query parameters on callback routes.
+
+## Token validation and usage
+- Never treat an OIDC `id_token` as an API bearer token, or trust access token payloads without validating signature, `iss`, `aud`, `exp`, and `nbf`.
+- Fetch provider public keys dynamically from the OIDC discovery JWKS endpoint with caching and key-rotation fallback on unknown `kid`.
+- Enforce scope checks or RBAC/ABAC authorization on resource servers; authentication proves identity, not permission.
+
+## Token storage and refresh
+- Keep client secrets, refresh tokens, and access tokens server-side (BFF with `HttpOnly`, `Secure`, `SameSite=Lax` cookies) where possible rather than `localStorage`.
+- Rotate refresh tokens with reuse detection so stolen token chains revoke immediately.
+
+## Verify
+Automated tests rejecting mismatched `state`/`nonce`, expired/wrong-`aud` JWTs, invalid PKCE verifiers, and reused refresh tokens.
