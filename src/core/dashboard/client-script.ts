@@ -1095,6 +1095,106 @@ async function loadCatalogSkills(){
   }catch{}
 }
 
+const APP_SEVERITY_PILL={critical:"pill-danger",high:"pill-danger",medium:"pill-warning",low:"pill-cyan",info:"pill-purple"};
+
+function appSize(bytes){return bytes>=1048576?(bytes/1048576).toFixed(2)+" MiB":Math.max(1,Math.round(bytes/1024))+" KB";}
+
+function appValue(value){
+  if(Array.isArray(value))return value.length?value.map(v=>esc(typeof v==="object"?JSON.stringify(v):v)).join("<br>"):"none";
+  if(value&&typeof value==="object")return esc(JSON.stringify(value));
+  return esc(value);
+}
+
+function renderAppReport(report){
+  const node=el("appInspectResult");
+  if(!node)return;
+  const counts={critical:0,high:0,medium:0,low:0,info:0};
+  (report.findings||[]).forEach(f=>{counts[f.severity]=(counts[f.severity]||0)+1;});
+  const head='<div class="rowitem" style="padding:10px 0"><b style="font-family:monospace">'+esc(report.file)+'</b>'+
+    '<span><span class="pill pill-purple">'+esc(report.kind)+'</span> <span class="pill pill-cyan">'+esc(appSize(report.sizeBytes))+'</span></span></div>';
+  const verdict=counts.critical+counts.high?'<span class="pill pill-danger">'+(counts.critical+counts.high)+' critical/high</span>':(counts.medium?'<span class="pill pill-warning">'+counts.medium+' medium</span>':'<span class="pill pill-emerald">no serious findings</span>');
+  const summary=Object.entries(report.summary||{}).filter(([,v])=>v!==undefined&&v!==null&&v!=="").map(([k,v])=>
+    '<div style="display:flex;gap:12px;padding:6px 0;border-bottom:1px solid var(--line)"><span style="min-width:170px;color:var(--muted);font-size:12px">'+esc(k)+'</span><span style="font-family:monospace;font-size:12px;word-break:break-all">'+appValue(v)+'</span></div>').join("");
+  const findings=(report.findings||[]).map(f=>
+    '<div style="padding:10px 0;border-bottom:1px solid var(--line)">'+
+      '<div class="rowitem"><b><span class="pill '+(APP_SEVERITY_PILL[f.severity]||"pill-cyan")+'">'+esc(String(f.severity).toUpperCase())+'</span> '+esc(f.ruleId)+'</b><span class="run-meta">'+esc(f.file)+'</span></div>'+
+      '<div style="font-size:13px;margin-top:4px">'+esc(f.message)+'</div>'+
+      '<div class="run-meta" style="margin-top:2px">Fix: '+esc(f.remediation)+'</div>'+
+    '</div>').join("");
+  const endpoints=(report.endpoints||[]).slice(0,20).map(e=>'<span class="pill pill-cyan" style="margin:2px">'+esc(e.host)+' ×'+esc(e.count)+'</span>').join("");
+  const notes=(report.notes||[]).map(n=>'<div class="run-meta">• '+esc(n)+'</div>').join("");
+  renderHtml(node,head+'<div style="margin-bottom:10px">'+verdict+'</div>'+
+    '<h3 style="font-size:14px;margin:14px 0 6px">Summary</h3>'+summary+
+    '<h3 style="font-size:14px;margin:14px 0 6px">Findings ('+(report.findings||[]).length+')</h3>'+(findings||'<div class="empty">No findings.</div>')+
+    (endpoints?'<h3 style="font-size:14px;margin:14px 0 6px">Endpoints</h3><div>'+endpoints+'</div>':'')+
+    (notes?'<h3 style="font-size:14px;margin:14px 0 6px">Notes</h3>'+notes:''));
+}
+
+function appBusy(message){renderHtml(el("appInspectResult"),'<div class="loading">'+esc(message)+'</div>');}
+function appError(message){renderHtml(el("appInspectResult"),'<div class="empty" style="color:var(--danger)">'+esc(message)+'</div>');}
+
+async function inspectAppFile(file){
+  if(!file)return;
+  if(file.size>256*1024*1024){appError("Files up to 256 MiB can be inspected.");return;}
+  appBusy("Inspecting "+file.name+"…");
+  try{
+    const response=await fetch("/api/app/upload",{method:"POST",headers:{"content-type":"application/octet-stream","x-anvil-upload":"1","x-anvil-filename":encodeURIComponent(file.name)},body:file});
+    const data=await response.json();
+    if(!response.ok)throw new Error(data.error||("Request failed ("+response.status+")"));
+    renderAppReport(data);
+  }catch(error){appError(error.message||String(error));}
+}
+
+async function inspectWorkspaceAppFile(){
+  const select=el("appCandidateSelect");
+  if(!select||!select.value)return;
+  appBusy("Inspecting "+select.value+"…");
+  try{
+    const response=await fetch("/api/app/inspect?path="+encodeURIComponent(select.value));
+    const data=await response.json();
+    if(!response.ok)throw new Error(data.error||("Request failed ("+response.status+")"));
+    renderAppReport(data);
+  }catch(error){appError(error.message||String(error));}
+}
+
+async function loadAppCandidates(){
+  const select=el("appCandidateSelect");
+  if(!select)return;
+  try{
+    const data=await api("/api/app/candidates");
+    select.replaceChildren();
+    const first=document.createElement("option");
+    first.value="";
+    first.textContent=data.candidates.length?"Choose a file ("+data.candidates.length+" found)":"No app files found in this workspace";
+    select.appendChild(first);
+    data.candidates.forEach(c=>{
+      const option=document.createElement("option");
+      option.value=c.path;
+      option.textContent=c.path+" · "+appSize(c.sizeBytes);
+      select.appendChild(option);
+    });
+  }catch{
+    select.replaceChildren();
+    const option=document.createElement("option");
+    option.value="";
+    option.textContent="Could not list workspace files";
+    select.appendChild(option);
+  }
+}
+
+(function setupAppInspector(){
+  const zone=el("appDropZone");
+  const input=el("appFileInput");
+  if(!zone||!input)return;
+  zone.addEventListener("click",()=>input.click());
+  zone.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();input.click();}});
+  input.addEventListener("change",()=>{inspectAppFile(input.files&&input.files[0]);input.value="";});
+  zone.addEventListener("dragover",event=>{event.preventDefault();zone.style.borderColor="var(--accent)";});
+  zone.addEventListener("dragleave",()=>{zone.style.borderColor="";});
+  zone.addEventListener("drop",event=>{event.preventDefault();zone.style.borderColor="";inspectAppFile(event.dataTransfer&&event.dataTransfer.files[0]);});
+  on("appInspectBtn","click",inspectWorkspaceAppFile);
+})();
+
 async function loadBinaryAssets(){
   try{
     const [res, scRes] = await Promise.all([
@@ -1200,7 +1300,7 @@ function reloadAllViews(){
   loadSkillExperiments();loadExperimentHistory();loadAgentOptimization();loadAgentIntelligence();
   loadHealth();loadRegression();loadReviews();loadQuality();loadVerifications();
   loadCleanerBackups();loadMemory();loadAdrs();loadSecurityAudit();loadGate();
-  loadCatalogSkills();loadBinaryAssets();loadCallGraph();
+  loadCatalogSkills();loadBinaryAssets();loadAppCandidates();loadCallGraph();
 }
 
 reloadAllViews();
