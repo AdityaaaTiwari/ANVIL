@@ -12,6 +12,7 @@ import {
 } from "./sourcemap.js";
 import { isScannableText, newTextScan, scanText, type AppFinding, type TextScanResult } from "./text-scan.js";
 import { isWasm, readWasm, type WasmModuleInfo } from "./wasm.js";
+import { analyzeNative, detectNativeFormat, formatHardening, nativeIssues, type NativeHardening } from "./native.js";
 import { isZip, readZip, type ZipArchive } from "./zip.js";
 
 /**
@@ -21,7 +22,7 @@ import { isZip, readZip, type ZipArchive } from "./zip.js";
  */
 
 export type AppKind =
-  "android-apk" | "android-aab" | "ios-ipa" | "electron-asar" | "zip" | "wasm" | "source-map" | "js-bundle";
+  "android-apk" | "android-aab" | "ios-ipa" | "electron-asar" | "zip" | "wasm" | "source-map" | "js-bundle" | "native";
 
 export interface AppReport {
   file: string;
@@ -75,6 +76,7 @@ async function readWhole(file: string): Promise<Buffer> {
 export function detectAppKind(file: string, buffer: Buffer): AppKind {
   const ext = path.extname(file).toLowerCase();
   if (isWasm(buffer)) return "wasm";
+  if (detectNativeFormat(buffer)) return "native";
   if (isAsar(buffer)) return "electron-asar";
   if (isZip(buffer)) {
     if (ext === ".apk" || ext === ".apks" || ext === ".xapk") return "android-apk";
@@ -91,7 +93,7 @@ export function detectAppKind(file: string, buffer: Buffer): AppKind {
     return "js-bundle";
   }
   throw new Error(
-    `Unrecognised app format for ${path.basename(file)} (expected .apk, .ipa, .asar, .aab, .wasm, .map, .js or a zip)`
+    `Unrecognised app format for ${path.basename(file)} (expected .apk, .ipa, .asar, .aab, .wasm, .map, .js, a zip or an ELF/PE/Mach-O binary)`
   );
 }
 
@@ -123,6 +125,43 @@ function scanZipText(zip: ZipArchive, scan: TextScanResult, notes: string[]): vo
       /* unreadable entry: skip */
     }
   }
+}
+
+const MAX_NATIVE_LIBS = 40;
+const MAX_NATIVE_BYTES = 64 * 1024 * 1024;
+
+/** One finding per mitigation gap, listing every binary that has it. */
+function nativeFindings(results: Array<{ file: string; info: NativeHardening }>): AppFinding[] {
+  const grouped = new Map<string, { issue: ReturnType<typeof nativeIssues>[number]; files: string[] }>();
+  for (const { file, info } of results) {
+    for (const issue of nativeIssues(info)) {
+      const group = grouped.get(issue.ruleId) ?? { issue, files: [] };
+      group.files.push(file);
+      grouped.set(issue.ruleId, group);
+    }
+  }
+  return [...grouped.values()].map(({ issue, files }) =>
+    finding(
+      issue.ruleId,
+      issue.severity,
+      files.length === 1 ? (files[0] ?? "") : `${files.length} native binaries`,
+      files.length === 1
+        ? issue.message
+        : `${issue.message} (${files.slice(0, 4).join(", ")}${files.length > 4 ? ", …" : ""})`,
+      issue.remediation
+    )
+  );
+}
+
+function hardeningSummary(info: NativeHardening): Record<string, unknown> {
+  return {
+    hardening: formatHardening(info),
+    libraries: info.libraries.slice(0, 40),
+    ...(info.rpaths.length ? { rpaths: info.rpaths } : {}),
+    ...(info.slices ? { slices: info.slices } : {}),
+    ...(info.dotnet ? { dotnet: true } : {}),
+    ...(info.encrypted ? { encrypted: true } : {}),
+  };
 }
 
 function attr(element: AxmlElement | undefined, name: string): string | number | boolean | undefined {
@@ -170,6 +209,24 @@ function inspectAndroid(
         "Sign release builds; unsigned APKs cannot be installed or updated safely."
       )
     );
+  }
+
+  const libs = zip.entries.filter(
+    (entry) => /^lib\/[^/]+\/[^/]+\.so$/.test(entry.name) && entry.size <= MAX_NATIVE_BYTES
+  );
+  const analyzed: Array<{ file: string; info: NativeHardening }> = [];
+  for (const entry of libs.slice(0, MAX_NATIVE_LIBS)) {
+    try {
+      analyzed.push({ file: entry.name, info: analyzeNative(zip.read(entry, MAX_NATIVE_BYTES)) });
+    } catch {
+      /* not a readable ELF: skip */
+    }
+  }
+  if (libs.length > MAX_NATIVE_LIBS)
+    notes.push(`Checked the first ${MAX_NATIVE_LIBS} of ${libs.length} native libraries.`);
+  if (analyzed.length) {
+    summary.nativeHardening = analyzed.map(({ file, info }) => `${file}: ${formatHardening(info)}`);
+    findings.push(...nativeFindings(analyzed));
   }
 
   const manifestEntry = zip.entries.find((entry) => entry.name === "AndroidManifest.xml");
@@ -312,6 +369,22 @@ function inspectIos(zip: ZipArchive, findings: AppFinding[], notes: string[]): R
       privacyUsage: Object.keys(info).filter((key) => /^NS\w+UsageDescription$/.test(key)),
       backgroundModes: Array.isArray(info.UIBackgroundModes) ? info.UIBackgroundModes.map(String) : [],
     });
+    const executableName = plistString(info.CFBundleExecutable) ?? appDir?.replace(/\.app$/, "");
+    const executable = zip.entries.find((entry) => entry.name === `Payload/${appDir}/${executableName}`);
+    if (executable && executable.size <= MAX_NATIVE_BYTES * 4) {
+      try {
+        const hardening = analyzeNative(zip.read(executable, MAX_NATIVE_BYTES * 4));
+        summary.executable = hardeningSummary(hardening);
+        findings.push(...nativeFindings([{ file: executable.name, info: hardening }]));
+        if (hardening.encrypted) {
+          notes.push(
+            "The executable is FairPlay-encrypted (App Store build), so its code and strings can't be scanned."
+          );
+        }
+      } catch (error) {
+        notes.push(`App executable could not be analysed: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    }
     if (ats.NSAllowsArbitraryLoads === true) {
       findings.push(
         finding(
@@ -477,6 +550,16 @@ export async function inspectApp(
     summary = inspectElectron(buffer, scan, findings, notes);
   } else if (kind === "wasm") {
     summary = wasmSummary(readWasm(buffer));
+  } else if (kind === "native") {
+    const hardening = analyzeNative(buffer);
+    summary = {
+      format: hardening.format,
+      type: hardening.type,
+      arch: `${hardening.arch}/${hardening.bits}`,
+      ...hardeningSummary(hardening),
+    };
+    findings.push(...nativeFindings([{ file: path.basename(resolved), info: hardening }]));
+    scanText(path.basename(resolved), buffer.toString("latin1", 0, Math.min(buffer.length, MAX_SCAN_BYTES)), scan);
   } else if (kind === "source-map") {
     const map = parseSourceMap(buffer.toString("utf8"));
     const info: SourceMapInfo = summarizeSourceMap(map);

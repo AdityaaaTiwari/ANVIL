@@ -5,12 +5,14 @@ const USAGE = `Usage: anvil app <file> [--json] [--fail-on critical|high|medium|
        anvil app <file.map> --extract DIR [--include-third-party]
 
 Look inside a shipped app without external reverse-engineering tools:
-  .apk / .aab   Android: manifest, permissions, exported components, signing, native ABIs, framework
-  .ipa          iOS: Info.plist, URL schemes, App Transport Security, frameworks
+  .apk / .aab   Android: manifest, permissions, exported components, signing, native lib hardening
+  .ipa          iOS: Info.plist, URL schemes, App Transport Security, executable hardening
   app.asar      Electron: package, insecure BrowserWindow settings
   .wasm         WebAssembly: imports, exports, host (WASI or JS), debug info
   .map          Source maps: recoverable original sources (--extract writes them to DIR)
   .js / zip     Bundles and other zips (JAR, VSIX, XPI): embedded secrets and endpoints
+  ELF/PE/Mach-O Native binaries (.so, .exe, .dll, .dylib, executables): PIE/ASLR, NX/DEP, RELRO,
+                stack canary, FORTIFY, CFG, code signing, linked libraries, RPATH
 
 Every format is also scanned for embedded credentials (masked) and network endpoints.
 `;
