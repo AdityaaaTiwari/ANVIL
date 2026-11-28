@@ -1054,7 +1054,7 @@ server.registerTool(
   {
     title: "App Package Inspection (APK, IPA, Electron, WASM, Source Maps)",
     description:
-      "Look inside one shipped app artifact in the workspace without external reverse-engineering tools: Android APK/AAB (manifest, permissions, exported components, signing), iOS IPA (Info.plist, ATS), Electron app.asar (insecure BrowserWindow settings), WebAssembly (imports/exports), source maps (recoverable sources) and JS bundles. Also reports embedded credentials (masked) and network endpoints. Read-only.",
+      "Look inside one shipped app artifact in the workspace without external reverse-engineering tools: Android APK/AAB (manifest, permissions, exported components, signing), iOS IPA (Info.plist, ATS), Electron app.asar (insecure BrowserWindow settings), WebAssembly (imports/exports), source maps (recoverable sources), JS bundles and native ELF/PE/Mach-O binaries (PIE/ASLR, NX/DEP, RELRO, canary, CFG, signing). Also reports embedded credentials (masked) and network endpoints. Read-only.",
     annotations: {
       readOnlyHint: true,
       destructiveHint: false,
